@@ -1,0 +1,498 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Premium Light Theme (Subtle adjustments) */
+  --background: 230 35% 98%;
+  --foreground: 224 40% 12%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 224 40% 12%;
+
+  --primary: 239 84% 67%;
+  /* Electric Indigo #6366f1 */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 189 87% 53%;
+  /* Soft Cyan #22d3ee */
+  --secondary-foreground: 224 40% 12%;
+
+  --accent: 230 40% 94%;
+  --accent-foreground: 224 40% 12%;
+
+  --muted: 230 30% 96%;
+  --muted-foreground: 224 15% 45%;
+
+  --border: 230 20% 92%;
+  --ring: 239 84% 67%;
+  --radius: 2rem;
+  /* Super smooth corners */
+}
+
+.dark {
+  /* Sophisticated Deep Navy/Charcoal */
+  --background: 240 10% 4%;
+  --foreground: 210 20% 98%;
+
+  --card: 240 10% 8%;
+  --card-foreground: 210 20% 98%;
+
+  --primary: 239 84% 67%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 189 87% 53%;
+  --secondary-foreground: 0 0% 0%;
+
+  --muted: 0 0% 14%;
+  --muted-foreground: 215 15% 65%;
+
+  --accent: 0 0% 18%;
+  --accent-foreground: 210 20% 98%;
+
+  --border: 0 0% 16%;
+  --ring: 239 84% 67%;
+}
+
+@theme inline {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: var(--radius);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-extrabold tracking-[-0.03em];
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   BENTO GRID UTILITIES
+   ═══════════════════════════════════════════════ */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   TAJIK INSPIRED PATTERNS (Subtle)
+   ═══════════════════════════════════════════════ */
+
+.tajik-pattern {
+  background-image: radial-gradient(#6366f1 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+  opacity: 0.03;
+}
+
+.dark .tajik-pattern {
+  opacity: 0.05;
+}
+
+/* ═══════════════════════════════════════════════
+   GLASS CARD REVAMP
+   ═══════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════
+   NAVBAR & SIDEBAR GLASS
+   ═══════════════════════════════════════════════ */
+
+.nav-glass {
+  @apply bg-background/40 backdrop-blur-xl border-b border-white/5;
+}
+
+.nav-glass-scrolled {
+  @apply bg-background/80 backdrop-blur-2xl border-b border-primary/10 shadow-lg shadow-black/5;
+}
+
+.sidebar-glass {
+  @apply bg-card/40 backdrop-blur-2xl border-r border-white/5 shadow-2xl transition-all duration-500;
+}
+
+.glass-card {
+  @apply relative overflow-hidden bg-card/60 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-500;
+}
+
+.glass-card:hover {
+  @apply -translate-y-2 border-primary/20 bg-card/80;
+}
+
+.glass-card-glow::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary), var(--color-primary));
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.5s;
+  padding: 1px;
+}
+
+.glass-card-glow:hover::after {
+  opacity: 0.3;
+}
+
+.career-compare-page .glass-card {
+  border-radius: 1.25rem;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.22);
+}
+
+.career-compare-page .glass-card:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .career-compare-page .glass-card {
+    border-radius: 1rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════ */
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground px-8 py-4 rounded-[1.5rem] font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2;
+}
+
+.btn-secondary {
+  @apply bg-muted/50 backdrop-blur-md text-foreground px-8 py-4 rounded-[1.5rem] font-bold border border-border/50 hover:bg-muted hover:-translate-y-1 transition-all duration-300;
+}
+
+/* ═══════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+   ═══════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full border-4 border-background;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/40;
+}
+
+.university-map {
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 22%),
+    rgba(4, 6, 14, 0.96) !important;
+}
+
+.university-map .leaflet-control-attribution {
+  background: rgba(12, 14, 23, 0.42) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border-top-left-radius: 10px;
+  padding: 3px 6px !important;
+  backdrop-filter: blur(6px);
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  opacity: 0.55;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.university-map .leaflet-control-attribution a {
+  color: rgba(131, 180, 255, 0.78) !important;
+}
+
+.university-map .leaflet-control-attribution:hover {
+  opacity: 0.9;
+  background: rgba(12, 14, 23, 0.72) !important;
+}
+
+.university-map .leaflet-popup-content-wrapper {
+  background: rgba(8, 10, 18, 0.92) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+}
+
+.university-map .leaflet-popup-tip {
+  background: rgba(8, 10, 18, 0.92) !important;
+}
+
+.university-map .leaflet-popup-content {
+  margin: 14px 16px !important;
+}
+
+.university-marker-wrapper {
+  background: transparent;
+  border: 0;
+}
+
+.university-cluster-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.university-cluster-marker__ring,
+.university-cluster-marker__core {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.university-cluster-marker__ring {
+  inset: 3px;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(129, 140, 248, 0.38);
+  animation: university-marker-pulse 1.8s ease-out infinite;
+}
+
+.university-cluster-marker__core {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.92), 0 0 24px rgba(99, 102, 241, 0.45);
+}
+
+.university-cluster-marker.is-active .university-cluster-marker__ring {
+  inset: 0;
+  background: rgba(34, 211, 238, 0.2);
+  border-color: rgba(103, 232, 249, 0.7);
+}
+
+.university-cluster-marker.is-active .university-cluster-marker__core {
+  background: linear-gradient(135deg, #f8fafc, #67e8f9);
+  color: #0f172a;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes university-marker-pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AI CHAT — PREMIUM MESSENGER STYLES
+   ═══════════════════════════════════════════════ */
+
+.ai-chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 8rem);
+  min-height: 620px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border) / 0.45);
+  border-radius: 18px;
+  background: hsl(var(--background) / 0.5);
+}
+
+.ai-chat-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 10% 20%, hsl(var(--primary) / 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 80%, hsl(var(--secondary) / 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, hsl(var(--primary) / 0.02) 0%, transparent 70%);
+}
+
+.ai-chat-header {
+  @apply relative z-10 flex items-center justify-between gap-4 px-4 py-3;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+  backdrop-filter: blur(20px);
+  background: hsl(var(--background) / 0.6);
+  min-height: 68px;
+  flex-shrink: 0;
+}
+
+.ai-chat-icon-btn {
+  @apply w-9 h-9 rounded-xl flex items-center justify-center transition-all;
+  background: hsl(var(--muted) / 0.4);
+  border: 1px solid hsl(var(--border) / 0.4);
+  color: hsl(var(--muted-foreground));
+}
+
+.ai-chat-icon-btn:hover {
+  background: hsl(var(--muted) / 0.7);
+  border-color: hsl(var(--border));
+}
+
+.ai-chat-messages {
+  @apply relative z-10 flex-1 overflow-y-auto px-4 py-5 space-y-3;
+  min-height: 0;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.ai-chat-input-area {
+  @apply relative z-10 px-4 py-3;
+  border-top: 1px solid hsl(var(--border) / 0.3);
+  backdrop-filter: blur(20px);
+  background: hsl(var(--background) / 0.6);
+  flex-shrink: 0;
+}
+
+.ai-chat-input-container {
+  @apply flex items-end gap-1 px-2 py-1.5 rounded-2xl;
+  background: hsl(var(--card) / 0.7);
+  border: 1px solid hsl(var(--border) / 0.5);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 2px 20px hsl(var(--primary) / 0.04),
+    0 0 0 1px hsl(var(--border) / 0.1);
+}
+
+/* AI Message Content Formatting */
+.ai-msg-content {
+  @apply text-[13.5px] leading-[1.7];
+}
+
+.ai-msg-content .ai-h2 {
+  @apply text-base font-extrabold mt-3 mb-1.5 tracking-tight;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ai-msg-content .ai-h3 {
+  @apply text-[14px] font-bold mt-3 mb-1;
+  color: hsl(var(--primary));
+}
+
+.ai-msg-content .ai-h4 {
+  @apply text-[13px] font-bold mt-2 mb-0.5;
+}
+
+.ai-msg-content .ai-ul,
+.ai-msg-content .ai-ol {
+  @apply my-2 space-y-1 pl-1;
+}
+
+.ai-msg-content .ai-ul-item {
+  @apply relative pl-4 text-[13px];
+}
+
+.ai-msg-content .ai-ul-item::before {
+  content: '';
+  @apply absolute left-0 top-[9px] w-1.5 h-1.5 rounded-full;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+}
+
+.ai-msg-content .ai-ol-item {
+  @apply pl-1 text-[13px];
+  list-style: decimal;
+  margin-left: 1rem;
+}
+
+.ai-msg-content .ai-ol-item::marker {
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
+.ai-msg-content .ai-code-block {
+  @apply my-2 p-3 rounded-xl text-[12px] overflow-x-auto;
+  background: hsl(var(--background) / 0.8);
+  border: 1px solid hsl(var(--border) / 0.5);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.ai-msg-content .ai-inline-code {
+  @apply px-1.5 py-0.5 rounded-md text-[12px] font-semibold;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.ai-msg-content strong {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+.ai-msg-content em {
+  color: hsl(var(--primary) / 0.85);
+  font-style: italic;
+}

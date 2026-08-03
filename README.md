@@ -47,6 +47,44 @@ npm run dev               # http://localhost:5173
 | `npm run seed -- --all` | Базаро аз сифр пур мекунад |
 | `npm run seed:verify` | Маълумотро бе база тафтиш мекунад |
 
+## Деплой (CI/CD)
+
+Ҳар push ба `main` худкор ба продакшн мебарояд — **https://ikhtisosiman.qobus.tj**
+
+| Файл | Кор |
+|---|---|
+| `.github/workflows/ci.yml` | PR ва бранчҳои дигар: build-и backend ва frontend месанҷад |
+| `.github/workflows/deploy.yml` | Push ба `main`: build + деплой ба сервер |
+| `scripts/deploy-server.sh` | Дар сервер иҷро мешавад: pull, build, restart, health-check |
+
+Раванди деплой:
+
+1. GitHub runner frontend-ро build мекунад (сервер танҳо 2 GB RAM дорад).
+2. Тавассути SSH `scripts/deploy-server.sh` дар сервер иҷро мешавад: `git reset --hard <sha>`,
+   `npm ci`, `npm run build`, `systemctl restart mycareer-api`.
+3. Health-check `/api/clusters`. **Агар API боло наояд, худкор ба коммити пешина бармегардад.**
+4. `Front/dist/` ба `/var/www/ikhtisosiman` rsync мешавад.
+5. Smoke-test-и сайти зинда.
+
+### Танзимот дар GitHub
+
+**Settings → Secrets and variables → Actions**
+
+| Навъ | Ном | Қимат |
+|---|---|---|
+| Secret | `SSH_PRIVATE_KEY` | калиди хусусии деплой (`~/.ssh/mycareer_deploy`) |
+| Variable | `VITE_API_URL` | ихтиёрӣ, стандартан `/api` |
+| Variable | `VITE_GOOGLE_CLIENT_ID` | ихтиёрӣ, барои Google sign-in |
+
+### Деплойи дастӣ
+
+```bash
+# аз сервер
+bash /root/My-career/scripts/deploy-server.sh origin/main --with-frontend
+```
+
+Ё дар GitHub: **Actions → Deploy to production → Run workflow**.
+
 ## Маълумот аз куҷост
 
 Файли `Back/nest-backend/ntc_raw_data.json` рӯйхати хоми МНТ аст.

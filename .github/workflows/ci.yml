@@ -1,0 +1,52 @@
+name: CI
+
+# Catches build breakage before it reaches main (and therefore production).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Back/nest-backend/package-lock.json
+      - working-directory: Back/nest-backend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+  frontend:
+    name: Frontend build + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Front/package-lock.json
+      - working-directory: Front
+        run: npm ci --no-audit --no-fund
+      - name: Lint
+        working-directory: Front
+        run: npm run lint
+        continue-on-error: true
+      - name: Build
+        working-directory: Front
+        env:
+          VITE_API_URL: /api
+        run: npm run build

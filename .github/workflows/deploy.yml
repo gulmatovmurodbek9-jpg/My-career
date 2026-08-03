@@ -1,0 +1,93 @@
+name: Deploy to production
+
+# Every push to main goes live automatically.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'Mobile/**'
+      - '.gitignore'
+  workflow_dispatch:
+
+# Never let two deploys touch the server at the same time; queue them instead
+# of cancelling, so the newest commit is always the one that ends up live.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  SSH_HOST: 62.238.33.236
+  SSH_USER: root
+  WEBROOT: /var/www/ikhtisosiman
+  SITE_URL: https://ikhtisosiman.qobus.tj
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Front/package-lock.json
+
+      # The server only has 2 GB of RAM, so the vite build (three.js, recharts,
+      # leaflet) runs here on the runner and only dist/ is shipped over.
+      - name: Build frontend
+        working-directory: Front
+        env:
+          # nginx proxies /api/ to the NestJS process on 127.0.0.1:3005
+          VITE_API_URL: ${{ vars.VITE_API_URL || '/api' }}
+          # Optional — set the repo variable to turn Google sign-in on in prod.
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pinned host key — a public key, safe to keep in the repo. It stops
+          # the deploy from trusting a different machine on this IP.
+          printf '%s\n' '62.238.33.236 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPLGrZP+/dnG6oI5lgvcc4kKjseIC5DntMd0m3jZ6vqT' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          cat >> ~/.ssh/config <<EOF
+          Host production
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ~/.ssh/known_hosts
+            ServerAliveInterval 30
+          EOF
+          chmod 600 ~/.ssh/config
+
+      # Pipes the script from this commit over stdin, so deploy logic changes
+      # take effect on the same push that introduces them. Rolls the API back
+      # to the previous commit by itself if the health check fails.
+      - name: Deploy backend
+        run: ssh production "bash -s -- ${{ github.sha }}" < scripts/deploy-server.sh
+
+      - name: Publish frontend
+        run: |
+          rsync -az --delete Front/dist/ production:$WEBROOT/
+          ssh production "chown -R www-data:www-data $WEBROOT"
+
+      - name: Smoke test
+        run: |
+          set -e
+          code=$(curl -fsS -o /dev/null -w '%{http_code}' "$SITE_URL/")
+          echo "$SITE_URL/ -> $code"
+          code=$(curl -fsS -o /dev/null -w '%{http_code}' "$SITE_URL/api/clusters")
+          echo "$SITE_URL/api/clusters -> $code"
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

@@ -1,0 +1,5 @@
+# These are executed on / consumed by Linux. core.autocrlf=true on Windows must
+# never turn them into CRLF, or bash on the server fails with "$'\r': not found".
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf

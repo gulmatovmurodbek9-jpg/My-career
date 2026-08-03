@@ -56,8 +56,12 @@ npm run dev               # http://localhost:5173
 | `.github/workflows/ci.yml` | PR ва бранчҳои дигар: build-и backend ва frontend месанҷад |
 | `.github/workflows/deploy.yml` | Push ба `main`: build + деплой ба сервер |
 | `scripts/deploy-server.sh` | Дар сервер иҷро мешавад: pull, build, restart, health-check |
+| `scripts/autodeploy.sh` | Дар сервер ҳар дақиқа GitHub-ро месанҷад ва деплой мекунад |
+| `scripts/install-autodeploy.sh` | Timer-и болоро як маротиба насб мекунад |
 
-Раванди деплой:
+Ду роҳи деплой ҳаст ва ҳарду ҳамзамон кор карда метавонанд:
+
+**1. GitHub Actions** (фаврӣ, логҳо дар GitHub)
 
 1. GitHub runner frontend-ро build мекунад (сервер танҳо 2 GB RAM дорад).
 2. Тавассути SSH `scripts/deploy-server.sh` дар сервер иҷро мешавад: `git reset --hard <sha>`,
@@ -65,6 +69,22 @@ npm run dev               # http://localhost:5173
 3. Health-check `/api/clusters`. **Агар API боло наояд, худкор ба коммити пешина бармегардад.**
 4. `Front/dist/` ба `/var/www/ikhtisosiman` rsync мешавад.
 5. Smoke-test-и сайти зинда.
+
+Агар secret-и `SSH_PRIVATE_KEY` гузошта нашуда бошад, workflow бо огоҳӣ мегузарад (хато намедиҳад)
+ва деплойро ба timer вомегузорад.
+
+**2. Timer-и сервер** (эҳтиётӣ, ҳеҷ танзимот дар GitHub лозим нест)
+
+`mycareer-autodeploy.timer` ҳар дақиқа `git fetch` мекунад; агар `origin/main` ҳаракат карда бошад,
+ҳамон `deploy-server.sh`-ро бо `--with-frontend` иҷро мекунад.
+
+Ду роҳ бо ҳам муноқиша намекунанд: кадоме аввал деплой кунад, `HEAD` ба `origin/main` баробар
+мешавад ва дигаре кор намеёбад. `flock` низ ҳаст, то ду деплой ҳамзамон нашаванд.
+
+```bash
+journalctl -u mycareer-autodeploy -f            # тамошои деплойҳо
+systemctl disable --now mycareer-autodeploy.timer  # хомӯш кардан
+```
 
 ### Танзимот дар GitHub
 

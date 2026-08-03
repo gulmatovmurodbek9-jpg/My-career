@@ -12,9 +12,9 @@
 #     bash /root/My-career/scripts/deploy-server.sh origin/main --with-frontend
 #     bash /root/My-career/scripts/deploy-server.sh origin/main --seed   # DESTRUCTIVE
 #
-# CI builds the frontend on the runner and rsyncs dist/ itself, so --with-frontend
-# is only needed when deploying by hand (the box has 2 GB of RAM — a local vite
-# build is slow and close to the memory ceiling).
+# GitHub Actions builds the frontend on the runner and rsyncs dist/ itself, so
+# it does not pass --with-frontend. The server's autodeploy timer and manual
+# runs do, building on the box itself (~15s; 1.9 GB RAM plus 3 GB of swap).
 #
 # If the API fails to come back healthy the previous commit is rebuilt and
 # restarted, so a broken push cannot leave the site down.

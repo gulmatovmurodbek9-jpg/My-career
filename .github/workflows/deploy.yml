@@ -48,7 +48,22 @@ jobs:
           npm ci --no-audit --no-fund
           npm run build
 
+      # The server also polls GitHub once a minute (mycareer-autodeploy.timer),
+      # so a missing secret means "deploy a minute later", not "deploy broken".
+      # Warn and stop rather than failing the run over it. `secrets` is not
+      # available to a job-level `if`, hence the gate step.
+      - name: Check for deploy secret
+        id: gate
+        run: |
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "::warning::SSH_PRIVATE_KEY is not set — skipping the push deploy. The server's autodeploy timer will pick this commit up within a minute."
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up SSH
+        if: steps.gate.outputs.ready == 'true'
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
@@ -73,14 +88,17 @@ jobs:
       # take effect on the same push that introduces them. Rolls the API back
       # to the previous commit by itself if the health check fails.
       - name: Deploy backend
+        if: steps.gate.outputs.ready == 'true'
         run: ssh production "bash -s -- ${{ github.sha }}" < scripts/deploy-server.sh
 
       - name: Publish frontend
+        if: steps.gate.outputs.ready == 'true'
         run: |
           rsync -az --delete Front/dist/ production:$WEBROOT/
           ssh production "chown -R www-data:www-data $WEBROOT"
 
       - name: Smoke test
+        if: steps.gate.outputs.ready == 'true'
         run: |
           set -e
           code=$(curl -fsS -o /dev/null -w '%{http_code}' "$SITE_URL/")

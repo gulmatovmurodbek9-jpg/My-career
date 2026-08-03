@@ -44,6 +44,14 @@ done
 
 log() { printf '\n==> %s\n' "$*"; }
 
+# Two things can start a deploy: GitHub Actions, and the server's own
+# autodeploy timer. Queue rather than fail so neither ever loses a commit.
+exec 9>/var/lock/mycareer-deploy.lock
+if ! flock -w 900 9; then
+  echo "another deploy held the lock for 15 minutes — giving up" >&2
+  exit 1
+fi
+
 lock_hash() { sha256sum "$1" 2>/dev/null | cut -d' ' -f1; }
 
 # npm ci is reproducible but hard-fails when the lockfile drifts out of sync

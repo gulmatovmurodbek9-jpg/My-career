@@ -138,11 +138,15 @@ const Layout = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14 md:h-16 gap-3 lg:gap-5">
               <Link to="/" className="flex shrink-0 items-center gap-2 lg:gap-3 group text-decoration-none">
-                <span className="w-9 h-9 lg:w-10 lg:h-10 icon-box-solid rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-500 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
-                  </svg>
-                </span>
+                {/* Логотип шаффоф аст, аз ин рӯ дар ҳарду тема кор мекунад ва
+                    қуттии градиентӣ дигар лозим нест. */}
+                <img
+                  src="/logo.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="h-9 w-9 lg:h-10 lg:w-10 flex-shrink-0 transition-transform duration-500 group-hover:scale-110"
+                />
                 <span className="hidden xl:block max-w-[190px] 2xl:max-w-[210px] font-extrabold text-lg 2xl:text-xl text-foreground tracking-normal uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                   {t("common.brand", "Ikhtisosiman")}
                 </span>
@@ -352,11 +356,13 @@ const Layout = () => {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16">
                 <div className="md:col-span-5">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="w-10 h-10 icon-box-solid rounded-2xl flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-white">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
-                      </svg>
-                    </span>
+                    <img
+                      src="/logo.png"
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 flex-shrink-0"
+                    />
                     <span className="font-extrabold text-xl text-foreground tracking-tighter uppercase font-jakarta">
                       {t("common.brand", "Ikhtisosiman")}
                     </span>

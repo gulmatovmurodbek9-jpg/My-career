@@ -219,11 +219,11 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                                     <Radar
                                                         name={userKey}
                                                         dataKey={userKey}
-                                                        stroke="#6366f1"
+                                                        stroke="#2563eb"
                                                         strokeWidth={2}
-                                                        fill="#6366f1"
+                                                        fill="#2563eb"
                                                         fillOpacity={0.15}
-                                                        dot={{ r: 3, fill: "#6366f1" }}
+                                                        dot={{ r: 3, fill: "#2563eb" }}
                                                     />
                                                     <Radar
                                                         name={careerKey}

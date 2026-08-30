@@ -358,7 +358,7 @@ const Info = () => {
                   { label: "Таҷрибадор (Senior)", desc: "5+ соли таҷриба", value: salary.senior, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/5", icon: Star },
                 ].filter(t => t.value).map((tier, i) => (
                   <div key={i} className={`${tier.bg} rounded-xl p-5 border border-border/30 text-center relative overflow-hidden`}>
-                    <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: i === 0 ? "#10b981" : i === 1 ? "#f59e0b" : "#6366f1" }} />
+                    <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: i === 0 ? "#10b981" : i === 1 ? "#f59e0b" : "#2563eb" }} />
                     <tier.icon className={`h-6 w-6 ${tier.color} mx-auto mb-2`} />
                     <div className="text-xs text-muted-foreground mb-1">{tier.label}</div>
                     <div className={`text-2xl font-bold ${tier.color} mb-1`}>{tier.value}</div>

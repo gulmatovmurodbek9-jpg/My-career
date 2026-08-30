@@ -576,6 +576,19 @@ export function installMockInterceptor() {
     (response) => response,
     async (error) => {
       const config = error.config;
+
+      // Дархости бекоршуда backend-и хомӯш нест.
+      //
+      // Вақте компонент дархости кӯҳнаро бо AbortController бекор мекунад,
+      // axios хатои бе `response` медиҳад — маҳз мисли хатои шабака. Бе ин
+      // санҷиш mock онро ҳамчун "backend афтод" мефаҳмид ва ба ҷои хато
+      // ҷавоби БОМУВАФФАҚИЯТИ сохта бармегардонд. Он ҷавоб дертар аз ҷавоби
+      // воқеӣ мерасид ва маълумоти дурустро мепӯшонд: саҳифаи ихтисосҳо
+      // ба ҷои 172 ихтисос "0 ихтисос ёфт шуд" нишон медод.
+      if (axios.isCancel(error) || error.code === "ERR_CANCELED") {
+        return Promise.reject(error);
+      }
+
       // Only intercept network errors (backend down) or 5xx errors
       const isNetworkError = !error.response || error.code === "ERR_NETWORK" || error.code === "ECONNREFUSED";
       const isServerError = error.response?.status >= 500;

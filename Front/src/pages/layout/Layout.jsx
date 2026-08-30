@@ -35,6 +35,23 @@ const Layout = () => {
 
   const isDashboard = location.pathname.startsWith("/dashboard");
 
+  /**
+   * Гузариш ба #hash.
+   *
+   * React Router худаш ба лангар скролл намекунад, аз ин рӯ истиноди
+   * "/#cluster-groups" бе ин танҳо ба болои саҳифа мебурд.
+   */
+  useEffect(() => {
+    if (!location.hash) return;
+    const target = document.querySelector(location.hash);
+    if (!target) return;
+    // Кадри оянда: бахш метавонад ҳанӯз рендер нашуда бошад.
+    const id = requestAnimationFrame(() =>
+      target.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+    return () => cancelAnimationFrame(id);
+  }, [location]);
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
@@ -85,7 +102,7 @@ const Layout = () => {
 
   const navLinks = [
     { to: "/", label: t("nav.home", "Асосӣ") },
-    { to: "/clusters", label: t("nav.clusters", "Кластерҳо") },
+    { to: "/#cluster-groups", label: t("nav.clusters", "Кластерҳо") },
     { to: "/careers", label: t("nav.careers", "Ихтисосҳо") },
     { to: "/universities", label: t("nav.universities", "Донишгоҳҳо") },
     { to: "/about", label: t("nav.about", "Дар бора") },
@@ -108,6 +125,12 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary-foreground">
+      {/* Аввалин чизи фокусшаванда: корбари клавиатура набояд ҳар дафъа
+          тамоми навбарро гузарад, то ба мазмун расад. */}
+      <a href="#main" className="skip-link">
+        {t("common.skip_to_content", "Ба мазмун гузаштан")}
+      </a>
+
       <div className="fixed inset-0 tajik-pattern pointer-events-none z-[-1]" />
 
       <header className="fixed top-0 left-0 w-full z-50">
@@ -127,20 +150,30 @@ const Layout = () => {
 
               <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-0.5 2xl:gap-1">
                 {navLinks.map((link) => {
-                  const isActive = link.to === "/" ? location.pathname === link.to : location.pathname.startsWith(link.to);
+                  // Истиноди лангарӣ ("/#cluster-groups") ба бахши дохили
+                  // саҳифа ишора мекунад, на ба саҳифаи алоҳида, аз ин рӯ
+                  // ҳолати "фаъол" надорад.
+                  const isActive = link.to.includes("#")
+                    ? false
+                    : link.to === "/"
+                      ? location.pathname === "/"
+                      : location.pathname.startsWith(link.to);
                   return (
                     <Link
                       key={link.to}
                       to={link.to}
-                      className={`relative whitespace-nowrap px-2 lg:px-2.5 xl:px-3 2xl:px-4 py-2 text-[11px] xl:text-xs 2xl:text-sm font-bold rounded-xl transition-all duration-300 ${
-                        isActive ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      className={`relative whitespace-nowrap rounded-lg px-2.5 lg:px-3 xl:px-3.5 py-2 text-[13px] xl:text-sm font-semibold transition-colors duration-200 focus-ring ${
+                        isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {link.label}
+                      {/* Хатчаи борики ягона. Нусхаи қаблӣ ҳам заминаи ранга,
+                          ҳам хатчаи 4px-и градиентӣ дошт: таъкиди дубора, ва
+                          градиент бо бақияи саҳифа намезад. */}
                       {isActive && (
-                        <motion.div
+                        <motion.span
                           layoutId="nav-indicator"
-                          className="absolute bottom-1 left-3 right-3 2xl:left-4 2xl:right-4 h-1 rounded-full bg-gradient-to-r from-primary to-secondary"
+                          className="absolute inset-x-2.5 -bottom-0.5 h-0.5 rounded-full bg-primary lg:inset-x-3 xl:inset-x-3.5"
                         />
                       )}
                     </Link>
@@ -299,6 +332,7 @@ const Layout = () => {
       </header>
 
       <main
+        id="main"
         className={
           isDashboard
             ? "flex-1 w-full max-w-[1520px] mx-auto flex flex-col md:flex-row gap-4 md:gap-6 px-4 sm:px-6 lg:px-7 pt-[96px] md:pt-[104px] pb-6 md:pb-8"

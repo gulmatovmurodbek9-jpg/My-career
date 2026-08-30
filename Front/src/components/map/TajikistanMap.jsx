@@ -10,6 +10,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router";
+import { useTheme } from "../../hooks/useTheme";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Building2,
@@ -24,32 +25,65 @@ import {
 
 const DEFAULT_CITY = "Душанбе";
 const DEFAULT_ZOOM = 11;
-const CITY_OVERVIEW_ZOOM = 8;
+const CITY_OVERVIEW_ZOOM = 10;
 
+// Every city and district that actually appears in the university data — all 42
+// of them. The previous table held only 20, and inferCity() quietly sent every
+// unlisted district to DEFAULT_CITY, so roughly a quarter of the country's
+// institutions were drawn on top of Dushanbe.
+//
+// Coordinates come from OpenStreetMap/Nominatim, taken from the administrative
+// boundary of the district (or the town, where the entry is a town). They are
+// district-level, not campus-level: a marker says "this institution is in this
+// district", which is as precise as the source data gets.
 const CITY_CENTERS = {
-  "Душанбе": { lat: 38.5737, lng: 68.787, zoom: 11 },
-  "Хуҷанд": { lat: 40.2824, lng: 69.6222, zoom: 11 },
-  "Бохтар": { lat: 37.8375, lng: 68.7791, zoom: 11 },
-  "Кӯлоб": { lat: 37.9146, lng: 69.7845, zoom: 11 },
-  "Хоруғ": { lat: 37.4897, lng: 71.5538, zoom: 11 },
-  "Ваҳдат": { lat: 38.5563, lng: 69.0135, zoom: 11 },
-  "Турсунзода": { lat: 38.5127, lng: 68.2316, zoom: 11 },
-  "Ҳисор": { lat: 38.525, lng: 68.551, zoom: 11 },
-  "Исфара": { lat: 40.1265, lng: 70.6252, zoom: 11 },
-  "Истаравшан": { lat: 39.9142, lng: 69.0023, zoom: 11 },
-  "Панҷакент": { lat: 39.4952, lng: 67.6093, zoom: 11 },
-  "Левакант": { lat: 37.822, lng: 68.809, zoom: 11 },
-  "Данғара": { lat: 38.095, lng: 69.339, zoom: 11 },
-  "Роғун": { lat: 38.6933, lng: 69.7798, zoom: 11 },
-  "Конибодом": { lat: 40.2923, lng: 70.4312, zoom: 11 },
-  "Бӯстон": { lat: 40.2917, lng: 69.6297, zoom: 11 },
-  "Норак": { lat: 38.3892, lng: 69.3227, zoom: 11 },
-  "Рашт": { lat: 39.0287, lng: 70.3745, zoom: 11 },
-  "Шаҳритус": { lat: 37.2622, lng: 68.1385, zoom: 11 },
-  "Ёвон": { lat: 38.3141, lng: 69.0378, zoom: 11 },
+  "Душанбе": { lat: 38.5598, lng: 68.787, zoom: 11 },
+  "Хуҷанд": { lat: 40.2842, lng: 69.6191, zoom: 11 },
+  "Бохтар": { lat: 37.8357, lng: 68.7821, zoom: 11 },
+  "Кӯлоб": { lat: 37.9081, lng: 69.7739, zoom: 11 },
+  "Хоруғ": { lat: 37.4909, lng: 71.5489, zoom: 11 },
+  "Ваҳдат": { lat: 38.5614, lng: 69.0173, zoom: 11 },
+  "Турсунзода": { lat: 38.5139, lng: 68.2317, zoom: 11 },
+  "Ҳисор": { lat: 38.5297, lng: 68.5579, zoom: 11 },
+  "Исфара": { lat: 40.1233, lng: 70.6134, zoom: 11 },
+  "Истаравшан": { lat: 39.908, lng: 68.9956, zoom: 11 },
+  "Панҷакент": { lat: 39.4962, lng: 67.6141, zoom: 11 },
+  "Левакант": { lat: 37.8718, lng: 68.9256, zoom: 11 },
+  "Данғара": { lat: 38.0954, lng: 69.3321, zoom: 11 },
+  "Роғун": { lat: 38.6952, lng: 69.7572, zoom: 11 },
+  "Конибодом": { lat: 40.2908, lng: 70.4255, zoom: 11 },
+  "Бӯстон": { lat: 40.2355, lng: 69.6989, zoom: 11 },
+  "Норак": { lat: 38.3897, lng: 69.3081, zoom: 11 },
+  "Рашт": { lat: 39.2, lng: 70.3375, zoom: 10 },
+  "Шаҳритус": { lat: 37.2665, lng: 68.1438, zoom: 11 },
+  "Ёвон": { lat: 38.3177, lng: 69.047, zoom: 11 },
+  "Гулистон": { lat: 40.267, lng: 69.7981, zoom: 11 },
+  "Рӯдакӣ": { lat: 38.2559, lng: 68.5099, zoom: 10 },
+  "Мастчоҳ": { lat: 40.4931, lng: 69.3664, zoom: 10 },
+  "Зафаробод": { lat: 40.1527, lng: 68.7841, zoom: 10 },
+  "Ҷаббор Расулов": { lat: 40.0843, lng: 69.4839, zoom: 10 },
+  "Бобоҷон Ғафуров": { lat: 40.2216, lng: 69.7296, zoom: 10 },
+  "Қубодиён": { lat: 37.4194, lng: 68.3111, zoom: 10 },
+  "Нуробод": { lat: 38.828, lng: 70.0538, zoom: 10 },
+  "Ҷайҳун": { lat: 37.3264, lng: 68.7268, zoom: 10 },
+  "Панҷ": { lat: 37.3126, lng: 69.125, zoom: 10 },
+  "Лахш": { lat: 39.2192, lng: 71.2001, zoom: 10 },
+  "Вахш": { lat: 37.7716, lng: 68.9951, zoom: 10 },
+  "Ховалинг": { lat: 38.3888, lng: 70.0931, zoom: 10 },
+  "Ҷалолиддини Балхӣ": { lat: 37.5722, lng: 69.0113, zoom: 10 },
+  "Муъминобод": { lat: 38.1729, lng: 70.0674, zoom: 10 },
+  "Восеъ": { lat: 37.9424, lng: 69.5969, zoom: 10 },
+  "Фархор": { lat: 37.4846, lng: 69.3303, zoom: 10 },
+  "Дӯстӣ": { lat: 37.499, lng: 68.5011, zoom: 10 },
+  "Тоҷикобод": { lat: 39.0722, lng: 70.9071, zoom: 10 },
+  "Темурмалик": { lat: 38.1141, lng: 69.5242, zoom: 10 },
+  "Сангвор": { lat: 38.7965, lng: 71.5314, zoom: 10 },
+  "Мир Сайид Алии Ҳамадонӣ": { lat: 37.7183, lng: 69.5605, zoom: 10 },
 };
 
-const CITY_KEYWORDS = Object.keys(CITY_CENTERS);
+// Longest first, so "Мир Сайид Алии Ҳамадонӣ" is tried before a short name that
+// happens to be a substring of it.
+const CITY_KEYWORDS = Object.keys(CITY_CENTERS).sort((a, b) => b.length - a.length);
 
 function createClusterIcon({ count, isActive }) {
   return new L.DivIcon({
@@ -69,50 +103,82 @@ function createDotIcon(isActive) {
   return new L.DivIcon({
     className: "university-marker-wrapper",
     html: `
-      <div class="university-cluster-marker ${isActive ? "is-active" : ""}">
+      <div class="university-cluster-marker is-single ${isActive ? "is-active" : ""}">
         <span class="university-cluster-marker__ring"></span>
         <span class="university-cluster-marker__core">1</span>
       </div>
     `,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
   });
 }
 
-function hashCode(value) {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash << 5) - hash + value.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
+// Returns null rather than falling back to the capital. Silently relocating an
+// institution to Dushanbe because its district was missing from the table is
+// what put a quarter of the country on one pin.
 function inferCity(uni) {
   if (uni.city && CITY_CENTERS[uni.city]) return uni.city;
 
-  const matchedKeyword = CITY_KEYWORDS.find((keyword) => uni.name?.includes(keyword));
-  if (matchedKeyword) return matchedKeyword;
-
-  return DEFAULT_CITY;
+  const haystack = `${uni.city || ""} ${uni.name || ""}`;
+  return CITY_KEYWORDS.find((keyword) => haystack.includes(keyword)) || null;
 }
 
-function buildDisplayUniversity(uni) {
-  const inferredCity = inferCity(uni);
-  const center = CITY_CENTERS[inferredCity] || CITY_CENTERS[DEFAULT_CITY];
-  const seed = hashCode(`${uni.id}-${inferredCity}`);
-  const angle = (seed % 360) * (Math.PI / 180);
-  const ring = Math.floor(seed / 360) % 10;
-  const radius = 0.012 + ring * 0.0035;
-  const lat = center.lat + Math.sin(angle) * radius;
-  const lng = center.lng + Math.cos(angle) * radius;
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-  return {
-    ...uni,
-    inferredCity,
-    displayLat: lat,
-    displayLng: lng,
-  };
+function buildDisplayUniversities(universities) {
+  const anchored = universities
+    .filter((uni) => uni.id && uni.name)
+    .map((uni) => {
+      const inferredCity = inferCity(uni);
+      if (!inferredCity) return null;
+
+      // Prefer the institution's own coordinates; fall back to its district.
+      const lat = Number(uni.latitude);
+      const lng = Number(uni.longitude);
+      const anchor =
+        Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)
+          ? { lat, lng }
+          : CITY_CENTERS[inferredCity];
+
+      return { ...uni, inferredCity, anchorLat: anchor.lat, anchorLng: anchor.lng };
+    })
+    .filter(Boolean);
+
+  // Institutions in the same city all carry that city's single coordinate, so
+  // their markers land on the exact same pixel and only the top one is
+  // clickable. Fan each stack out along a golden-angle spiral: deterministic,
+  // evenly spaced, and tight enough that a marker stays inside its own city.
+  const stacks = new Map();
+  anchored.forEach((uni) => {
+    const key = `${uni.anchorLat.toFixed(4)},${uni.anchorLng.toFixed(4)}`;
+    if (!stacks.has(key)) stacks.set(key, []);
+    stacks.get(key).push(uni);
+  });
+
+  const spread = [];
+  stacks.forEach((group) => {
+    if (group.length === 1) {
+      const [uni] = group;
+      spread.push({ ...uni, displayLat: uni.anchorLat, displayLng: uni.anchorLng });
+      return;
+    }
+
+    group.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    group.forEach((uni, index) => {
+      const radius = 0.013 * Math.sqrt(index + 1);
+      const angle = index * GOLDEN_ANGLE;
+      // A degree of longitude is shorter than a degree of latitude away from
+      // the equator; divide by cos(lat) so the spiral stays round on screen.
+      const lngScale = Math.cos((uni.anchorLat * Math.PI) / 180) || 1;
+      spread.push({
+        ...uni,
+        displayLat: uni.anchorLat + Math.sin(angle) * radius,
+        displayLng: uni.anchorLng + (Math.cos(angle) * radius) / lngScale,
+      });
+    });
+  });
+
+  return spread;
 }
 
 function CityOverviewMap({ activeCity, onViewportChange, preferredCity }) {
@@ -151,6 +217,8 @@ function CityOverviewMap({ activeCity, onViewportChange, preferredCity }) {
 
 export default function TajikistanMap({ universities = [] }) {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [geoData, setGeoData] = useState(null);
   const [activeCity, setActiveCity] = useState(DEFAULT_CITY);
   const [selectedUni, setSelectedUni] = useState(null);
@@ -168,11 +236,7 @@ export default function TajikistanMap({ universities = [] }) {
   }, []);
 
   const displayUniversities = useMemo(
-    () =>
-      universities
-        .filter((uni) => uni.id && uni.name)
-        .map(buildDisplayUniversity)
-        .filter((uni) => uni.inferredCity),
+    () => buildDisplayUniversities(universities),
     [universities]
   );
 
@@ -221,14 +285,26 @@ export default function TajikistanMap({ universities = [] }) {
     fillColor: "hsl(var(--primary))",
     weight: 1.2,
     opacity: 0.7,
-    color: "rgba(255,255,255,0.18)",
+    color: isDark ? "rgba(255,255,255,0.18)" : "rgba(30,41,59,0.25)",
     dashArray: "4",
     fillOpacity: 0.07,
   };
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-card/70 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] h-40 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
+    <div
+      className={`university-map-shell relative overflow-hidden rounded-[2rem] border bg-card/70 ${
+        isDark ? "is-dark" : "is-light"
+      }`}
+    >
+      {/* Scrim behind the floating controls — dark over dark tiles, light over
+          light ones, otherwise the city name on top of it is unreadable. */}
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-0 z-[500] h-40 bg-gradient-to-b ${
+          isDark
+            ? "from-black/60 via-black/20 to-transparent"
+            : "from-white/80 via-white/30 to-transparent"
+        }`}
+      />
 
       <div className="h-[620px] w-full md:h-[700px]">
         <MapContainer
@@ -239,7 +315,8 @@ export default function TajikistanMap({ universities = [] }) {
           className="university-map h-full w-full"
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            key={isDark ? "dark" : "light"}
+            url={`https://{s}.basemaps.cartocdn.com/${isDark ? "dark_all" : "light_all"}/{z}/{x}/{y}{r}.png`}
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
 

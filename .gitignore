@@ -52,3 +52,12 @@ pg_hba.conf.bak-*
 
 # ── Temporary helper scripts ──
 RESET-POSTGRES.bat
+
+# Файлҳои аслии расм ва видео (13 МБ). Нусхаҳои коркардшуда дар Front/src/images
+# ва Front/public ҳастанд — инҳо танҳо бойгонӣ.
+/Alll Senaria/
+
+# ── Асбобҳои агентӣ (скилҳо), на қисми барнома ──
+.claude/
+.agents/
+skills-lock.json

@@ -5,6 +5,7 @@ import {
   BookOpen,
   Users,
   Heart,
+  HeartPulse,
   Briefcase,
   Code,
   Cpu,
@@ -91,7 +92,7 @@ import {
 
 // Map of all supported Lucide icon names to their components
 const ICON_MAP = {
-  Monitor, Globe, BookOpen, Users, Heart, Briefcase, Code, Cpu, Database,
+  Monitor, Globe, BookOpen, Users, Heart, HeartPulse, Briefcase, Code, Cpu, Database,
   FileText, Hammer, Headphones, Home, Layers, Lightbulb, MapPin, Megaphone,
   Music, Palette, PenTool, Phone, Plane, Scale, Scissors, Settings, Shield,
   ShoppingCart, Star, Stethoscope, TrendingUp, Truck, Wrench, Zap, Building,
@@ -130,8 +131,10 @@ const LucideIconRenderer = ({ name, className = "w-5 h-5", fallback = null }) =>
     return <MatchedIcon className={className} />;
   }
 
-  // Fallback: render the text as-is (maybe it's an emoji or custom text)
-  return <span className="text-lg">{name}</span>;
+  // Unknown name: fall back to the generic icon. Printing the raw value is how
+  // the literal text "HeartPulse" ended up rendered on the cluster cards — an
+  // icon identifier is never something a visitor should see.
+  return fallback || <FolderKanban className={className} />;
 };
 
 export default LucideIconRenderer;

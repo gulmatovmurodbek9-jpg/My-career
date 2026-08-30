@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+/* Шрифтҳо дар худи лоиҳа мизбонӣ мешаванд (scripts/fetch-fonts.mjs), на аз
+   fonts.googleapis.com: пайваст ба хости бегона пеш аз кашидани ҳарфи аввал
+   як DNS+TLS илова мекунад. */
+@import './fonts.css';
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -57,7 +60,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'Golos Text', system-ui, sans-serif;
+  --font-display: 'Geologica', 'Golos Text', system-ui, sans-serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -85,7 +89,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Golos Text', system-ui, sans-serif;
     letter-spacing: -0.01em;
   }
 
@@ -95,7 +99,16 @@
   h4,
   h5,
   h6 {
-    @apply font-extrabold tracking-[-0.03em];
+    /* Geologica дар 800 аз ҳад вазнин аст: ҳарфҳои кирилли ба ҳам мечаспанд.
+       600 ҳамон қувватро дар андозаи калон медиҳад, вале нафас мекашад. */
+    @apply font-semibold tracking-[-0.02em];
+    font-family: var(--font-display);
+    /* Ҷумлаҳои сарлавҳа набояд як калимаро танҳо дар сатри охир гузоранд. */
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 
   html {
@@ -142,8 +155,13 @@
    NAVBAR & SIDEBAR GLASS
    ═══════════════════════════════════════════════ */
 
+/* Borders here use --border rather than white/N: a white hairline is invisible
+   on the light theme's near-white surfaces, which is what flattened every card
+   and the navbar into the background. */
+
 .nav-glass {
-  @apply bg-background/40 backdrop-blur-xl border-b border-white/5;
+  @apply bg-background/40 backdrop-blur-xl border-b;
+  border-color: hsl(var(--border) / 0.6);
 }
 
 .nav-glass-scrolled {
@@ -151,11 +169,21 @@
 }
 
 .sidebar-glass {
-  @apply bg-card/40 backdrop-blur-2xl border-r border-white/5 shadow-2xl transition-all duration-500;
+  @apply bg-card/40 backdrop-blur-2xl border-r shadow-2xl transition-all duration-500;
+  border-color: hsl(var(--border) / 0.6);
 }
 
 .glass-card {
-  @apply relative overflow-hidden bg-card/60 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-500;
+  @apply relative overflow-hidden bg-card/60 backdrop-blur-xl border rounded-[2rem] transition-all duration-500;
+  border-color: hsl(var(--border) / 0.8);
+  /* A 2xl black shadow reads as grime on a light background, so the light
+     theme gets a soft indigo lift instead and dark keeps the deep shadow. */
+  box-shadow: 0 18px 40px -24px hsl(239 84% 30% / 0.28);
+}
+
+.dark .glass-card {
+  border-color: hsl(var(--border));
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);
 }
 
 .glass-card:hover {
@@ -225,7 +253,30 @@
   @apply bg-primary/40;
 }
 
+/* The map was pinned to a dark palette regardless of theme, which left a black
+   rectangle sitting in the middle of the light page. Both the tiles (chosen in
+   TajikistanMap.jsx) and this chrome now follow the active theme. */
+
+.university-map-shell {
+  border-color: hsl(var(--border) / 0.8);
+}
+
+.university-map-shell.is-dark {
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+
+.university-map-shell.is-light {
+  box-shadow: 0 24px 60px -30px hsl(239 84% 30% / 0.35);
+}
+
 .university-map {
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.1), transparent 28%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.08), transparent 22%),
+    hsl(230 35% 96%) !important;
+}
+
+.dark .university-map {
   background:
     radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 28%),
     radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 22%),
@@ -233,8 +284,8 @@
 }
 
 .university-map .leaflet-control-attribution {
-  background: rgba(12, 14, 23, 0.42) !important;
-  color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  color: rgba(30, 41, 59, 0.65) !important;
   border-top-left-radius: 10px;
   padding: 3px 6px !important;
   backdrop-filter: blur(6px);
@@ -245,25 +296,53 @@
 }
 
 .university-map .leaflet-control-attribution a {
-  color: rgba(131, 180, 255, 0.78) !important;
+  color: hsl(var(--primary)) !important;
 }
 
 .university-map .leaflet-control-attribution:hover {
   opacity: 0.9;
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+
+.dark .university-map .leaflet-control-attribution {
+  background: rgba(12, 14, 23, 0.42) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dark .university-map .leaflet-control-attribution a {
+  color: rgba(131, 180, 255, 0.78) !important;
+}
+
+.dark .university-map .leaflet-control-attribution:hover {
   background: rgba(12, 14, 23, 0.72) !important;
 }
 
 .university-map .leaflet-popup-content-wrapper {
-  background: rgba(8, 10, 18, 0.92) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: hsl(var(--card) / 0.97) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border));
   border-radius: 18px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 50px -20px hsl(239 84% 30% / 0.4);
   backdrop-filter: blur(18px);
 }
 
 .university-map .leaflet-popup-tip {
-  background: rgba(8, 10, 18, 0.92) !important;
+  background: hsl(var(--card) / 0.97) !important;
+}
+
+.dark .university-map .leaflet-popup-content-wrapper {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* Leaflet's own zoom buttons ship white-on-white in the light theme. */
+.university-map .leaflet-bar a {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-bottom-color: hsl(var(--border)) !important;
+}
+
+.university-map .leaflet-bar a:hover {
+  background: hsl(var(--muted)) !important;
 }
 
 .university-map .leaflet-popup-content {
@@ -279,8 +358,15 @@
   position: relative;
   display: grid;
   place-items: center;
+  /* Ба iconSize дар TajikistanMap.jsx баробар: маркери шаҳр 44px,
+     муассисаи алоҳида 30px (синфи is-single). */
   width: 44px;
   height: 44px;
+}
+
+.university-marker-wrapper .university-cluster-marker.is-single {
+  width: 30px;
+  height: 30px;
 }
 
 .university-cluster-marker__ring,
@@ -308,6 +394,12 @@
   font-size: 11px;
   font-weight: 900;
   line-height: 1;
+  /* The halo separates the marker from the tiles, so it has to match the
+     basemap: white over light tiles, near-black over dark ones. */
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.95), 0 0 24px rgba(99, 102, 241, 0.4);
+}
+
+.dark .university-cluster-marker__core {
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.92), 0 0 24px rgba(99, 102, 241, 0.45);
 }
 
@@ -327,7 +419,7 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
+  background: hsl(var(--muted-foreground) / 0.3);
   border-radius: 999px;
 }
 
@@ -495,4 +587,262 @@
 .ai-msg-content em {
   color: hsl(var(--primary) / 0.85);
   font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM PRIMITIVES
+
+   These were used throughout the JSX but never actually defined, so the
+   elements rendered with no background at all. On the dark theme that went
+   unnoticed — a white glyph still reads against a near-black page. On light
+   it meant white-on-white: the header logo, the step badges and the cluster
+   icons were simply invisible.
+
+   Radii are set through :where() so they carry zero specificity and any
+   rounded-* utility on the element still wins.
+   ═══════════════════════════════════════════════ */
+
+/* Filled tile — always holds white content, so it keeps its own contrast
+   in both themes rather than depending on the page background. */
+.icon-box-solid {
+  background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  color: #fff;
+  flex-shrink: 0;
+}
+
+:where(.icon-box-solid) {
+  border-radius: 1rem;
+}
+
+/* Tinted tile — holds a text-primary icon, so it needs to stay light in
+   light mode and dark in dark mode. */
+.icon-box {
+  background: hsl(var(--primary) / 0.1);
+  border: 1px solid hsl(var(--primary) / 0.18);
+  flex-shrink: 0;
+}
+
+.dark .icon-box {
+  background: hsl(var(--primary) / 0.16);
+  border-color: hsl(var(--primary) / 0.28);
+}
+
+:where(.icon-box) {
+  border-radius: 1rem;
+}
+
+.pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.2);
+  white-space: nowrap;
+}
+
+.dark .pill-tag {
+  background: hsl(var(--primary) / 0.16);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.glass-card-sm {
+  @apply relative overflow-hidden bg-card/70 backdrop-blur-lg border transition-all duration-300;
+  border-color: hsl(var(--border) / 0.8);
+  box-shadow: 0 10px 24px -18px hsl(239 84% 30% / 0.3);
+}
+
+.dark .glass-card-sm {
+  border-color: hsl(var(--border));
+  box-shadow: 0 12px 28px -16px rgb(0 0 0 / 0.55);
+}
+
+:where(.glass-card-sm) {
+  border-radius: 1.25rem;
+}
+
+/* Section backdrops. Both are washes over --background, so they follow the
+   theme instead of being baked to one set of colours. */
+.hero-gradient {
+  position: relative;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 0%, hsl(var(--primary) / 0.14), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 85% 15%, hsl(var(--secondary) / 0.1), transparent 70%),
+    hsl(var(--background));
+}
+
+.dark .hero-gradient {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 0%, hsl(var(--primary) / 0.2), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 85% 15%, hsl(var(--secondary) / 0.13), transparent 70%),
+    hsl(var(--background));
+}
+
+.section-wash {
+  position: relative;
+  background: linear-gradient(180deg, transparent, hsl(var(--muted) / 0.65) 45%, transparent);
+}
+
+.dark .section-wash {
+  background: linear-gradient(180deg, transparent, hsl(var(--muted) / 0.35) 45%, transparent);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--muted) / 0.6);
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: hsl(var(--primary) / 0.12);
+  border-color: hsl(var(--primary) / 0.35);
+  color: hsl(var(--primary));
+}
+
+.listing-section {
+  scroll-margin-top: 6rem;
+}
+
+/* ── small utilities the markup expects ── */
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* ═══════════════════════════════════════════════
+   ҲИКОЯИ СКРОЛЛИ САФҲАИ АСОСӢ
+   ═══════════════════════════════════════════════ */
+
+/* Ҳолати боргузорӣ. Синфи `skeleton` дар Clusters.jsx аллакай истифода мешуд,
+   аммо ҳеҷ гоҳ таъриф нашуда буд — барои ҳамин ҷойҳои холӣ бе ҳаракат буданд. */
+@keyframes skeleton-pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.skeleton {
+  background: hsl(var(--muted));
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .skeleton {
+    animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ДАСТРАСӢ
+   ═══════════════════════════════════════════════ */
+
+/* Ҳалқаи фокус дар як ҷо таъриф мешавад: такрори занҷири дарози синфҳо дар ҳар
+   тугма боиси зиддияти outline-width ва outline-style мешуд. */
+.focus-ring:focus-visible {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+
+/* Истинод барои гузаштан ба мазмун. Танҳо ҳангоми фокуси клавиатура намоён
+   мешавад: корбари клавиатура набояд ҳар дафъа тамоми навбарро гузарад. */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-150%);
+  border-radius: 0.75rem;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  padding: 0.875rem 1.5rem;
+  font-weight: 700;
+  transition: transform 150ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   РАНГҲОИ ПАНҶ КЛАСТЕР
+   ═══════════════════════════════════════════════ */
+
+/* Ҳар кластер ду ранг дорад, на як. Як ранги ягона наметавонад дар ҳарду тема
+   контрасти кофӣ диҳад: #0e7490 дар заминаи равшан 5.2:1 медиҳад, вале дар
+   торик ҳамагӣ 3.0:1, ва #22d3ee баръакс. Ҳар ду маҷмӯа барои матни оддӣ
+   ҳадди ақал 4.5:1 доранд (WCAG AA). */
+
+:root {
+  --cluster-1: #0e7490;
+  /* фирӯзӣ, 5.2:1 */
+  --cluster-2: #047857;
+  /* зумуррад, 5.2:1 */
+  --cluster-3: #7e22ce;
+  /* бунафш, 6.8:1 */
+  --cluster-4: #92400e;
+  /* тилло, 7.0:1 */
+  --cluster-5: #be123c;
+  /* сурх, 5.9:1 */
+}
+
+.dark {
+  --cluster-1: #67e8f9;
+  /* 11:1 */
+  --cluster-2: #6ee7b7;
+  /* 11:1 */
+  --cluster-3: #d8b4fe;
+  /* 8.5:1 */
+  --cluster-4: #fcd34d;
+  /* 12:1 */
+  --cluster-5: #fda4af;
+  /* 8.6:1 */
 }

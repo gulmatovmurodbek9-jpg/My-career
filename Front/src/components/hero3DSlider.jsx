@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ImageHero from "../images/Flux_Dev_create_a_beautiful_image_of_Tajik_boys_and_girls_with_1.jpg";
-import ImageAi from "../images/imagAi.png"; 
-import ImageHero2 from "../images/ImageHero2.png";
-import ImageHero3 from "../images/imageHero3.png";
-import ImageHero4 from "../images/imageHero4.png";
-import ImageHero5 from "../images/ImageHero5.png";
+import { HERO_IMAGES } from "../lib/media";
 
-const images = [
-    ImageHero5,
-    ImageHero2, // Repeating for demo effect if only 2 images exist
-    ImageHero4,  // Repeating for demo effect if only 2 images exist
-    ImageHero3 // Repeating for demo effect if only 2 images exist
-];
+// Нусхаҳои webp аз lib/media. Қаблан ин ҷо PNG-ҳои аслии ~8 МБ ҳар яке
+// мустақиман import мешуданд — ҳамон чор файл ~32 МБ-и bundle-ро ташкил медод.
+const images = HERO_IMAGES;
 
 export default function Hero3DSlider() {
     const [index, setIndex] = useState(0);
@@ -64,7 +56,9 @@ export default function Hero3DSlider() {
             <AnimatePresence mode="popLayout">
                 <motion.img
                     key={index}
-                    src={images[index]}
+                    src={images[index].src}
+                    srcSet={images[index].srcSet}
+                    sizes={images[index].sizes}
                     alt={`Hero Slide ${index + 1}`}
                     variants={variants}
                     initial="enter"

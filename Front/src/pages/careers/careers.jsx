@@ -1,13 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowRight, ArrowLeft, BookOpen, Briefcase,
-  Grid3X3, LayoutList, Search, ChevronLeft, ChevronRight,
-  Cpu, LineChart, Palette, Scale, Stethoscope
+  ArrowRight, ChevronLeft, ChevronRight,
+  Grid3X3, LayoutList, Search, SlidersHorizontal,
 } from "lucide-react";
 import React, { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router";
 import axios from "axios";
 import { API } from "../../lib/config";
 import SpecialtyCard, { SpecialtyCardList } from "../../components/jobCard";
+import LucideIconRenderer from "../../components/admin/LucideIconRenderer";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
 
@@ -90,17 +91,30 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
   );
 };
 
-const IconMapper = ({ iconName, className }) => {
-  const icons = {
-    Cpu: Cpu,
-    LineChart: LineChart,
-    Palette: Palette,
-    Scale: Scale,
-    Stethoscope: Stethoscope,
-  };
-  const Icon = icons[iconName] || Briefcase;
-  return <Icon className={className} />;
-};
+
+/** Як сатри филтр дар панели канорӣ: ном дар чап, шумора дар рост. */
+const FilterRow = ({ active, onClick, icon, label, count }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={active}
+    className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition-colors duration-200 focus-ring ${
+      active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+    }`}
+  >
+    <span className="flex min-w-0 items-start gap-2.5">
+      <span className="mt-0.5 shrink-0">{icon}</span>
+      <span className="text-[15px] font-semibold leading-snug">{label}</span>
+    </span>
+    <span
+      className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ${
+        active ? "bg-white/20" : "bg-muted text-muted-foreground"
+      }`}
+    >
+      {count}
+    </span>
+  </button>
+);
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const Careers = () => {
@@ -109,7 +123,35 @@ const Careers = () => {
   const [clusters, setClusters] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: LIMIT, lastPage: 1 });
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCluster, setSelectedCluster] = useState("all");
+  /**
+   * Кластери интихобшуда дар URL нигоҳ дошта мешавад, на дар useState.
+   *
+   * Қаблан ин ҳолати дохилӣ буд ва ҳамеша аз "all" оғоз мешуд, аз ин рӯ
+   * истиноди /careers?clusterId=… аз сафҳаи асосӣ бесадо нодида гирифта мешуд
+   * ва ҳамаи ихтисосҳо нишон дода мешуданд.
+   *
+   * Ҳоло URL сарчашмаи ягона аст: истинод кор мекунад, тугмаи "ба ақиб" кор
+   * мекунад, ва корбар метавонад суроғаро бо филтри интихобшуда фиристад.
+   */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCluster = searchParams.get("clusterId") ?? "all";
+
+  const setSelectedCluster = useCallback(
+    (id) => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          if (id === "all") next.delete("clusterId");
+          else next.set("clusterId", id);
+          return next;
+        },
+        // Филтр иваз кардан набояд таърихи браузерро пур кунад: "ба ақиб"
+        // бояд корбарро ба саҳифаи қаблӣ барад, на ба филтри қаблӣ.
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
   const [priceFilter, setPriceFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [cities, setCities] = useState([]);
@@ -131,30 +173,47 @@ const Careers = () => {
   }, [debouncedSearch, selectedCluster, priceFilter, cityFilter]);
 
   // Fetch careers (server-side pagination)
-  const fetchCareers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = {
-        page: currentPage,
-        limit: LIMIT,
-        ...(debouncedSearch && { search: debouncedSearch }),
-        ...(selectedCluster !== "all" && { clusterId: selectedCluster }),
-        ...(priceFilter !== "all" && { maxPrice: parseInt(priceFilter) }),
-        ...(cityFilter !== "all" && { city: cityFilter }),
-      };
-      const { data } = await axios.get(`${API}/careers`, { params });
-      setCareers(data.data || []);
-      setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
-    } catch (error) {
-      console.error("Fetch careers error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, debouncedSearch, selectedCluster, priceFilter, cityFilter]);
-
+  /**
+   * Ихтисосҳо. Ҳар тағйири филтр дархости қаблиро бекор мекунад.
+   *
+   * Бе бекоркунӣ ду дархост ҳамзамон дар парвоз буданд ва ғолиб он мешуд, ки
+   * ДЕРТАР мерасид, на он ки охирин фиристода шуд. Аз ин рӯ ҳангоми зуд гузаштан
+   * аз кластер ба кластер рӯйхат баъзан ба ҳолати қаблӣ бармегашт: URL кластери
+   * навро нишон медод, вале мазмун кӯҳна буд.
+   *
+   * Дар React StrictMode ҳар эффект ду бор иҷро мешавад, аз ин рӯ ин мусобиқа
+   * дар development қариб ҳамеша рух медод.
+   */
   useEffect(() => {
-    fetchCareers();
-  }, [fetchCareers]);
+    const controller = new AbortController();
+    setLoading(true);
+
+    const params = {
+      page: currentPage,
+      limit: LIMIT,
+      ...(debouncedSearch && { search: debouncedSearch }),
+      ...(selectedCluster !== "all" && { clusterId: selectedCluster }),
+      ...(priceFilter !== "all" && { maxPrice: parseInt(priceFilter) }),
+      ...(cityFilter !== "all" && { city: cityFilter }),
+    };
+
+    axios
+      .get(`${API}/careers`, { params, signal: controller.signal })
+      .then(({ data }) => {
+        setCareers(data.data || []);
+        setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
+        setLoading(false);
+      })
+      .catch((error) => {
+        // Бекоркунӣ хато нест: дархости навтар аллакай дар роҳ аст, ва
+        // setLoading(false) кардан ҷои холии кӯтоҳ месохт.
+        if (axios.isCancel(error)) return;
+        console.error("Fetch careers error:", error);
+        setLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [currentPage, debouncedSearch, selectedCluster, priceFilter, cityFilter]);
 
   // Fetch clusters and cities once
   useEffect(() => {
@@ -180,184 +239,250 @@ const Careers = () => {
     show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
   };
 
+  // Шумораи ихтисоси ҳар кластер аллакай дар худи ҷавоби API ҳаст
+  // (relations: ['careers']), барои ҳамин дархости иловагӣ лозим нест.
+  const clusterCounts = clusters.map((cluster) => ({
+    id: cluster.id,
+    name: cluster.clusterName,
+    icon: cluster.clusterIcon,
+    count: Array.isArray(cluster.careers) ? cluster.careers.length : 0,
+  }));
+  const totalCount = clusterCounts.reduce((sum, c) => sum + c.count, 0);
+
+  const hasFilters =
+    selectedCluster !== "all" || searchQuery || priceFilter !== "all" || cityFilter !== "all";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCluster("all");
+    setPriceFilter("all");
+    setCityFilter("all");
+  };
+
+  const selectClass =
+    "w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-[15px] font-medium text-foreground transition-colors focus-ring";
+
   return (
     <div className="pb-24">
-      {/* ═══ HERO ═══ */}
-      <section className="pt-20 pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 tajik-pattern opacity-10 pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center relative z-10 space-y-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
-              <Briefcase className="w-3.5 h-3.5" />
-              {t('careers_page.hero_tag', "Кашфи Истеъдодҳо")}
-            </div>
-            <h1
-              className="text-5xl md:text-7xl font-extrabold text-foreground tracking-tighter leading-[0.9]"
-              dangerouslySetInnerHTML={{ __html: t('careers_page.hero_title', "Ояндаи худро <br /> <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-gradient\">аз ин ҷо ёб!</span>").replace(/className=/g, 'class=') }}
-            />
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed">
-              {t('careers_page.hero_desc', { defaultValue: "Дар байни {{total}}+ ихтисосҳои муосир роҳи беҳтарини касбии худро пайдо кунед.", total: meta.total })}
-            </p>
-          </motion.div>
+      {/* ═══ САРЛАВҲА ═══ */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
+          <h1
+            className="max-w-[18ch] leading-[1.05] text-foreground"
+            style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)" }}
+          >
+            {t("careers_page.hero_title_plain", "Ихтисосҳои Тоҷикистон")}
+          </h1>
+          <p className="mt-5 max-w-[54ch] text-xl leading-relaxed text-muted-foreground">
+            {t("careers_page.hero_desc", {
+              defaultValue:
+                "Дар байни {{total}}+ ихтисос роҳи касбии худро ёбед. Ҳар як ихтисос бо маош, талабот ва фанҳои лозимӣ.",
+              total: totalCount || meta.total,
+            })}
+          </p>
         </div>
       </section>
 
-      {/* ═══ SEARCH & FILTERS ═══ */}
-      <section className="sticky top-20 z-40 py-4 mb-12">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="glass-card p-2 !rounded-[2.5rem] flex flex-col md:flex-row items-center gap-4 bg-card/60 backdrop-blur-2xl border-white/5 shadow-2xl">
-            {/* Search */}
-            <div className="flex-1 w-full relative group">
-              <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              </div>
+      {/* ═══ МАЗМУН ВА ФИЛТРҲО ═══ */}
+      <section className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-12">
+          {/* ─── Чап: ҷустуҷӯ ва натиҷаҳо ─── */}
+          <div className="min-w-0">
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
               <input
-                type="text"
-                placeholder={t('careers_page.search_placeholder', "Ҷустуҷӯи ихтисос...")}
-                className="w-full pl-16 pr-6 py-4 bg-transparent text-foreground placeholder:text-muted-foreground/50 font-bold text-sm focus:outline-none"
+                type="search"
+                placeholder={t("careers_page.search_placeholder", "Ҷустуҷӯи ихтисос...")}
+                aria-label={t("careers_page.search_placeholder", "Ҷустуҷӯи ихтисос...")}
+                className="min-h-[3.5rem] w-full rounded-xl border-2 border-border bg-card pl-14 pr-5 text-[17px] text-foreground transition-colors placeholder:text-muted-foreground focus-ring"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
-            {/* City Filter */}
-            {cities.length > 0 && (
-              <div className="flex items-center mx-2 my-2 md:my-0">
-                <select
-                  value={cityFilter}
-                  onChange={(e) => setCityFilter(e.target.value)}
-                  className="bg-white/5 border border-white/10 text-foreground text-xs font-bold rounded-[1.8rem] px-4 py-3 outline-none focus:border-primary/50 transition-colors max-w-[180px]"
+
+            <div className="mt-6 flex items-center justify-between gap-4">
+              <p className="text-[15px] text-muted-foreground">
+                {loading
+                  ? t("common.loading", "Боргузорӣ...")
+                  : t("careers_page.found", {
+                      defaultValue: "{{count}} ихтисос ёфт шуд",
+                      count: meta.total,
+                    })}
+              </p>
+
+              <div className="flex shrink-0 gap-1 rounded-xl border-2 border-border p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  aria-pressed={viewMode === "grid"}
+                  aria-label={t("careers_page.view_grid", "Тӯр")}
+                  className={`rounded-lg p-2.5 transition-colors focus-ring ${
+                    viewMode === "grid"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
                 >
-                  <option value="all" className="bg-[#0c1222]">{t('careers_page.all_cities', "Ҳамаи шаҳрҳо")}</option>
-                  {cities.map((entry) => (
-                    <option key={entry.city} value={entry.city} className="bg-[#0c1222]">
-                      {entry.city} ({entry.count})
-                    </option>
-                  ))}
-                </select>
+                  <Grid3X3 className="h-5 w-5" strokeWidth={2} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  aria-pressed={viewMode === "list"}
+                  aria-label={t("careers_page.view_list", "Рӯйхат")}
+                  className={`rounded-lg p-2.5 transition-colors focus-ring ${
+                    viewMode === "list"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <LayoutList className="h-5 w-5" strokeWidth={2} />
+                </button>
               </div>
+            </div>
+
+            {loading ? (
+              <div className="mt-8 grid gap-5 sm:grid-cols-2">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="skeleton h-64 rounded-2xl" />
+                ))}
+              </div>
+            ) : careers.length === 0 ? (
+              <div className="mt-8 rounded-2xl border-2 border-border p-12 text-center">
+                <h3 className="text-2xl font-semibold text-foreground">
+                  {t("careers_page.not_found_title", "Ихтисосе ёфт нашуд")}
+                </h3>
+                <p className="mx-auto mt-3 max-w-[42ch] text-lg text-muted-foreground">
+                  {t("careers_page.not_found_desc", "Ҷустуҷӯ ё филтри худро иваз кунед.")}
+                </p>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="mt-8 inline-flex min-h-[3.5rem] items-center gap-3 rounded-xl bg-foreground px-8 text-lg font-semibold text-background transition-colors hover:bg-foreground/88 focus-ring active:translate-y-px"
+                >
+                  {t("careers_page.clear_btn", "Пок кардан")}
+                  <ArrowRight className="h-5 w-5" strokeWidth={2} aria-hidden />
+                </button>
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.ul
+                  key={`${currentPage}-${selectedCluster}-${debouncedSearch}-${viewMode}`}
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit={{ opacity: 0 }}
+                  className={viewMode === "grid" ? "mt-8 grid gap-5 sm:grid-cols-2" : "mt-8 grid gap-4"}
+                >
+                  {careers.map((career) => (
+                    <motion.li key={career.id} variants={itemVariants}>
+                      {viewMode === "grid" ? (
+                        <SpecialtyCard specialty={career} />
+                      ) : (
+                        <SpecialtyCardList specialty={career} />
+                      )}
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </AnimatePresence>
             )}
 
-            {/* Price Filter */}
-            <div className="flex items-center mx-2 my-2 md:my-0">
-              <select
-                value={priceFilter}
-                onChange={(e) => setPriceFilter(e.target.value)}
-                className="bg-white/5 border border-white/10 text-foreground text-xs font-bold rounded-[1.8rem] px-4 py-3 outline-none focus:border-primary/50 transition-colors"
-               >
-                 <option value="all" className="bg-[#0c1222]">{t('careers_page.all_prices', "Ҳамаи нархҳо")}</option>
-                 <option value="2000" className="bg-[#0c1222]">{t('careers_page.under_2k', "То 2,000 сомонӣ")}</option>
-                 <option value="5000" className="bg-[#0c1222]">{t('careers_page.under_5k', "То 5,000 сомонӣ")}</option>
-                 <option value="10000" className="bg-[#0c1222]">{t('careers_page.under_10k', "То 10,000 сомонӣ")}</option>
-                 <option value="15000" className="bg-[#0c1222]">{t('careers_page.under_15k', "То 15,000 сомонӣ")}</option>
-               </select>
-            </div>
-            {/* View Mode */}
-            <div className="flex items-center gap-2 p-1 bg-white/5 rounded-[2rem] border border-white/5 mr-2">
-              <button onClick={() => setViewMode("grid")}
-                className={`px-5 py-3 rounded-[1.8rem] transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest ${viewMode === "grid" ? "bg-primary text-white shadow-xl shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}>
-                <Grid3X3 className="h-4 w-4" /> {t('careers_page.view_grid', "Грит")}
-              </button>
-              <button onClick={() => setViewMode("list")}
-                className={`px-5 py-3 rounded-[1.8rem] transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest ${viewMode === "list" ? "bg-primary text-white shadow-xl shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}>
-                <LayoutList className="h-4 w-4" /> {t('careers_page.view_list', "Рӯйхат")}
-              </button>
-            </div>
+            {!loading && careers.length > 0 && (
+              <>
+                <Pagination
+                  currentPage={currentPage}
+                  lastPage={meta.lastPage}
+                  onPageChange={handlePageChange}
+                />
+                <p className="mt-6 text-center text-[15px] text-muted-foreground">
+                  {(currentPage - 1) * LIMIT + 1}–{Math.min(currentPage * LIMIT, meta.total)} аз{" "}
+                  {meta.total}
+                </p>
+              </>
+            )}
           </div>
 
-          {/* Clusters */}
-          <div className="mt-8 flex items-center gap-3 overflow-x-auto pb-4 no-scrollbar">
-            <button onClick={() => setSelectedCluster("all")}
-              className={`flex-shrink-0 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all ${selectedCluster === "all" ? "bg-primary text-white shadow-lg shadow-primary/20" : "glass-card border-white/5 text-muted-foreground hover:text-foreground"}`}>
-              {t('careers_page.all_clusters', "Ҳамаи Кластерҳо")}
-            </button>
-            {clusters.map((cluster) => (
-              <button key={cluster.id} onClick={() => setSelectedCluster(cluster.id)}
-                className={`flex-shrink-0 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${selectedCluster === cluster.id ? "bg-primary text-white shadow-lg shadow-primary/20" : "glass-card border-white/5 text-muted-foreground hover:text-foreground"}`}>
-                <IconMapper iconName={cluster.clusterIcon} className="w-4 h-4" />
-                {cluster.clusterName}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+          {/* ─── Рост: филтрҳо ───
+              lg:sticky — панел ҳангоми скролли рӯйхати дароз дар назар мемонад. */}
+          <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-2xl border-2 border-border bg-card p-4">
+              <h2 className="mb-3 flex items-center gap-2.5 px-2 pt-1 text-lg font-semibold text-foreground">
+                <SlidersHorizontal className="h-5 w-5 text-primary" strokeWidth={2} aria-hidden />
+                {t("careers_page.categories", "Категорияҳо")}
+              </h2>
 
-      {/* ═══ CAREERS LISTING ═══ */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 listing-section">
-        {loading ? (
-          <div className={viewMode === "grid" ? "bento-grid" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"}>
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className={`glass-card p-10 h-[350px] ${viewMode === "grid" ? (i === 0 ? "col-span-12 md:col-span-8" : "col-span-12 md:col-span-4") : ""}`}>
-                <div className="h-4 skeleton w-1/4 mb-8 opacity-20" />
-                <div className="h-12 skeleton w-3/4 mb-4" />
-                <div className="h-4 skeleton w-full mb-2" />
-                <div className="h-4 skeleton w-2/3 mb-12" />
-                <div className="flex justify-between items-center mt-auto">
-                  <div className="h-10 w-10 skeleton rounded-full" />
-                  <div className="h-10 w-32 skeleton rounded-full" />
-                </div>
+              <div className="space-y-1">
+                <FilterRow
+                  active={selectedCluster === "all"}
+                  onClick={() => setSelectedCluster("all")}
+                  label={t("careers_page.all_clusters", "Ҳама")}
+                  count={totalCount}
+                />
+                {clusterCounts.map((cluster) => (
+                  <FilterRow
+                    key={cluster.id}
+                    active={selectedCluster === cluster.id}
+                    onClick={() => setSelectedCluster(cluster.id)}
+                    icon={<LucideIconRenderer name={cluster.icon} className="h-4 w-4 shrink-0" />}
+                    label={cluster.name}
+                    count={cluster.count}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-        ) : careers.length === 0 ? (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-32 glass-card p-20 flex flex-col items-center gap-8">
-            <div className="w-24 h-24 rounded-[2rem] bg-primary/10 flex items-center justify-center">
-              <Search className="w-10 h-10 text-primary/50" />
             </div>
-            <div className="space-y-3">
-              <h3 className="text-4xl font-black text-foreground">{t('careers_page.not_found_title', "Ихтисосе ёфт нашуд")}</h3>
-              <p className="text-muted-foreground font-bold">{t('careers_page.not_found_desc', "Ҷустуҷӯ ё филтри худро иваз кунед.")}</p>
-            </div>
-            <button onClick={() => { setSearchQuery(""); setSelectedCluster("all"); setPriceFilter("all"); setCityFilter("all"); }} className="btn-primary px-10 py-4 group">
-              {t('careers_page.clear_btn', "Пок кардан")}
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1" />
-            </button>
-          </motion.div>
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${currentPage}-${selectedCluster}-${debouncedSearch}-${viewMode}`}
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              exit={{ opacity: 0 }}
-              className={viewMode === "grid" ? "bento-grid" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"}
-            >
-              {careers.map((career, i) => (
-                <motion.div
-                  key={career.id}
-                  variants={itemVariants}
-                  className={viewMode === "grid" ? `col-span-12 ${i === 0 ? "md:col-span-8" : "md:col-span-4"}` : ""}
+
+            <div className="space-y-4 rounded-2xl border-2 border-border bg-card p-5">
+              {cities.length > 0 && (
+                <label className="block">
+                  <span className="mb-2 block text-[15px] font-semibold text-foreground">
+                    {t("careers_page.city_label", "Шаҳр")}
+                  </span>
+                  <select
+                    value={cityFilter}
+                    onChange={(e) => setCityFilter(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="all">{t("careers_page.all_cities", "Ҳамаи шаҳрҳо")}</option>
+                    {cities.map((entry) => (
+                      <option key={entry.city} value={entry.city}>
+                        {entry.city} ({entry.count})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              <label className="block">
+                <span className="mb-2 block text-[15px] font-semibold text-foreground">
+                  {t("careers_page.price_label", "Нархи таҳсил")}
+                </span>
+                <select
+                  value={priceFilter}
+                  onChange={(e) => setPriceFilter(e.target.value)}
+                  className={selectClass}
                 >
-                  {viewMode === "grid"
-                    ? <SpecialtyCard specialty={career} />
-                    : <SpecialtyCardList specialty={career} />}
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-        )}
+                  <option value="all">{t("careers_page.all_prices", "Ҳамаи нархҳо")}</option>
+                  <option value="2000">{t("careers_page.under_2k", "То 2,000 сомонӣ")}</option>
+                  <option value="5000">{t("careers_page.under_5k", "То 5,000 сомонӣ")}</option>
+                  <option value="10000">{t("careers_page.under_10k", "То 10,000 сомонӣ")}</option>
+                  <option value="15000">{t("careers_page.under_15k", "То 15,000 сомонӣ")}</option>
+                </select>
+              </label>
 
-        {/* ─── Pagination ─── */}
-        {!loading && careers.length > 0 && (
-          <>
-            <Pagination
-              currentPage={currentPage}
-              lastPage={meta.lastPage}
-              onPageChange={handlePageChange}
-            />
-
-            <div className="text-center mt-6 flex items-center justify-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground opacity-40">
-                {(currentPage - 1) * LIMIT + 1}–{Math.min(currentPage * LIMIT, meta.total)} / {meta.total} {t('careers_page.specialties_count', "ихтисос")}
-              </span>
-              <span className="text-muted-foreground opacity-20">·</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground opacity-40">
-                {t('careers_page.page_info', { defaultValue: "Саҳ. {{current}} аз {{last}}", current: currentPage, last: meta.lastPage })}
-              </span>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="min-h-[3rem] w-full rounded-xl border-2 border-border text-[15px] font-semibold text-foreground transition-colors hover:bg-muted focus-ring"
+                >
+                  {t("careers_page.clear_btn", "Пок кардан")}
+                </button>
+              )}
             </div>
-          </>
-        )}
+          </aside>
+        </div>
       </section>
     </div>
   );

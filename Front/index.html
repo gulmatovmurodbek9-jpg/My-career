@@ -2,12 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="color-scheme" content="dark light" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Runs before the first paint so the page never flashes light on its way to
+      dark. Dark is the default: only an explicit stored "light" opts out.
+      useTheme() then reads this class back rather than keeping its own copy.
+    -->
+    <script>
+      (function () {
+        var theme = "dark";
+        try {
+          if (localStorage.getItem("theme") === "light") theme = "light";
+        } catch (e) {
+          /* storage blocked (private mode) — stay on the default */
+        }
+        if (theme === "dark") document.documentElement.classList.add("dark");
+        document.documentElement.style.backgroundColor = theme === "dark" ? "#0a0a0f" : "#f7f8fc";
+      })();
+    </script>
     <meta name="description" content="Ихтисоси ман — платформаи роҳнамоии касбӣ барои ҷавонони Тоҷикистон" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <title>Ихтисоси ман — Роҳнамоии Касбӣ</title>
   </head>
   <body>

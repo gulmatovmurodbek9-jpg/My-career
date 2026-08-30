@@ -15,13 +15,16 @@
   --card: 0 0% 100%;
   --card-foreground: 224 40% 12%;
 
-  --primary: 239 84% 67%;
-  /* Electric Indigo #6366f1 */
+  /* Палитра аз логотип гирифта шудааст: кабуди кулоҳ ва тиллои шокила.
+     Қиматҳо барои ҳар тема ҷудогонаанд, чун як ранг дар ҳарду замина
+     контрасти кофӣ дода наметавонад. */
+  --primary: 220 100% 35%;
+  /* #003bb3 — матни сафед рӯяш 9.2:1 */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 189 87% 53%;
-  /* Soft Cyan #22d3ee */
-  --secondary-foreground: 224 40% 12%;
+  --secondary: 36 92% 33%;
+  /* #a16207 — тиллои торикшуда: тиллои аслӣ рӯи заминаи равшан 1.7:1 медиҳад */
+  --secondary-foreground: 0 0% 100%;
 
   --accent: 230 40% 94%;
   --accent-foreground: 224 40% 12%;
@@ -30,7 +33,7 @@
   --muted-foreground: 224 15% 45%;
 
   --border: 230 20% 92%;
-  --ring: 239 84% 67%;
+  --ring: 221 83% 53%;
   --radius: 2rem;
   /* Super smooth corners */
 }
@@ -43,10 +46,12 @@
   --card: 240 10% 8%;
   --card-foreground: 210 20% 98%;
 
-  --primary: 239 84% 67%;
+  --primary: 221 83% 53%;
+  /* #2563eb — матни сафед рӯяш 5.2:1, худаш рӯи торик 3.8:1 */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 189 87% 53%;
+  --secondary: 43 100% 51%;
+  /* #ffb603 — тиллои аслии логотип, рӯи торик 11.2:1 */
   --secondary-foreground: 0 0% 0%;
 
   --muted: 0 0% 14%;
@@ -56,7 +61,7 @@
   --accent-foreground: 210 20% 98%;
 
   --border: 0 0% 16%;
-  --ring: 239 84% 67%;
+  --ring: 221 83% 53%;
 }
 
 @theme inline {
@@ -137,7 +142,7 @@
    ═══════════════════════════════════════════════ */
 
 .tajik-pattern {
-  background-image: radial-gradient(#6366f1 0.5px, transparent 0.5px);
+  background-image: radial-gradient(#2563eb 0.5px, transparent 0.5px);
   background-size: 24px 24px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
   opacity: 0.03;
@@ -178,7 +183,7 @@
   border-color: hsl(var(--border) / 0.8);
   /* A 2xl black shadow reads as grime on a light background, so the light
      theme gets a soft indigo lift instead and dark keeps the deep shadow. */
-  box-shadow: 0 18px 40px -24px hsl(239 84% 30% / 0.28);
+  box-shadow: 0 18px 40px -24px hsl(221 83% 30% / 0.28);
 }
 
 .dark .glass-card {
@@ -266,13 +271,13 @@
 }
 
 .university-map-shell.is-light {
-  box-shadow: 0 24px 60px -30px hsl(239 84% 30% / 0.35);
+  box-shadow: 0 24px 60px -30px hsl(221 83% 30% / 0.35);
 }
 
 .university-map {
   background:
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.1), transparent 28%),
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.08), transparent 22%),
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 182, 3, 0.08), transparent 22%),
     hsl(230 35% 96%) !important;
 }
 
@@ -285,8 +290,8 @@
 
 .dark .university-map {
   background:
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 22%),
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 182, 3, 0.12), transparent 22%),
     rgba(4, 6, 14, 0.96) !important;
 }
 
@@ -329,7 +334,7 @@
   color: hsl(var(--card-foreground)) !important;
   border: 1px solid hsl(var(--border));
   border-radius: 18px !important;
-  box-shadow: 0 20px 50px -20px hsl(239 84% 30% / 0.4);
+  box-shadow: 0 20px 50px -20px hsl(221 83% 30% / 0.4);
   backdrop-filter: blur(18px);
 }
 
@@ -384,7 +389,7 @@
 
 .university-cluster-marker__ring {
   inset: 3px;
-  background: rgba(99, 102, 241, 0.18);
+  background: rgba(37, 99, 235, 0.18);
   border: 1px solid rgba(129, 140, 248, 0.38);
   animation: university-marker-pulse 1.8s ease-out infinite;
 }
@@ -396,23 +401,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  background: linear-gradient(135deg, #2563eb, #ffb603);
   color: white;
   font-size: 11px;
   font-weight: 900;
   line-height: 1;
   /* The halo separates the marker from the tiles, so it has to match the
      basemap: white over light tiles, near-black over dark ones. */
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.95), 0 0 24px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.95), 0 0 24px rgba(37, 99, 235, 0.4);
 }
 
 .dark .university-cluster-marker__core {
-  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.92), 0 0 24px rgba(99, 102, 241, 0.45);
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.92), 0 0 24px rgba(37, 99, 235, 0.45);
 }
 
 .university-cluster-marker.is-active .university-cluster-marker__ring {
   inset: 0;
-  background: rgba(34, 211, 238, 0.2);
+  background: rgba(255, 182, 3, 0.2);
   border-color: rgba(103, 232, 249, 0.7);
 }
 
@@ -662,7 +667,7 @@
 .glass-card-sm {
   @apply relative overflow-hidden bg-card/70 backdrop-blur-lg border transition-all duration-300;
   border-color: hsl(var(--border) / 0.8);
-  box-shadow: 0 10px 24px -18px hsl(239 84% 30% / 0.3);
+  box-shadow: 0 10px 24px -18px hsl(221 83% 30% / 0.3);
 }
 
 .dark .glass-card-sm {
@@ -825,7 +830,7 @@
 
 /* Ҳар кластер ду ранг дорад, на як. Як ранги ягона наметавонад дар ҳарду тема
    контрасти кофӣ диҳад: #0e7490 дар заминаи равшан 5.2:1 медиҳад, вале дар
-   торик ҳамагӣ 3.0:1, ва #22d3ee баръакс. Ҳар ду маҷмӯа барои матни оддӣ
+   торик ҳамагӣ 3.0:1, ва #ffb603 баръакс. Ҳар ду маҷмӯа барои матни оддӣ
    ҳадди ақал 4.5:1 доранд (WCAG AA). */
 
 :root {

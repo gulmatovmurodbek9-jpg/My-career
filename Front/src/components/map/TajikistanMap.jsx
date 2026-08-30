@@ -314,10 +314,24 @@ export default function TajikistanMap({ universities = [] }) {
           scrollWheelZoom={true}
           className="university-map h-full w-full"
         >
+          {/*
+            Плиткаҳо аз Esri, на аз CARTO.
+
+            CARTO барои basemap-ҳои худ калиди API талаб кардан гирифт ва ба
+            ҷои хато плиткаро бо навиштаи "API KEY REQUIRED" бармегардонад.
+            Ҳолати HTTP 200 мемонад, аз ин рӯ ин дар код ҳамчун хато дида
+            намешавад — танҳо дар экран.
+
+            Esri ҳам варианти торик, ҳам равшан дорад, бидуни калид. Диққат:
+            тартиби порчаҳо {z}/{y}/{x} аст, на {z}/{x}/{y}.
+          */}
           <TileLayer
             key={isDark ? "dark" : "light"}
-            url={`https://{s}.basemaps.cartocdn.com/${isDark ? "dark_all" : "light_all"}/{z}/{x}/{y}{r}.png`}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url={`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${
+              isDark ? "Dark" : "Light"
+            }_Gray_Base/MapServer/tile/{z}/{y}/{x}`}
+            attribution='Плиткаҳо &copy; <a href="https://www.esri.com/">Esri</a>'
+            maxZoom={16}
           />
 
           <CityOverviewMap

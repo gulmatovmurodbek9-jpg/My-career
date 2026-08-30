@@ -276,6 +276,13 @@
     hsl(230 35% 96%) !important;
 }
 
+/* Плиткаҳои Esri аз CARTO равшантаранд ва дар темаи торик ҳамчун доғи
+   хокистарӣ менамуданд. Филтр танҳо ба қабати плитка меафтад — маркерҳо ва
+   попапҳо дар қабатҳои дигаранд ва равшан мемонанд. */
+.dark .university-map .leaflet-tile-pane {
+  filter: brightness(0.45) contrast(1.08) saturate(0.85);
+}
+
 .dark .university-map {
   background:
     radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 28%),

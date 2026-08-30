@@ -328,6 +328,17 @@ const normalizeCompareResponse = (payload, requestedCareers = []) => {
             .filter(Boolean);
     }
 
+    // Модел баъзан ҳар ихтисосро ду маротиба бармегардонад, ва саҳифа онро
+    // бо худаш муқоиса мекард: ду корти якхела бо ҳамон 70%. Такрорҳо аз рӯи
+    // ном бароварда мешаванд, аввалинаш мемонад.
+    const seenCareers = new Set();
+    comparisonItems = comparisonItems.filter((item) => {
+        const key = String(item.career || "").trim().toLowerCase();
+        if (!key || seenCareers.has(key)) return false;
+        seenCareers.add(key);
+        return true;
+    });
+
     const bestCareerRaw =
         toObject(comparisonRoot.bestCareer) ||
         toObject(rootData.bestCareer) ||

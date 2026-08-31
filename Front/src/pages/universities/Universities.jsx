@@ -98,24 +98,18 @@ export default function Universities() {
     [normalizedQuery, universities]
   );
 
-  const mappedCount = useMemo(
-    () =>
-      filteredUnis.filter(
-        (uni) =>
-          uni.latitude !== null &&
-          uni.latitude !== undefined &&
-          uni.longitude !== null &&
-          uni.longitude !== undefined
-      ).length,
-    [filteredUnis]
-  );
-
   const cityCount = useMemo(
     () => new Set(filteredUnis.map((uni) => inferCity(uni)).filter(Boolean)).size,
     [filteredUnis]
   );
 
-  const totalSpecialties = useMemo(
+  /*
+   * Ин ҷамъи пайвандҳои «донишгоҳ ↔ ихтисос» аст, на шумораи ихтисосҳо.
+   * Як касбе, ки дар панҷ донишгоҳ таълим дода мешавад, панҷ бор ҳисоб
+   * мешавад, барои ҳамин 2327 мебарояд, дар ҳоле ки дар база 884 касб ҳаст.
+   * Номаш «барномаҳои таълимӣ» шуд, то бо саҳифаи касбҳо мухолиф набошад.
+   */
+  const totalPrograms = useMemo(
     () => filteredUnis.reduce((acc, uni) => acc + (uni.careerCount || 0), 0),
     [filteredUnis]
   );
@@ -130,40 +124,30 @@ export default function Universities() {
           <div className="rounded-[2.25rem] border border-white/10 bg-card/60 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl md:p-8">
             <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
               <div className="space-y-5">
-                <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.32em] text-primary">
-                  <Building2 className="h-3.5 w-3.5" />
-                  Universities Map
-                </span>
-
                 <div className="space-y-4">
-                  <h1 className="max-w-3xl text-4xl font-black leading-tight text-foreground md:text-5xl">
-                    Харитаи донишгоҳҳоро зебо, равшан ва осон барои истифода кардем
+                  <h1 className="max-w-3xl text-4xl font-semibold leading-tight text-foreground md:text-5xl">
+                    Донишгоҳҳои Тоҷикистон дар як харита
                   </h1>
                   <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                    Ҷустуҷӯ кунед, байни харита ва рӯйхат гузаред ва донишгоҳҳоро аз рӯи шаҳр,
-                    ҷойгиршавӣ ва шумораи ихтисосҳо зуд муқоиса намоед.
+                    Ҷустуҷӯ кунед, байни харита ва рӯйхат гузаред ва донишгоҳҳоро аз рӯи шаҳр
+                    ва барномаҳои таълимӣ муқоиса намоед. Нишонаҳо аз рӯи шаҳр гузошта шудаанд,
+                    на аз рӯи суроғаи дақиқи бино.
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                 <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">
-                    Донишгоҳҳо
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-foreground">{universities.length}</p>
+                  <p className="text-sm text-muted-foreground">Донишгоҳҳо</p>
+                  <p className="mt-1 text-3xl font-semibold text-foreground">{universities.length}</p>
                 </div>
                 <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">
-                    Дар харита
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-foreground">{mappedCount}</p>
+                  <p className="text-sm text-muted-foreground">Шаҳру ноҳияҳо</p>
+                  <p className="mt-1 text-3xl font-semibold text-foreground">{cityCount}</p>
                 </div>
                 <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">
-                    Ихтисосҳо
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-foreground">{totalSpecialties}</p>
+                  <p className="text-sm text-muted-foreground">Барномаҳои таълимӣ</p>
+                  <p className="mt-1 text-3xl font-semibold text-foreground">{totalPrograms}</p>
                 </div>
               </div>
             </div>
@@ -191,9 +175,6 @@ export default function Universities() {
               </span>
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-muted-foreground">
                 {cityCount} шаҳр
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-muted-foreground">
-                {mappedCount} нуқтаи харита
               </span>
             </div>
           </div>

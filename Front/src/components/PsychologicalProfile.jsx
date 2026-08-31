@@ -1,51 +1,96 @@
 import React from 'react';
-import { TrendingUp, BrainCircuit, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import {
     Radar,
     RadarChart,
     PolarGrid,
     PolarAngleAxis,
+    PolarRadiusAxis,
     ResponsiveContainer,
     Tooltip,
 } from "recharts";
 import { useTranslation } from "react-i18next";
+import { MMT_CLUSTERS, MMT_MAX } from "../lib/mmtClusters";
+
+/**
+ * Нишонаи кластер дар атрофи чарх.
+ *
+ * Recharts барои `tick` матни SVG месозад, ва `textTransform` бо
+ * `letterSpacing` дар он ҷо кор намекунанд. Номҳои тоҷикӣ дароз ҳастанд
+ * («Ҷомеашиносӣ»), барои ҳамин нуқтаи чап ва рост ба тарафи худ рост карда
+ * мешаванд, вагарна матн аз канори чарх мебарояд.
+ */
+function ClusterTick({ payload, x, y, textAnchor }) {
+    return (
+        <text
+            x={x}
+            y={y}
+            textAnchor={textAnchor}
+            dominantBaseline="central"
+            className="fill-muted-foreground text-[11px] font-semibold"
+        >
+            {payload.value}
+        </text>
+    );
+}
+
+function ScoreTooltip({ active, payload }) {
+    if (!active || !payload?.length) return null;
+    const point = payload[0];
+    return (
+        <div className="rounded-xl border border-border bg-card px-3 py-2 shadow-lg">
+            <p className="text-xs font-semibold text-foreground">{point.payload.subject}</p>
+            <p className="text-sm font-bold text-primary">
+                {point.value} / {point.payload.fullMark}
+            </p>
+        </div>
+    );
+}
 
 const PsychologicalProfile = ({ results, className = "" }) => {
     const { t } = useTranslation();
 
     if (!results) return null;
 
-    const radarData = results.mmtClusters ? [
-        { subject: 'Техникӣ', A: results.mmtClusters.c1 || 0, fullMark: 30 },
-        { subject: 'Иқтисод', A: results.mmtClusters.c2 || 0, fullMark: 30 },
-        { subject: 'Филология', A: results.mmtClusters.c3 || 0, fullMark: 30 },
-        { subject: 'Ҷомеашиносӣ', A: results.mmtClusters.c4 || 0, fullMark: 30 },
-        { subject: 'Тиб', A: results.mmtClusters.c5 || 0, fullMark: 30 },
-    ] : [
-        { subject: t('quiz.category.logic', 'Logic'), A: results.logic || 0, fullMark: 10 },
-        { subject: t('quiz.category.creative', 'Creative'), A: results.creative || 0, fullMark: 10 },
-        { subject: t('quiz.category.social', 'Social'), A: results.social || 0, fullMark: 10 },
-        { subject: t('quiz.category.technical', 'Technical'), A: results.technical || 0, fullMark: 10 },
-    ];
+    const radarData = results.mmtClusters
+        ? MMT_CLUSTERS.map((cluster) => ({
+              subject: t(cluster.i18nKey, cluster.fallback),
+              A: results.mmtClusters[cluster.key] || 0,
+              fullMark: MMT_MAX,
+          }))
+        : [
+              { subject: t('quiz.category.logic', 'Logic'), A: results.logic || 0, fullMark: 10 },
+              { subject: t('quiz.category.creative', 'Creative'), A: results.creative || 0, fullMark: 10 },
+              { subject: t('quiz.category.social', 'Social'), A: results.social || 0, fullMark: 10 },
+              { subject: t('quiz.category.technical', 'Technical'), A: results.technical || 0, fullMark: 10 },
+          ];
+
+    const max = radarData[0]?.fullMark ?? MMT_MAX;
 
     return (
-        <div className={`glass-card p-6 relative overflow-hidden ${className}`}>
-            <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-                <BrainCircuit className="w-32 h-32 text-primary" />
-            </div>
-
-            <h3 className="text-lg font-black mb-6 flex items-center gap-3 uppercase tracking-tight">
-                <TrendingUp className="w-5 h-5 text-primary" />
+        <div className={`glass-card flex flex-col p-6 ${className}`}>
+            <h3 className="text-lg font-semibold text-foreground">
                 {t('dashboard.radar_title')}
             </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+                {t('dashboard.radar_hint', 'Хол аз рӯи ҷавобҳои саволномаи шумо')}
+            </p>
 
-            <div className="h-[220px] w-full">
+            {/*
+              Баландӣ 220px буд ва чарх 80% -и онро мегирифт, аз ин рӯ дар нимаи
+              рости корт ҷои холӣ мемонд ва нишонаҳо ба ҳам мечаспиданд.
+            */}
+            <div className="mt-4 min-h-[280px] flex-1">
                 <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                        <PolarGrid stroke="rgba(99, 102, 241, 0.1)" />
-                        <PolarAngleAxis
-                            dataKey="subject"
-                            tick={{ fill: "hsl(var(--foreground))", fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                    <RadarChart cx="50%" cy="52%" outerRadius="72%" data={radarData}>
+                        <PolarGrid stroke="hsl(var(--border))" />
+                        <PolarAngleAxis dataKey="subject" tick={<ClusterTick />} />
+                        {/* Бе миқёс чарх танҳо шакл аст; хонанда намедонад 12 аз чанд аст. */}
+                        <PolarRadiusAxis
+                            domain={[0, max]}
+                            tickCount={4}
+                            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                            axisLine={false}
                         />
                         <Radar
                             name="Score"
@@ -53,17 +98,10 @@ const PsychologicalProfile = ({ results, className = "" }) => {
                             stroke="var(--color-primary)"
                             strokeWidth={2}
                             fill="var(--color-primary)"
-                            fillOpacity={0.1}
-                            dot={{ r: 3, fill: "var(--color-primary)" }}
+                            fillOpacity={0.16}
+                            dot={{ r: 3, fill: "var(--color-primary)", strokeWidth: 0 }}
                         />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'rgba(18, 18, 18, 0.9)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '16px',
-                                padding: '12px',
-                            }}
-                        />
+                        <Tooltip content={<ScoreTooltip />} />
                     </RadarChart>
                 </ResponsiveContainer>
             </div>
@@ -76,11 +114,8 @@ export default PsychologicalProfile;
 // LazySuspense wrapper for lazy loading
 export const LazyPsychologicalProfile = (props) => (
     <React.Suspense fallback={
-        <div className={`glass-card p-6 flex items-center justify-center min-h-[300px] ${props.className}`}>
-            <div className="flex flex-col items-center gap-3">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Боргузорӣ...</p>
-            </div>
+        <div className={`glass-card flex min-h-[360px] items-center justify-center p-6 ${props.className}`}>
+            <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
         </div>
     }>
         <PsychologicalProfile {...props} />

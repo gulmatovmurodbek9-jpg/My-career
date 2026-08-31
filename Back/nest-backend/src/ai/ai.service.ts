@@ -19,7 +19,9 @@ export class AiService implements OnModuleInit {
         const geminiKey = this.configService.get<string>('GEMINI_API_KEY');
         if (geminiKey) {
             this.genAI = new GoogleGenerativeAI(geminiKey);
-            this.geminiModel = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+            // Алиас, на версияи мушаххас: gemini-2.0-flash ва gemini-2.5-flash аллакай
+            // бекор шудаанд ва ҳар як бекоркунӣ тамоми AI-ро мекушт.
+            this.geminiModel = this.genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
         }
 
         const groqKey = this.configService.get<string>('GROQ_API_KEY');
@@ -78,13 +80,31 @@ export class AiService implements OnModuleInit {
         }
     }
 
+    /**
+     * Матн аз AI. Агар провайдери аввал афтад, дуюм санҷида мешавад.
+     *
+     * Пештар пешфарз Groq буд ва ҳеҷ гузариш ба Gemini набуд: як хатои Groq
+     * тамоми функсияро мекушт. Маҳз ҳамин рӯй дод, вақте Groq модели
+     * llama-3.3-70b-versatile-ро бекор кард — маслиҳатгар, чат ва муқоиса
+     * ҳамзамон хатои 500 медоданд.
+     *
+     * Ҳарду провайдер бо алифбои тоҷикӣ дуруст кор мекунанд — санҷида шуд.
+     * Gemini аввал аст, чунки ҷавобҳояш дар тоҷикӣ табиитар баромаданд, вале
+     * ин афзалияти сабук аст: чизи муҳим худи мавҷудияти захира аст, то
+     * бекоршавии навбатии модел тамоми AI-ро набандад.
+     */
     async generateContent(prompt: string, options: { provider?: 'gemini' | 'groq' } = {}): Promise<string> {
-        const provider = options.provider || 'groq';
+        const primary = options.provider || 'gemini';
+        const secondary = primary === 'gemini' ? 'groq' : 'gemini';
 
-        if (provider === 'groq') {
-            return this.generateGroqContent(prompt);
-        } else {
-            return this.generateGeminiContent(prompt);
+        const run = (which: 'gemini' | 'groq') =>
+            which === 'groq' ? this.generateGroqContent(prompt) : this.generateGeminiContent(prompt);
+
+        try {
+            return await run(primary);
+        } catch (error) {
+            console.error(`AI: провайдери ${primary} афтод, ${secondary} санҷида мешавад:`, error?.message || error);
+            return await run(secondary);
         }
     }
 
@@ -151,7 +171,9 @@ export class AiService implements OnModuleInit {
             try {
                 const completion = await this.groq.chat.completions.create({
                     messages: [{ role: 'user', content: prompt }],
-                    model: 'llama-3.3-70b-versatile',
+                    // llama-3.3-70b-versatile аз Groq бекор шуд ва "does not
+                    // exist" бармегардонд. Ин танҳо провайдери захиравист.
+                    model: 'openai/gpt-oss-120b',
                 });
                 return completion.choices[0]?.message?.content || '';
             } catch (error) {

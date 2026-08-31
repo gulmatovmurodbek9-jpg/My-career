@@ -289,9 +289,22 @@ export class CareerService {
 
     private extractSearchTerms(question: string, careerName?: string): string[] {
         const text = this.normalizeText(`${careerName || ''} ${question}`);
+        // Феълҳо ва калимаҳои умумӣ бояд ин ҷо бошанд.
+        //
+        // ILIKE '%кунам%' ё '%дорам%' ба садҳо тавсиф мувофиқ меояд, ва ҷустуҷӯ
+        // ба ҷои ихтисосҳои мувофиқ тамоми базаро бармегардонад. Ба саволи
+        // «ба барномасозӣ шавқ дорам» чат «Бизнес-маъмуриятчигӣ» тавсия медод.
         const stopWords = new Set([
             'ман', 'ба', 'бо', 'ва', 'ё', 'аз', 'дар', 'ки', 'чӣ', 'чи', 'кадом', 'барои', 'мехоҳам', 'мехохам',
-            'ихтисос', 'ихтисосҳои', 'профессия', 'профессии', 'хочу', 'где', 'что', 'как', 'the', 'and', 'for',
+            'ихтисос', 'ихтисоси', 'ихтисосро', 'ихтисосҳои', 'профессия', 'профессии',
+            'хочу', 'где', 'что', 'как', 'the', 'and', 'for',
+            // Феълҳо ва пайвандакҳои сермаъмул
+            'дорам', 'дорад', 'доранд', 'кунам', 'кунад', 'кунанд', 'кунед', 'шавам', 'шавад',
+            'бошад', 'бошам', 'аст', 'ҳаст', 'ҳастам', 'будан', 'кардан', 'шудан', 'гирифтан',
+            'интихоб', 'маслиҳат', 'савол', 'лутфан', 'илтимос', 'салом', 'ассалом',
+            'ман_ро', 'худро', 'шумо', 'вай', 'онҳо', 'ҳамин', 'инро', 'онро',
+            'хочу', 'нужно', 'какой', 'какая', 'выбрать', 'посоветуйте', 'помогите',
+            'want', 'need', 'which', 'choose', 'advise', 'help', 'should',
         ]);
 
         return Array.from(new Set(
@@ -327,10 +340,36 @@ export class CareerService {
             }));
         }
 
-        const matched = await qb
-            .orderBy('career.likesCount', 'DESC')
-            .take(10)
-            .getMany();
+        /**
+         * Тартиб аз рӯи мувофиқат, на аз рӯи лайкҳо.
+         *
+         * Дархост бо OR кор мекунад: як калимаи умумӣ кифоя буд, то ихтисос ба
+         * рӯйхат афтад. Баъд тартиби `likesCount` беҳтарин ихтисосҳои мувофиқро
+         * ба поён мепартофт ва машҳуртаринҳои бемавзӯъро ба боло мебаровард.
+         *
+         * Ҳисоб дар JS меравад: мувофиқат дар НОМ вазни се, дар кластер ду, дар
+         * тавсиф як. Лайкҳо танҳо ҳангоми баробарӣ ҳал мекунанд.
+         */
+        const pool = await qb.take(60).getMany();
+
+        const score = (career: Career) => {
+            const name = this.normalizeText(career.name || '');
+            const cluster = this.normalizeText(career.cluster?.clusterName || '');
+            const body = this.normalizeText(`${career.description || ''} ${career.purpose || ''}`);
+            return terms.reduce((total, term) => {
+                if (name.includes(term)) return total + 3;
+                if (cluster.includes(term)) return total + 2;
+                if (body.includes(term)) return total + 1;
+                return total;
+            }, 0);
+        };
+
+        const matched = pool
+            .map((career) => ({ career, rank: score(career) }))
+            .filter((entry) => entry.rank > 0)
+            .sort((a, b) => b.rank - a.rank || (b.career.likesCount ?? 0) - (a.career.likesCount ?? 0))
+            .slice(0, 10)
+            .map((entry) => entry.career);
 
         if (matched.length >= 4) return matched;
 
@@ -405,9 +444,20 @@ export class CareerService {
         const language = this.getLanguageName(params.lang);
         const userContext = this.formatSavedCareerSummary(params.user);
         const careerContext = this.formatCareerContext(params.careers, params.userLocation);
+        /**
+         * Бахшҳои холӣ умуман фиристода намешаванд.
+         *
+         * Пештар дар ҷои холӣ «not provided» ва «not selected» навишта мешуд,
+         * ва модел ба ҳамин мечаспид: ба саволи равшани «кадом ихтисосро
+         * интихоб кунам?» ҷавоб медод «суроғаатон намоён намешавад» ва хоҳиш
+         * мекард саволро аз нав нависанд. Набудани бахш чунин чизе намедиҳад.
+         */
+        const optional = (heading: string, value?: string) =>
+            value && value.trim() ? `\n${heading}:\n${value.trim()}\n` : '';
+
         const locationContext = params.userLocation
             ? `latitude=${params.userLocation.latitude}, longitude=${params.userLocation.longitude}`
-            : 'not provided';
+            : '';
 
         return `
 You are MyCareer AI, a practical career advisor for students in Tajikistan.
@@ -415,18 +465,18 @@ Answer in ${language}. If the user writes in Tajik, use natural Tajik Cyrillic.
 
 USER QUESTION:
 ${params.question}
-
-SELECTED CAREER FIELD:
-${params.careerName || 'not selected'}
-
-USER PROFILE AND HISTORY:
-${userContext}
-
-USER LOCATION:
-${locationContext}
-
+${optional('SELECTED CAREER FIELD', params.careerName)}${optional('USER PROFILE AND HISTORY', userContext)}${optional('USER LOCATION', locationContext)}
 DATABASE CONTEXT - use this first, do not invent facts that are missing:
 ${careerContext}
+
+SPECIALTY NAMES - STRICT RULE:
+When you name a specialty a student can apply for, copy the name exactly as it
+appears in the database context above. Do not shorten it, translate it, or
+replace it with a familiar job title such as "Дизайнери UX/UI", "Барномасози
+веб (Full-Stack)" or "Муҳосиб". Those are not on the National Testing Centre
+list, so the student cannot apply for them and will not find them on this site.
+You may still discuss job roles in general terms, but make clear when you are
+describing a role rather than naming a specialty from the list.
 
 TASK:
 - Give a useful chat answer based on the user's profile, quiz results, saved careers, and database context.
@@ -508,7 +558,15 @@ TASK:
 
         const topMatches = await this.matchCareers(scores);
         const top3 = topMatches.slice(0, 3);
-        const topNames = top3.map((career) => career.name).filter(Boolean);
+
+        // Ба модел доираи васеътар дода мешавад, на танҳо се беҳтарин.
+        //
+        // Номҳо ҳоло қатъӣ маҳдуданд (ниг. ҚОИДАИ ҚАТЪӢ дар промт). Агар се ном
+        // дода шавад, модел маҷбур мешавад ҳамон серо баргардонад ва мулоҳизаи
+        // он ҳеҷ нақш надорад. Бо ҳашт номзад он аз рӯйхати ВОҚЕӢ интихоб
+        // мекунад ва сабабашро шарҳ медиҳад.
+        const candidates = topMatches.slice(0, 8);
+        const topNames = candidates.map((career) => career.name).filter(Boolean);
         const detailedCareers = topNames.length
             ? await this.careerRepository.find({
                 where: { name: In(topNames) },
@@ -516,7 +574,7 @@ TASK:
             })
             : [];
 
-        const careersContext = (detailedCareers.length ? detailedCareers : top3).map((c: any) => [
+        const careersContext = (detailedCareers.length ? detailedCareers : candidates).map((c: any) => [
             `- ${c.name}: ${c.description || c.purpose || ''}`,
             c.cluster?.clusterName ? `  cluster: ${c.cluster.clusterName}` : '',
             c.skills ? `  skills: ${JSON.stringify(c.skills)}` : '',
@@ -588,10 +646,29 @@ TASK:
 
         const instr = languageName === 'Russian' ? languageInstructions.Russian : languageName === 'English' ? languageInstructions.English : languageInstructions.Tajik;
 
-        const prompt = `Шумо як мушовири касбии ботаҷриба ҳастед. 
+        // Номҳои иҷозатдодашуда алоҳида дода мешаванд.
+        //
+        // Бе ин модел номҳои «шинос»-ро месохт — «Дизайнери UX/UI», «Барномасози
+        // веб (Full-Stack)» — ки дар базаи 884-ихтисоса вуҷуд надоранд ва дар
+        // рӯйхати ММТ ҳам нестанд. Хонанда тавсия мегирифт, дар сайт меҷуст,
+        // намеёфт, ва ба чунин ихтисос ҳуҷҷат супорида ҳам наметавонист.
+        const allowedNames = (detailedCareers.length ? detailedCareers : candidates)
+            .map((c: any) => c.name)
+            .filter(Boolean);
+
+        const prompt = `Шумо як мушовири касбии ботаҷриба ҳастед.
 Натиҷаҳои санҷиши MMT-и корбар (Кластерҳои Маркази Миллии Тестӣ): ${JSON.stringify(mmt)}.
 Ихтисосҳои мувофиқтарин аз базаи мо барои ин корбар:
 ${careersContext}
+
+ҚОИДАИ ҚАТЪӢ — НОМИ ИХТИСОСҲО:
+Дар "careerRecommendations", "explanation", "successPrediction" ва
+"careerRoadmap.targetCareer" ТАНҲО ҳамин номҳоро истифода баред, ҲАРФ БА ҲАРФ:
+${allowedNames.map((n) => `  • ${n}`).join('\n')}
+Номи навро НАСОЗЕД. Тарҷума накунед. Кӯтоҳ накунед. Номи касби умумӣ
+(масалан "Дизайнери UX/UI" ё "Барномасози веб") нанависед — чунин ихтисос дар
+рӯйхати Маркази миллии тестӣ вуҷуд надорад ва хонанда ба он ҳуҷҷат супорида
+наметавонад.
 
 DETAILED QUIZ ANSWERS FROM THE LAST TEST:
 ${quizAnswersContext}
@@ -683,6 +760,36 @@ ${instr.format}
                 successPrediction: [],
                 careerRoadmap: { targetCareer: top3[0]?.name || '', steps: [] }
             };
+        }
+
+        // Тафтиши номҳо. Промт метавонад нодида монад; ин ҷо кафолат аст.
+        //
+        // Ҳар тавсияе, ки номаш дар база нест, партофта мешавад. Агар ҳеҷ чиз
+        // намонад, ихтисосҳои воқеии беҳтарин гузошта мешаванд — беҳтар аз
+        // рӯйхати холӣ ва хеле беҳтар аз номи бофта.
+        const allowed = new Map(
+            allowedNames.map((n: string) => [n.trim().toLowerCase(), n]),
+        );
+        const keepReal = (name: unknown) =>
+            typeof name === 'string' && allowed.has(name.trim().toLowerCase());
+
+        if (Array.isArray(report?.careerRecommendations)) {
+            const kept = report.careerRecommendations.filter((r: any) => keepReal(r?.name));
+            report.careerRecommendations = kept.length
+                ? kept
+                : top3.map((m: any) => ({
+                    name: m.name,
+                    matchPercentage: m.matchPercentage,
+                    shortDescription: '',
+                }));
+        }
+        for (const field of ['explanation', 'successPrediction']) {
+            if (Array.isArray(report?.[field])) {
+                report[field] = report[field].filter((item: any) => keepReal(item?.career));
+            }
+        }
+        if (report?.careerRoadmap && !keepReal(report.careerRoadmap.targetCareer)) {
+            report.careerRoadmap.targetCareer = top3[0]?.name ?? '';
         }
 
         const targetCareerName = report?.careerRoadmap?.targetCareer || top3[0]?.name || 'Target career';

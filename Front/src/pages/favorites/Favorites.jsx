@@ -179,7 +179,7 @@ const Favorites = () => {
                         </div>
                         <h1 className="text-4xl md:text-6xl font-extrabold text-foreground tracking-tighter leading-tight">
                             {t('favorites.title_1', "Ихтисосҳои")}{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-gradient">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-blue to-primary animate-gradient">
                                 {t('favorites.title_2', "захирашуда")}
                             </span>
                         </h1>

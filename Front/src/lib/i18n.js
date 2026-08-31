@@ -241,7 +241,7 @@ i18n
                     },
                     careers_page: {
                         hero_tag: "Кашфи Истеъдодҳо",
-                        hero_title: "Ояндаи худро <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-gradient\">аз ин ҷо ёб!</span>",
+                        hero_title: "Ояндаи худро <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-blue to-primary animate-gradient\">аз ин ҷо ёб!</span>",
                         hero_desc: "Дар байни {{total}}+ ихтисосҳои муосир роҳи беҳтарини касбии худро пайдо кунед.",
                         search_placeholder: "Ҷустуҷӯи ихтисос...",
                         view_grid: "Грит",
@@ -641,7 +641,7 @@ i18n
                     },
                     careers_page: {
                         hero_tag: "Открытие талантов",
-                        hero_title: "Найди свое будущее <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-gradient\">здесь!</span>",
+                        hero_title: "Найди свое будущее <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-blue to-primary animate-gradient\">здесь!</span>",
                         hero_desc: "Среди {{total}}+ современных профессий найди свой лучший карьерный путь.",
                         search_placeholder: "Поиск профессии...",
                         view_grid: "Сетка",
@@ -1031,7 +1031,7 @@ i18n
                     },
                     careers_page: {
                         hero_tag: "Discover Talents",
-                        hero_title: "Find your future <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-gradient\">here!</span>",
+                        hero_title: "Find your future <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-blue to-primary animate-gradient\">here!</span>",
                         hero_desc: "Find your best career path among {{total}}+ modern professions.",
                         search_placeholder: "Search for a career...",
                         view_grid: "Grid",

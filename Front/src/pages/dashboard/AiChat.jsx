@@ -143,7 +143,7 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
             {/* Avatar */}
             {!isUser ? (
                 <div className="flex-shrink-0 mb-5">
-                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary via-violet-500 to-secondary p-[2px] shadow-lg shadow-primary/20">
+                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary via-accent-blue to-primary p-[2px] shadow-lg shadow-primary/20">
                         <div className="w-full h-full rounded-[14px] bg-[hsl(var(--card))] flex items-center justify-center">
                             <Bot className="w-4.5 h-4.5 text-primary" />
                         </div>
@@ -565,7 +565,7 @@ const AiChat = () => {
                     </Link>
                     <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary via-violet-500 to-secondary p-[2px] shadow-lg shadow-primary/20">
+                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary via-accent-blue to-primary p-[2px] shadow-lg shadow-primary/20">
                                 <div className="w-full h-full rounded-[14px] bg-[hsl(var(--card))] flex items-center justify-center">
                                     <Bot className="w-5 h-5 text-primary" />
                                 </div>
@@ -625,11 +625,11 @@ const AiChat = () => {
                         className="flex flex-col items-center justify-center h-full gap-8 text-center px-4">
                         {/* Hero icon */}
                         <div className="relative">
-                            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-secondary/15 flex items-center justify-center backdrop-blur-xl border border-primary/10">
+                            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-accent-blue/15 flex items-center justify-center backdrop-blur-xl border border-primary/10">
                                 <Bot className="w-12 h-12 text-primary" />
                             </div>
                             <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                                className="absolute -top-2 -right-2 w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/30">
+                                className="absolute -top-2 -right-2 w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center shadow-lg shadow-primary/30">
                                 <Sparkles className="w-4 h-4 text-white" />
                             </motion.div>
                             {/* Orbiting dots */}
@@ -639,7 +639,7 @@ const AiChat = () => {
                             </motion.div>
                         </div>
                         <div className="space-y-2 max-w-sm">
-                            <h2 className="text-2xl font-black tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                            <h2 className="text-2xl font-black tracking-tight bg-gradient-to-r from-primary to-accent-blue bg-clip-text text-transparent">
                                 {currentDict.heroTitle}
                             </h2>
                             <p className="text-[hsl(var(--muted-foreground))] text-sm font-medium leading-relaxed opacity-70">
@@ -669,7 +669,7 @@ const AiChat = () => {
                 {/* Typing indicator */}
                 {loading && (
                     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="flex items-end gap-2.5">
-                        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary via-violet-500 to-secondary p-[2px] shadow-lg shadow-primary/20 mb-5">
+                        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary via-accent-blue to-primary p-[2px] shadow-lg shadow-primary/20 mb-5">
                             <div className="w-full h-full rounded-[14px] bg-[hsl(var(--card))] flex items-center justify-center">
                                 <Bot className="w-4.5 h-4.5 text-primary" />
                             </div>
@@ -680,7 +680,7 @@ const AiChat = () => {
                                     <motion.div key={i}
                                         animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
                                         transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.15, ease: "easeInOut" }}
-                                        className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-secondary" />
+                                        className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-accent-blue" />
                                 ))}
                             </div>
                         </div>

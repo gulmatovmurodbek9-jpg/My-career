@@ -213,58 +213,22 @@ async function handleMockRequest(config) {
     return { status: 200, data: { totalUsers: users.length, totalCareers: careers.length, totalClusters: clusters.length, totalLikes: careers.reduce((s, c) => s + (c.likesCount || 0), 0), topLiked: [...careers].sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0)).slice(0, 7), topSaved: [...careers].sort((a, b) => (b.savedCount || 0) - (a.savedCount || 0)).slice(0, 7) } };
   }
 
-  if (path === "/careers/ask" && m === "post") {
-    const q = (body?.question || "").toLowerCase();
-    let answer = "";
-    if (q.includes("маош") || q.includes("зарплат") || q.includes("salary")) {
-      answer = "## 💰 Маош дар Тоҷикистон\n\nМаоши мутахассисон дар Тоҷикистон вобаста ба соҳа ва таҷриба фарқ мекунад:\n\n- **Барномасоз (Junior):** 2,000 — 4,000 сомонӣ\n- **Барномасоз (Middle):** 5,000 — 10,000 сомонӣ\n- **Барномасоз (Senior):** 12,000 — 25,000 сомонӣ\n- **Дизайнер UI/UX:** 3,000 — 8,000 сомонӣ\n- **Муҳандиси шабака:** 3,500 — 7,000 сомонӣ\n\n### 📈 Тавсияҳо\n- Забонҳои Python, JavaScript ва TypeScript дар Тоҷикистон талаботи зиёд доранд\n- Фрилансерон метавонанд то 2-3 маротиба зиёдтар даромад кунанд\n- Сертификатҳои AWS, Google Cloud маошро 30-50% зиёд мекунанд";
-    } else if (q.includes("донишгоҳ") || q.includes("университет")) {
-      answer = "## 🏛️ Донишгоҳҳои Тоҷикистон\n\nДонишгоҳҳои асосӣ барои таҳсилоти IT ва касбӣ:\n\n- **ДДМТ (Донишгоҳи давлатии миллии Тоҷикистон)** — Душанбе\n- **ДПТ (Донишгоҳи политехникии Тоҷикистон)** — Душанбе\n- **Донишгоҳи славянии Тоҷикистон** — Душанбе\n- **Донишгоҳи технологии Тоҷикистон** — Душанбе\n\n### 💡 Тавсия\nБарои ихтисосҳои IT, ДПТ ва Донишгоҳи технологӣ беҳтарин интихоб ҳастанд.";
-    } else if (q.includes("мувофиқ") || q.includes("тест") || q.includes("ихтисос")) {
-      answer = "## 🎯 Ихтисоси мувофиқ\n\nБарои ёфтани ихтисоси мувофиқ, аввал **тести касбиро** гузаред! Тест натиҷаҳои шуморо таҳлил карда, ихтисосҳои мувофиқро пешниҳод мекунад.\n\n### Қадамҳо:\n1. Ба саҳифаи **Тест** равед\n2. Ба ҳамаи саволҳо ҷавоб диҳед\n3. Натиҷаҳои AI-ро дар **Панели шахсӣ** бинед\n\nСистемаи мо дар асоси профили психологии шумо ихтисосҳои мувофиқро бо фоизи мувофиқат нишон медиҳад.";
-    } else {
-      answer = `## 💬 Ҷавоб\n\nСаволи шумо қабул шуд: "${body?.question}"\n\n### Маълумот\nМан AI Мушовири касбии MyCareer ҳастам. Метавонам дар бораи:\n\n- **Ихтисосҳо** — тавсиф, маош, талабот\n- **Донишгоҳҳо** — дар Тоҷикистон ва хориҷа\n- **Роҳи касбӣ** — қадамҳо барои муваффақият\n- **Муқоиса** — ихтисосҳоро бо ҳам муқоиса кунед\n\nСаволи мушаххастар пурсед, то ман беҳтар кӯмак расонам!`;
-    }
-    return { status: 200, data: { answer, remainingToday: 4 } };
-  }
-
-  if (path === "/careers/voice-ask" && m === "post") {
-    return { status: 200, data: { transcription: "Ман мехоҳам дар бораи ихтисосҳо маълумот гирам", answer: "## 🎙️ Паёми овозии шумо қабул шуд!\n\nМан метавонам дар бораи ҳар гуна ихтисос, маош, донишгоҳ ва роҳи касбӣ маълумот диҳам.\n\n### Тавсия\nСаволи мушаххас пурсед, масалан:\n- Маоши барномасоз чанд аст?\n- Кадом донишгоҳ барои IT беҳтар аст?\n- Ихтисоси дизайнер чӣ гуна аст?", remainingToday: 4 } };
-  }
-
-
-  if (path === "/careers/ai-advisor" && m === "post") {
-    const careers = getMockCareers().slice(0, 3);
-    return { status: 200, data: {
-      report: {
-        personalityAnalysis: "Профили психологии шумо нишон медиҳад, ки шумо шахси таҳлилгар ва амалӣ ҳастед. Шумо ба кори системавӣ ва ҳалли масъалаҳои мураккаб таваҷҷӯҳи зиёд доред.",
-        careerRecommendations: careers.map((c, i) => ({ name: c.name, shortDescription: c.description, matchPercentage: 95 - i * 10 })),
-        explanation: careers.map((c) => ({ career: c.name, reason: `Ин ихтисос ба профили RIASEC-и шумо мувофиқ аст, зеро малакаҳои зарурӣ бо қобилиятҳои табиии шумо мувофиқат мекунанд.` })),
-        successPrediction: careers.map((c, i) => ({ career: c.name, probability: 90 - i * 8, reasoning: "Дар асоси таҳлили AI ва мувофиқати профил." })),
-        careerRoadmap: { targetCareer: careers[0]?.name, steps: [{ step: 1, title: "Асосҳоро омӯзед", description: "Курсҳои асосӣ ва китобҳо", duration: "3 моҳ" }, { step: 2, title: "Малака ва амалия", description: "Лоиҳаҳои реалӣ ва амалия", duration: "6 моҳ" }, { step: 3, title: "Кор ва рушд", description: "Кори аввалин ва рушди минбаъда", duration: "12 моҳ" }] },
-      },
-      riasecScores: body?.scores?.riasec || { realistic: 5, investigative: 7, artistic: 4, social: 6, enterprising: 5, conventional: 6 },
-      dominantTypes: [{ type: "Investigative", score: 7 }, { type: "Social", score: 6 }, { type: "Conventional", score: 6 }],
-    } };
-  }
-
-  if (path === "/careers/compare" && m === "post") {
-    const requestedCareers = body?.careers || [];
-    return { status: 200, data: {
-      bestCareerName: requestedCareers[0],
-      reason: "Ин ихтисос аз ҷиҳати мувофиқат бо профили шумо ва талаботи бозор беҳтарин аст.",
-      summary: "Таҳлили муқоисавӣ нишон дод, ки ҳар ду ихтисос имконоти хуб доранд.",
-      careerComparison: requestedCareers.map((name, i) => ({
-        career: name, matchPercentage: 90 - i * 12,
-        summary: `${name} — ихтисоси ояндадор бо имконоти зиёд.`,
-        pros: ["Талаботи баланд", "Маоши хуб", "Имконоти рушд"],
-        cons: ["Рақобати зиёд", "Ниёз ба омӯзиши доимӣ"],
-        skillsRequired: ["Таҳлилгарӣ", "Коммуникатсия", "Техникӣ"],
-        marketDemand: i === 0 ? "high" : "medium",
-        learningDifficulty: "medium",
-        salaryRange: "$500-2000",
-      })),
-    } };
+  /**
+   * Нуқтаҳои AI ҷавоби омода надоранд — қасдан.
+   *
+   * Пештар дар ин ҷо ҷавобҳои сохта буданд: диапазони маош ("Барномасоз
+   * Junior: 2000-4000 сомонӣ"), тавсияи донишгоҳ ва даъвоҳое мисли
+   * "сертификати AWS маошро 30-50% зиёд мекунад". Ҳеҷ кадоми онҳо манбаъ
+   * надоштанд, ва дар экран ҳеҷ нишонае набуд, ки ин ҷавоби воқеии AI нест.
+   *
+   * Дар сайти роҳнамоии касбӣ ин хатарнок аст: хонанда рақами бофтаро ҳамчун
+   * маслиҳат мегирад ва дар асоси он қарори ҳаётӣ мебарорад.
+   *
+   * null баргардонида мешавад, то хатои аслӣ ба интерфейс расад ва корбар
+   * бубинад, ки хидмат дастрас нест — на ҷавоби сохта.
+   */
+  if (m === "post" && /^\/careers\/(ask|voice-ask|ai-advisor|compare)$/.test(path)) {
+    return null;
   }
 
   // Career like

@@ -91,7 +91,7 @@ const Login = () => {
                         <motion.div
                             initial={{ scale: 0.8 }}
                             animate={{ scale: 1 }}
-                            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary mb-4 shadow-lg shadow-primary/20"
+                            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent-blue mb-4 shadow-lg shadow-primary/20"
                         >
                             <LogIn className="w-8 h-8 text-primary-foreground" />
                         </motion.div>
@@ -149,7 +149,7 @@ const Login = () => {
                             whileTap={{ scale: 0.98 }}
                             disabled={loading}
                             type="submit"
-                            className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-primary-foreground font-bold shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-accent-blue text-primary-foreground font-bold shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

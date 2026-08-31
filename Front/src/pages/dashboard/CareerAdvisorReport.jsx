@@ -113,6 +113,20 @@ const labels = {
         demandOutlook: "Талабот ба мутахассис",
         now: "Ҳозир",
         in10Years: "10 сол баъд",
+        demandLevels: {
+            "very low": "Хеле паст",
+            low: "Паст",
+            "below average": "Аз миёна паст",
+            medium: "Миёна",
+            moderate: "Миёна",
+            average: "Миёна",
+            "above average": "Аз миёна баланд",
+            high: "Баланд",
+            "very high": "Хеле баланд",
+            growing: "Афзоишёбанда",
+            stable: "Устувор",
+            declining: "Камшаванда",
+        },
         reasons: "Сабабҳо",
         beginner: "Навомӯз",
         middle: "Миёна",
@@ -161,6 +175,20 @@ const labels = {
         demandOutlook: "Востребованность специалиста",
         now: "Сейчас",
         in10Years: "Через 10 лет",
+        demandLevels: {
+            "very low": "Очень низкая",
+            low: "Низкая",
+            "below average": "Ниже средней",
+            medium: "Средняя",
+            moderate: "Средняя",
+            average: "Средняя",
+            "above average": "Выше средней",
+            high: "Высокая",
+            "very high": "Очень высокая",
+            growing: "Растущая",
+            stable: "Стабильная",
+            declining: "Снижающаяся",
+        },
         reasons: "Причины",
         beginner: "Начинающий",
         middle: "Средний",
@@ -369,14 +397,14 @@ const CareerAdvisorReport = () => {
                 >
                     {/* Animated brain */}
                     <div className="relative">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-blue/20 flex items-center justify-center">
                             <BrainCircuit className="w-10 h-10 text-primary" />
                         </div>
                         {/* Orbiting dots */}
                         {[0, 1, 2].map((i) => (
                             <motion.div
                                 key={i}
-                                className="absolute w-3 h-3 rounded-full bg-gradient-to-r from-primary to-secondary"
+                                className="absolute w-3 h-3 rounded-full bg-gradient-to-r from-primary to-accent-blue"
                                 animate={{
                                     rotate: 360,
                                     x: [0, 30 * Math.cos((i * 2 * Math.PI) / 3), 0],
@@ -444,7 +472,7 @@ const CareerAdvisorReport = () => {
                             <ArrowLeft className="w-3.5 h-3.5" />
                             {t.back}
                         </Link>
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-accent-blue/10 border border-primary/20 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                             <Sparkles className="w-3.5 h-3.5" />
                             {t.badge}
                         </div>
@@ -460,7 +488,7 @@ const CareerAdvisorReport = () => {
                             <div
                                 key={dt.type}
                                 className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider ${i === 0
-                                    ? "bg-gradient-to-r from-primary to-secondary text-white"
+                                    ? "bg-gradient-to-r from-primary to-accent-blue text-white"
                                     : "glass-card-sm text-foreground"
                                     }`}
                             >
@@ -519,7 +547,7 @@ const CareerAdvisorReport = () => {
                                     }`}
                             >
                                 {idx === 0 && (
-                                    <div className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                                    <div className="absolute top-3 right-3 w-6 h-6 rounded-md bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center">
                                         <Star className="w-3.5 h-3.5 text-white fill-white" />
                                     </div>
                                 )}
@@ -650,7 +678,7 @@ const CareerAdvisorReport = () => {
                     <div className="glass-card p-6 md:p-8 mt-3">
                         {report.careerRoadmap?.targetCareer && (
                             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center">
                                     <Target className="w-4 h-4 text-white" />
                                 </div>
                                 <div>

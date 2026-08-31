@@ -751,7 +751,7 @@ const Quiz = () => {
                     <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
-                        className="h-full bg-gradient-to-r from-primary to-secondary"
+                        className="h-full bg-gradient-to-r from-primary to-accent-blue"
                     />
                 </div>
 

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LazyPsychologicalProfile } from "../../components/PsychologicalProfile";
+import { MMT_MAX, topCluster } from "../../lib/mmtClusters";
 import MatchCard from "../../components/MatchCard";
 import MatchExplainModal from "../../components/MatchExplainModal";
 import { useAuthStore } from "../../store/authStore";
@@ -36,6 +37,15 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [likedIds, setLikedIds] = useState(new Set());
     const [savedIds, setSavedIds] = useState(new Set());
+
+    /*
+     * Ҳисоби бо қайд сабтшуда `name` надорад, ва корт `user.name` -ро рост
+     * нишон медод: аватар холӣ мемонд ва сарлавҳа тамоман намебаромад, аз ин
+     * рӯ дар байни корт ҷои холии калон пайдо мешуд. Ном аз почта гирифта
+     * мешавад, вақте ки худи ном нест.
+     */
+    const displayName = user?.name?.trim() || user?.email?.split("@")[0] || t('dashboard.guest', 'Меҳмон');
+    const leadingCluster = topCluster(user?.quizResults?.mmtClusters, t);
     const [explainData, setExplainData] = useState(null);
     const [explainOpen, setExplainOpen] = useState(false);
 
@@ -141,29 +151,43 @@ const Dashboard = () => {
                         className="bento-grid"
                     >
                         {/* 1. Profile card */}
-                        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-4 glass-card p-6 flex flex-col justify-between group">
-                            <div className="space-y-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent-blue p-0.5 shadow-lg group-hover:rotate-3 transition-transform duration-500">
-                                    <div className="w-full h-full rounded-[0.6rem] bg-card flex items-center justify-center text-xl font-black text-primary">
-                                        {user?.name?.charAt(0)}
-                                    </div>
+                        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-4 glass-card flex flex-col p-6">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
+                                    {displayName.charAt(0).toUpperCase()}
                                 </div>
-                                <div>
-                                    <h3 className="text-2xl font-black text-foreground">{user?.name}</h3>
-                                    <p className="text-muted-foreground font-bold text-xs opacity-60">{user?.email}</p>
+                                <div className="min-w-0">
+                                    <h3 className="truncate text-xl font-semibold text-foreground">{displayName}</h3>
+                                    <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
                                 </div>
                             </div>
 
-                            <div className="mt-8 grid grid-cols-2 gap-3">
-                                <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
-                                    <Heart className="w-3.5 h-3.5 text-rose-500 mb-1.5 fill-rose-500/10" />
-                                    <div className="text-lg font-black">{likedIds.size}</div>
-                                    <div className="text-[7px] font-black uppercase tracking-widest opacity-40">{t('dashboard.likes')}</div>
+                            {leadingCluster && (
+                                <div className="mt-6 rounded-2xl border border-border bg-muted/40 p-4">
+                                    <p className="text-sm text-muted-foreground">{t('dashboard.top_cluster', 'Самти пешбари шумо')}</p>
+                                    <p className="mt-1 text-lg font-semibold text-foreground">{leadingCluster.label}</p>
+                                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border">
+                                        <div
+                                            className="h-full rounded-full bg-primary"
+                                            style={{ width: `${Math.round((leadingCluster.score / MMT_MAX) * 100)}%` }}
+                                        />
+                                    </div>
+                                    <p className="mt-2 text-sm font-medium text-muted-foreground">
+                                        {leadingCluster.score} / {MMT_MAX}
+                                    </p>
                                 </div>
-                                <div className="p-3 rounded-xl bg-secondary/5 border border-secondary/10">
-                                    <Bookmark className="w-3.5 h-3.5 text-secondary mb-1.5 fill-secondary/10" />
-                                    <div className="text-lg font-black">{savedIds.size}</div>
-                                    <div className="text-[7px] font-black uppercase tracking-widest opacity-40">{t('dashboard.saves')}</div>
+                            )}
+
+                            <div className="mt-6 grid grid-cols-2 gap-3">
+                                <div className="rounded-2xl border border-border p-4">
+                                    <Heart className="mb-2 h-4 w-4 text-primary" />
+                                    <div className="text-2xl font-semibold text-foreground">{likedIds.size}</div>
+                                    <div className="mt-0.5 text-sm text-muted-foreground">{t('dashboard.likes')}</div>
+                                </div>
+                                <div className="rounded-2xl border border-border p-4">
+                                    <Bookmark className="mb-2 h-4 w-4 text-primary" />
+                                    <div className="text-2xl font-semibold text-foreground">{savedIds.size}</div>
+                                    <div className="mt-0.5 text-sm text-muted-foreground">{t('dashboard.saves')}</div>
                                 </div>
                             </div>
                         </motion.div>

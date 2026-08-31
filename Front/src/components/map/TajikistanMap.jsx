@@ -192,9 +192,16 @@ function CityOverviewMap({ activeCity, onViewportChange, preferredCity }) {
   useEffect(() => {
     const update = () => {
       const center = map.getCenter();
+      const bounds = map.getBounds();
       onViewportChange({
         zoom: map.getZoom(),
         center: { lat: center.lat, lng: center.lng },
+        bounds: {
+          south: bounds.getSouth(),
+          west: bounds.getWest(),
+          north: bounds.getNorth(),
+          east: bounds.getEast(),
+        },
       });
     };
 
@@ -262,10 +269,26 @@ export default function TajikistanMap({ universities = [] }) {
 
   const visibleUniversities = useMemo(() => {
     if (viewport.zoom <= CITY_OVERVIEW_ZOOM) return [];
+
+    /*
+     * Аз рӯи он чизе ки дар экран аст, на аз рӯи номи шаҳри интихобшуда.
+     *
+     * Пештар филтр `inferredCity === activeCity` буд, ва вақте корбар
+     * харитаро бо даст ба ҷои дигар мебурд, activeCity ҳамон шаҳри пештара
+     * мемонд — харитаи холӣ бе ягон маркер, бе он ки сабабаш маълум бошад.
+     */
+    const box = viewport.bounds;
     return displayUniversities
-      .filter((uni) => uni.inferredCity === activeCity)
+      .filter((uni) =>
+        !box
+          ? uni.inferredCity === activeCity
+          : uni.displayLat >= box.south &&
+            uni.displayLat <= box.north &&
+            uni.displayLng >= box.west &&
+            uni.displayLng <= box.east,
+      )
       .sort((a, b) => (b.careerCount || 0) - (a.careerCount || 0));
-  }, [activeCity, displayUniversities, viewport.zoom]);
+  }, [activeCity, displayUniversities, viewport.bounds, viewport.zoom]);
 
   useEffect(() => {
     if (selectedUni && selectedUni.inferredCity !== activeCity) {
@@ -408,6 +431,18 @@ export default function TajikistanMap({ universities = [] }) {
           </div>
         </div>
       )}
+
+      {/*
+        Наздикшавӣ ба ҷои холӣ харитаро тамоман бе маркер мемонад. Бе ин ишорат
+        корбар намедонад, ки ин холигӣ аст ё сомона вайрон шудааст.
+      */}
+      {Boolean(cityGroups.length) &&
+        viewport.zoom > CITY_OVERVIEW_ZOOM &&
+        !visibleUniversities.length && (
+          <div className="pointer-events-none absolute left-1/2 top-6 z-[650] -translate-x-1/2 rounded-2xl border border-white/10 bg-black/70 px-4 py-2.5 text-sm font-semibold text-white shadow-xl backdrop-blur-xl">
+            Дар ин ҳудуд донишгоҳ нест — камтар наздик кунед
+          </div>
+        )}
 
       <button
         type="button"

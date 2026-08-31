@@ -180,6 +180,15 @@ export function resolveInstitutionType(universityName: string): string {
     return 'Муассисаи таълимӣ';
 }
 
+/**
+ * Моликияти муассиса аз номи расмии он муайян мешавад.
+ *
+ * Ҷадвали ММТ сутуни алоҳидаи моликият надорад, вале ном онро ҳамеша нишон
+ * медиҳад. Ду шакл истифода мешавад: «(ғайридавлатӣ)» ва «хусусӣ» — масалан
+ * «Коллеҷи тиббии хусусии "Даво"». Танҳо шакли аввалро санҷидан он як
+ * коллеҷро ҳамчун давлатӣ нишон медод.
+ */
 export function isStateOwned(universityName: string): boolean {
-    return !universityName.includes('ғайридавлатӣ');
+    const name = universityName.toLowerCase();
+    return !name.includes('ғайридавлат') && !name.includes('хусус');
 }

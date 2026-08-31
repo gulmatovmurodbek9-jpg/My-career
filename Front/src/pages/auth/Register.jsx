@@ -92,7 +92,7 @@ const Register = () => {
                         <motion.div
                             initial={{ scale: 0.8 }}
                             animate={{ scale: 1 }}
-                            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary to-primary mb-4 shadow-lg shadow-secondary/20"
+                            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-blue to-primary mb-4 shadow-lg shadow-secondary/20"
                         >
                             <ShieldCheck className="w-8 h-8 text-primary-foreground" />
                         </motion.div>
@@ -162,7 +162,7 @@ const Register = () => {
                             whileTap={{ scale: 0.98 }}
                             disabled={loading}
                             type="submit"
-                            className="w-full py-4 rounded-xl bg-gradient-to-r from-secondary to-primary text-primary-foreground font-bold shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full py-4 rounded-xl bg-gradient-to-r from-accent-blue to-primary text-primary-foreground font-bold shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

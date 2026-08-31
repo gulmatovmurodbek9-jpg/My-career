@@ -22,6 +22,10 @@
   /* #003bb3 — матни сафед рӯяш 9.2:1 */
   --primary-foreground: 0 0% 100%;
 
+  /* Кабуди равшантар — ҷуфти градиент. Тилло аксенти нуқтавист: дар
+     градиент "кабуд → тилло" ранги лойи хокистарӣ медиҳад. */
+  --accent-blue: 217 91% 60%;
+
   --secondary: 36 92% 33%;
   /* #a16207 — тиллои торикшуда: тиллои аслӣ рӯи заминаи равшан 1.7:1 медиҳад */
   --secondary-foreground: 0 0% 100%;
@@ -50,6 +54,8 @@
   /* #2563eb — матни сафед рӯяш 5.2:1, худаш рӯи торик 3.8:1 */
   --primary-foreground: 0 0% 100%;
 
+  --accent-blue: 213 94% 68%;
+
   --secondary: 43 100% 51%;
   /* #ffb603 — тиллои аслии логотип, рӯи торик 11.2:1 */
   --secondary-foreground: 0 0% 0%;
@@ -73,6 +79,7 @@
   --color-card-foreground: hsl(var(--card-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-accent-blue: hsl(var(--accent-blue));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));
@@ -199,7 +206,7 @@
   content: "";
   position: absolute;
   inset: -2px;
-  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary), var(--color-primary));
+  background: linear-gradient(45deg, var(--color-primary), var(--color-accent-blue), var(--color-primary));
   z-index: -1;
   border-radius: inherit;
   opacity: 0;
@@ -359,6 +366,20 @@
 
 .university-map .leaflet-popup-content {
   margin: 14px 16px !important;
+  /* Номи донишгоҳҳо дароз аст; бе ин ба чор сатри яккалимагӣ мешиканад. */
+  width: auto !important;
+  min-width: 190px;
+  max-width: 260px;
+}
+
+/* Тугмаи пӯшидан бо ранги мавзӯъ, на хокистарии пешфарзи Leaflet. */
+.university-map .leaflet-popup-close-button {
+  color: hsl(var(--muted-foreground)) !important;
+  padding: 8px 8px 0 0 !important;
+}
+
+.university-map .leaflet-popup-close-button:hover {
+  color: hsl(var(--foreground)) !important;
 }
 
 .university-marker-wrapper {
@@ -401,7 +422,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #2563eb, #ffb603);
+  background: linear-gradient(135deg, #003bb3, #3b82f6);
   color: white;
   font-size: 11px;
   font-weight: 900;
@@ -536,7 +557,7 @@
 
 .ai-msg-content .ai-h2 {
   @apply text-base font-extrabold mt-3 mb-1.5 tracking-tight;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-blue)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -563,7 +584,7 @@
 .ai-msg-content .ai-ul-item::before {
   content: '';
   @apply absolute left-0 top-[9px] w-1.5 h-1.5 rounded-full;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-blue)));
 }
 
 .ai-msg-content .ai-ol-item {
@@ -617,7 +638,7 @@
 /* Filled tile — always holds white content, so it keeps its own contrast
    in both themes rather than depending on the page background. */
 .icon-box-solid {
-  background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-blue)));
   color: #fff;
   flex-shrink: 0;
 }

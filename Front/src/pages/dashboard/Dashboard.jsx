@@ -119,7 +119,7 @@ const Dashboard = () => {
                             {t('dashboard.profile')}
                         </motion.div>
                         <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase">
-                            {t('dashboard.welcome')}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">{user?.name}</span>
+                            {t('dashboard.welcome')}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent-blue">{user?.name}</span>
                         </h1>
                     </div>
 
@@ -143,7 +143,7 @@ const Dashboard = () => {
                         {/* 1. Profile card */}
                         <motion.div variants={itemVariants} className="col-span-12 lg:col-span-4 glass-card p-6 flex flex-col justify-between group">
                             <div className="space-y-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary p-0.5 shadow-lg group-hover:rotate-3 transition-transform duration-500">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent-blue p-0.5 shadow-lg group-hover:rotate-3 transition-transform duration-500">
                                     <div className="w-full h-full rounded-[0.6rem] bg-card flex items-center justify-center text-xl font-black text-primary">
                                         {user?.name?.charAt(0)}
                                     </div>
@@ -186,9 +186,9 @@ const Dashboard = () => {
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/ai-advisor">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center gap-4 relative">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary p-0.5 group-hover:rotate-6 transition-transform duration-500">
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent-blue p-0.5 group-hover:rotate-6 transition-transform duration-500">
                                             <div className="w-full h-full rounded-[0.6rem] bg-card flex items-center justify-center">
                                                 <BrainCircuit className="w-6 h-6 text-primary" />
                                             </div>
@@ -236,9 +236,9 @@ const Dashboard = () => {
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/compare">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-secondary/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-accent-blue/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center gap-4 relative">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-primary p-0.5 group-hover:rotate-6 transition-transform duration-500">
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-blue to-primary p-0.5 group-hover:rotate-6 transition-transform duration-500">
                                             <div className="w-full h-full rounded-[0.6rem] bg-card flex items-center justify-center">
                                                 <Scale className="w-6 h-6 text-secondary" />
                                             </div>

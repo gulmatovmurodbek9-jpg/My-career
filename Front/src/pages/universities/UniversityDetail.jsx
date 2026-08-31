@@ -110,22 +110,47 @@ export default function UniversityDetail() {
                 <h1 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
                   {university.name}
                 </h1>
+                {/*
+                  Нишонҳо танҳо аз маълумоти воқеии база сохта мешаванд.
+                  Пештар дар ин ҷо «Аккредитатсияшуда» сахт навишта шуда буд ва
+                  ҳар 128 донишгоҳ онро нишон медод, дар ҳоле ки дар база ягон
+                  маълумоти аккредитатсия нест. Дар сайти таълимӣ ин даъвои
+                  беасос аст.
+
+                  Нишони навъ низ `university.type`-ро мехонд, ки вуҷуд надорад
+                  (API `institutionType` мефиристад), аз ин рӯ ҳама ба «Давлатӣ»
+                  меафтоданд — ҳатто донишгоҳҳои хусусӣ.
+                */}
                 <div className="flex flex-wrap gap-3">
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-xs font-bold text-muted-foreground border border-white/5">
-                    <MapPin className="w-3.5 h-3.5" /> {university.city}
+                    <MapPin className="w-3.5 h-3.5" />
+                    {[university.city, university.region].filter(Boolean).join(", ")}
                   </span>
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary border border-primary/20">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Аккредитатсияшуда
-                  </span>
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-xs font-bold text-blue-400 border border-blue-500/20">
-                    {university.type || "Давлатӣ"}
+
+                  {university.institutionType && (
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-xs font-bold text-muted-foreground border border-white/5">
+                      <Building2 className="w-3.5 h-3.5" /> {university.institutionType}
+                    </span>
+                  )}
+
+                  <span
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                      university.isState
+                        ? "bg-primary/10 text-primary border-primary/20"
+                        : "bg-secondary/10 text-secondary border-secondary/20"
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    {university.isState ? "Давлатӣ" : "Ғайридавлатӣ"}
                   </span>
                 </div>
               </div>
-              
-              <p className="text-muted-foreground font-medium leading-relaxed max-w-3xl line-clamp-3">
-                {university.description || "Маълумоти иловагӣ дар бораи донишгоҳ ҳоло дастрас нест."}
-              </p>
+
+              {university.description && (
+                <p className="text-muted-foreground font-medium leading-relaxed max-w-3xl">
+                  {university.description}
+                </p>
+              )}
 
               <div className="flex gap-8 pt-4 border-t border-white/5">
                 <div>

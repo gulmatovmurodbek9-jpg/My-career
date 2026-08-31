@@ -358,8 +358,8 @@ export default function TajikistanMap({ universities = [] }) {
               >
                 <Popup className="university-popup" offset={[0, -12]}>
                   <div className="space-y-2">
-                    <p className="text-sm font-bold leading-tight text-white">{group.city}</p>
-                    <p className="flex items-center gap-1 text-xs text-white/70">
+                    <p className="text-sm font-bold leading-tight text-foreground">{group.city}</p>
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="h-3.5 w-3.5" />
                       {group.count} донишгоҳ
                     </p>
@@ -383,8 +383,8 @@ export default function TajikistanMap({ universities = [] }) {
               >
                 <Popup className="university-popup" offset={[0, -10]}>
                   <div className="space-y-2">
-                    <p className="text-sm font-bold leading-tight text-white">{uni.name}</p>
-                    <p className="flex items-center gap-1 text-xs text-white/70">
+                    <p className="text-sm font-bold leading-tight text-foreground">{uni.name}</p>
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3.5 w-3.5" />
                       {uni.inferredCity}
                     </p>

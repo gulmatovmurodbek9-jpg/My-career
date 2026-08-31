@@ -615,7 +615,7 @@ const CareerCompare = () => {
                     className="glass-card p-14 text-center flex flex-col items-center gap-6 max-w-md relative overflow-hidden"
                 >
                     <div className="absolute inset-0 tajik-pattern opacity-10" />
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center relative">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-blue/20 flex items-center justify-center relative">
                         <Scale className="w-8 h-8 text-primary animate-pulse" />
                     </div>
                     <div className="space-y-2">
@@ -644,7 +644,7 @@ const CareerCompare = () => {
                             <ArrowLeft className="w-3.5 h-3.5" />
                             {t.back}
                         </Link>
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-secondary/10 to-primary/10 border border-secondary/20 text-[10px] font-black uppercase tracking-[0.2em] text-secondary">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-accent-blue/10 to-primary/10 border border-secondary/20 text-[10px] font-black uppercase tracking-[0.2em] text-secondary">
                             <Scale className="w-3.5 h-3.5" />
                             {t.badge}
                         </div>
@@ -669,13 +669,13 @@ const CareerCompare = () => {
                     {loadingSuggestions || loadingSavedCareers ? (
                         <div className="flex items-center justify-center py-12">
                             <div className="relative">
-                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-blue/20 flex items-center justify-center">
                                     <Scale className="w-8 h-8 text-primary" />
                                 </div>
                                 {[0, 1, 2].map((i) => (
                                     <motion.div
                                         key={i}
-                                        className="absolute w-2.5 h-2.5 rounded-full bg-gradient-to-r from-primary to-secondary"
+                                        className="absolute w-2.5 h-2.5 rounded-full bg-gradient-to-r from-primary to-accent-blue"
                                         animate={{
                                             x: [0, 24 * Math.cos((i * 2 * Math.PI) / 3), 0],
                                             y: [0, 24 * Math.sin((i * 2 * Math.PI) / 3), 0],
@@ -716,7 +716,7 @@ const CareerCompare = () => {
                                                     initial={{ scale: 0, rotate: -45 }}
                                                     animate={{ scale: 1, rotate: 0 }}
                                                     exit={{ scale: 0, rotate: 45 }}
-                                                    className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25"
+                                                    className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center shadow-lg shadow-primary/25"
                                                 >
                                                     <CheckCircle className="w-4 h-4 text-white" />
                                                 </motion.div>
@@ -732,7 +732,7 @@ const CareerCompare = () => {
                                         {/* Icon */}
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors duration-300 ${
                                             isSelected
-                                                ? "bg-gradient-to-br from-primary/20 to-secondary/10 border border-primary/20"
+                                                ? "bg-gradient-to-br from-primary/20 to-accent-blue/10 border border-primary/20"
                                                 : "bg-primary/5 border border-border group-hover:bg-primary/10 group-hover:border-primary/20"
                                         }`}>
                                             <GraduationCap className={`w-5 h-5 ${isSelected ? "text-primary" : "text-muted-foreground group-hover:text-primary"} transition-colors`} />
@@ -791,7 +791,7 @@ const CareerCompare = () => {
                         <button
                             onClick={addCareer}
                             disabled={!inputValue.trim() || careers.length >= 5}
-                            className="px-5 py-3 bg-gradient-to-r from-secondary to-primary text-white font-black rounded-xl text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider"
+                            className="px-5 py-3 bg-gradient-to-r from-accent-blue to-primary text-white font-black rounded-xl text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider"
                         >
                             <Plus className="w-4 h-4" />
                             {t.addCareer}
@@ -824,7 +824,7 @@ const CareerCompare = () => {
                                         exit="exit"
                                         className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-white/[0.04] to-white/[0.02] border border-white/10 text-sm font-bold text-foreground group hover:border-secondary/30 transition-all duration-300"
                                     >
-                                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center">
+                                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent-blue/20 to-primary/20 flex items-center justify-center">
                                             <GraduationCap className="w-3.5 h-3.5 text-secondary" />
                                         </div>
                                         {name}
@@ -874,7 +874,7 @@ const CareerCompare = () => {
                         disabled={careers.length < 2 || loading || retryCountdown > 0}
                         whileHover={careers.length >= 2 && !loading ? { scale: 1.01 } : {}}
                         whileTap={careers.length >= 2 && !loading ? { scale: 0.99 } : {}}
-                        className="w-full py-3.5 bg-gradient-to-r from-secondary via-primary to-secondary bg-[length:200%_100%] text-white font-black rounded-xl text-sm uppercase tracking-[0.12em] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-right transition-all duration-700 flex items-center justify-center gap-3 relative overflow-hidden group"
+                        className="w-full py-3.5 bg-gradient-to-r from-primary via-accent-blue to-primary bg-[length:200%_100%] text-white font-black rounded-xl text-sm uppercase tracking-[0.12em] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-right transition-all duration-700 flex items-center justify-center gap-3 relative overflow-hidden group"
                     >
                         {/* Shimmer effect */}
                         {careers.length >= 2 && !loading && (
@@ -904,14 +904,14 @@ const CareerCompare = () => {
                             className="flex flex-col items-center justify-center py-20 space-y-6"
                         >
                             <div className="relative">
-                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center">
+                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-blue/20 to-primary/20 flex items-center justify-center">
                                     <Scale className="w-10 h-10 text-secondary" />
                                 </div>
                                 {/* Orbiting dots */}
                                 {[0, 1, 2].map((i) => (
                                     <motion.div
                                         key={i}
-                                        className="absolute w-3 h-3 rounded-full bg-gradient-to-r from-secondary to-primary"
+                                        className="absolute w-3 h-3 rounded-full bg-gradient-to-r from-accent-blue to-primary"
                                         animate={{
                                             rotate: 360,
                                             x: [0, 30 * Math.cos((i * 2 * Math.PI) / 3), 0],
@@ -997,7 +997,7 @@ const CareerCompare = () => {
                                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
                                         <div className="flex items-start gap-4 relative">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary p-0.5 flex-shrink-0">
+                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent-blue p-0.5 flex-shrink-0">
                                                 <div className="w-full h-full rounded-[0.85rem] bg-card flex items-center justify-center">
                                                     <Crown className="w-6 h-6 text-primary" />
                                                 </div>
@@ -1047,7 +1047,7 @@ const CareerCompare = () => {
                                                 {/* Best badge */}
                                                 {isBest && (
                                                     <div className="absolute top-4 right-4">
-                                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
+                                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center shadow-lg shadow-primary/20">
                                                             <Trophy className="w-4 h-4 text-white" />
                                                         </div>
                                                     </div>
@@ -1056,7 +1056,7 @@ const CareerCompare = () => {
                                                 {/* Career name + match bar */}
                                                 <div className="space-y-3 pr-10">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isBest ? "bg-gradient-to-br from-primary/20 to-secondary/20" : "bg-blue-500/10"}`}>
+                                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isBest ? "bg-gradient-to-br from-primary/20 to-accent-blue/20" : "bg-blue-500/10"}`}>
                                                             <GraduationCap className={`w-5 h-5 ${isBest ? "text-primary" : "text-blue-400"}`} />
                                                         </div>
                                                         <h3 className="text-base md:text-lg font-black text-foreground uppercase tracking-normal leading-snug">{career.career}</h3>
@@ -1069,7 +1069,7 @@ const CareerCompare = () => {
                                                                 animate={{ width: `${career.matchPercentage}%` }}
                                                                 transition={{ duration: 1.2, delay: 0.3 + idx * 0.2, ease: [0.16, 1, 0.3, 1] }}
                                                                 className={`h-full rounded-full bg-gradient-to-r ${isBest
-                                                                    ? "from-primary to-secondary"
+                                                                    ? "from-primary to-accent-blue"
                                                                     : matchGradient(career.matchPercentage)
                                                                     }`}
                                                             />

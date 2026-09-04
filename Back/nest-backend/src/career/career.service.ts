@@ -543,6 +543,123 @@ TASK:
         return { answer, remainingToday: DAILY_LIMIT };
     }
 
+    /**
+     * Ба саволи корбар дар бораи як ихтисоси мушаххас ҷавоб медиҳад.
+     *
+     * Фарқаш аз `askAi`: он ихтисосро аз рӯи ном ҷустуҷӯ мекунад ва метавонад
+     * сабти нодурустро гирад. Дар саҳифаи ихтисос мо айнан медонем, ки сухан
+     * дар бораи кадом сабт меравад, аз ин рӯ ҳамон сабт ва пешниҳодҳои воқеии
+     * донишгоҳҳо (нарх, ҷойҳои ройгон, шакли таҳсил) ба промпт дода мешаванд.
+     * Ин муҳим аст: бе ин AI нархро аз худ мебофад.
+     */
+    async askAboutCareer(
+        careerId: string,
+        question: string,
+        userId?: string,
+        lang: string = 'tj',
+    ): Promise<{ answer: string; remainingToday: number }> {
+        const career = await this.careerRepository.findOne({
+            where: { id: careerId },
+            relations: ['cluster'],
+        });
+        if (!career) {
+            throw new NotFoundException('Ихтисос ёфт нашуд');
+        }
+
+        let user: User | null = null;
+        if (userId) {
+            user = await this.userRepository.findOne({ where: { id: userId } });
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const limited = user && user.role !== UserRole.ADMIN;
+        if (limited) {
+            const usage = user!.aiDailyUsage || { date: null, count: 0 };
+            if (usage.date !== today) { usage.date = today; usage.count = 0; }
+            if (usage.count >= DAILY_LIMIT) {
+                throw new ForbiddenException(`Имрӯз ${DAILY_LIMIT} савол тамом шуд. Фардо дубора кӯшиш кунед.`);
+            }
+        }
+
+        const offerings = await this.findOfferings(careerId);
+        const answer = await this.aiService.generateContent(
+            this.buildSingleCareerPrompt(career, offerings, question, lang),
+        );
+
+        if (limited) {
+            const usage = user!.aiDailyUsage || { date: null, count: 0 };
+            if (usage.date !== today) { usage.date = today; usage.count = 0; }
+            usage.count += 1;
+
+            const history = user!.chatHistory || [];
+            history.push({ question, answer, careerName: career.name, createdAt: new Date().toISOString() });
+            if (history.length > 100) history.splice(0, history.length - 100);
+
+            await this.userRepository.update(user!.id, { aiDailyUsage: usage, chatHistory: history });
+            return { answer, remainingToday: Math.max(0, DAILY_LIMIT - usage.count) };
+        }
+
+        return { answer, remainingToday: DAILY_LIMIT };
+    }
+
+    /**
+     * Промпт барои чати як ихтисос.
+     *
+     * Танҳо бахшҳои пуршуда фиристода мешаванд: сабтҳои холӣ ба монанди
+     * «''» ё «[]» ба модел ишора медиҳанд, ки маълумот нест, вале ҷои
+     * бештарро мегиранд ва ҷавобро суст мекунанд.
+     */
+    private buildSingleCareerPrompt(
+        career: Career,
+        offerings: Array<any>,
+        question: string,
+        lang: string,
+    ): string {
+        const section = (heading: string, value: any): string => {
+            if (value === null || value === undefined) return '';
+            if (Array.isArray(value) && value.length === 0) return '';
+            if (typeof value === 'string' && !value.trim()) return '';
+            const body = Array.isArray(value) ? value.join('; ') : String(value);
+            return `${heading}: ${body}\n`;
+        };
+
+        const places = offerings.slice(0, 12).map((offering) => {
+            const price = offering.paymentType === 'ройгон' || offering.tuitionFee === null
+                ? 'ройгон'
+                : `${offering.tuitionFee} сомонӣ/сол`;
+            return `- ${offering.university?.name} (${offering.university?.city ?? 'шаҳр номаълум'}), ` +
+                   `${offering.studyForm}, ${offering.language}, ${price}, ҷойҳо: ${offering.seats ?? 'номаълум'}`;
+        }).join('\n');
+
+        const languageName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+
+        return [
+            `Ту мушовири касбӣ дар портали "Ихтисоси ман" ҳастӣ. Ба хонандаи мактаби Тоҷикистон ҷавоб медиҳӣ.`,
+            '',
+            `ИХТИСОС: ${career.name}`,
+            section('Коди МНТ', career.code),
+            section('Кластер', career.cluster?.clusterName),
+            section('Тавсиф', career.description),
+            section('Мақсад', career.purpose),
+            section('Малакаҳои техникӣ', career.skills?.technical),
+            section('Малакаҳои шахсӣ', career.skills?.soft),
+            section('Технологияҳо', career.technologies),
+            section('Имкониятҳои корӣ', career.careerOpportunities),
+            section('Муддати таҳсил (сол)', career.durationYears),
+            '',
+            places ? `ДАР КУҶО МЕОМӮЗАНД (маълумоти воқеӣ аз базаи мо):\n${places}` : '',
+            '',
+            'ҚОИДАҲОИ ҚАТЪӢ:',
+            `1. Танҳо бо забони ${languageName} ҷавоб деҳ.`,
+            '2. Танҳо аз маълумоти боло истифода бар. Нарх, ном ё рақами донишгоҳро аз худ насоз.',
+            '3. Агар ҷавоб дар маълумоти боло набошад, рост бигӯ: "Ин маълумот дар базаи мо нест".',
+            '4. Маоши мушаххасро наном, агар дар боло набошад — дар Тоҷикистон чунин маълумоти расмӣ мавҷуд нест.',
+            '5. Кӯтоҳ ва содда навис, 3-6 ҷумла. Хонанда 15-17 сола аст.',
+            '',
+            `САВОЛИ ХОНАНДА: ${question}`,
+        ].filter(Boolean).join('\n');
+    }
+
     async generateCareerAdvisorReport(scores: any, lang: string = 'tj', quizProfile?: any): Promise<any> {
         const mmt = scores?.mmtClusters || scores;
         const hasScores = mmt && (

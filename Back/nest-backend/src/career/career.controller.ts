@@ -163,6 +163,21 @@ export class CareerController {
         return result; // { answer, remainingToday }
     }
 
+    @Post(':id/ask')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiOperation({ summary: 'Ask AI about one specific career, grounded in its own record' })
+    @ApiBearerAuth()
+    async askAboutCareer(
+        @Param('id') id: string,
+        @Body() body: { question: string; lang?: string },
+        @Request() req,
+    ) {
+        if (!body.question || body.question.trim().length === 0) {
+            throw new BadRequestException('Саволро нависед');
+        }
+        return this.careerService.askAboutCareer(id, body.question, req.user?.userId, body.lang);
+    }
+
     @Post('voice-ask')
     @UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()

@@ -122,7 +122,14 @@ const Careers = () => {
   const [careers, setCareers] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: LIMIT, lastPage: 1 });
-  const [searchQuery, setSearchQuery] = useState("");
+  /*
+   * Ҷустуҷӯ аз URL сар мешавад, то истиноди «ихтисоси вобаста» аз саҳифаи
+   * ихтисос кор кунад: /careers?search=<ном> рӯйхатро аллакай филтршуда
+   * мекушояд. Бе ин истинод мекушод, вале ҳамаи 884 ихтисосро нишон медод.
+   */
+  const [searchQuery, setSearchQuery] = useState(
+    () => new URLSearchParams(window.location.search).get("search") ?? "",
+  );
   /**
    * Кластери интихобшуда дар URL нигоҳ дошта мешавад, на дар useState.
    *

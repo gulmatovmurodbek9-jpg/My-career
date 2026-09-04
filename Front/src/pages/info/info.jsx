@@ -31,8 +31,99 @@ import { useParams, Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
 import PsychologicalProfile from "../../components/PsychologicalProfile";
 import { API } from "../../lib/config";
+import { resourceUrl } from "../../lib/resourceLinks";
+import CareerChat from "../../components/CareerChat";
+import SalarySection from "../../components/SalarySection";
 
 const fadeIn = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
+
+/**
+ * Як сатри манбаъ. Агар платформа шинохта шавад, пайванди воқеӣ мешавад;
+ * вагарна матн мемонад — пайванди бофта корбарро ба саҳифаи вайрон мебарад.
+ */
+function ResourceItem({ name }) {
+  const url = resourceUrl(name);
+  const body = (
+    <>
+      <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+      <span className="text-sm text-foreground">{name}</span>
+      {url && <ExternalLink className="ml-auto mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+    </>
+  );
+
+  if (!url) {
+    return <div className="flex items-start gap-2 rounded-lg glass-card-sm p-2.5">{body}</div>;
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="focus-ring flex items-start gap-2 rounded-lg glass-card-sm p-2.5 transition hover:bg-primary/5"
+    >
+      {body}
+    </a>
+  );
+}
+
+/**
+ * Кӯмак дар интихоби донишгоҳ барои ҳамин ихтисос.
+ *
+ * Ҳамаи рақамҳо аз `offerings` ҳисоб мешаванд — ҳамон ҷадвале, ки поёнтар
+ * нишон дода мешавад. Ҳеҷ рақами беруна ё тахминӣ илова намешавад.
+ */
+function ChoosingHelp({ offerings }) {
+  if (offerings.length < 2) return null;
+
+  const free = offerings.filter(
+    (o) => o.paymentType === "ройгон" || o.tuitionFee === null,
+  );
+  const paid = offerings.filter((o) => typeof o.tuitionFee === "number" && o.tuitionFee > 0);
+  const cheapest = paid.length
+    ? paid.reduce((min, o) => (o.tuitionFee < min.tuitionFee ? o : min))
+    : null;
+  const cities = [...new Set(offerings.map((o) => o.university?.city).filter(Boolean))];
+  const totalSeats = offerings.reduce((sum, o) => sum + (o.seats || 0), 0);
+
+  const rows = [
+    free.length && {
+      label: "Ҷойҳои ройгон",
+      value: `${free.length} пешниҳод`,
+      hint: [...new Set(free.map((o) => o.university?.name))].slice(0, 2).join(", "),
+    },
+    cheapest && {
+      label: "Арзонтарин пулакӣ",
+      value: `${cheapest.tuitionFee.toLocaleString("ru-RU")} сом./сол`,
+      hint: cheapest.university?.name,
+    },
+    cities.length && {
+      label: "Шаҳрҳо",
+      value: cities.length > 1 ? `${cities.length} шаҳр` : cities[0],
+      hint: cities.length > 1 ? cities.slice(0, 3).join(", ") : null,
+    },
+    totalSeats > 0 && { label: "Ҳамагӣ ҷойҳо", value: String(totalSeats), hint: null },
+  ].filter(Boolean);
+
+  return (
+    <div className="mb-5 rounded-2xl border border-border bg-muted/30 p-5">
+      <h3 className="text-base font-semibold text-foreground">Кадомашро интихоб кунам?</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Муқоисаи кӯтоҳ аз рӯи ҷадвали поён
+      </p>
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {rows.map((row) => (
+          <div key={row.label} className="rounded-xl border border-border bg-card p-4">
+            <p className="text-sm text-muted-foreground">{row.label}</p>
+            <p className="mt-0.5 text-lg font-semibold text-foreground">{row.value}</p>
+            {row.hint && (
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">{row.hint}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const Info = () => {
   const { id } = useParams();
@@ -256,8 +347,10 @@ const Info = () => {
                     </span>
                   )}
                   {career.code && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/5 text-muted-foreground border border-white/10">
-                      Коди МНТ: {career.code}
+                    <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm bg-white/5 border border-white/10">
+                      <span className="text-muted-foreground">Коди МНТ</span>
+                      {/* Рақам бо моношрифт: рақамҳо ба як паҳно меафтанд ва хондан осон мешавад. */}
+                      <span className="font-mono font-semibold tracking-wide text-foreground">{career.code}</span>
                     </span>
                   )}
                   {career.hasFreeSeats && (
@@ -298,7 +391,7 @@ const Info = () => {
                   </span>
                 </div>
               )}
-              {salary?.junior && (
+              {career.contentWritten && salary?.junior && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
                   <span className="text-muted-foreground">Маоши ибтидоӣ:</span>
@@ -349,25 +442,9 @@ const Info = () => {
           )}
 
           {/* --- Маоши меҳнат --- */}
-          {salary && (
-            <Section icon={DollarSign} title="Маоши меҳнат" subtitle="Дар бозори кор чӣ қадар маблағ мегиранд" gradient="from-emerald-500 to-green-500">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  { label: "Навкор (Junior)", desc: "0-1 соли таҷриба", value: salary.junior, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/5", icon: Rocket },
-                  { label: "Миёна (Mid)", desc: "2-4 соли таҷриба", value: salary.mid, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/5", icon: TrendingUp },
-                  { label: "Таҷрибадор (Senior)", desc: "5+ соли таҷриба", value: salary.senior, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/5", icon: Star },
-                ].filter(t => t.value).map((tier, i) => (
-                  <div key={i} className={`${tier.bg} rounded-xl p-5 border border-border/30 text-center relative overflow-hidden`}>
-                    <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: i === 0 ? "#10b981" : i === 1 ? "#f59e0b" : "#2563eb" }} />
-                    <tier.icon className={`h-6 w-6 ${tier.color} mx-auto mb-2`} />
-                    <div className="text-xs text-muted-foreground mb-1">{tier.label}</div>
-                    <div className={`text-2xl font-bold ${tier.color} mb-1`}>{tier.value}</div>
-                    <div className="text-[10px] text-muted-foreground">{tier.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </Section>
-          )}
+          <Section icon={DollarSign} title="Маоши меҳнат" subtitle="Маош чӣ гуна муайян карда мешавад" gradient="from-emerald-500 to-green-500">
+            <SalarySection salary={salary} contentWritten={career.contentWritten} />
+          </Section>
 
           {/* --- Маҳоратҳо --- */}
           {career.skills && (
@@ -449,12 +526,7 @@ const Info = () => {
                       {/* Content */}
                       <div className="flex-1 pb-5">
                         <div className="glass-card-sm p-4 rounded-xl">
-                          <h3 className="font-bold text-foreground flex items-start gap-2 flex-wrap">
-                            <span className="flex-1 min-w-0">{title}</span>
-                            <span className="text-[10px] text-muted-foreground font-normal px-2 py-0.5 bg-muted rounded-full flex-shrink-0">
-                              Қадами {number}
-                            </span>
-                          </h3>
+                          <h3 className="font-semibold leading-6 text-foreground">{title}</h3>
                           {tasks.length > 0 && (
                             <div className="space-y-1.5 mt-2">
                               {tasks.map((task, taskIndex) => (
@@ -493,11 +565,19 @@ const Info = () => {
           {/* --- Имкониятҳои касбӣ --- */}
           {opportunities.length > 0 && (
             <Section icon={Briefcase} title="Имкониятҳои касбӣ" subtitle="Дар оянда кадом вазифаҳоро гирифта метавонед" gradient="from-indigo-500 to-violet-500">
-              <div className="flex flex-wrap gap-2.5">
+              {/*
+                Пештар ҳаббҳои бунафш бо ситорачаи «AI» буданд. Ин ҷойҳои кори
+                воқеӣ ҳастанд, на теги ороишӣ, аз ин рӯ ҳамчун рӯйхат нишон
+                дода мешаванд.
+              */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {opportunities.map((opp, i) => (
-                  <span key={i} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-indigo-500/6 text-indigo-600 dark:text-indigo-400 border border-indigo-500/10 hover:bg-indigo-500/10 transition-colors">
-                    <Sparkles className="h-3.5 w-3.5" /> {opp}
-                  </span>
+                  <div key={i} className="flex items-center gap-3 rounded-xl border border-border p-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm text-foreground">{opp}</span>
+                  </div>
                 ))}
               </div>
             </Section>
@@ -527,6 +607,8 @@ const Info = () => {
               subtitle={`${offerings.length} пешниҳод дар ${new Set(offerings.map(o => o.university?.name)).size} муассиса — аз арзонтарин сар карда`}
               gradient="from-blue-500 to-cyan-500"
             >
+              <ChoosingHelp offerings={offerings} />
+
               <div className="overflow-x-auto -mx-2 px-2">
                 <table className="w-full min-w-[720px] text-sm border-separate border-spacing-y-1.5">
                   <thead>
@@ -605,10 +687,7 @@ const Info = () => {
                     </h3>
                     <div className="space-y-1.5">
                       {resources.books.map((book, i) => (
-                        <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg glass-card-sm">
-                          <ChevronRight className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-foreground">{book}</span>
-                        </div>
+                        <ResourceItem key={i} name={book} />
                       ))}
                     </div>
                   </div>
@@ -621,10 +700,7 @@ const Info = () => {
                     </h3>
                     <div className="space-y-1.5">
                       {resources.courses.map((course, i) => (
-                        <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg glass-card-sm">
-                          <ChevronRight className="h-3.5 w-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-foreground">{course}</span>
-                        </div>
+                        <ResourceItem key={i} name={course} />
                       ))}
                     </div>
                   </div>
@@ -637,10 +713,7 @@ const Info = () => {
                     </h3>
                     <div className="space-y-1.5">
                       {resources.blogs.map((blog, i) => (
-                        <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg glass-card-sm">
-                          <ChevronRight className="h-3.5 w-3.5 text-cyan-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-foreground">{blog}</span>
-                        </div>
+                        <ResourceItem key={i} name={blog} />
                       ))}
                     </div>
                   </div>
@@ -652,11 +725,21 @@ const Info = () => {
           {/* --- Ихтисосҳои вобаста --- */}
           {related.length > 0 && (
             <Section icon={Layers} title="Ихтисосҳои вобаста" subtitle="Ихтисосҳои наздик ба ин соҳа" gradient="from-violet-500 to-purple-500">
+              {/*
+                Инҳо `span` буданд — намуди зернашаванда доштанд, вале ҳеҷ ҷо
+                намебурданд. Ҳоло ба рӯйхати ихтисосҳо бо ҷустуҷӯи ҳамон ном
+                мебаранд.
+              */}
               <div className="flex flex-wrap gap-2.5">
                 {related.map((spec, i) => (
-                  <span key={i} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-purple-500/6 text-purple-600 dark:text-purple-400 border border-purple-500/10 hover:bg-purple-500/10 transition-colors">
-                    <ChevronRight className="h-3.5 w-3.5" /> {spec}
-                  </span>
+                  <Link
+                    key={i}
+                    to={`/careers?search=${encodeURIComponent(spec)}`}
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm text-foreground transition hover:border-primary/40 hover:bg-primary/5"
+                  >
+                    {spec}
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Link>
                 ))}
               </div>
             </Section>
@@ -686,6 +769,11 @@ const Info = () => {
               </div>
             </motion.div>
           )}
+
+          {/* --- Саволу ҷавоб дар бораи ҳамин ихтисос --- */}
+          <motion.div {...fadeIn}>
+            <CareerChat careerId={career.id} careerName={career.name} />
+          </motion.div>
 
           {/* --- Back to careers --- */}
           <motion.div {...fadeIn} className="text-center pt-8 pb-4">

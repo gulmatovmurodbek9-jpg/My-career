@@ -68,7 +68,7 @@ const PsychologicalProfile = ({ results, className = "" }) => {
     const max = radarData[0]?.fullMark ?? MMT_MAX;
 
     return (
-        <div className={`glass-card flex flex-col p-6 ${className}`}>
+        <div className={`glass-card p-6 ${className}`}>
             <h3 className="text-lg font-semibold text-foreground">
                 {t('dashboard.radar_title')}
             </h3>
@@ -77,10 +77,11 @@ const PsychologicalProfile = ({ results, className = "" }) => {
             </p>
 
             {/*
-              Баландӣ 220px буд ва чарх 80% -и онро мегирифт, аз ин рӯ дар нимаи
-              рости корт ҷои холӣ мемонд ва нишонаҳо ба ҳам мечаспиданд.
+              Баландии муайян, на flex-1: ResponsiveContainer баландии
+              волидро чен мекунад, ва дар қуттии flex ҳангоми аввалин
+              кашидан 0 мегирад ва дигар барнамегардад — чарх холӣ мемонад.
             */}
-            <div className="mt-4 min-h-[280px] flex-1">
+            <div className="mt-4 h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="52%" outerRadius="72%" data={radarData}>
                         <PolarGrid stroke="hsl(var(--border))" />

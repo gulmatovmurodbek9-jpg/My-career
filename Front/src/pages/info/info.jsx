@@ -32,6 +32,7 @@ import { useAuthStore } from "../../store/authStore";
 import PsychologicalProfile from "../../components/PsychologicalProfile";
 import { API } from "../../lib/config";
 import { resourceUrl } from "../../lib/resourceLinks";
+import { buildRoadmap } from "../../lib/buildRoadmap";
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
 
@@ -286,7 +287,12 @@ const Info = () => {
 
   const techSkills = career.skills?.technical || [];
   const softSkills = career.skills?.soft || [];
-  const roadmap = career.roadmap || [];
+  /*
+   * Нақша аз маълумоти худи ихтисос сохта мешавад — малакаҳо, технологияҳо,
+   * ҷойҳои кор. Нақшаи дар база захирашуда шаблон буд ва ҳамаи ин маълумотро
+   * нодида мегирифт. Агар сохтан имконнопазир бошад, захирашуда мемонад.
+   */
+  const roadmap = buildRoadmap(career) ?? career.roadmap ?? [];
   const salary = career.salaryAndMarket;
   const techs = career.technologies || [];
   const opportunities = career.careerOpportunities || [];

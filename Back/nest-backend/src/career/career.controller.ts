@@ -178,54 +178,6 @@ export class CareerController {
         return this.careerService.askAboutCareer(id, body.question, req.user?.userId, body.lang);
     }
 
-    @Post('voice-ask')
-    @UseGuards(AuthGuard('jwt'))
-    @ApiBearerAuth()
-    @ApiConsumes('multipart/form-data')
-    @ApiOperation({ summary: 'Send voice message, transcribe via Whisper, get AI response' })
-    @UseInterceptors(FileInterceptor('audio', {
-        storage: diskStorage({
-            destination: uploadsDir,
-            filename: (_req, file, cb) => {
-                const unique = Date.now() + '-' + Math.round(Math.random() * 1e6);
-                const ext = path.extname(file.originalname) || '.webm';
-                cb(null, `voice-${unique}${ext}`);
-            },
-        }),
-        limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max
-    }))
-    async voiceAsk(
-        @UploadedFile() file: Express.Multer.File,
-        @Body() body: { lang?: string; careerName?: string },
-        @Request() req,
-    ) {
-        if (!file) {
-            throw new BadRequestException('Файли овозӣ фиристода нашуд');
-        }
-
-        try {
-            // 1. Transcribe audio via Groq Whisper
-            const transcription = await this.aiService.transcribeAudio(file.path, body.lang || 'tj');
-
-            if (!transcription || transcription.trim().length === 0) {
-                throw new BadRequestException('Овоз шинохта нашуд. Лутфан дубора кӯшиш кунед.');
-            }
-
-            // 2. Pass transcription to existing AI chat flow
-            const userId = req.user?.userId;
-            const result = await this.careerService.askAi(transcription.trim(), userId, body.careerName, body.lang);
-
-            return {
-                transcription: transcription.trim(),
-                answer: result.answer,
-                remainingToday: result.remainingToday,
-            };
-        } finally {
-            // Clean up temp file
-            try { fs.unlinkSync(file.path); } catch { }
-        }
-    }
-
     @Post('ai-advisor')
     @UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()

@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit, InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import Groq from 'groq-sdk';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -11,7 +10,6 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export class AiService implements OnModuleInit {
     private genAI: GoogleGenerativeAI | null = null;
     private geminiModel: any = null;
-    private groq: Groq | null = null;
     private vertexKey: string | null = null;
     private vertexModel = 'gemini-flash-latest';
 
@@ -29,75 +27,8 @@ export class AiService implements OnModuleInit {
         this.vertexKey = this.configService.get<string>('VERTEX_API_KEY') || null;
         this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-flash-latest';
 
-        const groqKey = this.configService.get<string>('GROQ_API_KEY');
-        if (groqKey) {
-            this.groq = new Groq({ apiKey: groqKey });
-        }
     }
 
-    /**
-     * Transcribe audio using Groq Whisper (whisper-large-v3)
-     * Uses full model + prompt hints for maximum accuracy
-     */
-    async transcribeAudio(filePath: string, lang: string = 'tg'): Promise<string> {
-        if (!this.groq) {
-            throw new InternalServerErrorException('Groq API Key танзим нашудааст');
-        }
-
-        // Map our lang codes to Whisper language codes
-        const whisperLang: Record<string, string> = { tj: 'tg', ru: 'ru', en: 'en' };
-        const language = whisperLang[lang] || 'ru';
-
-        // Prompt hints improve accuracy for domain-specific vocabulary
-        const promptHints: Record<string, string> = {
-            tg: 'Ихтисос, маош, донишгоҳ, барномасоз, касб, таълим, кор, мутахассис, сомонӣ, Тоҷикистон, Душанбе',
-            ru: 'Профессия, зарплата, университет, программист, карьера, образование, работа, специалист',
-            en: 'Career, salary, university, programmer, profession, education, job, specialist',
-        };
-
-        try {
-            const transcription = await this.groq.audio.transcriptions.create({
-                file: fs.createReadStream(filePath),
-                model: 'whisper-large-v3',
-                language,
-                prompt: promptHints[language] || promptHints['ru'],
-                response_format: 'verbose_json',
-                temperature: 0.0, // deterministic = more accurate
-            });
-
-            // Extract text from verbose response
-            const text = (transcription as any)?.text || (transcription as any)?.toString?.() || String(transcription);
-            return text.trim();
-        } catch (error) {
-            console.error('Whisper transcription error:', error?.message || error);
-            // Fallback to turbo model if full model fails
-            try {
-                const fallback = await this.groq.audio.transcriptions.create({
-                    file: fs.createReadStream(filePath),
-                    model: 'whisper-large-v3-turbo',
-                    language,
-                    response_format: 'text',
-                });
-                return ((fallback as any)?.toString?.() || String(fallback)).trim();
-            } catch {
-                throw new InternalServerErrorException('Хатогӣ ҳангоми табдили овоз ба матн');
-            }
-        }
-    }
-
-    /**
-     * Матн аз AI. Агар провайдери аввал афтад, дуюм санҷида мешавад.
-     *
-     * Пештар пешфарз Groq буд ва ҳеҷ гузариш ба Gemini набуд: як хатои Groq
-     * тамоми функсияро мекушт. Маҳз ҳамин рӯй дод, вақте Groq модели
-     * llama-3.3-70b-versatile-ро бекор кард — маслиҳатгар, чат ва муқоиса
-     * ҳамзамон хатои 500 медоданд.
-     *
-     * Ҳарду провайдер бо алифбои тоҷикӣ дуруст кор мекунанд — санҷида шуд.
-     * Gemini аввал аст, чунки ҷавобҳояш дар тоҷикӣ табиитар баромаданд, вале
-     * ин афзалияти сабук аст: чизи муҳим худи мавҷудияти захира аст, то
-     * бекоршавии навбатии модел тамоми AI-ро набандад.
-     */
     /**
      * Матн месозад, бо гузариши худкор аз Vertex ба Gemini.
      *
@@ -106,7 +37,7 @@ export class AiService implements OnModuleInit {
      * 403 медиҳад ва дархост бесадо ба Gemini мегузарад. Баъди фаъол шудани
      * API ҳамон код худаш ба Vertex мегузарад.
      *
-     * Groq аз ин занҷир бароварда шуд — танҳо Google истифода мешавад.
+     * Танҳо провайдерҳои Google истифода мешаванд.
      */
     async generateContent(
         prompt: string,
@@ -173,10 +104,10 @@ export class AiService implements OnModuleInit {
 
     /**
      * Extract retry delay (in ms) from a rate-limit error.
-     * Handles both Groq ("retry-after" header or message text) and Gemini (retryDelay field).
+     * Handles the retry-after header and Gemini's retryDelay field.
      */
     private extractRetryDelay(error: any): number | null {
-        // 1. Groq: retry-after header (seconds)
+        // 1. retry-after header (seconds)
         const retryAfterHeader = error?.headers?.['retry-after'];
         if (retryAfterHeader) {
             return Math.min(Number(retryAfterHeader) * 1000, 30_000);
@@ -218,7 +149,7 @@ export class AiService implements OnModuleInit {
      */
     private isDailyQuotaExhausted(error: any): boolean {
         const msg = error?.error?.error?.message || error?.message || '';
-        // Groq: "tokens per day (TPD)"
+        // "tokens per day (TPD)"
         if (msg.includes('per day') || msg.includes('TPD')) return true;
         // Gemini: "free_tier" with limit: 0
         if (msg.includes('limit: 0')) return true;

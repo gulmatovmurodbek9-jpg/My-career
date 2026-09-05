@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -10,8 +11,8 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export class AiService implements OnModuleInit {
     private genAI: GoogleGenerativeAI | null = null;
     private geminiModel: any = null;
-    private vertexKey: string | null = null;
-    private vertexModel = 'gemini-flash-latest';
+    private vertex: GoogleGenAI | null = null;
+    private vertexModel = 'gemini-2.5-flash';
 
     constructor(private configService: ConfigService) { }
 
@@ -24,9 +25,23 @@ export class AiService implements OnModuleInit {
             this.geminiModel = this.genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
         }
 
-        this.vertexKey = this.configService.get<string>('VERTEX_API_KEY') || null;
-        this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-flash-latest';
+        this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-2.5-flash';
 
+        // Vertex AI бо лоиҳаи воқеии Google Cloud кор мекунад: ҳисоб ба ҳамон
+        // лоиҳа меравад ва кредити $300 аз ҳамон ҷо сарф мешавад.
+        const project =
+            this.configService.get<string>('VERTEX_PROJECT_ID') ||
+            this.configService.get<string>('GOOGLE_CLOUD_PROJECT');
+        const location = this.configService.get<string>('VERTEX_LOCATION') || 'global';
+
+        if (project) {
+            // Эътимоднома аз GOOGLE_APPLICATION_CREDENTIALS (файли калиди ҳисоби
+            // хизматӣ) ё аз `gcloud auth application-default login` гирифта мешавад.
+            this.vertex = new GoogleGenAI({ vertexai: true, project, location });
+            console.log(`AI: Vertex фаъол — лоиҳа ${project}, минтақа ${location}, модел ${this.vertexModel}`);
+        } else {
+            console.warn('AI: VERTEX_PROJECT_ID танзим нашудааст — танҳо Gemini API истифода мешавад');
+        }
     }
 
     /**
@@ -50,7 +65,7 @@ export class AiService implements OnModuleInit {
             ? ['gemini', 'vertex']
             : ['vertex', 'gemini'];
 
-        const usable = chain.filter((which) => which !== 'vertex' || this.vertexKey);
+        const usable = chain.filter((which) => which !== 'vertex' || this.vertex);
 
         let last: any = null;
         for (const which of usable) {
@@ -65,37 +80,23 @@ export class AiService implements OnModuleInit {
     }
 
     /**
-     * Vertex AI дар реҷаи express: калиди оддии API, бе ҳисоби хизматӣ.
+     * Vertex AI тавассути SDK-и расмӣ.
      *
-     * `@google/generative-ai` танҳо ба generativelanguage муроҷиат мекунад,
-     * аз ин рӯ ин ҷо дархости мустақим фиристода мешавад.
+     * Дархост ба `aiplatform.googleapis.com` бо эътимодномаи ҳисоби хизматӣ
+     * меравад, на бо калиди оддии API — танҳо ҳамин роҳ ба лоиҳа ва кредити
+     * Google Cloud пайваст мешавад.
      */
     private async generateVertexContent(prompt: string): Promise<string> {
-        if (!this.vertexKey) {
-            throw new InternalServerErrorException('VERTEX_API_KEY танзим нашудааст');
+        if (!this.vertex) {
+            throw new InternalServerErrorException('Vertex танзим нашудааст (VERTEX_PROJECT_ID)');
         }
 
-        const url =
-            'https://aiplatform.googleapis.com/v1/publishers/google/models/' +
-            `${this.vertexModel}:generateContent?key=${this.vertexKey}`;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] }),
+        const response = await this.vertex.models.generateContent({
+            model: this.vertexModel,
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
         });
 
-        if (!response.ok) {
-            const detail = await response.text();
-            throw new Error(`Vertex ${response.status}: ${detail.slice(0, 200)}`);
-        }
-
-        const data: any = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts
-            ?.map((part: any) => part.text)
-            .filter(Boolean)
-            .join('');
-
+        const text = response.text;
         if (!text) {
             throw new Error('Vertex ҷавоби холӣ баргардонд');
         }

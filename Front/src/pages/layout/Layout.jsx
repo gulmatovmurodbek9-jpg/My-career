@@ -18,8 +18,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ChatModal } from "../../components/aiAssitand";
-import { FloatingChatButton } from "../../components/chatbtn";
 import { useTheme } from "../../hooks/useTheme";
 import { useAuthStore } from "../../store/authStore";
 import DashboardSidebar from "../../components/DashboardSidebar";
@@ -71,7 +69,6 @@ const Layout = () => {
     { code: "en", label: "EN", name: "English" },
   ];
 
-  const [chatOpen, setChatOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = i18n.language?.startsWith("ru")
     ? "ru"
@@ -424,8 +421,6 @@ const Layout = () => {
         </footer>
       )}
 
-      <FloatingChatButton onClick={() => setChatOpen(true)} />
-      <ChatModal open={chatOpen} onOpenChange={setChatOpen} />
     </div>
   );
 };

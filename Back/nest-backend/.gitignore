@@ -5,6 +5,9 @@ dist/
 .env.*
 !.env.example
 
+keys/
+*.json.key
+
 *.local
 npm-debug.log*
 yarn-debug.log*

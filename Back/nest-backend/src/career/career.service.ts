@@ -10,7 +10,17 @@ import { ConfigService } from '@nestjs/config';
 import { AiService } from '../ai/ai.service';
 import { User, UserRole } from '../users/user.entity';
 
-const DAILY_LIMIT = 5;
+/**
+ * Лимити рӯзонаи саволҳои AI барои як корбар.
+ *
+ * 0 маънои бе лимит дорад — ҳолати пешфарзи ҳозира, то ҳар кас, аз ҷумла
+ * доварони озмун, озодона санҷида тавонад.
+ *
+ * Агар сарфи ҳисоб зиёд шавад, лимитро бе тағйири код баргардонидан мумкин
+ * аст: дар .env сатри AI_DAILY_LIMIT=5 гузошта шавад.
+ */
+const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 0);
+const LIMIT_ON = DAILY_LIMIT > 0;
 
 @Injectable()
 export class CareerService {
@@ -509,7 +519,7 @@ TASK:
             const today = new Date().toISOString().slice(0, 10);
             const usage = user.aiDailyUsage || { date: null, count: 0 };
             if (usage.date !== today) { usage.date = today; usage.count = 0; }
-            if (usage.count >= DAILY_LIMIT) {
+            if (LIMIT_ON && usage.count >= DAILY_LIMIT) {
                 throw new ForbiddenException(`Имрӯз ${DAILY_LIMIT} савол тамом шуд. Фардо дубора кӯшиш кунед.`);
             }
         }
@@ -537,10 +547,10 @@ TASK:
             if (history.length > 100) history.splice(0, history.length - 100);
 
             await this.userRepository.update(user.id, { aiDailyUsage: usage, chatHistory: history });
-            return { answer, remainingToday: Math.max(0, DAILY_LIMIT - usage.count) };
+            return { answer, remainingToday: LIMIT_ON ? Math.max(0, DAILY_LIMIT - usage.count) : null };
         }
 
-        return { answer, remainingToday: DAILY_LIMIT };
+        return { answer, remainingToday: null };
     }
 
     /**
@@ -576,7 +586,7 @@ TASK:
         if (limited) {
             const usage = user!.aiDailyUsage || { date: null, count: 0 };
             if (usage.date !== today) { usage.date = today; usage.count = 0; }
-            if (usage.count >= DAILY_LIMIT) {
+            if (LIMIT_ON && usage.count >= DAILY_LIMIT) {
                 throw new ForbiddenException(`Имрӯз ${DAILY_LIMIT} савол тамом шуд. Фардо дубора кӯшиш кунед.`);
             }
         }
@@ -596,10 +606,10 @@ TASK:
             if (history.length > 100) history.splice(0, history.length - 100);
 
             await this.userRepository.update(user!.id, { aiDailyUsage: usage, chatHistory: history });
-            return { answer, remainingToday: Math.max(0, DAILY_LIMIT - usage.count) };
+            return { answer, remainingToday: LIMIT_ON ? Math.max(0, DAILY_LIMIT - usage.count) : null };
         }
 
-        return { answer, remainingToday: DAILY_LIMIT };
+        return { answer, remainingToday: null };
     }
 
     /**

@@ -294,13 +294,14 @@ export class UsersService {
 
         const today = new Date().toISOString().slice(0, 10);
         const usage = user.aiDailyUsage || { date: null, count: 0 };
-        const DAILY_LIMIT = 5;
+        // 0 = бе лимит; ба career.service.ts мувофиқ.
+        const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 0);
 
         const usedToday = usage.date === today ? usage.count : 0;
         return {
             usedToday,
-            remainingToday: Math.max(0, DAILY_LIMIT - usedToday),
-            limit: DAILY_LIMIT,
+            remainingToday: DAILY_LIMIT > 0 ? Math.max(0, DAILY_LIMIT - usedToday) : null,
+            limit: DAILY_LIMIT > 0 ? DAILY_LIMIT : null,
             isAdmin: false,
         };
     }

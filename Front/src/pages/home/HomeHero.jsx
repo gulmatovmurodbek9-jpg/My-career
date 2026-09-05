@@ -28,7 +28,7 @@ export default function HomeHero() {
     "inline-flex min-h-[3.5rem] items-center justify-center gap-3 whitespace-nowrap rounded-xl px-8 text-lg font-semibold transition-colors duration-200 focus-ring active:translate-y-px";
 
   return (
-    <section className="border-b border-border bg-background">
+    <section className="bg-background">
       {/* max-w-6xl = 1152px. Видео 1024px паҳноии аслӣ дорад, аз ин рӯ контейнери
           калонтар онро танҳо ноаниқ мекунад. */}
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20 lg:px-8">

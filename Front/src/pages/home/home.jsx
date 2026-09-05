@@ -9,6 +9,7 @@ import SpecialtyCard from "../../components/jobCard";
 import { API } from "../../lib/config";
 import Reveal from "../../components/Reveal";
 import SceneVideo from "../../components/SceneVideo";
+import SceneSlider from "../../components/SceneSlider";
 import { CHOICES_POSTER, CHOICES_VIDEO, CLOSING_POSTER, CLOSING_VIDEO } from "../../lib/media";
 import { useHomeContent } from "./useHomeContent";
 
@@ -42,8 +43,8 @@ function OverwhelmScene() {
   const { overwhelm } = useHomeContent();
 
   return (
-    <section className="border-b border-border bg-background">
-      <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32 lg:px-8">
+    <section className="bg-background">
+      <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20 lg:px-8">
         <Reveal>
           <SceneVideo
             src={CHOICES_VIDEO}
@@ -253,8 +254,15 @@ export default function Home() {
 
   return (
     <>
-      <HomeHero />
-      <OverwhelmScene />
+      {/*
+        Ду экрани аввал — савол ва мушкил — гардиш мекунанд. Онҳо як фикрро
+        аз ду тараф мегӯянд, аз ин рӯ паҳлӯи ҳам гузоштанашон саҳифаро дароз
+        мекард ва такрор менамуд.
+      */}
+      <SceneSlider
+        label="Муқаддимаи сомона"
+        slides={[<HomeHero key="hero" />, <OverwhelmScene key="overwhelm" />]}
+      />
       <EntryDoors />
       <ClusterList />
       <TopCareers />

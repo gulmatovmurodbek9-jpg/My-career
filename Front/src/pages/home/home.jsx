@@ -10,6 +10,7 @@ import { API } from "../../lib/config";
 import Reveal from "../../components/Reveal";
 import SceneVideo from "../../components/SceneVideo";
 import SceneSlider from "../../components/SceneSlider";
+import StoryScene from "./StoryScene";
 import { CHOICES_POSTER, CHOICES_VIDEO, CLOSING_POSTER, CLOSING_VIDEO } from "../../lib/media";
 import { useHomeContent } from "./useHomeContent";
 
@@ -40,36 +41,21 @@ import { useHomeContent } from "./useHomeContent";
  * пай дар пай як шакл надошта бошанд.
  */
 function OverwhelmScene() {
-  const { overwhelm } = useHomeContent();
+  const { overwhelm, opening } = useHomeContent();
 
   return (
-    <section className="bg-background">
-      <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20 lg:px-8">
-        <Reveal>
-          <SceneVideo
-            src={CHOICES_VIDEO}
-            poster={CHOICES_POSTER}
-            alt={overwhelm.videoAlt}
-            preload="none"
-          />
-        </Reveal>
-
-        <Reveal
-          as="h2"
-          delay={0.06}
-          className="mt-12 max-w-[20ch] font-semibold leading-[1.1] tracking-[-0.02em] text-foreground"
-          style={{ fontSize: "clamp(2.125rem, 4.6vw, 3.5rem)" }}
-        >
-          {overwhelm.title}
-        </Reveal>
-
-        <Reveal delay={0.12}>
-          <p className="mt-6 max-w-[58ch] text-xl leading-relaxed text-muted-foreground">
-            {overwhelm.lead}
-          </p>
-        </Reveal>
-      </div>
-    </section>
+    <StoryScene
+      video={CHOICES_VIDEO}
+      poster={CHOICES_POSTER}
+      videoAlt={overwhelm.videoAlt}
+      preload="none"
+      title={overwhelm.title}
+      lead={overwhelm.lead}
+      /* Ҳамон ду тугма: экран мушкилро мегӯяд, ва тугмаҳо роҳи ҳалро. Корбар
+         ҳеҷ гоҳ ҳарду экранро ҳамзамон намебинад, аз ин рӯ такрор нест. */
+      ctaPrimary={opening.ctaPrimary}
+      ctaSecondary={opening.ctaSecondary}
+    />
   );
 }
 

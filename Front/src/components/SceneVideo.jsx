@@ -1,5 +1,6 @@
 import React from "react";
 import { useReducedMotion } from "framer-motion";
+import { useSlider } from "./SceneSlider";
 
 /**
  * Видеои ороишии як бахш, ё расми беҳаракат ба ҷои он.
@@ -23,6 +24,7 @@ export default function SceneVideo({
   className = "",
 }) {
   const reduceMotion = useReducedMotion();
+  const slider = useSlider();
 
   // Баландӣ маҳдуд аст, на таносуб. Бо `aspect` видео тамоми паҳноро мегирифт
   // ва дар экрани калон 600px баланд мешуд — саҳифаро мехӯрд. Маҳдуд кардани
@@ -40,7 +42,9 @@ export default function SceneVideo({
       poster={poster}
       autoPlay
       muted
-      loop
+      /* Дар слайдер такрор намешавад: охири видео экранро иваз мекунад. */
+      loop={!slider}
+      onEnded={slider?.onSceneEnded}
       playsInline
       preload={preload}
       /* Видеои фазоӣ аст: маънои саҳифа пурра дар матн ҳаст. */

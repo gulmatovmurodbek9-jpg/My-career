@@ -1,6 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+/**
+ * Ба видеои дохили слайдер мегӯяд, ки такрор нашавад ва охирашро хабар диҳад.
+ *
+ * Бе ин SceneVideo `loop` дорад ва ҳодисаи `ended` ҳеҷ гоҳ рух намедиҳад.
+ */
+const SliderContext = createContext(null);
+
+export const useSlider = () => useContext(SliderContext);
 
 /**
  * Экранҳои ҳикояро як-як бо гардиш нишон медиҳад.
@@ -11,13 +20,13 @@ import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
  *
  *   - гардиш ҳангоми ламс, ҳаракати муш ё фокуси клавиатура МЕИСТАД, то
  *     тугма зери ангушти корбар аз ҷояш наравад;
- *   - тугмаи ошкорои «Таваққуф» ҳаст, на танҳо нуқтаҳо;
+ *   - зер кардани тир ё нуқта гардиши худкорро тамоман мебандад;
  *   - бо `prefers-reduced-motion` гардиши худкор тамоман хомӯш мешавад;
  *   - тағйири экран ба хонандаи экран эълон мешавад.
  *
  * Тирҳо ва нуқтаҳо тугмаҳои воқеӣ ҳастанд, аз ин рӯ клавиатура кор мекунад.
  */
-export default function SceneSlider({ slides, interval = 11000, label }) {
+export default function SceneSlider({ slides, interval = 20000, label }) {
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -33,11 +42,31 @@ export default function SceneSlider({ slides, interval = 11000, label }) {
   // Гардиш танҳо вақте кор мекунад, ки корбар ба он даст назада бошад.
   const running = !reduceMotion && !paused && !manual && total > 1;
 
+  const next = useCallback(() => go(index + 1), [go, index]);
+
+  /*
+   * Таймер ин ҷо заҳира аст, на манбаи асосии суръат.
+   *
+   * Экран вақте иваз мешавад, ки видеояш тамом шавад — суръат ба худи мазмун
+   * вобаста мешавад. Вале видео метавонад тамоман наояд: шабака бурида шавад,
+   * браузер пахшро манъ кунад, ё `prefers-reduced-motion` онро ба акс табдил
+   * диҳад. Дар он ҳолат слайдер бе ин таймер абадӣ дар як экран мемонад.
+   *
+   * 20 сония қасдан аз видеоҳо (ҳар кадом 8.0с) хеле дарозтар аст: он набояд
+   * видеои сустборшавандаро бурад, балки танҳо вақте кор кунад, ки видео
+   * тамоман наомадааст.
+   */
   useEffect(() => {
     if (!running) return undefined;
-    timer.current = setTimeout(() => go(index + 1), interval);
+    timer.current = setTimeout(next, interval);
     return () => clearTimeout(timer.current);
-  }, [running, index, interval, go]);
+  }, [running, next, interval]);
+
+  const sceneEnded = useCallback(() => {
+    if (running) next();
+  }, [running, next]);
+
+  const context = useMemo(() => ({ onSceneEnded: sceneEnded }), [sceneEnded]);
 
   if (total === 0) return null;
 
@@ -67,7 +96,7 @@ export default function SceneSlider({ slides, interval = 11000, label }) {
           aria-roledescription="slide"
           aria-label={`${index + 1} аз ${total}`}
         >
-          {slides[index]}
+          <SliderContext.Provider value={context}>{slides[index]}</SliderContext.Provider>
         </motion.div>
       </AnimatePresence>
 
@@ -105,16 +134,6 @@ export default function SceneSlider({ slides, interval = 11000, label }) {
             ))}
           </div>
 
-          {!reduceMotion && (
-            <button
-              type="button"
-              onClick={() => setManual((was) => !was)}
-              className="focus-ring ml-auto inline-flex min-h-[3rem] items-center gap-2 rounded-xl border-2 border-border px-4 text-base font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              {manual ? <Play className="h-4 w-4" aria-hidden /> : <Pause className="h-4 w-4" aria-hidden />}
-              {manual ? "Гардиш" : "Таваққуф"}
-            </button>
-          )}
         </div>
       )}
 

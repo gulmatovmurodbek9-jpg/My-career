@@ -99,29 +99,25 @@ export class AiService implements OnModuleInit {
      * бекоршавии навбатии модел тамоми AI-ро набандад.
      */
     /**
-     * Матн месозад, бо гузариши худкор ба провайдери дигар.
+     * Матн месозад, бо гузариши худкор аз Vertex ба Gemini.
      *
-     * Тартиб: Vertex AI → Gemini API → Groq.
+     * Ҳарду ба ҳамон ҳисоби Google Cloud-и корбар пайвастанд. Vertex аввал
+     * меистад; агар `aiplatform.googleapis.com` дар лоиҳа фаъол набошад, он
+     * 403 медиҳад ва дархост бесадо ба Gemini мегузарад. Баъди фаъол шудани
+     * API ҳамон код худаш ба Vertex мегузарад.
      *
-     * Vertex аввал меистад, чунки ҳисоби Google Cloud-и корбар ба он пайваст
-     * аст. Агар `aiplatform.googleapis.com` дар лоиҳа фаъол набошад, он 403
-     * бармегардонад ва занҷир бесадо ба Gemini мегузарад — сомона кор мекунад,
-     * ва баъди фаъол шудани API худаш ба Vertex мегузарад, бе тағйири код.
+     * Groq аз ин занҷир бароварда шуд — танҳо Google истифода мешавад.
      */
     async generateContent(
         prompt: string,
-        options: { provider?: 'vertex' | 'gemini' | 'groq' } = {},
+        options: { provider?: 'vertex' | 'gemini' } = {},
     ): Promise<string> {
-        const run = (which: 'vertex' | 'gemini' | 'groq') =>
-            which === 'vertex'
-                ? this.generateVertexContent(prompt)
-                : which === 'groq'
-                    ? this.generateGroqContent(prompt)
-                    : this.generateGeminiContent(prompt);
+        const run = (which: 'vertex' | 'gemini') =>
+            which === 'vertex' ? this.generateVertexContent(prompt) : this.generateGeminiContent(prompt);
 
-        const chain: Array<'vertex' | 'gemini' | 'groq'> = options.provider
-            ? [options.provider, ...(['vertex', 'gemini', 'groq'] as const).filter((p) => p !== options.provider)]
-            : ['vertex', 'gemini', 'groq'];
+        const chain: Array<'vertex' | 'gemini'> = options.provider === 'gemini'
+            ? ['gemini', 'vertex']
+            : ['vertex', 'gemini'];
 
         const usable = chain.filter((which) => which !== 'vertex' || this.vertexKey);
 
@@ -227,60 +223,6 @@ export class AiService implements OnModuleInit {
         // Gemini: "free_tier" with limit: 0
         if (msg.includes('limit: 0')) return true;
         return false;
-    }
-
-    private async generateGroqContent(prompt: string, retries = 2): Promise<string> {
-        if (!this.groq) {
-            throw new InternalServerErrorException('Groq API Key танзим нашудааст');
-        }
-
-        for (let attempt = 0; attempt <= retries; attempt++) {
-            try {
-                const completion = await this.groq.chat.completions.create({
-                    messages: [{ role: 'user', content: prompt }],
-                    // llama-3.3-70b-versatile аз Groq бекор шуд ва "does not
-                    // exist" бармегардонд. Ин танҳо провайдери захиравист.
-                    model: 'openai/gpt-oss-120b',
-                });
-                return completion.choices[0]?.message?.content || '';
-            } catch (error) {
-                console.error(`Groq Error (attempt ${attempt + 1}/${retries + 1}):`, error?.message || error);
-
-                if (this.isRateLimitError(error)) {
-                    // If daily quota exhausted, skip retry and fallback immediately
-                    if (this.isDailyQuotaExhausted(error)) {
-                        console.log('Groq daily quota exhausted, falling back to Gemini...');
-                        break;
-                    }
-
-                    // Short rate limit — try waiting
-                    if (attempt < retries) {
-                        const delay = this.extractRetryDelay(error) || 10_000;
-                        console.log(`Groq rate limited, retrying in ${delay}ms...`);
-                        await sleep(Math.min(delay, 15_000));
-                        continue;
-                    }
-                }
-
-                // Last attempt or non-rate-limit error: fallback to Gemini
-                break;
-            }
-        }
-
-        // Fallback to Gemini
-        if (this.geminiModel) {
-            console.log('Falling back to Gemini...');
-            return this.generateGeminiContent(prompt);
-        }
-
-        throw new HttpException(
-            {
-                message: 'Лимити рӯзонаи AI тамом шуд. Лутфан баъд аз чанд дақиқа кӯшиш кунед.',
-                code: 'AI_RATE_LIMIT',
-                retryAfterSeconds: 60,
-            },
-            HttpStatus.TOO_MANY_REQUESTS,
-        );
     }
 
     private async generateGeminiContent(prompt: string, retries = 2): Promise<string> {

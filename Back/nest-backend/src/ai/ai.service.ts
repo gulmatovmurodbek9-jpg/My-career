@@ -12,6 +12,8 @@ export class AiService implements OnModuleInit {
     private genAI: GoogleGenerativeAI | null = null;
     private geminiModel: any = null;
     private groq: Groq | null = null;
+    private vertexKey: string | null = null;
+    private vertexModel = 'gemini-flash-latest';
 
     constructor(private configService: ConfigService) { }
 
@@ -23,6 +25,9 @@ export class AiService implements OnModuleInit {
             // бекор шудаанд ва ҳар як бекоркунӣ тамоми AI-ро мекушт.
             this.geminiModel = this.genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
         }
+
+        this.vertexKey = this.configService.get<string>('VERTEX_API_KEY') || null;
+        this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-flash-latest';
 
         const groqKey = this.configService.get<string>('GROQ_API_KEY');
         if (groqKey) {
@@ -93,19 +98,81 @@ export class AiService implements OnModuleInit {
      * ин афзалияти сабук аст: чизи муҳим худи мавҷудияти захира аст, то
      * бекоршавии навбатии модел тамоми AI-ро набандад.
      */
-    async generateContent(prompt: string, options: { provider?: 'gemini' | 'groq' } = {}): Promise<string> {
-        const primary = options.provider || 'gemini';
-        const secondary = primary === 'gemini' ? 'groq' : 'gemini';
+    /**
+     * Матн месозад, бо гузариши худкор ба провайдери дигар.
+     *
+     * Тартиб: Vertex AI → Gemini API → Groq.
+     *
+     * Vertex аввал меистад, чунки ҳисоби Google Cloud-и корбар ба он пайваст
+     * аст. Агар `aiplatform.googleapis.com` дар лоиҳа фаъол набошад, он 403
+     * бармегардонад ва занҷир бесадо ба Gemini мегузарад — сомона кор мекунад,
+     * ва баъди фаъол шудани API худаш ба Vertex мегузарад, бе тағйири код.
+     */
+    async generateContent(
+        prompt: string,
+        options: { provider?: 'vertex' | 'gemini' | 'groq' } = {},
+    ): Promise<string> {
+        const run = (which: 'vertex' | 'gemini' | 'groq') =>
+            which === 'vertex'
+                ? this.generateVertexContent(prompt)
+                : which === 'groq'
+                    ? this.generateGroqContent(prompt)
+                    : this.generateGeminiContent(prompt);
 
-        const run = (which: 'gemini' | 'groq') =>
-            which === 'groq' ? this.generateGroqContent(prompt) : this.generateGeminiContent(prompt);
+        const chain: Array<'vertex' | 'gemini' | 'groq'> = options.provider
+            ? [options.provider, ...(['vertex', 'gemini', 'groq'] as const).filter((p) => p !== options.provider)]
+            : ['vertex', 'gemini', 'groq'];
 
-        try {
-            return await run(primary);
-        } catch (error) {
-            console.error(`AI: провайдери ${primary} афтод, ${secondary} санҷида мешавад:`, error?.message || error);
-            return await run(secondary);
+        const usable = chain.filter((which) => which !== 'vertex' || this.vertexKey);
+
+        let last: any = null;
+        for (const which of usable) {
+            try {
+                return await run(which);
+            } catch (error) {
+                last = error;
+                console.error(`AI: провайдери ${which} афтод:`, error?.message || error);
+            }
         }
+        throw last ?? new InternalServerErrorException('Ҳеҷ провайдери AI дастрас нест');
+    }
+
+    /**
+     * Vertex AI дар реҷаи express: калиди оддии API, бе ҳисоби хизматӣ.
+     *
+     * `@google/generative-ai` танҳо ба generativelanguage муроҷиат мекунад,
+     * аз ин рӯ ин ҷо дархости мустақим фиристода мешавад.
+     */
+    private async generateVertexContent(prompt: string): Promise<string> {
+        if (!this.vertexKey) {
+            throw new InternalServerErrorException('VERTEX_API_KEY танзим нашудааст');
+        }
+
+        const url =
+            'https://aiplatform.googleapis.com/v1/publishers/google/models/' +
+            `${this.vertexModel}:generateContent?key=${this.vertexKey}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] }),
+        });
+
+        if (!response.ok) {
+            const detail = await response.text();
+            throw new Error(`Vertex ${response.status}: ${detail.slice(0, 200)}`);
+        }
+
+        const data: any = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts
+            ?.map((part: any) => part.text)
+            .filter(Boolean)
+            .join('');
+
+        if (!text) {
+            throw new Error('Vertex ҷавоби холӣ баргардонд');
+        }
+        return text;
     }
 
     /**

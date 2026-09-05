@@ -18,9 +18,19 @@ export const useSlider = () => useContext(SliderContext);
  * тамом кунад, нопадид мешавад, ва ин маҳз ба одамони калонсол ва сустхон
  * мезанад. Аз ин рӯ ин ҷо чанд ҳимоя гузошта шудааст:
  *
- *   - гардиш ҳангоми ламс, ҳаракати муш ё фокуси клавиатура МЕИСТАД, то
- *     тугма зери ангушти корбар аз ҷояш наравад;
- *   - зер кардани тир ё нуқта гардиши худкорро тамоман мебандад;
+ * Гардиш беохир аст: баъди экрани охирин аз аввал сар мешавад.
+ *
+ * Пештар он ҳангоми дар боло будани муш меистод. Аммо ин бахш қариб тамоми
+ * экранро мегирад, аз ин рӯ дар компютер муш ҳамеша дар болои он буд ва
+ * гардиш амалан ҳеҷ гоҳ кор намекард. Зер кардани тир низ онро абадӣ мебаст.
+ *
+ * Он ҳимояҳо аз он сабаб буданд, ки экранҳо тартиби гуногун доштанд ва тугма
+ * метавонист аз таги ангушти корбар равад. Ҳоло ҳарду экран як тартиб ва як
+ * тугмаҳо дар як ҷой доранд, пас ин хатар нест.
+ *
+ * Он чи мондааст:
+ *   - ҳангоми фокуси клавиатура дар дохили слайдер гардиш МЕИСТАД, то
+ *     истифодабарандаи клавиатура аз ҷои худ партофта нашавад;
  *   - бо `prefers-reduced-motion` гардиши худкор тамоман хомӯш мешавад;
  *   - тағйири экран ба хонандаи экран эълон мешавад.
  *
@@ -29,8 +39,8 @@ export const useSlider = () => useContext(SliderContext);
 export default function SceneSlider({ slides, interval = 20000, label }) {
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [manual, setManual] = useState(false);
+  // Танҳо фокуси клавиатура гардишро мебандад; ҳаракати муш не.
+  const [focused, setFocused] = useState(false);
   const total = slides.length;
   const timer = useRef(null);
 
@@ -39,8 +49,7 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
     [total],
   );
 
-  // Гардиш танҳо вақте кор мекунад, ки корбар ба он даст назада бошад.
-  const running = !reduceMotion && !paused && !manual && total > 1;
+  const running = !reduceMotion && !focused && total > 1;
 
   const next = useCallback(() => go(index + 1), [go, index]);
 
@@ -70,21 +79,17 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
 
   if (total === 0) return null;
 
-  const step = (delta) => {
-    setManual(true);
-    go(index + delta);
-  };
+  // Гардишро намебандад: танҳо ба экрани дигар мегузарад ва таймер аз нав
+  // сар мешавад, чун `index` вобастагии эффект аст.
+  const step = (delta) => go(index + delta);
 
   return (
     <section
       aria-roledescription="carousel"
       aria-label={label}
       className="relative border-b border-border bg-background"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
-      onTouchStart={() => setManual(true)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={() => setFocused(false)}
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -124,7 +129,7 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
               <button
                 key={i}
                 type="button"
-                onClick={() => { setManual(true); go(i); }}
+                onClick={() => go(i)}
                 aria-label={`Экрани ${i + 1}`}
                 aria-current={i === index}
                 className={`focus-ring h-3 rounded-full transition-all ${

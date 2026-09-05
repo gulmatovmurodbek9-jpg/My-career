@@ -443,7 +443,12 @@ const Info = () => {
 
           {/* --- Маоши меҳнат --- */}
           <Section icon={DollarSign} title="Маоши меҳнат" subtitle="Маош чӣ гуна муайян карда мешавад" gradient="from-emerald-500 to-green-500">
-            <SalarySection salary={salary} contentWritten={career.contentWritten} />
+            <SalarySection
+              salary={salary}
+              contentWritten={career.contentWritten}
+              careerName={career.name}
+              clusterName={career.cluster?.clusterName}
+            />
           </Section>
 
           {/* --- Маҳоратҳо --- */}

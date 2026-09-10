@@ -18,7 +18,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "export:vr": "ts-node --transpileOnly src/seed/export-vr-data.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +32,7 @@
     "@types/express": "^5.0.6",
     "@types/multer": "^2.1.0",
     "@types/node": "^25.2.2",
+    "@types/nodemailer": "^8.0.1",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "ts-node": "^10.9.2",
@@ -53,6 +55,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "google-auth-library": "^10.6.2",
+    "nodemailer": "^10.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

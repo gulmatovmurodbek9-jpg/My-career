@@ -24,8 +24,9 @@ import {
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
-import { API } from "../../lib/config";
+import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
+import { MMT_CLUSTERS, MMT_MAX } from "../../lib/mmtClusters";
 
 /* ─── Animation Variants ─── */
 const containerVariants = {
@@ -41,34 +42,6 @@ const scaleIn = {
     visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
-/* ─── RIASEC type translations ─── */
-const riasecLabels = {
-    tj: {
-        Realistic: "Амалӣ",
-        Investigative: "Таҳқиқотӣ",
-        Artistic: "Эҷодкорӣ",
-        Social: "Иҷтимоӣ",
-        Enterprising: "Ташаббускор",
-        Conventional: "Мураттаб",
-    },
-    ru: {
-        Realistic: "Практический",
-        Investigative: "Исследовательский",
-        Artistic: "Артистический",
-        Social: "Социальный",
-        Enterprising: "Предприимчивый",
-        Conventional: "Традиционный",
-    },
-    en: {
-        Realistic: "Realistic",
-        Investigative: "Investigative",
-        Artistic: "Artistic",
-        Social: "Social",
-        Enterprising: "Enterprising",
-        Conventional: "Conventional",
-    },
-};
-
 /* ─── i18n labels ─── */
 const labels = {
     tj: {
@@ -76,7 +49,7 @@ const labels = {
         subtitle: "Таҳлили мушаххас дар асоси профили психологии шумо",
         badge: "AI Маслиҳатгар",
         generating: "AI таҳлил мекунад...",
-        generatingDesc: "Профили RIASEC-и шумо бо зеҳни сунъӣ таҳлил карда мешавад",
+        generatingDesc: "Натиҷаи санҷиши шумо бо зеҳни сунъӣ таҳлил карда мешавад",
         section1: "Таҳлили Шахсият",
         section2: "Тавсияи Ихтисосҳо",
         section3: "Далелнокӣ",
@@ -94,6 +67,7 @@ const labels = {
         noQuizDesc: "Барои гирифтани тавсияи AI, тести психологиро гузаред.",
         startQuiz: "Оғоз кардани тест",
         error: "Хатогӣ рӯй дод",
+        errorTimeout: "Ҷавоб дер монд. Шабакаро санҷед ва дубора кӯшиш кунед.",
         retry: "Дубора кӯшиш кунед",
         targetCareer: "Ихтисоси мақсад",
         successChance: "Шонси муваффақият",
@@ -138,7 +112,7 @@ const labels = {
         subtitle: "Подробный анализ на основе вашего психологического профиля",
         badge: "AI Советник",
         generating: "AI анализирует...",
-        generatingDesc: "Ваш профиль RIASEC анализируется искусственным интеллектом",
+        generatingDesc: "Результат вашего теста анализируется искусственным интеллектом",
         section1: "Анализ Личности",
         section2: "Рекомендации Профессий",
         section3: "Обоснование",
@@ -156,6 +130,7 @@ const labels = {
         noQuizDesc: "Для получения AI рекомендации пройдите психологический тест.",
         startQuiz: "Начать тест",
         error: "Произошла ошибка",
+        errorTimeout: "Ответ занял слишком много времени. Проверьте сеть и попробуйте снова.",
         retry: "Попробовать снова",
         targetCareer: "Целевая профессия",
         successChance: "Шанс на успех",
@@ -200,7 +175,7 @@ const labels = {
         subtitle: "Detailed analysis based on your psychological profile",
         badge: "AI Advisor",
         generating: "AI is analyzing...",
-        generatingDesc: "Your RIASEC profile is being analyzed by artificial intelligence",
+        generatingDesc: "Your quiz result is being analyzed by artificial intelligence",
         section1: "Personality Analysis",
         section2: "Career Recommendations",
         section3: "Explanation",
@@ -218,6 +193,7 @@ const labels = {
         noQuizDesc: "To get an AI recommendation, complete the psychological test.",
         startQuiz: "Start Quiz",
         error: "An error occurred",
+        errorTimeout: "The response took too long. Check your connection and try again.",
         retry: "Try again",
         targetCareer: "Target Career",
         successChance: "Success Chance",
@@ -229,12 +205,10 @@ const labels = {
     },
 };
 
-/* ─── RIASEC name helper ─── */
-const riasecName = (key, lang) => {
-    const map = riasecLabels[lang] || riasecLabels.en;
-    // Try PascalCase first, then capitalize
-    const k = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
-    return map[k] || map[key] || key;
+/* Номи кластери ММТ аз манбаи умумӣ — то панел ва ин саҳифа якхела бошанд. */
+const clusterName = (key, t) => {
+    const cluster = MMT_CLUSTERS.find((c) => c.key === key);
+    return cluster ? t(cluster.i18nKey, cluster.fallback) : key.toUpperCase();
 };
 
 /* ─── Probability Color ─── */
@@ -259,7 +233,7 @@ const probBg = (p) => {
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
 
 const CareerAdvisorReport = () => {
-    const { i18n } = useTranslation();
+    const { i18n, t: translate } = useTranslation();
     const lang = (i18n.language || "tj").slice(0, 2);
     const t = labels[lang] || labels.tj;
 
@@ -340,12 +314,12 @@ const CareerAdvisorReport = () => {
                         quizLang: storedQuiz?.quizLang || lang,
                     },
                 },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` }, timeout: AI_TIMEOUT_MS }
             );
             setData(res.data);
         } catch (err) {
             console.error("AI Advisor error:", err);
-            setError(err?.response?.data?.message || t.error);
+            setError(isTimeout(err) ? t.errorTimeout : err?.response?.data?.message || t.error);
         } finally {
             setLoading(false);
             fetchingRef.current = false;
@@ -367,7 +341,7 @@ const CareerAdvisorReport = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     className="glass-card p-14 text-center flex flex-col items-center gap-6 max-w-md relative overflow-hidden"
                 >
-                    <div className="absolute inset-0 tajik-pattern opacity-10" />
+                    <div className="absolute inset-0 tajik-pattern opacity-10 pointer-events-none" />
                     <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center relative">
                         <BrainCircuit className="w-8 h-8 text-primary animate-pulse" />
                     </div>
@@ -458,7 +432,7 @@ const CareerAdvisorReport = () => {
 
     if (!data) return null;
 
-    const { report, riasecScores, dominantTypes } = data;
+    const { report, mmtScores, dominantTypes } = data;
 
     /* ═══ RENDER REPORT ═══ */
     return (
@@ -482,7 +456,7 @@ const CareerAdvisorReport = () => {
                         <p className="text-muted-foreground text-sm font-medium opacity-60">{t.subtitle}</p>
                     </div>
 
-                    {/* RIASEC mini badges */}
+                    {/* Нишонҳои кластерҳои пешбар */}
                     <div className="flex flex-wrap gap-2">
                         {dominantTypes?.map((dt, i) => (
                             <div
@@ -492,7 +466,7 @@ const CareerAdvisorReport = () => {
                                     : "glass-card-sm text-foreground"
                                     }`}
                             >
-                                {riasecName(dt.type, lang)}: {dt.score}
+                                {clusterName(dt.type, translate)}: {dt.score}
                             </div>
                         ))}
                     </div>
@@ -511,20 +485,20 @@ const CareerAdvisorReport = () => {
                             </p>
                         </div>
 
-                        {/* RIASEC bars */}
+                        {/* Сутунҳои холи кластерҳои ММТ */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {Object.entries(riasecScores || {}).map(([key, val]) => (
+                            {Object.entries(mmtScores || {}).map(([key, val]) => (
                                 <div key={key} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                                            {riasecName(key, lang)}
+                                            {clusterName(key, translate)}
                                         </span>
                                         <span className="text-sm font-black text-foreground">{val}</span>
                                     </div>
                                     <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
-                                            animate={{ width: `${Math.min(100, (val / 15) * 100)}%` }}
+                                            animate={{ width: `${Math.min(100, (val / MMT_MAX) * 100)}%` }}
                                             transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                                             className="h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-400"
                                         />

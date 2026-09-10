@@ -1,7 +1,9 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
@@ -37,5 +39,21 @@ export class AuthController {
     @ApiOperation({ summary: 'Login or register with Google id token' })
     async google(@Body() body: { idToken: string }) {
         return this.authService.googleLogin(body.idToken);
+    }
+
+    @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Фиристодани пайванди барқарорсозии парол ба почта' })
+    @ApiResponse({ status: 200, description: 'Ҷавоб ҳамеша якхела — новобаста аз мавҷудияти ҳисоб' })
+    async forgotPassword(@Body() dto: ForgotPasswordDto) {
+        return this.authService.forgotPassword(dto.email);
+    }
+
+    @Post('reset-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Гузоштани пароли нав аз рӯи коди нома' })
+    @ApiResponse({ status: 400, description: 'Код нодуруст, кӯҳна ё кӯшишҳо зиёд' })
+    async resetPassword(@Body() dto: ResetPasswordDto) {
+        return this.authService.resetPassword(dto.email, dto.code, dto.password);
     }
 }

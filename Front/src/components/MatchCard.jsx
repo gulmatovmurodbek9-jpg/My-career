@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../store/authStore";
 import { useToast } from "./toast/ToastProvider";
 
-const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: initialSaved, isLarge = false, onExplain }) => {
+const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: initialSaved, rank = 0, onExplain }) => {
     const { t } = useTranslation();
     const [isLiked, setIsLiked] = useState(initialLiked || false);
     const [isSaved, setIsSaved] = useState(initialSaved || false);
@@ -17,6 +17,14 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
     const [isSaving, setIsSaving] = useState(false);
     const { token, user, updateUser } = useAuthStore();
     const { error: showError } = useToast();
+
+    /* «Беҳтарин интихоб» дар ҳар корт маъно надорад — вай танҳо ба мувофиқати
+       якум тааллуқ дорад, боқимондаҳо рақами ҷои худро мегиранд. */
+    const isTop = rank === 1;
+    const percent = Math.max(0, Math.min(100, Math.round(matchPercentage || 0)));
+
+    const universities = career.universities || [];
+    const extraCount = Math.max(0, (career.universitiesCount || 0) - universities.length);
 
     // Sync with parent props & global user state
     useEffect(() => {
@@ -82,109 +90,171 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ y: -8, scale: 1.02 }}
-            className={`glass-card glass-card-glow group relative overflow-hidden flex flex-col justify-between h-full p-8 transition-all duration-500 cursor-pointer ${isLarge ? 'p-10' : 'p-8'}`}
-        >
-            <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 blur-[100px] group-hover:bg-primary/20 transition-all duration-700" />
-
-            <div className="relative z-10 h-full flex flex-col">
-                <div className="flex items-start justify-between mb-8">
-                    <div className="flex items-center gap-4">
-                        <div className="relative w-16 h-16 flex items-center justify-center">
-                            <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]">
-                                <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-white/5" />
-                                <motion.circle
-                                    cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" strokeLinecap="round" fill="transparent"
-                                    strokeDasharray={176}
-                                    initial={{ strokeDashoffset: 176 }}
-                                    animate={{ strokeDashoffset: 176 - (176 * matchPercentage) / 100 }}
-                                    transition={{ duration: 2, ease: "circOut" }}
-                                    className="text-primary"
-                                />
-                            </svg>
-                            <span className="absolute text-xs font-black text-foreground">{matchPercentage}%</span>
-                        </div>
-                        <div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary block mb-1">
-                                {t('common.match_level', 'Дараҷаи Мувофиқат')}
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <Star className="w-3 h-3 text-secondary fill-secondary" />
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('common.best_pick', 'Беҳтарин Интихоб')}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={handleSave}
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isSaved
-                            ? "bg-secondary/20 text-secondary border border-secondary/30"
-                            : "bg-white/5 border border-white/10 hover:border-white/20 text-muted-foreground hover:text-foreground"
+        <article className={`match-card group ${isTop ? "match-card--top" : ""}`}>
+            <div className="relative z-10 flex h-full flex-col p-6 md:p-7">
+                {/* Сарлавҳа: ҷои рейтинг ва тугмаи захира */}
+                <div className="flex items-start justify-between gap-3">
+                    <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] ${isTop
+                            ? "bg-secondary/10 text-secondary"
+                            : "bg-muted text-muted-foreground"
                             }`}
                     >
-                        <Bookmark className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`} />
+                        {isTop ? (
+                            <>
+                                <Star className="h-3 w-3 fill-current" />
+                                {t('common.best_pick', 'Беҳтарин Интихоб')}
+                            </>
+                        ) : (
+                            <span className="tabular-nums">№ {rank}</span>
+                        )}
+                    </span>
+
+                    <button
+                        type="button"
+                        onClick={handleSave}
+                        aria-pressed={isSaved}
+                        aria-label={t('common.saved', 'Захираҳо')}
+                        className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border transition-colors duration-200 ${isSaved
+                            ? "border-secondary/30 bg-secondary/10 text-secondary"
+                            : "border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:text-primary"
+                            }`}
+                    >
+                        <Bookmark className={`h-[18px] w-[18px] ${isSaved ? "fill-current" : ""}`} />
                     </button>
                 </div>
 
-                <div className="space-y-4 flex-1 mb-10" onDoubleClick={handleLike}>
-                    <h3 className={`font-black text-foreground group-hover:text-primary transition-colors leading-[1.1] ${isLarge ? 'text-3xl' : 'text-2xl'}`}>
-                        {career.name}
+                {/* Ном ва тавсиф — дар ҳама кортҳо як андоза, то сатр ҳамвор монад */}
+                <div className="mt-5 flex-1" onDoubleClick={handleLike}>
+                    <h3 className="text-xl leading-[1.2] font-bold text-foreground">
+                        <Link
+                            to={`/info/${career.id}`}
+                            className="line-clamp-2 transition-colors hover:text-primary"
+                        >
+                            {career.name}
+                        </Link>
                     </h3>
-                    <p className={`text-muted-foreground font-medium leading-relaxed ${isLarge ? 'text-lg line-clamp-3' : 'text-sm line-clamp-2'}`}>
+                    {/* Коди расмӣ — маҳз ҳамин рақам ҳангоми супоридани
+                        ҳуҷҷат ба ММТ нависта мешавад. */}
+                    {career.code && (
+                        <div className="mt-2 flex items-center gap-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+                                {t('common.code', 'Код')}
+                            </span>
+                            <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums text-foreground">
+                                {career.code}
+                            </span>
+                        </div>
+                    )}
+
+                    <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
                         {career.description || career.purpose}
                     </p>
-
-                    <AnimatePresence>
-                        {showHeart && (
-                            <motion.div
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1.5, opacity: 1 }}
-                                exit={{ scale: 0, opacity: 0 }}
-                                className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
-                            >
-                                <Heart className="w-24 h-24 text-rose-500 fill-current drop-shadow-[0_0_30px_rgba(244,63,94,0.5)]" />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
                 </div>
 
-                <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                {/* Донишгоҳҳо: бе онҳо довталаб мебинад, ки ихтисос мувофиқ
+                    аст, вале намедонад куҷо ҳуҷҷат супорад. */}
+                {universities.length > 0 && (
+                    <div className="mt-4">
+                        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                            {t('common.where_to_study', 'Дар куҷо хондан мумкин')}
+                        </span>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                            {universities.map((uni) => (
+                                <span
+                                    key={uni.id}
+                                    title={uni.city ? `${uni.name} — ${uni.city}` : uni.name}
+                                    className="max-w-full truncate rounded-lg bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground"
+                                >
+                                    {uni.name}
+                                </span>
+                            ))}
+                            {extraCount > 0 && (
+                                <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold text-primary">
+                                    +{extraCount}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Ченаки мувофиқат: сатри уфуқӣ ба ҷои ҳалқаи хурди 64px — фоиз
+                   хонотар аст ва ранги роҳаш дар ҳарду тема намоён мемонад. */}
+                <div className="mt-6">
+                    <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                            {t('common.match_level', 'Дараҷаи Мувофиқат')}
+                        </span>
+                        <span className="text-lg font-bold tabular-nums text-primary">{percent}%</span>
+                    </div>
+                    <div
+                        role="progressbar"
+                        aria-valuenow={percent}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={t('common.match_level', 'Дараҷаи Мувофиқат')}
+                        className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"
+                    >
+                        <motion.div
+                            className="h-full rounded-full bg-gradient-to-r from-primary to-accent-blue"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percent}%` }}
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        />
+                    </div>
+                </div>
+
+                {/* Поя */}
+                <div className="mt-5 flex items-center justify-between gap-1 border-t border-border pt-4">
                     <button
+                        type="button"
                         onClick={handleLike}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-sm ${isLiked
-                            ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                            : "hover:bg-white/5 text-muted-foreground hover:text-rose-400"
+                        aria-pressed={isLiked}
+                        className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-bold transition-colors ${isLiked
+                            ? "text-rose-500"
+                            : "text-muted-foreground hover:text-rose-500"
                             }`}
                     >
-                        <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-                        {career.likesCount}
+                        <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
+                        <span className="tabular-nums">{career.likesCount ?? 0}</span>
                     </button>
 
                     {onExplain && (
                         <button
+                            type="button"
                             onClick={(e) => { e.preventDefault(); onExplain(); }}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all text-xs font-bold"
+                            className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-muted-foreground transition-colors hover:text-primary"
                         >
-                            <Sparkles className="w-3.5 h-3.5" />
+                            <Sparkles className="h-3.5 w-3.5" />
                             {t('common.why_match', 'Чаро ин?')}
                         </button>
                     )}
 
                     <Link
                         to={`/info/${career.id}`}
-                        className="group/btn flex items-center gap-2 text-sm font-black uppercase tracking-widest text-foreground hover:text-primary transition-all pr-2"
+                        className="group/btn flex items-center gap-2 rounded-lg py-1.5 pl-2 text-xs font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:text-primary"
                     >
                         {t('common.details', 'Маълумот')}
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover/btn:translate-x-1 group-hover/btn:bg-primary group-hover/btn:text-white transition-all">
-                            <ArrowRight className="w-4 h-4" />
-                        </div>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary transition-all duration-300 group-hover/btn:bg-primary group-hover/btn:text-primary-foreground">
+                            <ArrowRight className="h-3.5 w-3.5" />
+                        </span>
                     </Link>
                 </div>
             </div>
-        </motion.div>
+
+            <AnimatePresence>
+                {showHeart && (
+                    <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1.4, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
+                    >
+                        <Heart className="h-24 w-24 fill-current text-rose-500 drop-shadow-[0_0_30px_rgba(244,63,94,0.5)]" />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </article>
     );
 };
 

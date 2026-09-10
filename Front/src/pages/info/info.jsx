@@ -31,6 +31,7 @@ import { useParams, Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
 import PsychologicalProfile from "../../components/PsychologicalProfile";
 import { API } from "../../lib/config";
+import { useToast } from "../../components/toast/ToastProvider";
 import { resourceUrl } from "../../lib/resourceLinks";
 import { buildRoadmap } from "../../lib/buildRoadmap";
 import CareerChat from "../../components/CareerChat";
@@ -129,6 +130,7 @@ function ChoosingHelp({ offerings }) {
 const Info = () => {
   const { id } = useParams();
   const { user, token, updateUser, refreshProfile } = useAuthStore();
+  const { error: showError } = useToast();
   const [career, setCareer] = useState(null);
   const [offerings, setOfferings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,6 +141,46 @@ const Info = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  /* Рӯйхати ҳуҷҷатсупорӣ: кадом пешниҳодҳо аллакай интихоб шудаанд. */
+  const [planIds, setPlanIds] = useState(new Set());
+  const [planBusyId, setPlanBusyId] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    axios
+      .get(`${API}/users/application-plan`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setPlanIds(new Set((data.items || []).map((item) => item.offeringId))))
+      .catch(() => { });
+  }, [token]);
+
+  const togglePlan = async (offeringId) => {
+    if (!token) {
+      showError("Барои интихоб аввал ворид шавед");
+      return;
+    }
+    setPlanBusyId(offeringId);
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      if (planIds.has(offeringId)) {
+        await axios.delete(`${API}/users/application-plan/${offeringId}`, { headers });
+        setPlanIds((prev) => {
+          const next = new Set(prev);
+          next.delete(offeringId);
+          return next;
+        });
+      } else {
+        await axios.post(`${API}/users/application-plan/${offeringId}`, {}, { headers });
+        setPlanIds((prev) => new Set(prev).add(offeringId));
+      }
+    } catch (err) {
+      /* Хатои «кластери дигар» матни фаҳмондадиҳанда дорад — онро айнан
+         нишон медиҳем, то корбар донад чаро рад шуд. */
+      showError(err.response?.data?.message || "Иҷро нашуд");
+    } finally {
+      setPlanBusyId(null);
+    }
+  };
 
   useEffect(() => {
     async function fetchCareer() {
@@ -630,6 +672,7 @@ const Info = () => {
                       <th className="px-4 py-2">Забон</th>
                       <th className="px-4 py-2 text-center">Ҷойҳо</th>
                       <th className="px-4 py-2 text-right">Нарх (сол)</th>
+                      <th className="px-4 py-2 text-right">Интихоб</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -649,7 +692,7 @@ const Info = () => {
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{offering.studyForm}</td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{offering.language}</td>
                         <td className="px-4 py-3 text-center text-muted-foreground">{offering.seats || '—'}</td>
-                        <td className="px-4 py-3 text-right rounded-r-xl whitespace-nowrap">
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
                           {offering.paymentType === 'ройгон' || offering.tuitionFee === null ? (
                             <span className="font-bold text-emerald-500">Ройгон</span>
                           ) : (
@@ -657,6 +700,22 @@ const Info = () => {
                               {offering.tuitionFee.toLocaleString('ru-RU')} сом.
                             </span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-right rounded-r-xl whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => togglePlan(offering.id)}
+                            disabled={planBusyId === offering.id}
+                            aria-pressed={planIds.has(offering.id)}
+                            className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${planIds.has(offering.id)
+                              ? "bg-primary text-primary-foreground"
+                              : "border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
+                              }`}
+                          >
+                            {planBusyId === offering.id
+                              ? "…"
+                              : planIds.has(offering.id) ? "✓ Дар рӯйхат" : "+ Илова"}
+                          </button>
                         </td>
                       </tr>
                     ))}

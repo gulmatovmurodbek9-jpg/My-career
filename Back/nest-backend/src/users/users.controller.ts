@@ -55,15 +55,6 @@ export class UsersController {
         return this.usersService.findAll();
     }
 
-    @Delete(':id')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles('admin')
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Delete a user (Admin only)' })
-    async deleteUser(@Param('id') id: string) {
-        await this.usersService.deleteUser(id);
-        return { message: 'Корбар нест карда шуд' };
-    }
 
     @Patch(':id/role')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -90,6 +81,40 @@ export class UsersController {
     @ApiOperation({ summary: 'Гирифтани ихтисосҳои захирашуда' })
     async getSavedCareers(@Req() req: any) {
         return this.usersService.getSavedCareers(req.user.userId);
+    }
+
+    /* ─── Рӯйхати ҳуҷҷатсупорӣ ─── */
+
+    @Get('application-plan')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Рӯйхати ҳуҷҷатсупорӣ — аввал ҷойҳои ройгон, баъд пулакӣ' })
+    async getApplicationPlan(@Req() req: any) {
+        return this.usersService.getApplicationPlan(req.user.userId);
+    }
+
+    @Post('application-plan/:offeringId')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Илова кардани интихоб (ҳама бояд аз як кластер бошанд)' })
+    async addApplicationChoice(@Param('offeringId') offeringId: string, @Req() req: any) {
+        return this.usersService.addApplicationChoice(req.user.userId, offeringId);
+    }
+
+    @Delete('application-plan/:offeringId')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Баровардани интихоб аз рӯйхат' })
+    async removeApplicationChoice(@Param('offeringId') offeringId: string, @Req() req: any) {
+        return this.usersService.removeApplicationChoice(req.user.userId, offeringId);
+    }
+
+    @Delete('application-plan')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Тоза кардани тамоми рӯйхат' })
+    async clearApplicationPlan(@Req() req: any) {
+        return this.usersService.clearApplicationPlan(req.user.userId);
     }
 
     @Get('liked-careers')
@@ -136,5 +161,23 @@ export class UsersController {
     @ApiOperation({ summary: 'Гирифтани маълумот дар бораи истифодаи AI имрӯз' })
     async getAiUsage(@Req() req: any) {
         return this.usersService.getAiUsage(req.user.userId);
+    }
+
+    /*
+     * ДИҚҚАТ: `@Delete(':id')` бояд аз ҳамаи роутҳои DELETE-и мушаххас
+     * ПОЁНТАР эълон шавад.
+     *
+     * NestJS роутҳоро бо тартиби эълон мутобиқ мекунад, аз ин рӯ агар ин
+     * дар боло бошад, `DELETE /users/application-plan` ба ҳамин меафтад ва
+     * «application-plan» ҳамчун id-и корбар хонда мешавад.
+     */
+    @Delete(':id')
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Delete a user (Admin only)' })
+    async deleteUser(@Param('id') id: string) {
+        await this.usersService.deleteUser(id);
+        return { message: 'Корбар нест карда шуд' };
     }
 }

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, In } from 'typeorm';
 import { Career } from './career.entity';
 import { CareerOffering } from './career-offering.entity';
+import { Cluster } from '../cluster/cluster.entity';
 import { CreateCareerDto } from './dto/create-career.dto';
 import { UpdateCareerDto } from './dto/update-career.dto';
 import { GetCareersDto } from './dto/get-careers.dto';
@@ -22,13 +23,44 @@ import { User, UserRole } from '../users/user.entity';
 const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 0);
 const LIMIT_ON = DAILY_LIMIT > 0;
 
+/*
+ * Ҳамворкунии ҳарфҳои хоси тоҷикӣ барои ҷустуҷӯ.
+ *
+ * Дар клавиатураи русӣ ҳарфҳои ғ ӣ қ ӯ ҳ ҷ нестанд ва корбар ба ҷои онҳо
+ * г и к у х ч менависад. Бе ин мутобиқсозӣ ҷустуҷӯи «Зех» ихтисоси «Зеҳни
+ * сунъӣ»-ро намеёбад.
+ */
+const TAJIK_LETTERS = 'ғӣқӯҳҷ';
+const PLAIN_LETTERS = 'гикухч';
+
+const foldTajik = (value: string): string => {
+    let out = value.toLowerCase();
+    for (let i = 0; i < TAJIK_LETTERS.length; i++) {
+        out = out.split(TAJIK_LETTERS[i]).join(PLAIN_LETTERS[i]);
+    }
+    return out;
+};
+
+/** Ҳамон табдил, вале дар тарафи Postgres. */
+const TAJIK_FOLD = (column: string): string =>
+    `translate(lower(${column}), 'ғӣқӯҳҷҒӢҚӮҲҶ', 'гикухчгикухч')`;
+
 @Injectable()
 export class CareerService {
+    /*
+     * Ҳадди болоии холи як кластер: 10 саволи ММТ × 4 холи имконпазир.
+     * Панел пештар 60 мегирифт ва саҳифаи натиҷаи тест 40 — як корбар дар ду
+     * ҷо ду фоизи гуногунро медид (масалан 27% ва 40%).
+     */
+    private static readonly MMT_MAX_SCORE = 40;
+
     constructor(
         @InjectRepository(Career)
         private careerRepository: Repository<Career>,
         @InjectRepository(CareerOffering)
         private offeringRepository: Repository<CareerOffering>,
+        @InjectRepository(Cluster)
+        private clusterRepository: Repository<Cluster>,
         @InjectRepository(User)
         private userRepository: Repository<User>,
         private configService: ConfigService,
@@ -44,9 +76,20 @@ export class CareerService {
         qb.leftJoinAndSelect('career.universities', 'universities');
 
         if (search) {
+            /*
+             * Ҳарфҳои хоси тоҷикӣ ҳамвор карда мешаванд.
+             *
+             * Дар клавиатураи русӣ ҳарфҳои ғ ӣ қ ӯ ҳ ҷ нестанд, аз ин рӯ
+             * корбар «Зех» менависад, дар ҳоле ки дар база «Зеҳни сунъӣ» аст —
+             * ва ҷустуҷӯи оддии ILIKE ҳеҷ чиз намеёбад. Ҳоло ҳам сутун ва ҳам
+             * дархост ба як шакл оварда мешаванд, то ҳарду навъи навишт кор
+             * кунад.
+             */
             qb.andWhere(
-                '(career.name ILIKE :search OR career.description ILIKE :search OR career.code ILIKE :search)',
-                { search: `%${search}%` },
+                `(${TAJIK_FOLD('career.name')} LIKE :search
+                  OR ${TAJIK_FOLD('career.description')} LIKE :search
+                  OR career.code LIKE :rawSearch)`,
+                { search: `%${foldTajik(search)}%`, rawSearch: `%${search}%` },
             );
         }
 
@@ -128,7 +171,19 @@ export class CareerService {
                     isState: offering.university?.isState,
                 },
             }))
-            .sort((a, b) => (a.tuitionFee ?? -1) - (b.tuitionFee ?? -1));
+            /*
+             * Ҷойҳои РОЙГОН аввал.
+             *
+             * Пештар танҳо аз рӯи нарх тартиб дода мешуд, ва ҷойҳои буҷавӣ
+             * дар байни пулакиҳо гум мешуданд. Довталаб бошад аввал маҳз
+             * ҷои ройгонро меҷӯяд.
+             */
+            .sort((a, b) => {
+                const freeA = a.paymentType === 'ройгон';
+                const freeB = b.paymentType === 'ройгон';
+                if (freeA !== freeB) return freeA ? -1 : 1;
+                return (a.tuitionFee ?? Number.MAX_SAFE_INTEGER) - (b.tuitionFee ?? Number.MAX_SAFE_INTEGER);
+            });
     }
 
     async create(dto: CreateCareerDto): Promise<Career> {
@@ -182,37 +237,143 @@ export class CareerService {
         }
     }
 
+    /**
+     * Интихоби ихтисосҳои тавсияшуда аз рӯи натиҷаи тест.
+     *
+     * Ин ягона ҷоест, ки рӯйхати тавсияро месозад — ҳам саҳифаи натиҷаи тест
+     * ва ҳам панели корбар аз ҳамин ҷо мегиранд. Пештар ҳар кадом мантиқи
+     * худро дошт: тест аз кластери пешбар 24 ихтисос гирифта, онҳоро аз рӯи
+     * калидвожаҳои ҷавобҳо тартиб медод, панел бошад ҳамаи ихтисосҳои
+     * кластерро (масалан 351-торо) мегирифт, ба ҳамаашон як фоиз медод ва
+     * 12-тои аввали навбати базаро нишон медод. Барои ҳамин дар панел
+     * ихтисосҳои тамоман дигар мебаромаданд.
+     */
+    async selectMatchedCareers(userScores: any): Promise<{
+        cluster: Cluster | null;
+        matchPercentage: number;
+        careers: Career[];
+        clusterScores: { cluster: Cluster; score: number }[];
+    }> {
+        const mmtScores = userScores?.mmtClusters || { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+        const clusters = await this.clusterRepository.find();
+
+        const clusterScores = clusters
+            .map(cluster => ({
+                cluster,
+                score: Number(mmtScores[`c${cluster.clusterId}`]) || 0,
+            }))
+            .sort((a, b) => b.score - a.score);
+
+        const top = clusterScores[0];
+        if (!top) {
+            return { cluster: null, matchPercentage: 0, careers: [], clusterScores };
+        }
+
+        const matchPercentage = Math.min(
+            100,
+            Math.round((top.score / CareerService.MMT_MAX_SCORE) * 100),
+        );
+
+        /*
+         * ҲАМАИ ихтисосҳои кластер баҳо дода мешаванд, на 24-тои аввал.
+         *
+         * Пештар ин ҷо `take: 24` буд — бе ҳеҷ тартиб, яъне 24 сабти аввали
+         * навбати база. Кластери «Табиӣ ва техникӣ» 351 ихтисос дорад, аз ин
+         * рӯ ихтисоси комилан мувофиқ дар ҷои 300 ҳеҷ гоҳ ба рӯйхат
+         * намеафтод. Дар экран бошад чизҳои тасодуфии алифбоӣ мебаромаданд.
+         *
+         * Аввал сабук бор мешавад (бе муносибатҳо), баъд танҳо барои 12-тои
+         * беҳтарин донишгоҳҳо гирифта мешавад — вагарна барои 351 сабт
+         * муносибат бор кардан лозим мешуд.
+         */
+        const pool = await this.careerRepository.find({
+            where: { clusterId: top.cluster.id },
+            select: ['id', 'name', 'description', 'purpose', 'skills', 'likesCount'],
+        });
+
+        const keywords: string[] = (userScores?.specialtyKeywords || [])
+            .map((k: string) => k.toLowerCase())
+            .filter(Boolean);
+
+        const scoreOf = (career: Career): number => {
+            if (!keywords.length) return 0;
+
+            /* Мувофиқат дар НОМ вазни бештар дорад: калидвожа дар номи
+               ихтисос нисбат ба ҳамон калима дар тавсифи дароз хеле
+               маънодортар аст. */
+            const name = (career.name || '').toLowerCase();
+            const body = [
+                career.description || '',
+                career.purpose || '',
+                ...(career.skills?.technical || []),
+                ...(career.skills?.soft || []),
+            ].join(' ').toLowerCase();
+
+            return keywords.reduce((total, keyword) => {
+                if (name.includes(keyword)) return total + 3;
+                if (body.includes(keyword)) return total + 1;
+                return total;
+            }, 0);
+        };
+
+        const ranked = pool
+            .map(career => ({ career, rank: scoreOf(career) }))
+            .sort((a, b) =>
+                b.rank - a.rank ||
+                (b.career.likesCount ?? 0) - (a.career.likesCount ?? 0) ||
+                (a.career.name || '').localeCompare(b.career.name || ''))
+            .slice(0, 12);
+
+        // Донишгоҳҳо танҳо барои ҳамон 12-то бор мешаванд.
+        const topCareers = ranked.length
+            ? await this.careerRepository.find({
+                where: { id: In(ranked.map(r => r.career.id)) },
+                relations: ['universities'],
+            })
+            : [];
+
+        // `In` тартибро нигоҳ намедорад — онро барқарор мекунем.
+        const order = new Map(ranked.map((r, index) => [r.career.id, index]));
+        topCareers.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+
+        return {
+            cluster: top.cluster,
+            matchPercentage,
+            careers: topCareers,
+            clusterScores,
+        };
+    }
+
     async matchCareers(userScores: any): Promise<any[]> {
-        const careers = await this.careerRepository.find();
-        const mmtScores = userScores?.mmtClusters || { c1:0, c2:0, c3:0, c4:0, c5:0 };
-        const maxScore = 60; // Max possible score
+        const { careers, matchPercentage } = await this.selectMatchedCareers(userScores);
 
-        const scored = careers.map(career => {
-            const clusterId = career.mmtCluster || 1;
-            let clusterScore = 0;
-            switch(clusterId) {
-                case 1: clusterScore = mmtScores.c1 || 0; break;
-                case 2: clusterScore = mmtScores.c2 || 0; break;
-                case 3: clusterScore = mmtScores.c3 || 0; break;
-                case 4: clusterScore = mmtScores.c4 || 0; break;
-                case 5: clusterScore = mmtScores.c5 || 0; break;
-            }
-
-            const matchPercentage = Math.min(100, Math.round((clusterScore / maxScore) * 100));
+        return careers.map(career => {
+            /*
+             * Донишгоҳҳо ҳамроҳи корт мераванд: бе онҳо довталаб мебинад, ки
+             * ихтисос ба ӯ мувофиқ аст, вале намедонад куҷо ҳуҷҷат супорад.
+             * Се номи аввал бас аст — боқимонда ҳамчун рақам («+4») нишон
+             * дода мешавад, то корт дароз нашавад.
+             */
+            const universities = (career.universities || []);
 
             return {
                 id: career.id,
+                /* Коди расмии ихтисос — маҳз ҳамин рақам ҳангоми супоридани
+                   ҳуҷҷат ба ММТ нависта мешавад. */
+                code: career.code,
                 name: career.name,
                 description: career.description,
                 purpose: career.purpose,
                 matchPercentage,
                 likesCount: career.likesCount,
-                _score: matchPercentage
+                universities: universities.slice(0, 3).map(uni => ({
+                    id: uni.id,
+                    name: uni.shortName || uni.name,
+                    city: uni.city,
+                })),
+                universitiesCount: universities.length,
             };
         });
-
-        scored.sort((a, b) => b._score - a._score);
-        return scored.slice(0, 12);
     }
 
     async getStats(): Promise<any> {
@@ -427,20 +588,47 @@ export class CareerService {
         }).join('\n\n---\n\n');
     }
 
+    /**
+     * Хулосаи кӯтоҳи профил барои промпт.
+     *
+     * Пештар ин ҷо `JSON.stringify(user.quizResults)` мерафт — тамоми натиҷа
+     * бо массиви хоми `specialtyKeywords`. Модел ҳамон рӯйхатро содда ба
+     * корбар такрор мекард («ба соҳаҳои авиатсия, сенсор, радио… таваҷҷуҳ
+     * доред»), ки на фоида дошт ва на зебо буд. Ҳоло танҳо хулосаи хондашаванда
+     * фиристода мешавад: кластери пешбар ва холҳо, бе рӯйхати калидвожаҳо.
+     */
     private formatSavedCareerSummary(user?: User | null): string {
-        if (!user) return 'Guest user or profile not loaded.';
+        if (!user) return '';
 
-        const saved = (user.savedCareers || []).slice(0, 12).map((career) => career.name).join(', ') || 'none';
-        const liked = (user.likedCareers || []).slice(0, 12).map((career) => career.name).join(', ') || 'none';
+        const saved = (user.savedCareers || []).slice(0, 8).map((career) => career.name).join(', ');
+        const liked = (user.likedCareers || []).slice(0, 8).map((career) => career.name).join(', ');
 
-        return [
-            `name: ${user.name || 'not provided'}`,
-            `email: ${user.email || 'not provided'}`,
-            `role: ${user.role}`,
-            `quizResults: ${user.quizResults ? JSON.stringify(user.quizResults) : 'not completed'}`,
-            `savedCareers: ${saved}`,
-            `likedCareers: ${liked}`,
-        ].join('\n');
+        const lines: string[] = [];
+        if (user.name) lines.push(`name: ${user.name}`);
+
+        const mmt = (user.quizResults as any)?.mmtClusters;
+        if (mmt) {
+            const names: Record<string, string> = {
+                c1: 'Табиӣ ва техникӣ',
+                c2: 'Иқтисод ва география',
+                c3: 'Филология, педагогика ва санъат',
+                c4: 'Ҷомеашиносӣ ва ҳуқуқ',
+                c5: 'Тиб, биология ва варзиш',
+            };
+            const ranked = Object.entries(mmt)
+                .map(([key, score]) => ({ label: names[key] || key, score: Number(score) || 0 }))
+                .sort((a, b) => b.score - a.score);
+
+            lines.push(`quizTopCluster: ${ranked[0]?.label} (${ranked[0]?.score}/40)`);
+            lines.push(`quizAllClusters: ${ranked.map((r) => `${r.label} ${r.score}`).join(', ')}`);
+        } else {
+            lines.push('quiz: not completed yet');
+        }
+
+        if (saved) lines.push(`savedCareers: ${saved}`);
+        if (liked) lines.push(`likedCareers: ${liked}`);
+
+        return lines.join('\n');
     }
 
     private buildCareerChatPrompt(params: {
@@ -495,8 +683,23 @@ TASK:
 - If the user asks for a full explanation of a specialty, cover: what the specialist does, workplaces, 10-year outlook, technologies, books, video courses, certifications, and first 3 practical steps.
 - If the user asks for doctor/medical fields, prefer cluster 5 or health-related rows if they exist in the database context.
 - If official university website or current tuition is missing from context, clearly say it is not in the database yet and recommend checking the official admissions page. Do not invent links or prices.
-- Keep the tone friendly and concise, but give enough detail to act.
-- Format with short headings and bullet points. Avoid JSON.
+
+STYLE - FOLLOW EXACTLY:
+- Address the student with the polite "шумо" (Russian "вы", English "you"). Never use the informal "ту".
+- Answer the question that was actually asked. Do not open with a long welcome or a
+  summary of the student's profile unless they asked about their profile.
+- Never read the student's keyword list, cluster scores or saved careers back to them
+  as a list. Use that data silently to choose what to recommend.
+- If the student only greets you ("салом", "привет", "hi") and asks nothing, reply in at
+  most 3 sentences: greet back, name at most two specialties that suit their quiz result,
+  and end by asking what they would like to know. Save the details for when they ask.
+- Be concrete. Prefer a named specialty, a number, or a next step over general advice.
+- Keep it under 180 words unless the student asked for a full explanation.
+
+FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
+- You may use "**bold**" for emphasis and lines starting with "- " for lists.
+- Do NOT use "*" for bullets, "#" headings, tables, code blocks or links.
+- Separate ideas with a blank line. Never output JSON.
 `;
     }
 
@@ -1004,8 +1207,17 @@ ${instr.format}
         }));
 
         return {
+            /*
+             * Холҳои кластерҳои ММТ.
+             *
+             * Дар паҳлӯи ин майдон боз `riasecScores` фиристода мешуд, ки
+             * қиматашро аз `scores?.riasec || scores?.cognitive || mmt`
+             * мегирифт. Дар барнома ҳеҷ RIASEC ҳисоб намешавад, ва `cognitive`
+             * объекти ХОЛӢ аст — вале дар JS объекти холӣ «рост» аст, аз ин рӯ
+             * ҳамеша маҳз ҳамон интихоб мешуд ва дар саҳифа ягон сутун
+             * намебаромад. Ҳоло саҳифа рост ҳамин майдонро мехонад.
+             */
             mmtScores: mmt,
-            riasecScores: scores?.riasec || scores?.cognitive || mmt,
             dominantTypes: Object.entries(mmt)
                 .map(([type, score]) => ({ type, score: Number(score) || 0 }))
                 .sort((a: any, b: any) => Number(b.score) - Number(a.score))

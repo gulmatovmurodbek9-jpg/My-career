@@ -7,7 +7,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/authStore";
 import axios from "axios";
-import { API } from "../../lib/config";
+import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { Link } from "react-router";
 
 const formatTime = (d) =>
@@ -77,18 +77,41 @@ const splitSpeechText = (text, maxLength = 220) => {
 };
 
 /* ── markdown → html ── */
+/*
+ * Матни ҷавоб рост ба `dangerouslySetInnerHTML` меравад, аз ин рӯ аввал
+ * escape карда мешавад. Бе ин ҳар теге, ки дар ҷавоб медаромад — масалан
+ * вақте корбар порчаи HTML мефиристад ва мепурсад «ин чист?» — дар браузер
+ * иҷро мешуд.
+ */
+const escapeHtml = (text) =>
+    text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
 const renderMarkdown = (text) => {
     if (!text) return "";
-    let html = text
+    let html = escapeHtml(text)
         .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="ai-code-block"><code>$2</code></pre>')
         .replace(/`([^`]+)`/g, '<code class="ai-inline-code">$1</code>')
-        .replace(/### (.+)/g, '<h4 class="ai-h4">$1</h4>')
-        .replace(/## (.+)/g, '<h3 class="ai-h3">$1</h3>')
-        .replace(/# (.+)/g, '<h2 class="ai-h2">$1</h2>')
+        .replace(/^### (.+)$/gm, '<h4 class="ai-h4">$1</h4>')
+        .replace(/^## (.+)$/gm, '<h3 class="ai-h3">$1</h3>')
+        .replace(/^# (.+)$/gm, '<h2 class="ai-h2">$1</h2>')
+        /*
+         * Рӯйхатҳо ПЕШ аз курсив коркард мешаванд.
+         *
+         * «*» низ ҳамчун нуқтаи рӯйхат қабул мешавад: пештар танҳо «-» ва «•»
+         * фаҳмида мешуданд, ва модел бошад аксар вақт «* матн» менавишт —
+         * дар натиҷа ситорача дар экран хом мемонд. Агар курсив пеш иҷро
+         * мешуд, ҳамон ситорачаи аввали сатрро мехӯрд.
+         */
+        .replace(/^\s*[-•*]\s+(.+)$/gm, '<li class="ai-ul-item">$1</li>')
+        .replace(/^\s*\d+\.\s+(.+)$/gm, '<li class="ai-ol-item">$1</li>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, "<em>$1</em>")
-        .replace(/^\d+\.\s+(.+)$/gm, '<li class="ai-ol-item">$1</li>')
-        .replace(/^[-•]\s+(.+)$/gm, '<li class="ai-ul-item">$1</li>');
+        // Курсив танҳо дар дохили як сатр ва бе фосилаи оғозӣ
+        .replace(/\*(?!\s)([^*\n]+?)(?<!\s)\*/g, "<em>$1</em>");
+
     // wrap consecutive li groups
     html = html.replace(/((?:<li class="ai-ul-item">.*?<\/li>\s*)+)/g, '<ul class="ai-ul">$1</ul>');
     html = html.replace(/((?:<li class="ai-ol-item">.*?<\/li>\s*)+)/g, '<ol class="ai-ol">$1</ol>');
@@ -237,6 +260,7 @@ const AiChat = () => {
             heroSubtitle: "Дар бораи ихтисосҳо, маош, донишгоҳҳо ва роҳи касбӣ савол диҳед",
             placeholder: "Паём нависед...",
             errorGeneric: "Хатогӣ рух дод. Лутфан дубора кӯшиш кунед.",
+            errorTimeout: "Ҷавоб дер монд. Шабакаро санҷед ва дубора кӯшиш кунед.",
             voiceUserMsg: "🎙️ Паёми овозӣ...",
             voiceSentMsg: "🎙️ Овоз фиристода шуд",
             voiceError: "Хатогӣ рух дод.",
@@ -259,6 +283,7 @@ const AiChat = () => {
             heroSubtitle: "Задайте вопросы о специальностях, зарплате, инструментах и карьерном пути",
             placeholder: "Напишите сообщение...",
             errorGeneric: "Произошла ошибка. Пожалуйста, попробуйте еще раз.",
+            errorTimeout: "Ответ занял слишком много времени. Проверьте сеть и попробуйте снова.",
             voiceUserMsg: "🎙️ Голосовое сообщение...",
             voiceSentMsg: "🎙️ Голос отправлен",
             voiceError: "Произошла ошибка.",
@@ -281,6 +306,7 @@ const AiChat = () => {
             heroSubtitle: "Ask about careers, salaries, universities, and career pathways",
             placeholder: "Type a message...",
             errorGeneric: "An error occurred. Please try again.",
+            errorTimeout: "The response took too long. Check your connection and try again.",
             voiceUserMsg: "🎙️ Voice message...",
             voiceSentMsg: "🎙️ Voice sent",
             voiceError: "An error occurred.",
@@ -531,12 +557,14 @@ const AiChat = () => {
 
         try {
             const { data } = await axios.post(`${API}/careers/ask`, { question: text, lang },
-                { headers: { Authorization: `Bearer ${token}` } });
+                { headers: { Authorization: `Bearer ${token}` }, timeout: AI_TIMEOUT_MS });
             const botMsg = { id: `a${Date.now()}`, role: "assistant", text: data.answer, time: new Date().toISOString(), _isNew: true };
             setMessages(prev => [...prev, botMsg]);
             if (data.remainingToday !== undefined) setRemainingToday(data.remainingToday);
         } catch (err) {
-            const errText = err.response?.data?.message || currentDict.errorGeneric;
+            const errText = isTimeout(err)
+                ? currentDict.errorTimeout
+                : err.response?.data?.message || currentDict.errorGeneric;
             setMessages(prev => [...prev, { id: `e${Date.now()}`, role: "assistant", text: `⚠️ ${errText}`, time: new Date().toISOString(), isError: true, _isNew: true }]);
         } finally {
             setLoading(false);

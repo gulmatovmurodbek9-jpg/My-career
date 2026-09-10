@@ -4,9 +4,10 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './user.entity';
 import { Career } from '../career/career.entity';
+import { CareerOffering } from '../career/career-offering.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, Career])],
+    imports: [TypeOrmModule.forFeature([User, Career, CareerOffering])],
     controllers: [UsersController],
     providers: [UsersService],
     exports: [UsersService],

@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { QuizService } from './quiz.service';
 import { QuizController } from './quiz.controller';
-import { Career } from '../career/career.entity';
-import { Cluster } from '../cluster/cluster.entity';
 import { AiModule } from '../ai/ai.module';
 import { UsersModule } from '../users/users.module';
+import { CareerModule } from '../career/career.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Career, Cluster]),
         AiModule,
         UsersModule,
+        CareerModule,
     ],
     controllers: [QuizController],
     providers: [QuizService],

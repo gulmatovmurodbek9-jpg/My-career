@@ -24,8 +24,20 @@ async function bootstrap() {
     // нашиканад. Барои домени воқеӣ CORS_ORIGIN-ро гузоштан лозим аст.
     const productionFallback = ['http://localhost:5173', 'http://localhost:3000'];
 
+    /*
+     * Дар development ба ғайр аз localhost суроғаҳои шабакаи дохилӣ низ
+     * иҷозат дода мешаванд: 192.168.x.x, 10.x.x.x ва 172.16–31.x.x.
+     *
+     * Ҳангоми намоиш аз телефони ҳамон Wi-Fi origin дигар localhost нест,
+     * балки 192.168.x.x — ва бе ин ҳамаи дархостҳои API бесадо баста
+     * мешаванд. Аломаташ маҳз ҳамон аст, ки дар боло навишта шудааст:
+     * саҳифа мекушояд, вале ҳеҷ ҷо маълумот намеояд.
+     */
+    const devOrigin =
+        /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(?::\d+)?$/;
+
     app.enableCors({
-        origin: allowList ?? (isProduction ? productionFallback : /^http:\/\/localhost:\d+$/),
+        origin: allowList ?? (isProduction ? productionFallback : devOrigin),
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         credentials: true,
     });

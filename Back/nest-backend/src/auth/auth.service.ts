@@ -1,17 +1,27 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
+import { MailService } from '../mail/mail.service';
+
+/* Фосилаи ҳадди ақал байни ду номаи барқарорсозӣ ба як суроға. */
+const RESET_THROTTLE_MS = 60 * 1000;
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
+    /** email → вақти охирин фиристодан. Дар хотира, барои як нусхаи сервер. */
+    private readonly recentResets = new Map<string, number>();
+
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
         private configService: ConfigService,
+        private mailService: MailService,
     ) { }
 
     async validateUser(email: string, pass: string): Promise<any> {
@@ -39,6 +49,55 @@ export class AuthService {
     async register(createUserDto: CreateUserDto) {
         const user = await this.usersService.create(createUserDto);
         return this.login(user);
+    }
+
+    /**
+     * Дархости барқарорсозии парол.
+     *
+     * Ҷавоб ҳамеша якхела аст — новобаста аз он ки чунин корбар ҳаст ё не.
+     * Вагарна саҳифа ба воситаи фарқи ҷавобҳо нишон медиҳад, ки кадом имейл
+     * дар база сабт аст.
+     */
+    async forgotPassword(email: string): Promise<{ message: string }> {
+        const message = 'Агар чунин ҳисоб бошад, дастур ба почтаи шумо фиристода шуд';
+
+        const key = email.trim().toLowerCase();
+        if (this.isThrottled(key)) {
+            // Ҳамон ҷавоб бармегардад — вагарна аз рӯи фарқи ҷавоб фаҳмидан
+            // мумкин мешуд, ки барои ин суроға тозагӣ нома рафтааст.
+            return { message };
+        }
+
+        const created = await this.usersService.createPasswordResetCode(email);
+        if (!created) return { message };
+
+        this.markSent(key);
+
+        try {
+            await this.mailService.sendPasswordResetCode(created.user.email, created.code, created.user.name);
+        } catch (err) {
+            // Хатои SMTP набояд ба корбар нишон дода шавад — вагарна ҳамон
+            // фарқи ҷавоб пайдо мешавад, ки дар боло аз он худдорӣ кардем.
+            this.logger.error(`Нома ба ${created.user.email} нарафт: ${err.message}`);
+        }
+
+        return { message };
+    }
+
+    async resetPassword(email: string, code: string, password: string): Promise<{ message: string }> {
+        const result = await this.usersService.resetPasswordWithCode(email, code, password);
+
+        if (result === 'expired') {
+            throw new BadRequestException('Мӯҳлати код гузаштааст. Коди навро дархост кунед.');
+        }
+        if (result === 'too_many_attempts') {
+            throw new BadRequestException('Кӯшишҳо аз ҳад зиёд шуданд. Коди навро дархост кунед.');
+        }
+        if (result === 'invalid') {
+            throw new BadRequestException('Код нодуруст аст. Онро аз нома санҷед.');
+        }
+
+        return { message: 'Парол иваз шуд. Акнун бо пароли нав ворид шавед.' };
     }
 
     async googleLogin(idToken: string) {
@@ -69,6 +128,25 @@ export class AuthService {
         });
 
         return this.login(user);
+    }
+
+    /*
+     * Як нома дар як дақиқа ба як суроға. Бе ин касе метавонад формаро дар
+     * ҳалқа зада, ба почтаи бегона садҳо нома фиристад — ва квотаи рӯзонаи
+     * фиристодани Gmail-и худи мо тамом мешавад.
+     */
+    private isThrottled(email: string): boolean {
+        const last = this.recentResets.get(email);
+        return last !== undefined && Date.now() - last < RESET_THROTTLE_MS;
+    }
+
+    private markSent(email: string): void {
+        // Навиштаҷоти кӯҳна тоза мешаванд, то Map беохир калон нашавад.
+        const now = Date.now();
+        for (const [key, at] of this.recentResets) {
+            if (now - at >= RESET_THROTTLE_MS) this.recentResets.delete(key);
+        }
+        this.recentResets.set(email, now);
     }
 
     private getGoogleClientIds(): string[] {

@@ -28,6 +28,23 @@ export class User {
     @Column({ nullable: true })
     password: string;
 
+    /*
+     * Барқарорсозии парол бо коди 6-рақама. Худи код нигоҳ дошта намешавад —
+     * танҳо hash-и он, то дуздидани база имкони иваз кардани паролро надиҳад.
+     */
+    @Column({ nullable: true, select: false })
+    resetTokenHash: string | null;
+
+    @Column({ type: 'timestamptz', nullable: true, select: false })
+    resetTokenExpiresAt: Date | null;
+
+    /*
+     * Шумораи кӯшишҳои нодуруст. Коди 6-рақама ҳамагӣ як миллион вариант
+     * дорад — бе ин ҳисоб онро бо барнома дар чанд дақиқа ёфтан мумкин аст.
+     */
+    @Column({ type: 'int', default: 0, select: false })
+    resetAttempts: number;
+
     @Column({
         type: 'enum',
         enum: UserRole,
@@ -50,6 +67,17 @@ export class User {
 
     @Column('jsonb', { nullable: true, default: [] })
     chatHistory: ChatMessage[];
+
+    /*
+     * Рӯйхати ҳуҷҷатсупорӣ — id-ҳои `career_offerings`.
+     *
+     * Як «пешниҳод» аллакай ихтисос + донишгоҳ + шакли таҳсил + буҷа/шартнома
+     * -ро дар як сатр мебандад, аз ин рӯ маҳз ҳамон интихоби воқеии довталаб
+     * аст. Нигоҳ доштани танҳо id кофист: боқимонда ҳангоми хондан аз база
+     * гирифта мешавад ва ҳамеша тоза мемонад.
+     */
+    @Column('jsonb', { nullable: true, default: [] })
+    applicationChoices: string[];
 
     @Column('jsonb', { nullable: true, default: () => '\'{"date": null, "count": 0}\'' })
     aiDailyUsage: { date: string | null; count: number };

@@ -26,15 +26,9 @@ import axios from "axios";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../components/toast/ToastProvider";
+import { MMT_CLUSTERS } from "../../lib/mmtClusters";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
-const CLUSTER_LABELS = {
-    c1: "Кластери 1",
-    c2: "Кластери 2",
-    c3: "Кластери 3",
-    c4: "Кластери 4",
-    c5: "Кластери 5",
-};
 
 const Quiz = () => {
     const { t, i18n } = useTranslation();
@@ -406,6 +400,17 @@ const Quiz = () => {
         );
     }
 
+    /*
+     * Номи кластер. Пештар ин ҷо ҷадвали «Кластери 1…5» сахт навишта шуда
+     * буд ва дар экран ҳамон тавр мебаромад — рақам ба хонанда ҳеҷ чиз
+     * намегӯяд. Номҳо аз ҳамон манбаи умумии панел гирифта мешаванд, то ду
+     * саҳифа якхела бошанд ва дар ҳар се забон тарҷума шаванд.
+     */
+    const clusterLabel = (key) => {
+        const cluster = MMT_CLUSTERS.find((c) => c.key === key);
+        return cluster ? t(cluster.i18nKey, cluster.fallback) : key.toUpperCase();
+    };
+
     if (showResults && results) {
         const topCluster = results.topCluster;
         const personalityDesc = results.personality || "";
@@ -413,7 +418,7 @@ const Quiz = () => {
         const rankedClusters = Object.entries(results.scores?.mmtClusters || {})
             .map(([key, score]) => ({
                 key,
-                label: CLUSTER_LABELS[key] || key.toUpperCase(),
+                label: clusterLabel(key),
                 raw: Number(score) || 0,
                 percent: Math.min(100, Math.round(((Number(score) || 0) / 40) * 100)),
             }))
@@ -711,8 +716,10 @@ const Quiz = () => {
         ? currentQuestion.question
         : currentQuestion.question?.[activeLang] || currentQuestion.question?.tj || "";
 
+    /* px-4 ҳатмист: <main> барои саҳифаҳои ғайрипанелӣ padding-и уфуқӣ надорад,
+       ва бе ин сарлавҳа дар телефон ба ҳарду канор мечаспид ва бурида мешуд. */
     return (
-        <div className="max-w-2xl mx-auto py-8 relative">
+        <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 relative">
             <div className="space-y-4 relative">
                 {/* Header Section */}
                 <div className="flex items-center justify-between gap-4">

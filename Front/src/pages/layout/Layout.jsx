@@ -144,12 +144,22 @@ const Layout = () => {
                   height={40}
                   className="h-9 w-9 lg:h-10 lg:w-10 flex-shrink-0 transition-transform duration-500 group-hover:scale-110"
                 />
-                <span className="hidden xl:block max-w-[190px] 2xl:max-w-[210px] font-extrabold text-lg 2xl:text-xl text-foreground tracking-normal uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+                {/*
+                  Номи бренд танҳо аз 2xl намоён мешавад.
+                  Дар русӣ номҳои меню дарозтаранд («Университеты»,
+                  «Консультации»), ва дар xl қатор ба ҷои худ намеғунҷад.
+                  Азбаски он `justify-center` аст, барзиёдӣ ба ҳарду тараф
+                  мебарояд — ва «Главная» ба болои номи бренд мехазид.
+                */}
+                <span className="hidden 2xl:block max-w-[210px] font-extrabold text-xl text-foreground tracking-normal uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                   {t("common.brand", "Ikhtisosiman")}
                 </span>
               </Link>
 
-              <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-0.5 2xl:gap-1">
+              {/* overflow-hidden муҳофиз аст: агар қатор боз ҳам нағунҷад
+                  (забони дарозтар, экрани борик), барзиёдӣ бурида мешавад
+                  ва ба ҳамсояҳо намедарояд. */}
+              <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-0.5 overflow-hidden 2xl:gap-1">
                 {navLinks.map((link) => {
                   // Истиноди лангарӣ ("/#cluster-groups") ба бахши дохили
                   // саҳифа ишора мекунад, на ба саҳифаи алоҳида, аз ин рӯ

@@ -128,6 +128,17 @@ if [ "$WITH_FRONTEND" -eq 1 ]; then
   log "frontend: install + build"
   cd "$FRONT_DIR"
   install_deps
+
+  # Two paths build the frontend and only one of them reads the GitHub
+  # workflow's env: the autodeploy timer builds here on the box. Without a
+  # client ID Vite proves the Google sign-in branch dead and strips it, so
+  # whichever path ran last decided whether the button existed at all. An
+  # OAuth client ID is public — the browser sends it to Google — so it is
+  # safe to carry here, and the environment still wins when it is set.
+  : "${VITE_API_URL:=/api}"
+  : "${VITE_GOOGLE_CLIENT_ID:=775960361578-tbnkgabcvooc25d3olgua5uo697ekp0t.apps.googleusercontent.com}"
+  export VITE_API_URL VITE_GOOGLE_CLIENT_ID
+
   NODE_OPTIONS="--max-old-space-size=1536" npm run build
 
   log "publishing frontend to $WEBROOT"

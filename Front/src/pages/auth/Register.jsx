@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, ArrowRight, LogIn, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, LogIn, Loader2, AlertCircle, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/authStore";
 import axios from "axios";
@@ -12,6 +12,7 @@ const Register = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState(null);
     const googleButtonRef = useRef(null);
@@ -147,13 +148,25 @@ const Register = () => {
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     required
+                                    autoComplete="new-password"
                                     placeholder="••••••••"
-                                    className="w-full bg-muted/20 border border-border/50 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:bg-muted/30 transition-all text-foreground"
+                                    className="w-full bg-muted/20 border border-border/50 rounded-xl py-3.5 pl-12 pr-12 focus:outline-none focus:border-primary/50 focus:bg-muted/30 transition-all text-foreground"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
+                                {/* Ҳангоми сохтани парол дидан муҳимтар аст:
+                                    хатои имло дар ин ҷо баъдтар ҳамчун
+                                    «пароли нодуруст» бармегардад. */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    aria-label={showPassword ? "Пинҳон кардани парол" : "Нишон додани парол"}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
 

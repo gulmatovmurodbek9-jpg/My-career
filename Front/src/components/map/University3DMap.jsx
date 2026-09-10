@@ -120,7 +120,7 @@ const University3DMap = ({ universities = [], center, zoom = 15, onSelect }) => 
             el.type = "button";
             el.className = uni.hasExactLocation ? "map3d-pin map3d-pin--exact" : "map3d-pin";
             el.title = uni.hasExactLocation
-                ? uni.name
+                ? [uni.name, uni.address].filter(Boolean).join("\n")
                 : `${uni.name} — ҷои тахминӣ (маркази шаҳр)`;
             el.setAttribute("aria-label", uni.name);
             if (onSelect) el.addEventListener("click", () => onSelect(uni));

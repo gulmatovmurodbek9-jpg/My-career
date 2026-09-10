@@ -17,6 +17,16 @@ export class University {
     @Index()
     city: string;
 
+    /*
+     * Суроғаи пурра — кӯча ва рақами бино.
+     *
+     * Танҳо барои муассисаҳое пур карда мешавад, ки координатаи воқеӣ доранд.
+     * Барои боқимонда суроға маънои маркази шаҳрро мебуд ва довталабро
+     * гумроҳ мекард.
+     */
+    @Column({ nullable: true })
+    address: string;
+
     /** Region/oblast the city belongs to, e.g. "Суғд", "Хатлон". */
     @Column({ nullable: true })
     region: string;

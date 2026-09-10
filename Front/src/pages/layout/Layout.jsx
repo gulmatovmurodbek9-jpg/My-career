@@ -156,10 +156,14 @@ const Layout = () => {
                 </span>
               </Link>
 
-              {/* overflow-hidden муҳофиз аст: агар қатор боз ҳам нағунҷад
-                  (забони дарозтар, экрани борик), барзиёдӣ бурида мешавад
-                  ва ба ҳамсояҳо намедарояд. */}
-              <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-0.5 overflow-hidden 2xl:gap-1">
+              {/*
+                `justify-start`, на `justify-center`.
+                Қатори марказонидашуда ҳангоми нағунҷидан аз ҲАРДУ тараф
+                мебарояд, ва канори чапаш маҳз ба болои номи бренд меафтод:
+                аз «Асосӣ» танҳо «сосӣ» мемонд. Бо оғоз аз чап барзиёдӣ
+                ҳамеша аз тарафи рост бурида мешавад — дур аз бренд.
+              */}
+              <div className="hidden md:flex min-w-0 flex-1 items-center justify-start gap-0.5 overflow-hidden pl-1 2xl:gap-1">
                 {navLinks.map((link) => {
                   // Истиноди лангарӣ ("/#cluster-groups") ба бахши дохили
                   // саҳифа ишора мекунад, на ба саҳифаи алоҳида, аз ин рӯ
@@ -173,7 +177,10 @@ const Layout = () => {
                     <Link
                       key={link.to}
                       to={link.to}
-                      className={`relative whitespace-nowrap rounded-lg px-2.5 lg:px-3 xl:px-3.5 py-2 text-[13px] xl:text-sm font-semibold transition-colors duration-200 focus-ring ${
+                      /* Фосилаи xl аз 3.5 ба 3 кам шуд: ҳафт истинод дар
+                         тоҷикӣ ва русӣ («Донишгоҳҳо», «Университеты») бо
+                         фосилаи пештара дар экрани миёна намеғунҷиданд. */
+                      className={`relative whitespace-nowrap rounded-lg px-2.5 lg:px-3 py-2 text-[13px] xl:text-sm font-semibold transition-colors duration-200 focus-ring ${
                         isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >

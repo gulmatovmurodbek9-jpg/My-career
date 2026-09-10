@@ -29,7 +29,19 @@ export class AiService implements OnModuleInit {
             this.genAI = new GoogleGenerativeAI(geminiKey);
             // Алиас, на версияи мушаххас: gemini-2.0-flash ва gemini-2.5-flash аллакай
             // бекор шудаанд ва ҳар як бекоркунӣ тамоми AI-ро мекушт.
-            this.geminiModel = this.genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+            this.geminiModel = this.genAI.getGenerativeModel({
+                model: 'gemini-flash-latest',
+                /*
+                 * «Фикркунӣ» хомӯш — ҳамон сабабе, ки дар Vertex.
+                 *
+                 * Ин роҳ дар сервер асосист: он ҷо VERTEX_PROJECT_ID нест, аз
+                 * ин рӯ ҳамаи дархостҳо маҳз аз ҳамин ҷо мегузаранд. Дар
+                 * ченкунӣ модел 749 токени фикрро пеш аз ҷавоб месӯзонд ва
+                 * даъват 4.9 сония мекашид; бе он ҳамон дархост дар 1.7
+                 * сония иҷро мешавад.
+                 */
+                generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as any,
+            });
         }
 
         this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-2.5-flash';

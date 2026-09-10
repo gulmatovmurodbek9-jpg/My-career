@@ -400,6 +400,7 @@ export default function TajikistanMap({ universities = [] }) {
         <MapContainer
           center={[CITY_CENTERS[DEFAULT_CITY].lat, CITY_CENTERS[DEFAULT_CITY].lng]}
           zoom={DEFAULT_ZOOM}
+          maxZoom={20}
           zoomControl={true}
           scrollWheelZoom={true}
           className="university-map h-full w-full"
@@ -430,7 +431,14 @@ export default function TajikistanMap({ universities = [] }) {
               key="satellite"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               attribution='Тасвир &copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics'
-              maxZoom={18}
+              /*
+               * Барои Душанбе тасвири воқеӣ то z=19 мерасад — дар он сатҳ
+               * бино ва ҳавлӣ дида мешавад; z=20 аллакай холӣ бармегардад.
+               * `maxNativeZoom` ҳамон 19-ро калон карда нишон медиҳад, то
+               * харита дар z=20 сафед нашавад.
+               */
+              maxNativeZoom={19}
+              maxZoom={20}
             />
           ) : (
             <TileLayer
@@ -450,7 +458,8 @@ export default function TajikistanMap({ universities = [] }) {
             <TileLayer
               key="labels"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={18}
+              maxNativeZoom={16}
+              maxZoom={20}
             />
           )}
 
@@ -568,10 +577,17 @@ export default function TajikistanMap({ universities = [] }) {
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-lg font-black leading-tight">{selectedUni.name}</p>
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-white/65">
-                    <MapPin className="h-4 w-4" />
-                    {selectedUni.inferredCity}
+                  {/* Суроғаи пурра, вақте маълум аст — довталабро маҳз ҳамин
+                      ба бинои дуруст мебарад, на номи шаҳр. */}
+                  <p className="mt-1 flex items-start gap-1.5 text-sm text-white/65">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{selectedUni.address || selectedUni.inferredCity}</span>
                   </p>
+                  {!selectedUni.hasExactLocation && (
+                    <p className="mt-1 text-xs text-white/45">
+                      Ҷои тахминӣ — маркази шаҳр
+                    </p>
+                  )}
                 </div>
 
                 <button

@@ -42,8 +42,13 @@ jobs:
         env:
           # nginx proxies /api/ to the NestJS process on 127.0.0.1:3005
           VITE_API_URL: ${{ vars.VITE_API_URL || '/api' }}
-          # Optional — set the repo variable to turn Google sign-in on in prod.
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          # An OAuth client ID is public by design — the browser has to send it
+          # to Google — so the production one is the default here rather than a
+          # repo variable someone has to remember. Without a value Vite proves
+          # the sign-in branch is dead and strips it, and the button silently
+          # never appears in prod. Override with the repo variable to point a
+          # deployment at a different Google project.
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID || '775960361578-tbnkgabcvooc25d3olgua5uo697ekp0t.apps.googleusercontent.com' }}
         run: |
           npm ci --no-audit --no-fund
           npm run build

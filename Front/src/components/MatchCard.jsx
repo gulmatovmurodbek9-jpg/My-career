@@ -230,11 +230,13 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                         </button>
                     )}
 
+                    {/* Ба ҷои саҳифаи умумӣ рост ба ҷадвали донишгоҳҳо мебарад:
+                        интихоби донишгоҳ ва намуди ҷой маҳз он ҷост. */}
                     <Link
-                        to={`/info/${career.id}`}
+                        to={`/info/${career.id}#universities`}
                         className="group/btn flex items-center gap-2 rounded-lg py-1.5 pl-2 text-xs font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:text-primary"
                     >
-                        {t('common.details', 'Маълумот')}
+                        {t('common.choose', 'Интихоб')}
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary transition-all duration-300 group-hover/btn:bg-primary group-hover/btn:text-primary-foreground">
                             <ArrowRight className="h-3.5 w-3.5" />
                         </span>

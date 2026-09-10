@@ -145,6 +145,7 @@ const Info = () => {
   /* Рӯйхати ҳуҷҷатсупорӣ: кадом пешниҳодҳо аллакай интихоб шудаанд. */
   const [planIds, setPlanIds] = useState(new Set());
   const [planBusyId, setPlanBusyId] = useState(null);
+  const [clusterConflict, setClusterConflict] = useState(null);
 
   useEffect(() => {
     if (!token) return;
@@ -174,8 +175,35 @@ const Info = () => {
         setPlanIds((prev) => new Set(prev).add(offeringId));
       }
     } catch (err) {
-      /* Хатои «кластери дигар» матни фаҳмондадиҳанда дорад — онро айнан
-         нишон медиҳем, то корбар донад чаро рад шуд. */
+      /*
+       * Хатои «кластери дигар» роҳи баромад дорад, аз ин рӯ ба ҷои паёми
+       * оддӣ панели тасдиқ нишон дода мешавад: корбар мебинад чаро рад шуд
+       * ва метавонад ҳамон ҷо рӯйхатро тоза кунад. Пештар ӯ бояд худаш
+       * мефаҳмид, ки ба кадом саҳифа гузарад.
+       */
+      if (err.response?.status === 409) {
+        setClusterConflict({ message: err.response.data?.message, offeringId });
+      } else {
+        showError(err.response?.data?.message || "Иҷро нашуд");
+      }
+    } finally {
+      setPlanBusyId(null);
+    }
+  };
+
+  /** Рӯйхатро тоза мекунад ва ҳамон интихобро илова менамояд. */
+  const clearPlanAndAdd = async () => {
+    const offeringId = clusterConflict?.offeringId;
+    setClusterConflict(null);
+    if (!offeringId) return;
+
+    setPlanBusyId(offeringId);
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.delete(`${API}/users/application-plan`, { headers });
+      await axios.post(`${API}/users/application-plan/${offeringId}`, {}, { headers });
+      setPlanIds(new Set([offeringId]));
+    } catch (err) {
       showError(err.response?.data?.message || "Иҷро нашуд");
     } finally {
       setPlanBusyId(null);
@@ -655,11 +683,45 @@ const Info = () => {
           {/* --- Донишгоҳҳо ва нархҳо --- */}
           {offerings.length > 0 ? (
             <Section
+              id="universities"
               icon={GraduationCap}
               title="Дар куҷо омӯхтан мумкин аст"
               subtitle={`${offerings.length} пешниҳод дар ${new Set(offerings.map(o => o.university?.name)).size} муассиса — аз арзонтарин сар карда`}
               gradient="from-blue-500 to-cyan-500"
             >
+              {/* Ҳангоми бархӯрди кластер: сабаб ва роҳи баромад дар як ҷо. */}
+              {clusterConflict && (
+                <div className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/10 p-5">
+                  <p className="text-sm leading-relaxed text-foreground">
+                    {clusterConflict.message}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={clearPlanAndAdd}
+                      className="cursor-pointer rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
+                    >
+                      Рӯйхатро тоза кунам ва инро илова намоям
+                    </button>
+                    <Link to="/dashboard/plan">
+                      <button
+                        type="button"
+                        className="cursor-pointer rounded-xl border border-border px-4 py-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        Рӯйхатро дидан
+                      </button>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setClusterConflict(null)}
+                      className="cursor-pointer rounded-xl px-4 py-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Бекор
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <ChoosingHelp offerings={offerings} />
 
               <div className="overflow-x-auto -mx-2 px-2">

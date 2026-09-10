@@ -21,6 +21,7 @@ export class UniversityService {
                 name: uni.name,
                 shortName: uni.shortName,
                 city: uni.city,
+                address: uni.address,
                 region: uni.region,
                 isState: uni.isState,
                 institutionType: uni.institutionType,

@@ -29,6 +29,9 @@ export class UniversityService {
                 description: uni.description,
                 latitude: uni.latitude,
                 longitude: uni.longitude,
+                /* Харита бояд донад, ки нуқта суроғаи воқеист ё танҳо
+                   маркази шаҳр — вагарна тахминро ҳамчун дақиқ мекашад. */
+                hasExactLocation: uni.hasExactLocation,
                 careerCount: uni.careers?.length || 0
             }))
             .sort((a, b) => b.careerCount - a.careerCount);

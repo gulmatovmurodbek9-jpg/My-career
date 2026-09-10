@@ -202,20 +202,50 @@
   @apply -translate-y-2 border-primary/20 bg-card/80;
 }
 
+/*
+ * Дурахши ҳошия ҳангоми hover.
+ *
+ * Пештар ин қабат бо `z-index: -1` дар ЗЕРИ корт меистод. Азбаски заминаи
+ * корт ниммушаффаф аст (bg-card/60), градиенти кабуд аз тамоми рӯи он
+ * медурахшид ва корт якбора кабуд мешуд — на ҳошия, балки ҳама чиз.
+ *
+ * Ҳоло қабат дар БОЛО аст, вале маска маркази онро мебурад: танҳо як
+ * навори 1px дар канор мемонад. `pointer-events: none` ҳатмист — вагарна
+ * қабат кликҳоро мегирифт.
+ */
 .glass-card-glow::after {
   content: "";
   position: absolute;
-  inset: -2px;
-  background: linear-gradient(45deg, var(--color-primary), var(--color-accent-blue), var(--color-primary));
-  z-index: -1;
+  /* inset: 0, на -2px: волид `overflow: hidden` дорад ва берунро мебурад. */
+  inset: 0;
   border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.5s;
   padding: 1px;
+  background: linear-gradient(135deg,
+      hsl(var(--primary)),
+      hsl(var(--accent-blue)),
+      hsl(var(--primary)));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .glass-card-glow:hover::after {
-  opacity: 0.3;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-card-glow::after {
+    transition: none;
+  }
 }
 
 .career-compare-page .glass-card {
@@ -230,6 +260,67 @@
 @media (max-width: 768px) {
   .career-compare-page .glass-card {
     border-radius: 1rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MATCH CARD — «Тавсияҳои Ояндасоз»
+   ═══════════════════════════════════════════════ */
+
+/* Корт заминаи сахт дорад, бинобар ин backdrop-blur-и .glass-card дар ин ҷо
+   чизе намедиҳад — вай танҳо ҳар кадри GPU-ро мехӯрад. Ҳамчунин градиенти
+   .glass-card-glow дар зери заминаи ниммушаффаф ҳангоми hover тамоми кортро
+   кабуд мекард; ин ҷо танҳо ҳошия ранг мегирад, на худи корт. */
+.match-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 30px -22px hsl(221 83% 30% / 0.35);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.match-card:hover {
+  transform: translateY(-6px);
+  border-color: hsl(var(--primary) / 0.35);
+  box-shadow: 0 26px 50px -28px hsl(221 83% 30% / 0.45);
+}
+
+.dark .match-card {
+  box-shadow: 0 20px 40px -28px rgb(0 0 0 / 0.7);
+}
+
+.dark .match-card:hover {
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.8);
+}
+
+/* Мувофиқати аввал: ҳамон шакл, танҳо як нурафкании нозук — на андозаи дигар,
+   вагарна сатри кортҳо ноҳамвор мешавад. */
+.match-card--top {
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+.match-card--top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(160deg, hsl(var(--primary) / 0.1), transparent 58%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .match-card,
+  .match-card:hover {
+    transform: none;
+    transition: border-color 0.2s ease;
   }
 }
 
@@ -878,4 +969,110 @@
   /* 12:1 */
   --cluster-5: #fda4af;
   /* 8.6:1 */
+}
+
+/* ═══════════════════════════════════════════════
+   ЧОП / PDF — рӯйхати ҳуҷҷатсупорӣ
+   ═══════════════════════════════════════════════ */
+
+@media print {
+
+  /* Браузер заминаҳоро ба таври пешфарз чоп намекунад, аз ин рӯ ҳама чиз
+     ба матни сиёҳ рӯи сафед оварда мешавад — сиёҳӣ кам сарф мешавад ва
+     ҷадвал хонотар мебарояд. */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --muted-foreground: 0 0% 30%;
+    --border: 0 0% 75%;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Навбар, сайдбар, поя ва тугмаҳо дар коғаз лозим нестанд. */
+  header.print\:hidden,
+  nav,
+  aside,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .hidden.print\:block {
+    display: block !important;
+  }
+
+  /* Соя ва шаффофӣ дар чоп танҳо доғ медиҳанд. */
+  .glass-card,
+  .match-card {
+    box-shadow: none !important;
+    background: #fff !important;
+    border-color: #bbb !important;
+  }
+
+  table {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 11px;
+  }
+
+  /* Сатр набояд байни ду саҳифа шикаста шавад. */
+  tr {
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ХАРИТАИ 3D — нишонаҳо
+   ═══════════════════════════════════════════════ */
+
+.map3d-pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0;
+  /* Нуқтаи тахминӣ (маркази шаҳр) — доираи ХОЛӢ. Фарқи намуд қасдан аст:
+     корбар бояд бидонад, ки ин суроғаи дақиқ нест. */
+  background: transparent;
+  border: 2px solid hsl(var(--muted-foreground));
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  transition: transform 0.15s ease;
+}
+
+/* Суроғаи ВОҚЕӢ — доираи пур бо ҳалқаи сафед. */
+.map3d-pin--exact {
+  width: 16px;
+  height: 16px;
+  background: hsl(var(--primary));
+  border-color: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.45);
+}
+
+.map3d-pin:hover,
+.map3d-pin:focus-visible {
+  transform: scale(1.35);
+  outline: none;
+}
+
+/* Дар чоп харита лозим нест. */
+@media print {
+  .map3d-pin {
+    display: none;
+  }
 }

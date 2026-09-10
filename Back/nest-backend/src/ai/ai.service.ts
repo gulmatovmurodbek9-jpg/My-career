@@ -7,6 +7,13 @@ import * as path from 'path';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+/*
+ * Ҳадди вақт барои як провайдери AI. Ду провайдер × 25с = 50с дар бадтарин
+ * ҳолат, ки аз timeout-и 90-сонияи frontend хеле камтар аст — яъне корбар
+ * ҳамеша ё ҷавоб мегирад, ё паёми фаҳмо.
+ */
+const AI_PROVIDER_TIMEOUT_MS = 25000;
+
 @Injectable()
 export class AiService implements OnModuleInit {
     private genAI: GoogleGenerativeAI | null = null;
@@ -70,13 +77,33 @@ export class AiService implements OnModuleInit {
         let last: any = null;
         for (const which of usable) {
             try {
-                return await run(which);
+                return await this.withTimeout(run(which), which);
             } catch (error) {
                 last = error;
                 console.error(`AI: провайдери ${which} афтод:`, error?.message || error);
             }
         }
         throw last ?? new InternalServerErrorException('Ҳеҷ провайдери AI дастрас нест');
+    }
+
+    /**
+     * Маҳдудияти вақт барои як провайдер.
+     *
+     * Провайдери овезонмонда набояд тамоми занҷирро боздорад: агар даъват на
+     * хато диҳад ва на ҷавоб, `generateContent` ҳеҷ гоҳ ба провайдери навбатӣ
+     * намегузарад ва дархост то timeout-и худи браузер кушода мемонад. Бо ин
+     * маҳдудият овезон мондан ҳамчун афтиш ҳисоб мешавад ва занҷир давом
+     * мекунад.
+     */
+    private withTimeout<T>(work: Promise<T>, which: string): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            const timer = setTimeout(
+                () => reject(new Error(`провайдери ${which} дар ${AI_PROVIDER_TIMEOUT_MS} мс ҷавоб надод`)),
+                AI_PROVIDER_TIMEOUT_MS,
+            );
+
+            work.then(resolve, reject).finally(() => clearTimeout(timer));
+        });
     }
 
     /**
@@ -94,6 +121,17 @@ export class AiService implements OnModuleInit {
         const response = await this.vertex.models.generateContent({
             model: this.vertexModel,
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            config: {
+                /*
+                 * gemini-2.5-flash ба таври пешфарз «фикр» мекунад: дар
+                 * ченкунӣ он 2,566 токени фикрро пеш аз ҷавоб месӯзонд ва
+                 * даъват 18.8 сония мекашид. Бо хомӯш кардани он ҳамон
+                 * дархост дар 3.6 сония иҷро мешавад — 5.3 баробар тезтар,
+                 * ва ҷавоб ҳатто пурратар мебарояд. Барои маслиҳати касбӣ
+                 * занҷири дарозии мулоҳиза лозим нест.
+                 */
+                thinkingConfig: { thinkingBudget: 0 },
+            },
         });
 
         const text = response.text;

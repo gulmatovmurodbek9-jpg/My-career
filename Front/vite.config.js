@@ -41,6 +41,12 @@ export default defineConfig({
           if (name === 'leaflet' || name === 'react-leaflet' || name.startsWith('@react-leaflet')) {
             return 'vendor-map'
           }
+          // MapLibre танҳо дар реҷаи 3D лозим аст ва беш аз 1 МБ вазн дорад.
+          // Бе ин қоида он ба гурӯҳи умумии `vendor` меафтад ва ҳар корбар
+          // онро бор мекунад, ҳатто агар харитаи 3D-ро накушояд.
+          if (name === 'maplibre-gl' || name.startsWith('@maplibre')) {
+            return 'vendor-maplibre'
+          }
           if (name === 'recharts' || name.startsWith('d3-') || name === 'victory-vendor' ||
               name === 'internmap' || name === 'decimal.js-light') {
             return 'vendor-charts'

@@ -44,6 +44,17 @@ export class University {
     @Column('decimal', { precision: 10, scale: 7, nullable: true })
     longitude: number;
 
+    /*
+     * Оё координата суроғаи ВОҚЕИИ муассиса аст?
+     *
+     * `false` маънои маркази шаҳрро дорад. Ин фарқ муҳим аст: барои аксари
+     * коллеҷҳо OpenStreetMap нуқта надорад (аз 128 муассиса танҳо барои 14-то
+     * ёфт шуд), ва ҳамаи боқимонда дар маркази шаҳр ҷамъ мешаванд. Харита
+     * набояд нуқтаи тахминиро ҳамчун суроғаи дақиқ нишон диҳад.
+     */
+    @Column({ default: false })
+    hasExactLocation: boolean;
+
     @ManyToMany(() => Career, career => career.universities)
     careers: Career[];
 

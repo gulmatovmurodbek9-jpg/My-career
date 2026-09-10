@@ -1,11 +1,32 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateSpecialistDto } from './dto/create-specialist.dto';
 import { Career } from '../career/career.entity';
+import { CareerOffering } from '../career/career-offering.entity';
 import * as bcrypt from 'bcrypt';
+import { createHash, randomInt } from 'crypto';
+
+/* Дар база ҷои ройгон маҳз бо ҳамин калима нишон дода мешавад. */
+const FREE_PAYMENT_TYPE = 'ройгон';
+
+/* Тартиби шаклҳои таҳсил дар рӯйхати чоп. */
+const STUDY_FORM_ORDER = ['рӯзона', 'шабона', 'ғоибона', 'фосилавӣ'];
+
+/* Ҳадди интихобҳо дар як рӯйхати ҳуҷҷатсупорӣ. */
+const MAX_APPLICATION_CHOICES = 12;
+
+/* Коди барқарорсозӣ 15 дақиқа эътибор дорад. */
+const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000;
+
+/* Баъди 5 кӯшиши нодуруст код бекор мешавад. */
+const MAX_RESET_ATTEMPTS = 5;
+
+export type PasswordResetResult = 'ok' | 'invalid' | 'expired' | 'too_many_attempts';
+
+const hashCode = (code: string) => createHash('sha256').update(code).digest('hex');
 
 const DEFAULT_SPECIALIST_AVAILABILITY = {
     monday: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'],
@@ -48,6 +69,8 @@ export class UsersService {
         private usersRepository: Repository<User>,
         @InjectRepository(Career)
         private careerRepository: Repository<Career>,
+        @InjectRepository(CareerOffering)
+        private offeringRepository: Repository<CareerOffering>,
     ) { }
 
     async findOne(email: string): Promise<User | undefined> {
@@ -208,6 +231,195 @@ export class UsersService {
             });
             await this.usersRepository.save(specialist);
         }
+    }
+
+    /**
+     * Сохтани токени барқарорсозии парол.
+     *
+     * Худи токен бармегардад (вай ба нома меравад), вале дар база танҳо
+     * sha256-и он нигоҳ дошта мешавад: агар база дуздида шавад, аз hash
+     * пайванди кордиҳанда сохтан мумкин нест.
+     */
+    async createPasswordResetCode(email: string): Promise<{ user: User; code: string } | null> {
+        const user = await this.findOne(email);
+        // Корбари бо Google воридшуда парол надорад, вале гузоштани парол
+        // тавассути ҳамин раванд ба ӯ иҷозат дода мешавад.
+        if (!user) return null;
+
+        // randomInt аз Math.random фарқ мекунад: он аз манбаи криптографӣ
+        // мегирад, яъне коди навбатиро пешгӯӣ кардан мумкин нест.
+        const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+
+        await this.usersRepository.update(user.id, {
+            resetTokenHash: hashCode(code),
+            resetTokenExpiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
+            resetAttempts: 0,
+        });
+
+        return { user, code };
+    }
+
+    /** Гузоштани пароли нав аз рӯи коди аз почта омада. */
+    async resetPasswordWithCode(
+        email: string,
+        code: string,
+        newPassword: string,
+    ): Promise<PasswordResetResult> {
+        const user = await this.usersRepository.findOne({
+            where: { email },
+            select: ['id', 'resetTokenHash', 'resetTokenExpiresAt', 'resetAttempts'],
+        });
+
+        if (!user?.resetTokenHash || !user.resetTokenExpiresAt) return 'invalid';
+        if (user.resetTokenExpiresAt.getTime() < Date.now()) return 'expired';
+
+        if (user.resetAttempts >= MAX_RESET_ATTEMPTS) {
+            // Коди дуздидашуда набояд беохир озмуда шавад.
+            await this.usersRepository.update(user.id, {
+                resetTokenHash: null,
+                resetTokenExpiresAt: null,
+            });
+            return 'too_many_attempts';
+        }
+
+        if (hashCode(code.trim()) !== user.resetTokenHash) {
+            await this.usersRepository.update(user.id, { resetAttempts: user.resetAttempts + 1 });
+            return 'invalid';
+        }
+
+        await this.usersRepository.update(user.id, {
+            password: await bcrypt.hash(newPassword, 10),
+            // Код якдафъаина аст — баъди истифода тоза мешавад.
+            resetTokenHash: null,
+            resetTokenExpiresAt: null,
+            resetAttempts: 0,
+        });
+
+        return 'ok';
+    }
+
+    /**
+     * Рӯйхати ҳуҷҷатсупорӣ бо тартиби омодаи чоп.
+     *
+     * Тартиб: аввал ҷойҳои РОЙГОН, баъд пулакӣ; дар дохили ҳар гурӯҳ аз рӯи
+     * шакли таҳсил ва нархи камтар. Довталаб маҳз бо ҳамин тартиб ҳуҷҷат
+     * месупорад — аввал ҷои буҷавиро мегирад, баъд шартномаро ҳамчун захира.
+     */
+    async getApplicationPlan(userId: string): Promise<{
+        cluster: { id: string; name: string; number: number } | null;
+        items: any[];
+    }> {
+        const user = await this.usersRepository.findOne({ where: { id: userId } });
+        const ids = user?.applicationChoices || [];
+        if (!ids.length) return { cluster: null, items: [] };
+
+        const offerings = await this.offeringRepository.find({
+            where: { id: In(ids) },
+            relations: ['career', 'career.cluster', 'university'],
+        });
+
+        const isFree = (offering: CareerOffering) => offering.paymentType === FREE_PAYMENT_TYPE;
+
+        offerings.sort((a, b) => {
+            if (isFree(a) !== isFree(b)) return isFree(a) ? -1 : 1;
+            const formDiff = STUDY_FORM_ORDER.indexOf(a.studyForm) - STUDY_FORM_ORDER.indexOf(b.studyForm);
+            if (formDiff !== 0) return formDiff;
+            return (a.tuitionFee ?? 0) - (b.tuitionFee ?? 0);
+        });
+
+        const first = offerings[0]?.career?.cluster;
+
+        return {
+            cluster: first
+                ? { id: first.id, name: first.clusterName, number: first.clusterId }
+                : null,
+            items: offerings.map((offering, index) => ({
+                order: index + 1,
+                offeringId: offering.id,
+                careerId: offering.career?.id,
+                code: offering.career?.code,
+                careerName: offering.career?.name,
+                universityName: offering.university?.name,
+                universityShortName: offering.university?.shortName,
+                city: offering.university?.city,
+                studyForm: offering.studyForm,
+                paymentType: offering.paymentType,
+                isFree: isFree(offering),
+                tuitionFee: offering.tuitionFee,
+                seats: offering.seats,
+                language: offering.language,
+            })),
+        };
+    }
+
+    /**
+     * Илова кардани як интихоб.
+     *
+     * Ҳамаи интихобҳо бояд аз ЯК кластер бошанд: дар ММТ довталаб имтиҳони
+     * як кластерро месупорад, аз ин рӯ омехтани кластери 1 ва 2 дар
+     * ҳуҷҷатсупории воқеӣ имконнопазир аст.
+     */
+    async addApplicationChoice(userId: string, offeringId: string): Promise<{ added: boolean }> {
+        const user = await this.usersRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException('Корбар ёфт нашуд');
+
+        const offering = await this.offeringRepository.findOne({
+            where: { id: offeringId },
+            relations: ['career', 'career.cluster'],
+        });
+        if (!offering) throw new NotFoundException('Чунин пешниҳод ёфт нашуд');
+
+        const current = user.applicationChoices || [];
+        if (current.includes(offeringId)) return { added: false };
+
+        if (current.length >= MAX_APPLICATION_CHOICES) {
+            throw new ConflictException(
+                `Дар рӯйхат аз ${MAX_APPLICATION_CHOICES} интихоб зиёд шуда наметавонад`,
+            );
+        }
+
+        if (current.length) {
+            const existing = await this.offeringRepository.findOne({
+                where: { id: current[0] },
+                relations: ['career', 'career.cluster'],
+            });
+            const existingCluster = existing?.career?.cluster;
+            const newCluster = offering.career?.cluster;
+
+            if (existingCluster && newCluster && existingCluster.id !== newCluster.id) {
+                throw new ConflictException(
+                    `Дар рӯйхат аллакай ихтисоси кластери «${existingCluster.clusterName}» ҳаст. ` +
+                    `Дар ММТ ҳуҷҷат танҳо ба як кластер супорида мешавад — ` +
+                    `аввал рӯйхатро тоза кунед ё ихтисоси ҳамон кластерро интихоб намоед.`,
+                );
+            }
+        }
+
+        await this.usersRepository.update(user.id, {
+            applicationChoices: [...current, offeringId],
+        });
+        return { added: true };
+    }
+
+    async removeApplicationChoice(userId: string, offeringId: string): Promise<{ removed: boolean }> {
+        const user = await this.usersRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException('Корбар ёфт нашуд');
+
+        const current = user.applicationChoices || [];
+        const next = current.filter((id) => id !== offeringId);
+        if (next.length === current.length) return { removed: false };
+
+        await this.usersRepository.update(user.id, { applicationChoices: next });
+        return { removed: true };
+    }
+
+    async clearApplicationPlan(userId: string): Promise<{ cleared: number }> {
+        const user = await this.usersRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException('Корбар ёфт нашуд');
+
+        const count = (user.applicationChoices || []).length;
+        await this.usersRepository.update(user.id, { applicationChoices: [] });
+        return { cleared: count };
     }
 
     async saveQuizResults(userId: string, scores: any): Promise<User> {

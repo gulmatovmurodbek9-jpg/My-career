@@ -9,7 +9,7 @@ import {
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
-import { API } from "../../lib/config";
+import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
@@ -58,6 +58,7 @@ const labels = {
         noQuizDesc: "Барои муқоисаи ихтисосҳо, тести психологиро гузаред.",
         startQuiz: "Оғоз кардани тест",
         error: "Хатогӣ рӯй дод",
+        errorTimeout: "Ҷавоб дер монд. Шабакаро санҷед ва дубора кӯшиш кунед.",
         retry: "Дубора кӯшиш кунед",
         high: "Баланд",
         medium: "Миёна",
@@ -111,6 +112,7 @@ const labels = {
         noQuizDesc: "Для сравнения профессий пройдите психологический тест.",
         startQuiz: "Начать тест",
         error: "Произошла ошибка",
+        errorTimeout: "Ответ занял слишком много времени. Проверьте сеть и попробуйте снова.",
         retry: "Попробовать снова",
         high: "Высокий",
         medium: "Средний",
@@ -164,6 +166,7 @@ const labels = {
         noQuizDesc: "To compare careers, complete the psychological test.",
         startQuiz: "Start Quiz",
         error: "An error occurred",
+        errorTimeout: "The response took too long. Check your connection and try again.",
         retry: "Try again",
         high: "High",
         medium: "Medium",
@@ -558,7 +561,7 @@ const CareerCompare = () => {
             const res = await axios.post(
                 `${API}/careers/compare`,
                 { scores: fullScores, careers, lang, compareQuestion: compareQuestion.trim() },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` }, timeout: AI_TIMEOUT_MS }
             );
             const normalized = normalizeCompareResponse(res.data, careers);
 
@@ -591,6 +594,8 @@ const CareerCompare = () => {
                         return prev - 1;
                     });
                 }, 1000);
+            } else if (isTimeout(err)) {
+                setError(t.errorTimeout);
             } else {
                 setError(err.response?.data?.message || t.error);
             }
@@ -614,7 +619,7 @@ const CareerCompare = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     className="glass-card p-14 text-center flex flex-col items-center gap-6 max-w-md relative overflow-hidden"
                 >
-                    <div className="absolute inset-0 tajik-pattern opacity-10" />
+                    <div className="absolute inset-0 tajik-pattern opacity-10 pointer-events-none" />
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-blue/20 flex items-center justify-center relative">
                         <Scale className="w-8 h-8 text-primary animate-pulse" />
                     </div>
@@ -878,7 +883,7 @@ const CareerCompare = () => {
                     >
                         {/* Shimmer effect */}
                         {careers.length >= 2 && !loading && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                         )}
                         {loading ? (
                             <>

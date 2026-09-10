@@ -16,12 +16,14 @@ const UniversityDetail = lazy(() => import("./pages/universities/UniversityDetai
 const Info = lazy(() => import("./pages/info/info"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const Quiz = lazy(() => import("./pages/quiz/Quiz"));
 const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
 const AiChat = lazy(() => import("./pages/dashboard/AiChat"));
 const CareerAdvisorReport = lazy(() => import("./pages/dashboard/CareerAdvisorReport"));
 const CareerCompare = lazy(() => import("./pages/dashboard/CareerCompare"));
 const AppointmentPanel = lazy(() => import("./pages/dashboard/AppointmentPanel"));
+const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
 const Favorites = lazy(() => import("./pages/favorites/Favorites"));
 
 // Admin Panel
@@ -65,6 +67,7 @@ const App = () => {
                 <Route path="/dashboard/ai-advisor" element={<CareerAdvisorReport />} />
                 <Route path="/dashboard/compare" element={<CareerCompare />} />
                 <Route path="/dashboard/appointments" element={<AppointmentPanel />} />
+                <Route path="/dashboard/plan" element={<ApplicationPlan />} />
                 <Route path="/favorites" element={<Favorites />} />
               </Route>
             </Route>
@@ -85,6 +88,11 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Route>
+
+            {/* Берун аз PublicRoute: он корбари воридшударо ба /dashboard
+                мепартояд, ва касе ки дар як таб кушода мондааст, саҳифаи
+                барқарорсозиро ҳеҷ гоҳ дида наметавонист. */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

@@ -10,6 +10,7 @@ import {
     LayoutDashboard,
     Scale,
     MessageSquare,
+    FileText,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LazyPsychologicalProfile } from "../../components/PsychologicalProfile";
@@ -212,16 +213,14 @@ const Dashboard = () => {
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center gap-4 relative">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent-blue p-0.5 group-hover:rotate-6 transition-transform duration-500">
-                                            <div className="w-full h-full rounded-[0.6rem] bg-card flex items-center justify-center">
-                                                <BrainCircuit className="w-6 h-6 text-primary" />
-                                            </div>
-                                        </div>
+                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                                            <BrainCircuit className="h-6 w-6" />
+                                        </span>
                                         <div>
                                             <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
                                                 {t('dashboard.ai_advisor_title')}
                                             </h3>
-                                            <p className="text-muted-foreground text-xs font-medium opacity-60">
+                                            <p className="text-muted-foreground text-xs font-medium">
                                                 {t('dashboard.ai_advisor_desc')}
                                             </p>
                                         </div>
@@ -234,19 +233,17 @@ const Dashboard = () => {
                         {/* 2.55 AI Chat CTA */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/ai-chat">
-                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-secondary/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-emerald-600/30 transition-all duration-300 relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center gap-4 relative">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-primary p-0.5 group-hover:rotate-6 transition-transform duration-500">
-                                            <div className="w-full h-full rounded-[0.6rem] bg-card flex items-center justify-center">
-                                                <MessageSquare className="w-6 h-6 text-emerald-500" />
-                                            </div>
-                                        </div>
+                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 transition-colors duration-300 group-hover:bg-emerald-600 group-hover:text-white dark:bg-emerald-400/10 dark:text-emerald-400 dark:group-hover:bg-emerald-400 dark:group-hover:text-emerald-950">
+                                            <MessageSquare className="h-6 w-6" />
+                                        </span>
                                         <div>
                                             <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
                                                 AI Чат — Мушовири касбӣ
                                             </h3>
-                                            <p className="text-muted-foreground text-xs font-medium opacity-60">
+                                            <p className="text-muted-foreground text-xs font-medium">
                                                 Саволҳои худро дар бораи ихтисосҳо, маошҳо ва донишгоҳҳо пурсед
                                             </p>
                                         </div>
@@ -260,18 +257,16 @@ const Dashboard = () => {
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/compare">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-secondary/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-accent-blue/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <div className="flex items-center gap-4 relative">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-blue to-primary p-0.5 group-hover:rotate-6 transition-transform duration-500">
-                                            <div className="w-full h-full rounded-[0.6rem] bg-card flex items-center justify-center">
-                                                <Scale className="w-6 h-6 text-secondary" />
-                                            </div>
-                                        </div>
+                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-colors duration-300 group-hover:bg-secondary group-hover:text-secondary-foreground">
+                                            <Scale className="h-6 w-6" />
+                                        </span>
                                         <div>
                                             <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
                                                 {t('dashboard.compare_title')}
                                             </h3>
-                                            <p className="text-muted-foreground text-xs font-medium opacity-60">
+                                            <p className="text-muted-foreground text-xs font-medium">
                                                 {t('dashboard.compare_desc')}
                                             </p>
                                         </div>
@@ -281,35 +276,68 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
+                        {/* 2.65 Рӯйхати ҳуҷҷатсупорӣ */}
+                        <motion.div variants={itemVariants} className="col-span-12">
+                            <Link to="/dashboard/plan">
+                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-emerald-600/30 transition-all duration-300 relative overflow-hidden">
+                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="flex items-center gap-4 relative">
+                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 transition-colors duration-300 group-hover:bg-emerald-600 group-hover:text-white dark:bg-emerald-400/10 dark:text-emerald-400 dark:group-hover:bg-emerald-400 dark:group-hover:text-emerald-950">
+                                            <FileText className="h-6 w-6" />
+                                        </span>
+                                        <div>
+                                            <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
+                                                {t('dashboard.plan_title', 'Рӯйхати ҳуҷҷатсупорӣ')}
+                                            </h3>
+                                            <p className="text-muted-foreground text-xs font-medium">
+                                                {t('dashboard.plan_desc', 'Ихтисос ва донишгоҳро интихоб кунед ва рӯйхатро чоп намоед')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-600 group-hover:translate-x-1 transition-all relative" />
+                                </div>
+                            </Link>
+                        </motion.div>
+
                         {/* 2.7 Appointment CTA */}
                         {/* Removed - using AppointmentCard component instead */}
 
                         {/* 3. Match Grid Header */}
                         <motion.div id="recommendations" variants={itemVariants} className="col-span-12 pt-8">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                                <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter">
-                                    <Award className="w-8 h-8 text-secondary" />
-                                    {t('dashboard.recommendations')}
-                                </h3>
-                                <div className="text-[8px] font-black uppercase tracking-[0.2em] bg-muted px-4 py-1.5 rounded-full opacity-60">
+                            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+                                <div className="flex items-center gap-3">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/10">
+                                        <Award className="h-5 w-5 text-secondary" />
+                                    </span>
+                                    <div>
+                                        <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter">
+                                            {t('dashboard.recommendations')}
+                                        </h3>
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            {matches.length} {t('common.specialty', 'Ихтисос').toLowerCase()}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="rounded-full bg-muted px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                                     AI Powered
                                 </div>
                             </div>
                         </motion.div>
 
-                        {/* 4. Individual Matches */}
+                        {/* 4. Individual Matches — ҳама кортҳо як андоза: сатрҳои
+                            ноҳамвор аз андозаҳои гуногун пайдо мешуданд. */}
                         {matches.map((career, idx) => (
                             <motion.div
                                 key={career.id}
                                 variants={itemVariants}
-                                className={`col-span-12 ${idx < 2 ? 'md:col-span-6' : 'md:col-span-4'}`}
+                                className="col-span-12 md:col-span-6 lg:col-span-4"
                             >
                                 <MatchCard
                                     career={career}
                                     matchPercentage={career.matchPercentage}
                                     isLiked={likedIds.has(career.id)}
                                     isSaved={savedIds.has(career.id)}
-                                    isLarge={idx < 2}
+                                    rank={idx + 1}
                                     onExplain={() => { setExplainData(career); setExplainOpen(true); }}
                                 />
                             </motion.div>
@@ -321,7 +349,10 @@ const Dashboard = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="glass-card p-16 text-center flex flex-col items-center gap-6 relative overflow-hidden"
                     >
-                        <div className="absolute inset-0 tajik-pattern opacity-10" />
+                        {/* pointer-events-none ҳатмист: ин қабати ороишӣ absolute
+                            аст ва болои тугмаи «Гузаштани санҷиш» меистод —
+                            клик ба он мерасид, на ба тугма. */}
+                        <div className="absolute inset-0 tajik-pattern opacity-10 pointer-events-none" />
                         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center relative">
                             <BrainCircuit className="w-8 h-8 text-primary animate-pulse" />
                         </div>

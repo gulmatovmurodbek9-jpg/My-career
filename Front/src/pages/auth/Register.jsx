@@ -86,7 +86,7 @@ const Register = () => {
                 className="w-full max-w-md relative z-10"
             >
                 <div className="glass-card p-8 sm:p-10 border border-white/10 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
                     <div className="text-center mb-8">
                         <motion.div

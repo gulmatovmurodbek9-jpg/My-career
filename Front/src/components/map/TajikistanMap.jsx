@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   GeoJSON,
   MapContainer,
@@ -8,6 +8,8 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+// MapLibre ~200 КБ аст — танҳо ҳангоми гузариш ба 3D бор мешавад.
+const University3DMap = lazy(() => import("./University3DMap"));
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router";
 import { useTheme } from "../../hooks/useTheme";
@@ -144,18 +146,32 @@ function buildDisplayUniversities(universities) {
     })
     .filter(Boolean);
 
-  // Institutions in the same city all carry that city's single coordinate, so
-  // their markers land on the exact same pixel and only the top one is
-  // clickable. Fan each stack out along a golden-angle spiral: deterministic,
-  // evenly spaced, and tight enough that a marker stays inside its own city.
+  /*
+   * Муассисаҳое, ки суроғаи ВОҚЕӢ доранд, ҳеҷ гоҳ ҷобаҷо карда намешаванд.
+   *
+   * Барои 14 донишгоҳи асосӣ координатаи ҳақиқӣ аз OpenStreetMap гирифта
+   * шудааст. Онҳоро ба спирал андохтан маънои аз ҷои дурусташ ба ҷои бофта
+   * кӯчонидан аст — маҳз баръакси он чи лозим аст.
+   */
+  const exact = anchored.filter((uni) => uni.hasExactLocation);
+  const approximate = anchored.filter((uni) => !uni.hasExactLocation);
+
+  // Боқимонда ҳамагӣ координатаи маркази шаҳрро доранд, аз ин рӯ нишонаҳояшон
+  // ба як пиксел меафтанд ва танҳо болоияш пахш мешавад. Ҳар даста бо спирали
+  // тиллоӣ пароканда мешавад: муайян, баробар ва дар дохили ҳамон шаҳр.
   const stacks = new Map();
-  anchored.forEach((uni) => {
+  approximate.forEach((uni) => {
     const key = `${uni.anchorLat.toFixed(4)},${uni.anchorLng.toFixed(4)}`;
     if (!stacks.has(key)) stacks.set(key, []);
     stacks.get(key).push(uni);
   });
 
-  const spread = [];
+  const spread = exact.map((uni) => ({
+    ...uni,
+    displayLat: uni.anchorLat,
+    displayLng: uni.anchorLng,
+  }));
+
   stacks.forEach((group) => {
     if (group.length === 1) {
       const [uni] = group;
@@ -230,6 +246,12 @@ export default function TajikistanMap({ universities = [] }) {
   const [activeCity, setActiveCity] = useState(DEFAULT_CITY);
   const [selectedUni, setSelectedUni] = useState(null);
   const [panelOpen, setPanelOpen] = useState(true);
+
+  /* Реҷаи харита: нақшаи хокистарӣ, тасвири моҳвораӣ ё 3D.
+     Моҳвора пешфарз аст — 68 донишгоҳ координатаи воқеӣ дорад ва рӯи
+     тасвир бинои аслии онҳо дида мешавад. */
+  const [mapMode, setMapMode] = useState("satellite");
+  const satellite = mapMode === "satellite";
   const [viewport, setViewport] = useState({
     zoom: DEFAULT_ZOOM,
     center: CITY_CENTERS[DEFAULT_CITY],
@@ -329,6 +351,51 @@ export default function TajikistanMap({ universities = [] }) {
         }`}
       />
 
+      {/* Гузариши намуди харита. z-[500] лозим аст: қабатҳои Leaflet то
+          z-index 400 мебароянд ва тугмаро мепӯшонанд. */}
+      <div className="absolute right-4 top-4 z-[500] flex gap-1 rounded-xl border border-border bg-card/90 p-1 shadow-lg backdrop-blur">
+        {[
+          { id: "canvas", label: "Нақша" },
+          { id: "satellite", label: "Моҳвора" },
+          { id: "3d", label: "3D" },
+        ].map((mode) => (
+          <button
+            key={mode.id}
+            type="button"
+            onClick={() => setMapMode(mode.id)}
+            aria-pressed={mapMode === mode.id}
+            className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${mapMode === mode.id
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+
+      {/*
+        Реҷаи 3D ҷудогона аст: Leaflet ҳаҷм намекашад, аз ин рӯ он ҷо
+        MapLibre GL кор мекунад. Агар он бор нашавад, ду реҷаи дигар
+        бетағйир мемонанд.
+      */}
+      {mapMode === "3d" ? (
+        <div className="h-[620px] w-full md:h-[700px]">
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center">
+                <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/25 border-t-primary" />
+              </div>
+            }
+          >
+            <University3DMap
+              universities={displayUniversities}
+              center={CITY_CENTERS[activeCity] || CITY_CENTERS[DEFAULT_CITY]}
+              onSelect={setSelectedUni}
+            />
+          </Suspense>
+        </div>
+      ) : (
       <div className="h-[620px] w-full md:h-[700px]">
         <MapContainer
           center={[CITY_CENTERS[DEFAULT_CITY].lat, CITY_CENTERS[DEFAULT_CITY].lng]}
@@ -348,14 +415,44 @@ export default function TajikistanMap({ universities = [] }) {
             Esri ҳам варианти торик, ҳам равшан дорад, бидуни калид. Диққат:
             тартиби порчаҳо {z}/{y}/{x} аст, на {z}/{x}/{y}.
           */}
-          <TileLayer
-            key={isDark ? "dark" : "light"}
-            url={`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${
-              isDark ? "Dark" : "Light"
-            }_Gray_Base/MapServer/tile/{z}/{y}/{x}`}
-            attribution='Плиткаҳо &copy; <a href="https://www.esri.com/">Esri</a>'
-            maxZoom={16}
-          />
+          {/*
+            Ду навъи плитка: нақшаи хокистарӣ ва тасвири МОҲВОРАӢ.
+
+            Нақшаи хокистарӣ мавқеъро абстрактӣ нишон медиҳад — барои ҳамин
+            харита «ғайривоқеӣ» менамуд. Тасвири моҳвораии Esri Тоҷикистонро
+            пурра мепӯшонад ва бе калид кор мекунад: биноҳои воқеии
+            донишгоҳ, роҳҳо ва ҳудуди кампус дида мешаванд.
+
+            Диққат: тартиби порчаҳо {z}/{y}/{x} аст, на {z}/{x}/{y}.
+          */}
+          {satellite ? (
+            <TileLayer
+              key="satellite"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              attribution='Тасвир &copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics'
+              maxZoom={18}
+            />
+          ) : (
+            <TileLayer
+              key={isDark ? "dark" : "light"}
+              url={`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${
+                isDark ? "Dark" : "Light"
+              }_Gray_Base/MapServer/tile/{z}/{y}/{x}`}
+              attribution='Плиткаҳо &copy; <a href="https://www.esri.com/">Esri</a>'
+              maxZoom={16}
+            />
+          )}
+
+          {/* Дар тасвири моҳвораӣ номи кӯчаву шаҳр нест — қабати шаффофи
+              номҳо болои он гузошта мешавад, вагарна мавқеъро фаҳмидан
+              душвор аст. */}
+          {satellite && (
+            <TileLayer
+              key="labels"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={18}
+            />
+          )}
 
           <CityOverviewMap
             activeCity={activeCity}
@@ -417,6 +514,7 @@ export default function TajikistanMap({ universities = [] }) {
             ))}
         </MapContainer>
       </div>
+      )}
 
       {!cityGroups.length && (
         <div className="absolute inset-0 z-[650] flex items-center justify-center bg-black/45 p-6 backdrop-blur-sm">

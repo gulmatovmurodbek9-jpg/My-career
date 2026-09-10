@@ -38,6 +38,11 @@ i18n
                     common: {
                         match_level: "Дараҷаи Мувофиқат",
                         best_pick: "Беҳтарин Интихоб",
+                        why_match: "Чаро ин?",
+                        where_to_study: "Дар куҷо хондан мумкин",
+                        next: "Оянда",
+                        skip_to_content: "Ба мазмун гузаштан",
+                        error_loading: "Хатогӣ рух дод",
                         details: "Маълумот",
                         back: "Ба ақиб",
                         loading: "Боргузорӣ...",
@@ -62,6 +67,22 @@ i18n
                         technical: "Техникӣ",
                         soft: "Муоширатӣ",
                         error_saving: "Хатогӣ ҳангоми захира"
+                    },
+                    career_chat: {
+                        title: "Саволе доред?",
+                        subtitle: "Дар бораи ин ихтисос бипурсед",
+                        placeholder: "Саволи худро нависед…",
+                        send: "Фиристодан",
+                        thinking: "Фикр карда истодааст…",
+                        q1: "Ин ихтисос ба ман мувофиқ аст?",
+                        q2: "Баъди хатм дар куҷо кор кардан мумкин аст?",
+                        q3: "Кадом донишгоҳро интихоб кунам?",
+                        q4: "Барои дохилшавӣ чӣ тайёрӣ лозим аст?",
+                        limit: "Лимити имрӯзаи саволҳо тамом шуд. Фардо кӯшиш кунед.",
+                        failed: "Ҷавоб нагирифтем. Пас аз чанд сония дубора кӯшиш кунед.",
+                        login_hint: "Барои пурсидан дар бораи ин ихтисос ба ҳисоби худ ворид шавед.",
+                        remaining: "Имрӯз боз {{count}} савол мондааст",
+                        disclaimer: "Ҷавобҳо аз маълумоти базаи мо сохта мешаванд. Барои қарори ниҳоӣ маълумоти расмии донишгоҳро тафтиш кунед."
                     },
                     home: {
                         hero_tag: "Роҳнамои касбии шумо",
@@ -161,7 +182,7 @@ i18n
                         your_results_desc: "Профили шумо муайян карда шуд. Дар асоси ҷавобҳои шумо, ихтисоси идеалии шумо:",
                         ai_advice_title: "Маслиҳати Зеҳни Сунъӣ",
                         suggested_cluster: "Кластери Тавсияшуда",
-                        cluster_reason: "Ин кластер бар асоси профили RIASEC-и шумо интихоб шудааст.",
+                        cluster_reason: "Ин кластер аз рӯи ҷавобҳои санҷиши ММТ-и шумо интихоб шудааст.",
                         suggested_specializations: "Ихтисосҳои Пешниҳодшуда:",
                         cluster_not_defined: "Кластер ҳанӯз муайян нашудааст.",
                         personality_type: "Навъи Шаксият",
@@ -203,7 +224,7 @@ i18n
                         empty_desc: "Шумо ҳанӯз санҷиши психолологиро нагузаштаед. Ин қадами аввалин ба сӯи касби орзуҳои шумост.",
                         start_quiz_btn: "Гузаштани санҷиш",
                         ai_advisor_title: "Тавсияи AI барои касб",
-                        ai_advisor_desc: "Таҳлили мушаххаси касбӣ бо зеҳни сунъӣ дар асоси профили RIASEC-и шумо",
+                        ai_advisor_desc: "Таҳлили мушаххаси касбӣ бо зеҳни сунъӣ дар асоси натиҷаи санҷиши шумо",
                         compare_title: "Муқоисаи ихтисосҳо",
                         compare_desc: "Ихтисосҳоро бо AI муқоиса кунед ва беҳтаринро ёбед"
                     },
@@ -251,6 +272,17 @@ i18n
                     },
                     careers_page: {
                         hero_tag: "Кашфи Истеъдодҳо",
+                        hero_title_plain: "Ихтисосҳои Тоҷикистон",
+                        found: "{{count}} ихтисос ёфт шуд",
+                        categories: "Категорияҳо",
+                        city_label: "Шаҳр",
+                        all_cities: "Ҳамаи шаҳрҳо",
+                        price_label: "Нархи таҳсил",
+                        all_prices: "Ҳамаи нархҳо",
+                        under_2k: "То 2,000 сомонӣ",
+                        under_5k: "То 5,000 сомонӣ",
+                        under_10k: "То 10,000 сомонӣ",
+                        under_15k: "То 15,000 сомонӣ",
                         hero_title: "Ояндаи худро <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-blue to-primary animate-gradient\">аз ин ҷо ёб!</span>",
                         hero_desc: "Дар байни {{total}}+ ихтисосҳои муосир роҳи беҳтарини касбии худро пайдо кунед.",
                         search_placeholder: "Ҷустуҷӯи ихтисос...",
@@ -387,6 +419,7 @@ i18n
                         },
                         form: {
                             save: "Захира",
+                            tuitionFee: "Нархи Шартнома (солона)",
                             create: "Сохтан",
                             cancel: "Бекор кардан",
                             delete: "Нест кардан",
@@ -443,6 +476,11 @@ i18n
                     common: {
                         match_level: "Уровень Соответствия",
                         best_pick: "Лучший Выбор",
+                        why_match: "Почему это?",
+                        where_to_study: "Где можно учиться",
+                        next: "Далее",
+                        skip_to_content: "Перейти к содержанию",
+                        error_loading: "Произошла ошибка",
                         details: "Подробнее",
                         back: "Назад",
                         loading: "Загрузка...",
@@ -467,6 +505,22 @@ i18n
                         technical: "Технические",
                         soft: "Гибкие",
                         error_saving: "Ошибка при сохранении"
+                    },
+                    career_chat: {
+                        title: "Есть вопрос?",
+                        subtitle: "Спросите об этой профессии",
+                        placeholder: "Напишите свой вопрос…",
+                        send: "Отправить",
+                        thinking: "Думает…",
+                        q1: "Подходит ли мне эта профессия?",
+                        q2: "Где можно работать после выпуска?",
+                        q3: "Какой университет выбрать?",
+                        q4: "Как подготовиться к поступлению?",
+                        limit: "Дневной лимит вопросов исчерпан. Попробуйте завтра.",
+                        failed: "Не удалось получить ответ. Повторите через несколько секунд.",
+                        login_hint: "Войдите в аккаунт, чтобы задать вопрос об этой профессии.",
+                        remaining: "Сегодня осталось вопросов: {{count}}",
+                        disclaimer: "Ответы формируются на основе данных нашей базы. Для окончательного решения проверьте официальную информацию университета."
                     },
                     home: {
                         hero_tag: "Ваш карьерный гид",
@@ -527,34 +581,6 @@ i18n
                             subheader: "Мы предоставляем необходимые инструменты и данные"
                         }
                     },
-                    quiz: {
-                        title: "Интеллектуальный Тест",
-                        subtitle: "IQ & КАРЬЕРА",
-                        question: "Вопрос",
-                        back: "Назад",
-                        analyzing: "AI Анализ...",
-                        congrats: "Поздравляем!",
-                        analysis_done: "Анализ завершен",
-                        dashboard_btn: "В Дашборд",
-                        category: {
-                            logic: "Логика",
-                            creative: "Креативность",
-                            social: "Социальность",
-                            technical: "Технический",
-                            realistic: "Практический",
-                            investigative: "Исследовательский",
-                            artistic: "Артистический",
-                            enterprising: "Предприимчивый",
-                            conventional: "Традиционный"
-                        },
-                        options: {
-                            yes: "ДА, КОНЕЧНО",
-                            mostly_yes: "СКОРЕЕ ДА",
-                            not_sure: "НЕ УВЕРЕН",
-                            mostly_no: "СКОРЕЕ НЕТ",
-                            no: "НЕТ, СОВСЕМ"
-                        }
-                    },
                     dashboard: {
                         welcome: "Добро пожаловать",
                         profile: "Личная Панель",
@@ -576,7 +602,7 @@ i18n
                         empty_desc: "Вы еще не прошли психологический тест. Это первый шаг к карьере вашей мечты.",
                         start_quiz_btn: "Пройти тест",
                         ai_advisor_title: "AI Карьерный Отчёт",
-                        ai_advisor_desc: "Подробный анализ карьеры с помощью ИИ на основе вашего профиля RIASEC",
+                        ai_advisor_desc: "Подробный анализ карьеры с помощью ИИ на основе результата вашего теста",
                         compare_title: "Сравнение профессий",
                         compare_desc: "Сравните профессии с помощью AI и найдите лучшую"
                     },
@@ -623,6 +649,27 @@ i18n
                         shortcuts: "Enter — отправить · Shift+Enter — новая строка"
                     },
                     quiz: {
+                        subtitle: "IQ & КАРЬЕРА",
+                        category: {
+                            logic: "Логика",
+                            creative: "Креативность",
+                            social: "Социальность",
+                            technical: "Технический",
+                            realistic: "Практический",
+                            investigative: "Исследовательский",
+                            artistic: "Артистический",
+                            enterprising: "Предприимчивый",
+                            conventional: "Традиционный"
+                        },
+                        congrats: "Поздравляем!",
+                        analysis_done: "Анализ завершен",
+                        options: {
+                            yes: "ДА, КОНЕЧНО",
+                            mostly_yes: "СКОРЕЕ ДА",
+                            not_sure: "НЕ УВЕРЕН",
+                            mostly_no: "СКОРЕЕ НЕТ",
+                            no: "НЕТ, СОВСЕМ"
+                        },
                         title: "Профессиональный тест",
                         question: "Вопрос",
                         analyzing: "Анализ данных...",
@@ -638,7 +685,7 @@ i18n
                         your_results_desc: "Ваш профиль определен. На основе ваших желаний и способностей ваша идеальная карьера находится в следующей области:",
                         ai_advice_title: "Совет AI (MyCareer AI)",
                         suggested_cluster: "Рекомендуемый Кластер",
-                        cluster_reason: "Этот кластер выбран на основе вашего профиля RIASEC.",
+                        cluster_reason: "Этот кластер выбран по ответам вашего теста НЦТ.",
                         suggested_specializations: "Рекомендуемые Профессии:",
                         cluster_not_defined: "Кластер еще не определен.",
                         personality_type: "Тип Личности",
@@ -661,6 +708,17 @@ i18n
                     },
                     careers_page: {
                         hero_tag: "Открытие талантов",
+                        hero_title_plain: "Профессии Таджикистана",
+                        found: "Найдено профессий: {{count}}",
+                        categories: "Категории",
+                        city_label: "Город",
+                        all_cities: "Все города",
+                        price_label: "Стоимость обучения",
+                        all_prices: "Любая стоимость",
+                        under_2k: "До 2 000 сомони",
+                        under_5k: "До 5 000 сомони",
+                        under_10k: "До 10 000 сомони",
+                        under_15k: "До 15 000 сомони",
                         hero_title: "Найди свое будущее <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-blue to-primary animate-gradient\">здесь!</span>",
                         hero_desc: "Среди {{total}}+ современных профессий найди свой лучший карьерный путь.",
                         search_placeholder: "Поиск профессии...",
@@ -797,6 +855,7 @@ i18n
                         },
                         form: {
                             save: "Сохранить",
+                            tuitionFee: "Стоимость контракта (в год)",
                             create: "Создать",
                             cancel: "Отмена",
                             delete: "Удалить",
@@ -844,11 +903,20 @@ i18n
                         ai_advisor: "AI Advisor",
                         profile: "Profile",
                         settings: "Settings",
-                        admin: "Admin"
+                        admin: "Admin",
+                        clusters: "Clusters",
+                        universities: "Universities",
+                        appointments: "Appointments",
+                        logout: "Log out"
                     },
                     common: {
                         match_level: "Match Level",
                         best_pick: "Best Pick",
+                        why_match: "Why this?",
+                        where_to_study: "Where to study",
+                        next: "Next",
+                        skip_to_content: "Skip to content",
+                        error_loading: "Something went wrong",
                         details: "Details",
                         back: "Back",
                         loading: "Loading...",
@@ -873,6 +941,22 @@ i18n
                         technical: "Technical",
                         soft: "Soft",
                         error_saving: "Error while saving"
+                    },
+                    career_chat: {
+                        title: "Have a question?",
+                        subtitle: "Ask about this career",
+                        placeholder: "Type your question…",
+                        send: "Send",
+                        thinking: "Thinking…",
+                        q1: "Is this career a good fit for me?",
+                        q2: "Where can I work after graduating?",
+                        q3: "Which university should I choose?",
+                        q4: "How do I prepare for admission?",
+                        limit: "You have reached today's question limit. Try again tomorrow.",
+                        failed: "Could not get an answer. Please try again in a few seconds.",
+                        login_hint: "Sign in to ask questions about this career.",
+                        remaining: "{{count}} questions left today",
+                        disclaimer: "Answers are generated from our database. Check the university's official information before making a final decision."
                     },
                     home: {
                         hero_tag: "Your Career Guide",
@@ -933,34 +1017,6 @@ i18n
                             subheader: "We provide necessary tools and data"
                         }
                     },
-                    quiz: {
-                        title: "Intellectual Quiz",
-                        subtitle: "IQ & CAREER",
-                        question: "Question",
-                        back: "Back",
-                        analyzing: "AI Analyzing...",
-                        congrats: "Congratulations!",
-                        analysis_done: "Analysis Completed",
-                        dashboard_btn: "Go to Dashboard",
-                        category: {
-                            logic: "Logic",
-                            creative: "Creative",
-                            social: "Social",
-                            technical: "Technical",
-                            realistic: "Realistic",
-                            investigative: "Investigative",
-                            artistic: "Artistic",
-                            enterprising: "Enterprising",
-                            conventional: "Conventional"
-                        },
-                        options: {
-                            yes: "YES, ABSOLUTELY",
-                            mostly_yes: "MOSTLY YES",
-                            not_sure: "NOT SURE",
-                            mostly_no: "MOSTLY NO",
-                            no: "NO, NOT REALLY"
-                        }
-                    },
                     dashboard: {
                         welcome: "Welcome",
                         profile: "Personal Dashboard",
@@ -982,7 +1038,7 @@ i18n
                         empty_desc: "You haven't taken the career test yet. It's the first step towards your dream career.",
                         start_quiz_btn: "Take the Quiz",
                         ai_advisor_title: "AI Career Report",
-                        ai_advisor_desc: "Get a detailed AI-powered career analysis based on your RIASEC profile",
+                        ai_advisor_desc: "Get a detailed AI-powered career analysis based on your quiz result",
                         compare_title: "Career Comparison",
                         compare_desc: "Compare careers with AI and find the best match"
                     },
@@ -1029,6 +1085,33 @@ i18n
                         shortcuts: "Enter — send · Shift+Enter — new line"
                     },
                     quiz: {
+                        subtitle: "IQ & CAREER",
+                        confidence_label: "Confidence",
+                        confidence_desc: "This shows how far ahead your top result is compared to the second one.",
+                        top_matches_label: "Best match",
+                        top_matches_desc: "These are the directions that came out strongest from your answers.",
+                        results_based: "Results are based on 15 questions (Cluster + Specialty).",
+                        no_price: "Tuition: not specified",
+                        category: {
+                            logic: "Logic",
+                            creative: "Creative",
+                            social: "Social",
+                            technical: "Technical",
+                            realistic: "Realistic",
+                            investigative: "Investigative",
+                            artistic: "Artistic",
+                            enterprising: "Enterprising",
+                            conventional: "Conventional"
+                        },
+                        congrats: "Congratulations!",
+                        analysis_done: "Analysis Completed",
+                        options: {
+                            yes: "YES, ABSOLUTELY",
+                            mostly_yes: "MOSTLY YES",
+                            not_sure: "NOT SURE",
+                            mostly_no: "MOSTLY NO",
+                            no: "NO, NOT REALLY"
+                        },
                         title: "Career Quiz",
                         question: "Question",
                         analyzing: "Analyzing data...",
@@ -1044,7 +1127,7 @@ i18n
                         your_results_desc: "Your profile is determined. Based on your desires and abilities, your ideal career is in the following area:",
                         ai_advice_title: "AI Advice (MyCareer AI)",
                         suggested_cluster: "Suggested Cluster",
-                        cluster_reason: "This cluster was selected based on your RIASEC profile.",
+                        cluster_reason: "This cluster was selected from your MMT quiz answers.",
                         suggested_specializations: "Suggested Specializations:",
                         cluster_not_defined: "Cluster not yet defined.",
                         personality_type: "Personality Type",
@@ -1061,6 +1144,17 @@ i18n
                     },
                     careers_page: {
                         hero_tag: "Discover Talents",
+                        hero_title_plain: "Careers in Tajikistan",
+                        found: "{{count}} careers found",
+                        categories: "Categories",
+                        city_label: "City",
+                        all_cities: "All cities",
+                        price_label: "Tuition",
+                        all_prices: "Any price",
+                        under_2k: "Up to 2,000 TJS",
+                        under_5k: "Up to 5,000 TJS",
+                        under_10k: "Up to 10,000 TJS",
+                        under_15k: "Up to 15,000 TJS",
                         hero_title: "Find your future <br /> <span className=\"text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-blue to-primary animate-gradient\">here!</span>",
                         hero_desc: "Find your best career path among {{total}}+ modern professions.",
                         search_placeholder: "Search for a career...",
@@ -1197,6 +1291,7 @@ i18n
                         },
                         form: {
                             save: "Save",
+                            tuitionFee: "Tuition fee (per year)",
                             create: "Create",
                             cancel: "Cancel",
                             delete: "Delete",

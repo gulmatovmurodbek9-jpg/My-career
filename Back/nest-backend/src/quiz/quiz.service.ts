@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Career } from '../career/career.entity';
 import { Cluster } from '../cluster/cluster.entity';
 import { QUIZ_QUESTIONS, QuizQuestion, QuizPart } from './data/questions';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { AiService } from '../ai/ai.service';
+import { CareerService } from '../career/career.service';
 
 export interface MMTScores {
     c1: number;
@@ -25,11 +24,8 @@ export interface UserScores {
 @Injectable()
 export class QuizService {
     constructor(
-        @InjectRepository(Career)
-        private readonly careerRepository: Repository<Career>,
-        @InjectRepository(Cluster)
-        private readonly clusterRepository: Repository<Cluster>,
         private readonly aiService: AiService,
+        private readonly careerService: CareerService,
     ) { }
 
     getQuestions(): QuizQuestion[] {
@@ -93,57 +89,15 @@ export class QuizService {
     }
 
     async matchCareers(userScores: UserScores, lang: string = 'tj'): Promise<any> {
-        const clusters = await this.clusterRepository.find({ relations: ['careers'] });
-        
-        // Match user's mmt score directly with the cluster id
-        const clusterScores = clusters.map(cluster => {
-            let score = 0;
-            switch(cluster.clusterId) {
-                case 1: score = userScores.mmtClusters.c1; break;
-                case 2: score = userScores.mmtClusters.c2; break;
-                case 3: score = userScores.mmtClusters.c3; break;
-                case 4: score = userScores.mmtClusters.c4; break;
-                case 5: score = userScores.mmtClusters.c5; break;
-            }
-            return { cluster, score };
-        });
+        /* Интихоб дар CareerService аст, то панели корбар ҳамон 12 ихтисоси
+           ин ҷо нишондодашударо барорад — на рӯйхати дигар. */
+        const selection = await this.careerService.selectMatchedCareers(userScores);
+        const { clusterScores, careers: topCareers, matchPercentage: clusterMatchPct } = selection;
 
-        clusterScores.sort((a, b) => b.score - a.score);
-
-        const topClusterEntry = clusterScores[0];
-        if (!topClusterEntry) {
+        const topCluster = selection.cluster;
+        if (!topCluster) {
             return { topCluster: null, topType: '', personality: '', aiAdvice: '', allMatches: [] };
         }
-
-        const topCluster = topClusterEntry.cluster;
-
-        const maxPossible = 40; // 10 questions * 4 points max per question
-        const clusterMatchPct = Math.min(100, Math.round((topClusterEntry.score / maxPossible) * 100));
-
-        let topCareers = await this.careerRepository.find({
-            where: { clusterId: topCluster.id },
-            take: 24, // Fetch more to rank them
-        });
-
-        // Refinement sorting based on specialty keywords
-        if (userScores.specialtyKeywords && userScores.specialtyKeywords.length > 0) {
-            topCareers.forEach(career => {
-                let matchPoints = 0;
-                const searchString = `${career.name} ${career.description || ''} ${career.purpose || ''} ${(career.skills?.technical || []).join(' ')} ${(career.skills?.soft || []).join(' ')}`.toLowerCase();
-                
-                userScores.specialtyKeywords.forEach(keyword => {
-                    if (searchString.includes(keyword.toLowerCase())) {
-                        matchPoints += 1;
-                    }
-                });
-                (career as any).refinementScore = matchPoints;
-            });
-            // Sort by refinement score descending
-            topCareers.sort((a: any, b: any) => (b.refinementScore || 0) - (a.refinementScore || 0));
-        }
-
-        // Limit to top 12 for the UI
-        topCareers = topCareers.slice(0, 12);
 
         const specializations = topCareers.map(c => ({
             id: c.id,
@@ -155,7 +109,7 @@ export class QuizService {
         }));
 
         const personality = "Натиҷаи тести шумо мутобиқати баландро бо " + topCluster.clusterName + " нишон медиҳад.";
-        const aiAdvice = await this.generateAiAdvice(userScores, topCluster, topCareers, lang);
+        const aiAdvice = await this.generateAiAdvice(userScores, topCluster, topCareers, lang, clusterScores);
 
         return {
             topCluster: {
@@ -166,7 +120,9 @@ export class QuizService {
                 specializations,
                 averageMatch: clusterMatchPct,
             },
-            topType: "Cluster " + topCluster.clusterId,
+            /* Пештар ин ҷо «Cluster 1» мерафт ва дар экран ҳамон тавр
+               мебаромад. Номи воқеӣ маънидортар аст. */
+            topType: topCluster.clusterName,
             personality,
             aiAdvice,
             allMatches: clusterScores.map(cs => ({
@@ -176,10 +132,82 @@ export class QuizService {
         };
     }
 
-    private async generateAiAdvice(userScores: UserScores, cluster: Cluster, careers: Career[], lang: string = 'tj'): Promise<string> {
-        let text = "Based on your quiz, we recommend you prepare for MMT Cluster " + cluster.clusterId + " exams.";
-        if (lang === 'tj') text = "Дар асоси тести шумо, мо тавсия медиҳем, ки барои имтиҳонҳои Кластери " + cluster.clusterId + " ММТ тайёрӣ бинед.";
-        if (lang === 'ru') text = "Основываясь на вашем тесте, мы рекомендуем вам готовиться к экзаменам Кластера " + cluster.clusterId + " НЦТ.";
-        return text;
+    /**
+     * Маслиҳати шахсии касбӣ.
+     *
+     * Пештар ин ҷо як ҷумлаи тайёр бармегашт («барои имтиҳонҳои Кластери N
+     * тайёрӣ бинед») — он ҳеҷ иртиботе бо зеҳни сунъӣ надошт ва барои ҳама
+     * як хел буд. Ҳоло маслиҳат аз рӯи ҷавобҳои худи хонанда сохта мешавад:
+     * холи ҳар панҷ кластер, ангезаҳо, калидвожаҳои интихобкарда ва
+     * ихтисосҳои мувофиқ.
+     *
+     * Агар AI дастрас набошад, ҳамон матни пештара бармегардад — саҳифаи
+     * натиҷа набояд аз сабаби нарасидани AI шиканад.
+     */
+    private async generateAiAdvice(
+        userScores: UserScores,
+        cluster: Cluster,
+        careers: Career[],
+        lang: string = 'tj',
+        clusterScores: { cluster: Cluster; score: number }[] = [],
+    ): Promise<string> {
+        const fallback = this.staticAdvice(cluster, lang);
+
+        try {
+            const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+
+            const others = clusterScores
+                .filter(cs => cs.cluster.id !== cluster.id)
+                .map(cs => `${cs.cluster.clusterName}: ${cs.score}`)
+                .join(', ');
+
+            const motivation = Object.entries(userScores.motivation || {})
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('; ') || 'нишон дода нашуд';
+
+            const keywords = (userScores.specialtyKeywords || []).slice(0, 12).join(', ') || 'нест';
+
+            const prompt = [
+                'Ту мушовири касбии ботаҷрибаи тоҷик ҳастӣ. Бо хонандаи мактаб сӯҳбат мекунӣ,',
+                'ки навакак тести касбии ММТ супорид. Ӯро «шумо» муроҷиат кун.',
+                '',
+                'НАТИҶАИ ТЕСТ:',
+                `- Кластери пешбар: ${cluster.clusterName}`,
+                cluster.description ? `- Тавсифи кластер: ${cluster.description}` : '',
+                others ? `- Холи кластерҳои дигар: ${others}` : '',
+                `- Ангезаҳои интихобкарда: ${motivation}`,
+                `- Калидвожаҳои ҷавобҳо: ${keywords}`,
+                `- Ихтисосҳои мувофиқ: ${careers.slice(0, 6).map(c => c.name).join(', ')}`,
+                '',
+                'ВАЗИФА:',
+                'Маслиҳати кӯтоҳ ва мушаххас нависед аз 3–4 ҷумла:',
+                '1) чаро маҳз ин самт ба ҷавобҳои ӯ мувофиқ аст — ба ангезаҳо ва калидвожаҳои боло такя кунед;',
+                '2) ба кадом фанҳо диққати бештар диҳад;',
+                '3) як қадами мушаххаси наздик (чӣ кор кунад).',
+                '',
+                'ҚОИДАҲО:',
+                `- Танҳо бо забони ${langName} нависед.`,
+                '- Матни оддӣ, бе рӯйхат, бе сарлавҳа, бе Markdown.',
+                '- Маълумоти сохта нанависед: рақами имтиҳон, сана ё номи донишгоҳро тахмин накунед.',
+                '- Гарму дилгарм, вале бе шиору муболиға.',
+                '- Ҳадди аксар 90 калима.',
+            ].filter(Boolean).join('\n');
+
+            const text = (await this.aiService.generateContent(prompt))?.trim();
+            return text && text.length > 40 ? text : fallback;
+        } catch (error) {
+            console.error('AI advice афтод, матни захиравӣ истифода мешавад:', error?.message || error);
+            return fallback;
+        }
+    }
+
+    private staticAdvice(cluster: Cluster, lang: string): string {
+        if (lang === 'ru') {
+            return `Основываясь на вашем тесте, мы рекомендуем готовиться к экзаменам кластера «${cluster.clusterName}» НЦТ.`;
+        }
+        if (lang === 'en') {
+            return `Based on your quiz, we recommend preparing for the "${cluster.clusterName}" MMT cluster exams.`;
+        }
+        return `Дар асоси тести шумо, мо тавсия медиҳем, ки барои имтиҳонҳои кластери «${cluster.clusterName}» ММТ тайёрӣ бинед.`;
     }
 }

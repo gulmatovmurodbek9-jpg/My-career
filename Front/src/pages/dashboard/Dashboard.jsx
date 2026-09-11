@@ -18,6 +18,7 @@ import { LazyPsychologicalProfile } from "../../components/PsychologicalProfile"
 import { MMT_MAX, topCluster } from "../../lib/mmtClusters";
 import MatchCard from "../../components/MatchCard";
 import MatchExplainModal from "../../components/MatchExplainModal";
+import { currentApiLang } from "../../lib/apiLang";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../components/toast/ToastProvider";
 import axios from "axios";
@@ -61,6 +62,9 @@ const Dashboard = () => {
             try {
                 const { data } = await axios.post(`${API}/careers/match`, {
                     scores: user.quizResults,
+                    /* Тавсияҳо бо забони интерфейс меоянд — вагарна
+                       дар дошборди русӣ кортҳо тоҷикӣ мемонанд. */
+                    lang: currentApiLang() ?? undefined,
                 });
                 setMatches(data);
             } catch (err) {

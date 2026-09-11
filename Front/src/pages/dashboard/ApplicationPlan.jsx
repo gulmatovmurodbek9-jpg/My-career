@@ -16,6 +16,7 @@ import axios from "axios";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../components/toast/ToastProvider";
+import { currentApiLang } from "../../lib/apiLang";
 
 const money = (value) =>
     value === null || value === undefined
@@ -188,15 +189,33 @@ const ApplicationPlan = () => {
             doc.setFontSize(8);
             doc.setTextColor(120);
             const afterTable = doc.lastAutoTable.finalY + 18;
+            /*
+             * Ҳуҷҷат ҳамеша тоҷикист, ҳатто вақте интерфейс русӣ ё англисӣ
+             * бошад.
+             *
+             * Онро ба ММТ ва донишгоҳ мебаранд: номи ихтисос ва код бояд
+             * айнан ҳамон бошанд, ки дар китобчаи расмӣ ҳастанд. Варақаи
+             * русӣ бо номҳои тарҷумашуда дар қабул кор намекунад — барои
+             * ҳамин сабабашро ҳамин ҷо менависем, то корбар ҳайрон нашавад.
+             */
+            if (currentApiLang()) {
+                doc.text(
+                    "Ҳуҷҷат бо забони тоҷикӣ аст: номи ихтисос ва код бояд бо китобчаи расмии ММТ мувофиқ бошанд.",
+                    40,
+                    afterTable,
+                );
+            }
+
+            const noteY = currentApiLang() ? afterTable + 12 : afterTable;
             doc.text(
                 "Нархҳо ва шумораи ҷойҳо аз маълумоти мавҷудаи мо гирифта шудаанд ва метавонанд тағйир ёбанд.",
                 40,
-                afterTable,
+                noteY,
             );
             doc.text(
                 "Пеш аз супоридани ҳуҷҷат онҳоро дар худи донишгоҳ тасдиқ кунед.",
                 40,
-                afterTable + 12,
+                noteY + 12,
             );
 
             doc.save(`ruyhati-hujjatsupori-${new Date().toISOString().slice(0, 10)}.pdf`);

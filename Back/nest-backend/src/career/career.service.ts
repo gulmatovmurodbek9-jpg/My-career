@@ -30,6 +30,70 @@ const LIMIT_ON = DAILY_LIMIT > 0;
  * г и к у х ч менависад. Бе ин мутобиқсозӣ ҷустуҷӯи «Зех» ихтисоси «Зеҳни
  * сунъӣ»-ро намеёбад.
  */
+
+/**
+ * Номи касбҳои гуфтугӯӣ → калимаҳои ҷустуҷӯ дар база.
+ *
+ * Довталаб «Юрист» менависад, вале дар рӯйхати ММТ чунин ном нест — он ҷо
+ * «Ҳуқуқшиносӣ» аст. ILIKE '%юрист%' ҳеҷ чиз намеёбад, ҷустуҷӯ ба fallback
+ * мегузарад ва чат ба ҷои ҳуқуқ «Таърих»-у «Идоракунии давлатӣ»-ро тавсия
+ * мекунад — маҳз ҳамин дар демо дида шуд.
+ *
+ * Калидҳо folded навишта мешаванд (ғ→г, ӣ→и, қ→к, ӯ→у, ҳ→х, ҷ→ч), то ки
+ * навишти русиклавиатура низ кор кунад: «хукук» ба «ҳуқуқ» мерасад.
+ */
+const CAREER_SYNONYMS: Record<string, string[]> = {
+    // Ҳуқуқ
+    юрист: ['хукук'], юристи: ['хукук'], адвокат: ['хукук'], прокурор: ['хукук'],
+    судя: ['хукук'], судъя: ['хукук'], нотариус: ['хукук'], хукукшинос: ['хукук'],
+    // Тиб
+    врач: ['табобат', 'тиб'], доктор: ['табобат', 'тиб'], духтур: ['табобат', 'тиб'],
+    табиб: ['табобат', 'тиб'], хирург: ['чаррох', 'табобат'], педиатр: ['педиатр', 'кудакон'],
+    стоматолог: ['дандон'], дантист: ['дандон'], медсестра: ['хамшира'],
+    фельдшер: ['хамшира'], фармацевт: ['дорусоз'], аптекар: ['дорусоз'],
+    // IT
+    программист: ['барнома', 'информатика'], программирование: ['барнома', 'информатика'],
+    барномасоз: ['барнома'], кодер: ['барнома'], разработчик: ['барнома'],
+    developer: ['барнома'], programmer: ['барнома'],
+    айти: ['информатика', 'иттилоот'], it: ['информатика', 'иттилоот'],
+    тестировщик: ['барнома'], дизайнер: ['дизайн'], design: ['дизайн'],
+    // Муҳандисӣ ва техника
+    инженер: ['мухандис'], мухандис: ['мухандис'], электрик: ['электр'],
+    энергетик: ['энергетика'], строитель: ['сохтмон'], сохтмончи: ['сохтмон'],
+    архитектор: ['меъмор'], механик: ['механика'], водитель: ['наклиёт'],
+    // Иқтисод
+    экономист: ['иктисод'], бухгалтер: ['бахисобгири', 'молия'],
+    мухосиб: ['бахисобгири', 'молия'], банкир: ['молия', 'бонк'],
+    финансист: ['молия'], менеджер: ['менечмент', 'идора'], маркетолог: ['маркетинг'],
+    предприниматель: ['соибкори', 'бизнес'], логист: ['логистика', 'наклиёт'],
+    // Таълим ва забон
+    учитель: ['омузгор', 'педагогика'], омузгор: ['омузгор', 'педагогика'],
+    преподаватель: ['омузгор', 'педагогика'], воспитатель: ['томактаби', 'педагогика'],
+    переводчик: ['тарчум'], тарчумон: ['тарчум'], филолог: ['филология'],
+    лингвист: ['забон', 'филология'],
+    // Ҷомеашиносӣ
+    психолог: ['психология'], социолог: ['сотсиология', 'чомеашиноси'],
+    журналист: ['журналистика'], дипломат: ['байналмилали', 'муносибат'],
+    политолог: ['сиёсатшиноси'], историк: ['таърих'],
+    // Дигар
+    повар: ['хурок', 'технологияи хурок'], агроном: ['агроном', 'кишоварзи'],
+    ветеринар: ['ветеринар'], эколог: ['экология'], геолог: ['геология'],
+    химик: ['химия'], биолог: ['биология'], физик: ['физика'], математик: ['математика'],
+    спортсмен: ['варзиш'], тренер: ['варзиш'], артист: ['санъат'], музыкант: ['мусики'],
+    художник: ['наккоши', 'санъат'], актер: ['санъат'], режиссер: ['санъат'],
+    военный: ['харби'], полицейский: ['хукук', 'харби'],
+    /* Бандакҳои русӣ «ь»-ро мехӯранд — «учителем», «строителя». Решаи бе
+       аломати мулоим ҳамчун калиди алоҳида, то мувофиқати оғоз кор кунад. */
+    учител: ['омузгор', 'педагогика'], преподавател: ['омузгор', 'педагогика'],
+    воспитател: ['томактаби', 'педагогика'], строител: ['сохтмон'],
+    водител: ['наклиёт'], предпринимател: ['соибкори', 'бизнес'],
+    учитил: ['омузгор', 'педагогика'],
+};
+
+/* Калидҳои дарозтар аввал, то ки «программирование» ба «программист» афтад,
+   на ба калиди кӯтоҳтари тасодуфӣ. */
+const SYNONYM_KEYS = Object.keys(CAREER_SYNONYMS).sort((a, b) => b.length - a.length);
+
 const TAJIK_LETTERS = 'ғӣқӯҳҷ';
 const PLAIN_LETTERS = 'гикухч';
 
@@ -478,12 +542,30 @@ export class CareerService {
             'want', 'need', 'which', 'choose', 'advise', 'help', 'should',
         ]);
 
-        return Array.from(new Set(
-            text
-                .split(' ')
-                .map((word) => word.trim())
-                .filter((word) => word.length >= 3 && !stopWords.has(word)),
-        )).slice(0, 8);
+        const words = text
+            .split(' ')
+            .map((word) => word.trim())
+            .filter((word) => word.length >= 3 && !stopWords.has(word));
+
+        /* Ҳар калима ҳам худаш ва ҳам шакли folded-аш меравад, ва агар дар
+           ҷадвали ҳаммаъноҳо бошад — тарҷумаи тоҷикиаш низ. Ҷустуҷӯ баъдан
+           бо TAJIK_FOLD муқоиса мекунад, пас ҳамааш дар як алифбо мешавад. */
+        const terms: string[] = [];
+        for (const word of words) {
+            const folded = foldTajik(word);
+            terms.push(folded);
+            /* «врачом», «юристом», «программиста» — русӣ ва тоҷикӣ ҳарду
+               бандак мегиранд. Мувофиқати дақиқ онҳоро намегирад, барои
+               ҳамин калиди 4-ҳарфа ё дарозтар ҳамчун оғози калима низ
+               ҳисоб мешавад. */
+            const prefixKey = SYNONYM_KEYS.find(
+                (key) => key.length >= 4 && folded.startsWith(key),
+            );
+            const mapped = CAREER_SYNONYMS[folded] ?? (prefixKey ? CAREER_SYNONYMS[prefixKey] : undefined);
+            if (mapped) terms.push(...mapped.map(foldTajik));
+        }
+
+        return Array.from(new Set(terms)).slice(0, 10);
     }
 
     private async findRelevantCareers(question: string, careerName?: string): Promise<Career[]> {
@@ -497,13 +579,16 @@ export class CareerService {
             qb.where(new Brackets((where) => {
                 terms.forEach((term, index) => {
                     const param = `term${index}`;
+                    /* ILIKE хом набуд: истилоҳот аллакай folded аст (ҳ→х),
+                       пас сутунҳо низ бояд folded шаванд, вагарна «хукук»
+                       ба «Ҳуқуқшиносӣ» ҳеҷ гоҳ намерасад. */
                     const condition = `
-                        career.name ILIKE :${param}
-                        OR career.description ILIKE :${param}
-                        OR career.purpose ILIKE :${param}
-                        OR cluster.clusterName ILIKE :${param}
-                        OR universities.name ILIKE :${param}
-                        OR universities.city ILIKE :${param}
+                        ${TAJIK_FOLD('career.name')} LIKE :${param}
+                        OR ${TAJIK_FOLD('career.description')} LIKE :${param}
+                        OR ${TAJIK_FOLD('career.purpose')} LIKE :${param}
+                        OR ${TAJIK_FOLD('cluster.clusterName')} LIKE :${param}
+                        OR ${TAJIK_FOLD('universities.name')} LIKE :${param}
+                        OR ${TAJIK_FOLD('universities.city')} LIKE :${param}
                     `;
                     if (index === 0) where.where(condition, { [param]: `%${term}%` });
                     else where.orWhere(condition, { [param]: `%${term}%` });
@@ -524,9 +609,9 @@ export class CareerService {
         const pool = await qb.take(60).getMany();
 
         const score = (career: Career) => {
-            const name = this.normalizeText(career.name || '');
-            const cluster = this.normalizeText(career.cluster?.clusterName || '');
-            const body = this.normalizeText(`${career.description || ''} ${career.purpose || ''}`);
+            const name = foldTajik(this.normalizeText(career.name || ''));
+            const cluster = foldTajik(this.normalizeText(career.cluster?.clusterName || ''));
+            const body = foldTajik(this.normalizeText(`${career.description || ''} ${career.purpose || ''}`));
             return terms.reduce((total, term) => {
                 if (name.includes(term)) return total + 3;
                 if (cluster.includes(term)) return total + 2;
@@ -544,6 +629,10 @@ export class CareerService {
 
         if (matched.length >= 4) return matched;
 
+        /* Вақте ҷустуҷӯ чизе намеёбад, ин ҷо ихтисосҳои машҳуртарин мегиранд.
+           Онҳо ба савол алоқа надоранд, вале модел инро намедонист ва онҳоро
+           ҳамчун ҷавоб пешниҳод мекард. `isFallback` дар промпт қайд мешавад,
+           то модел бигӯяд, ки мувофиқи аниқ наёфт. */
         const fallback = await this.careerRepository.find({
             relations: ['cluster', 'universities'],
             order: { likesCount: 'DESC' },
@@ -552,7 +641,9 @@ export class CareerService {
 
         const byId = new Map<string, Career>();
         [...matched, ...fallback].forEach((career) => byId.set(career.id, career));
-        return Array.from(byId.values()).slice(0, 10);
+        const rows = Array.from(byId.values()).slice(0, 10);
+        (rows as any).isFallback = matched.length === 0;
+        return rows;
     }
 
     private formatCareerContext(careers: Career[], userLocation?: { latitude: number; longitude: number }): string {
@@ -664,6 +755,15 @@ Answer in ${language}. If the user writes in Tajik, use natural Tajik Cyrillic.
 USER QUESTION:
 ${params.question}
 ${optional('SELECTED CAREER FIELD', params.careerName)}${optional('USER PROFILE AND HISTORY', userContext)}${optional('USER LOCATION', locationContext)}
+${params.careers.length && (params.careers as any).isFallback
+    ? [
+        'NO EXACT MATCH: the search found nothing for this question. The rows below are',
+        'simply the most popular specialties and are NOT answers to what was asked.',
+        'Say plainly that you did not find a matching specialty for that word, name the',
+        'closest field you can from the rows if one genuinely fits, and ask one short',
+        'question to narrow it down. Never present these rows as recommendations.',
+      ].join('\n')
+    : ''}
 DATABASE CONTEXT - use this first, do not invent facts that are missing:
 ${careerContext}
 

@@ -130,7 +130,7 @@ function ChoosingHelp({ offerings }) {
 const Info = () => {
   const { id } = useParams();
   const { user, token, updateUser, refreshProfile } = useAuthStore();
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess, warning: showWarning } = useToast();
   const [career, setCareer] = useState(null);
   const [offerings, setOfferings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,6 +172,9 @@ const Info = () => {
     setPlanBusyId(offeringId);
     try {
       const headers = { Authorization: `Bearer ${token}` };
+      /* Ҳар пахш бояд ҷавоби намоён диҳад. Танҳо иваз шудани навишти тугма
+         аз «+ Илова» ба «✓ Дар рӯйхат» кофӣ набуд: тугма хурд аст ва дар
+         поёни ҷадвал, ва корбар бовар мекард, ки чизе рӯй надод. */
       if (planIds.has(offeringId)) {
         await axios.delete(`${API}/users/application-plan/${offeringId}`, { headers });
         setPlanIds((prev) => {
@@ -179,9 +182,11 @@ const Info = () => {
           next.delete(offeringId);
           return next;
         });
+        showSuccess("Аз рӯйхати ҳуҷҷатсупорӣ бароварда шуд");
       } else {
         await axios.post(`${API}/users/application-plan/${offeringId}`, {}, { headers });
         setPlanIds((prev) => new Set(prev).add(offeringId));
+        showSuccess("Ба рӯйхати ҳуҷҷатсупорӣ илова шуд");
       }
     } catch (err) {
       /*
@@ -189,12 +194,16 @@ const Info = () => {
        * оддӣ панели тасдиқ нишон дода мешавад: корбар мебинад чаро рад шуд
        * ва метавонад ҳамон ҷо рӯйхатро тоза кунад. Пештар ӯ бояд худаш
        * мефаҳмид, ки ба кадом саҳифа гузарад.
+       *
+       * Танҳо бархӯрди кластерро бо панели «тоза кунам» ҳал кардан мумкин
+       * аст. Агар рӯйхат пур бошад, ҳамон панел ҳамаи 12 интихобро нест
+       * мекард — барои он ҳолат паёми оддӣ бас аст.
        */
-      /* Танҳо бархӯрди кластерро бо панели «тоза кунам» ҳал кардан мумкин
-         аст. Агар рӯйхат пур бошад, ҳамон панел ҳамаи 12 интихобро нест
-         мекард — барои он ҳолат паёми оддӣ бас аст. */
       if (err.response?.status === 409 && err.response.data?.code !== "PLAN_FULL") {
         setClusterConflict({ message: err.response.data?.message, offeringId });
+        /* Панел дар болои ҷадвал аст — то саҳифа то он ҷо мелағжад, ҳушдор
+           дарҳол дар назди чашм мемонад. */
+        showWarning("Ин ихтисос аз кластери дигар аст — шарҳ дар боло");
       } else {
         showError(err.response?.data?.message || "Иҷро нашуд");
       }

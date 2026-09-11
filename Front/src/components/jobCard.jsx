@@ -160,6 +160,9 @@ export default function SpecialtyCard({ specialty }) {
           <div className="flex flex-col gap-2">
             {specialty.cluster?.clusterName && (
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/20 w-fit">
+                {/* Рақами кластер пеш аз ном: ариза ба ЯК кластер меравад,
+                    ва маҳз ҳамин рақам барои довталаб муҳим аст. */}
+                {specialty.cluster.clusterId ? `${specialty.cluster.clusterId}. ` : ""}
                 {specialty.cluster.clusterName}
               </span>
             )}
@@ -297,7 +300,9 @@ export function SpecialtyCardList({ specialty }) {
       >
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
-            <span className="text-[9px] font-black uppercase tracking-widest text-primary/70">{specialty.cluster?.clusterName || t('common.course', "Курси таълимӣ")}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-primary/70">{specialty.cluster?.clusterName
+              ? `${specialty.cluster.clusterId ? specialty.cluster.clusterId + ". " : ""}${specialty.cluster.clusterName}`
+              : t('common.course', "Курси таълимӣ")}</span>
             <h3 className="font-black text-lg text-foreground group-hover:text-primary transition-colors leading-tight">
               {specialty.name}
             </h3>

@@ -254,12 +254,18 @@ const Careers = () => {
 
   // Шумораи ихтисоси ҳар кластер аллакай дар худи ҷавоби API ҳаст
   // (relations: ['careers']), барои ҳамин дархости иловагӣ лозим нест.
-  const clusterCounts = clusters.map((cluster) => ({
-    id: cluster.id,
-    name: cluster.clusterName,
-    icon: cluster.clusterIcon,
-    count: Array.isArray(cluster.careers) ? cluster.careers.length : 0,
-  }));
+  /* Рақами кластер (1–5) ҳатмист, на ороиш: ариза ба ММТ маҳз ба ЯК
+     кластер супорида мешавад, ва довталаб бояд бидонад, ки кадомаш.
+     Тартиб низ аз рӯи ҳамон рақам аст — API онҳоро бетартиб бармегардонад. */
+  const clusterCounts = clusters
+    .map((cluster) => ({
+      id: cluster.id,
+      number: cluster.clusterId,
+      name: cluster.clusterName,
+      icon: cluster.clusterIcon,
+      count: Array.isArray(cluster.careers) ? cluster.careers.length : 0,
+    }))
+    .sort((a, b) => (a.number ?? 99) - (b.number ?? 99));
   const totalCount = clusterCounts.reduce((sum, c) => sum + c.count, 0);
 
   const hasFilters =
@@ -471,7 +477,7 @@ const Careers = () => {
                     active={selectedCluster === cluster.id}
                     onClick={() => setSelectedCluster(cluster.id)}
                     icon={<LucideIconRenderer name={cluster.icon} className="h-4 w-4 shrink-0" />}
-                    label={cluster.name}
+                    label={cluster.number ? `${cluster.number}. ${cluster.name}` : cluster.name}
                     count={cluster.count}
                   />
                 ))}

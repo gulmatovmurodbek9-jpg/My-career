@@ -8,11 +8,13 @@ import * as path from 'path';
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /*
- * Ҳадди вақт барои як провайдери AI. Ду провайдер × 25с = 50с дар бадтарин
- * ҳолат, ки аз timeout-и 90-сонияи frontend хеле камтар аст — яъне корбар
- * ҳамеша ё ҷавоб мегирад, ё паёми фаҳмо.
+ * Ҳадди вақт барои як провайдери AI. Се провайдер × 20с = 60с дар бадтарин
+ * ҳолат, ки аз timeout-и 90-сонияи frontend камтар аст — яъне корбар ҳамеша
+ * ё ҷавоб мегирад, ё паёми фаҳмо. Бо 25с се провайдер аз он ҳадд мегузаштанд.
  */
-const AI_PROVIDER_TIMEOUT_MS = 25000;
+const AI_PROVIDER_TIMEOUT_MS = 20000;
+
+type AiProvider = 'vertex' | 'gemini' | 'groq';
 
 @Injectable()
 export class AiService implements OnModuleInit {
@@ -20,6 +22,8 @@ export class AiService implements OnModuleInit {
     private geminiModel: any = null;
     private vertex: GoogleGenAI | null = null;
     private vertexModel = 'gemini-2.5-flash';
+    private groqKey: string | null = null;
+    private groqModel = 'openai/gpt-oss-120b';
 
     constructor(private configService: ConfigService) { }
 
@@ -44,6 +48,24 @@ export class AiService implements OnModuleInit {
             });
         }
 
+        /*
+         * Groq — провайдери сеюм, берун аз Google.
+         *
+         * Vertex ва Gemini ҳарду ба ҳамон инфрасохтори Google мераванд:
+         * вақте Gemini 503 «серталабӣ» медиҳад, Vertex низ ҳамон ҳол аст.
+         * Дар сервер VERTEX_PROJECT_ID нест, яъне занҷир аз як ҳалқа иборат
+         * буд ва як садамаи Google тамоми AI-и барномаро мекушт. Groq
+         * шабакаи тамоман дигар аст ва калидаш аллакай дар сервер буд, вале
+         * ҳеҷ ҷо хонда намешуд.
+         */
+        this.groqKey = this.configService.get<string>('GROQ_API_KEY') || null;
+        this.groqModel = this.configService.get<string>('GROQ_MODEL') || 'openai/gpt-oss-120b';
+        if (this.groqKey) {
+            console.log(`AI: Groq ҳамчун захира фаъол — модел ${this.groqModel}`);
+        } else {
+            console.warn('AI: GROQ_API_KEY нест — агар Gemini афтад, захира намемонад');
+        }
+
         this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-2.5-flash';
 
         // Vertex AI бо лоиҳаи воқеии Google Cloud кор мекунад: ҳисоб ба ҳамон
@@ -64,27 +86,37 @@ export class AiService implements OnModuleInit {
     }
 
     /**
-     * Матн месозад, бо гузариши худкор аз Vertex ба Gemini.
+     * Матн месозад, бо гузариши худкор аз Vertex ба Gemini ва баъд ба Groq.
      *
      * Ҳарду ба ҳамон ҳисоби Google Cloud-и корбар пайвастанд. Vertex аввал
      * меистад; агар `aiplatform.googleapis.com` дар лоиҳа фаъол набошад, он
      * 403 медиҳад ва дархост бесадо ба Gemini мегузарад. Баъди фаъол шудани
      * API ҳамон код худаш ба Vertex мегузарад.
      *
-     * Танҳо провайдерҳои Google истифода мешаванд.
+     * Vertex ва Gemini ҳарду Google-анд: садамаи умумии Google ҳардуро якҷо
+     * мекушад. Groq берун аз он аст ва танҳо ҳамчун захираи охирин меояд.
      */
     async generateContent(
         prompt: string,
-        options: { provider?: 'vertex' | 'gemini' } = {},
+        options: { provider?: AiProvider } = {},
     ): Promise<string> {
-        const run = (which: 'vertex' | 'gemini') =>
-            which === 'vertex' ? this.generateVertexContent(prompt) : this.generateGeminiContent(prompt);
+        const run = (which: AiProvider) => {
+            if (which === 'vertex') return this.generateVertexContent(prompt);
+            if (which === 'groq') return this.generateGroqContent(prompt);
+            return this.generateGeminiContent(prompt);
+        };
 
-        const chain: Array<'vertex' | 'gemini'> = options.provider === 'gemini'
-            ? ['gemini', 'vertex']
-            : ['vertex', 'gemini'];
+        /* Groq ҳамеша охирин: сифати тоҷикиаш аз Gemini пасттар аст, пас
+           танҳо вақте меояд, ки роҳи Google тамоман баста бошад. */
+        const chain: AiProvider[] = options.provider === 'gemini'
+            ? ['gemini', 'vertex', 'groq']
+            : ['vertex', 'gemini', 'groq'];
 
-        const usable = chain.filter((which) => which !== 'vertex' || this.vertex);
+        const usable = chain.filter((which) => {
+            if (which === 'vertex') return !!this.vertex;
+            if (which === 'groq') return !!this.groqKey;
+            return true;
+        });
 
         let last: any = null;
         for (const which of usable) {
@@ -95,7 +127,24 @@ export class AiService implements OnModuleInit {
                 console.error(`AI: провайдери ${which} афтод:`, error?.message || error);
             }
         }
-        throw last ?? new InternalServerErrorException('Ҳеҷ провайдери AI дастрас нест');
+        /*
+         * Ҳама афтоданд. Хатои хом ба корбар 500-и бемаъно медиҳад, аз ин рӯ
+         * ин ҷо ба паёми фаҳмо табдил меёбад — ва «лимит» танҳо вақте гуфта
+         * мешавад, ки воқеан лимит бошад, на ҳар садама.
+         */
+        if (last instanceof HttpException) throw last;
+
+        const rateLimited = this.isRateLimitError(last);
+        throw new HttpException(
+            {
+                message: rateLimited
+                    ? 'Лимити AI муваққатан тамом шуд. Баъд аз чанд дақиқа кӯшиш кунед.'
+                    : 'Хидмати AI ҳоло дастрас нест. Баъд аз чанд дақиқа кӯшиш кунед.',
+                code: rateLimited ? 'AI_RATE_LIMIT' : 'AI_UNAVAILABLE',
+                retryAfterSeconds: 60,
+            },
+            rateLimited ? HttpStatus.TOO_MANY_REQUESTS : HttpStatus.SERVICE_UNAVAILABLE,
+        );
     }
 
     /**
@@ -212,11 +261,13 @@ export class AiService implements OnModuleInit {
             throw new InternalServerErrorException('Gemini API Key танзим нашудааст');
         }
 
+        let lastError: any = null;
         for (let attempt = 0; attempt <= retries; attempt++) {
             try {
                 const result = await this.geminiModel.generateContent(prompt);
                 return result.response.text();
             } catch (error) {
+                lastError = error;
                 console.error(`Gemini Error (attempt ${attempt + 1}/${retries + 1}):`, error?.message || error);
 
                 if (this.isRateLimitError(error)) {
@@ -237,14 +288,54 @@ export class AiService implements OnModuleInit {
             }
         }
 
-        // Both providers exhausted
-        throw new HttpException(
-            {
-                message: 'Лимити рӯзонаи AI тамом шуд. Лутфан баъд аз чанд дақиқа кӯшиш кунед.',
-                code: 'AI_RATE_LIMIT',
-                retryAfterSeconds: 60,
-            },
-            HttpStatus.TOO_MANY_REQUESTS,
-        );
+        /* Пештар ҳар афтиши Gemini ҳамчун «лимити рӯзона тамом шуд» баромад
+           мекард — ҳатто 503-и «серталабӣ», ки ба лимит ҳеҷ рабте надорад.
+           Корбар бовар мекард, ки ҳаққи худро сарф кардааст, ва дигар
+           кӯшиш намекард. Ҳоло хатои аслӣ боло меравад ва занҷир ба
+           провайдери навбатӣ мегузарад. */
+        throw lastError ?? new InternalServerErrorException('Gemini ҷавоб надод');
+    }
+
+    /**
+     * Groq — API-и бо OpenAI мувофиқ, бе SDK-и алоҳида.
+     *
+     * Ҳадди вақт аз худи `withTimeout` меояд, вале `AbortController` низ
+     * лозим аст: бе он сокети кушода пас аз timeout дар замина мемонад.
+     */
+    private async generateGroqContent(prompt: string): Promise<string> {
+        if (!this.groqKey) {
+            throw new InternalServerErrorException('Groq танзим нашудааст (GROQ_API_KEY)');
+        }
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), AI_PROVIDER_TIMEOUT_MS);
+
+        try {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${this.groqKey}`,
+                },
+                body: JSON.stringify({
+                    model: this.groqModel,
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7,
+                }),
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                const detail = await response.text();
+                throw new Error(`Groq ${response.status}: ${detail.slice(0, 200)}`);
+            }
+
+            const data: any = await response.json();
+            const text = data?.choices?.[0]?.message?.content;
+            if (!text) throw new Error('Groq ҷавоби холӣ баргардонд');
+            return text;
+        } finally {
+            clearTimeout(timer);
+        }
     }
 }

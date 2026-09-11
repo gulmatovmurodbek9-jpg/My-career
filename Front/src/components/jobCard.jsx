@@ -42,6 +42,21 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
           {specialty.code}
         </span>
       )}
+      {/* Дараҷа ва мӯҳлат.
+
+          Дар рӯйхати ММТ 80 ном такрор мешавад — «Информатика» чор бор,
+          «Забони хориҷӣ (англисӣ)» ҳафт бор. Инҳо хато нестанд ва набояд
+          нест карда шаванд: ҳар яке коди расмии худро дорад ва довталаб маҳз
+          ҳамон рақамро дар ариза менависад (ДМТ — 1310304, Хуҷанд — 1020505).
+
+          Вале дар корт онҳо айнан як хел менамуданд. Дараҷа калонтарин
+          фарқашон аст: яке бакалаври 4-сола, дигаре миёнаи касбии 3-сола. */}
+      {specialty.degreeType && (
+        <span className={`inline-flex items-center rounded-full border border-primary/20 bg-primary/10 font-bold text-primary ${pad}`}>
+          {specialty.degreeType}
+          {specialty.durationYears ? ` · ${specialty.durationYears} сол` : ""}
+        </span>
+      )}
       {tuition && (
         <span className={`inline-flex items-center rounded-full font-black uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 ${pad}`}>
           {tuition}
@@ -50,6 +65,14 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
       {specialty.hasFreeSeats && (
         <span className={`inline-flex items-center rounded-full font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ${pad}`}>
           Ройгон ҳаст
+        </span>
+      )}
+      {/* Дуюмин фарқи ҳамномҳо: се «Информатика»-и бакалаврӣ дар 3, 1 ва 7
+          донишгоҳ таълим дода мешаванд — ва ин маҳз он чизест, ки довталаб
+          донистан мехоҳад. */}
+      {specialty.universities?.length > 0 && (
+        <span className={`inline-flex items-center rounded-full border border-border bg-muted/60 font-semibold text-muted-foreground ${pad}`}>
+          {specialty.universities.length} донишгоҳ
         </span>
       )}
     </div>

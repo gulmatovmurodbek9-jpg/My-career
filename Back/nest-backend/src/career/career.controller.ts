@@ -29,8 +29,9 @@ export class CareerController {
 
     @Get()
     @ApiOperation({ summary: 'Get all careers with filtering and pagination' })
-    getAll(@Query() query: GetCareersDto) {
-        return this.careerService.findAll(query);
+    async getAll(@Query() query: GetCareersDto, @Query('lang') lang?: string) {
+        const result = await this.careerService.findAll(query);
+        return { ...result, data: result.data.map((c) => this.careerService.localize(c, lang)) };
     }
 
 
@@ -58,12 +59,12 @@ export class CareerController {
     @Get(':id')
     @ApiOperation({ summary: 'Get career by ID' })
     @ApiParam({ name: 'id', description: 'Career UUID' })
-    async getOne(@Param('id') id: string) {
+    async getOne(@Param('id') id: string, @Query('lang') lang?: string) {
         const career = await this.careerService.findOne(id);
         if (!career) {
             throw new NotFoundException(`Ихтисос бо ID "${id}" ёфт нашуд`);
         }
-        return career;
+        return this.careerService.localize(career, lang);
     }
 
     @Post()
@@ -135,11 +136,12 @@ export class CareerController {
 
     @Post('match')
     @ApiOperation({ summary: 'Match careers based on user quiz results' })
-    match(@Body() body: { scores: any }) {
+    async match(@Body() body: { scores: any; lang?: string }) {
         if (!body.scores) {
             throw new BadRequestException('Натиҷаҳои санҷишро фиристед');
         }
-        return this.careerService.matchCareers(body.scores);
+        const matches = await this.careerService.matchCareers(body.scores);
+        return matches.map((c) => this.careerService.localize(c, body.lang));
     }
 
     @Post('ask')

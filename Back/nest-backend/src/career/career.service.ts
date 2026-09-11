@@ -217,6 +217,39 @@ export class CareerService {
 
 
 
+    /**
+     * Мазмунро ба забони интихобшуда мегардонад.
+     *
+     * Танҳо майдонҳое иваз мешаванд, ки тарҷума воқеан доранд — агар
+     * тарҷума нарасад, матни тоҷикӣ мемонад. Ин муҳим аст: холӣ мондани
+     * майдон аз матни забони дигар бадтар аст.
+     *
+     * `code` ва `name` ҳеҷ гоҳ иваз намешаванд. Код шиносаи расмии ММТ аст,
+     * ва номи тоҷикӣ ҳамонест, ки довталаб дар китобчаи ММТ меҷӯяд — номи
+     * тарҷумашуда ба `nameTranslated` меравад, то саҳифа ҳардуро дар як ҷо
+     * нишон диҳад.
+     */
+    localize<T extends Partial<Career>>(career: T, lang?: string): T {
+        if (!career || !lang || lang === 'tj') return career;
+
+        const tr = (career as any).translations?.[lang];
+        if (!tr) return career;
+
+        const out: any = { ...career };
+        for (const [key, value] of Object.entries(tr)) {
+            if (value === null || value === undefined || value === '') continue;
+            /* Майдонҳои хидматии скрипти тарҷума (_fields) ба клиент намераванд. */
+            if (key.startsWith('_')) continue;
+            if (key === 'name') { out.nameTranslated = value; continue; }
+            if (key === 'code') continue;
+            out[key] = value;
+        }
+
+        /* Ҷадвали пурраи тарҷумаҳо ба клиент лозим нест — вазни беҳуда. */
+        delete out.translations;
+        return out as T;
+    }
+
     findOne(id: string): Promise<Career | null> {
         return this.careerRepository.findOne({ where: { id }, relations: ['cluster', 'universities'] });
     }

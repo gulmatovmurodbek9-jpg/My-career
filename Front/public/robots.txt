@@ -1,0 +1,17 @@
+# Ихтисоси ман — ikhtisosiman.qobus.tj
+
+User-agent: *
+Allow: /
+
+# Саҳифаҳои шахсӣ ва хидматӣ: маълумоти корбар доранд ё берун аз он
+# маънои ҷустуҷӯӣ надоранд. Google онҳоро ба ҳар ҳол индексатсия карда
+# наметавонад — ҳамаашон логин талаб мекунанд.
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /favorites
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /quiz
+
+Sitemap: https://ikhtisosiman.qobus.tj/sitemap.xml

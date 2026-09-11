@@ -231,7 +231,16 @@ function ClosingScene() {
   );
 }
 
+import { usePageMeta } from "../../lib/usePageMeta";
+
 export default function Home() {
+  usePageMeta({
+    description:
+      "Санҷиши ММТ, 884 ихтисос, 128 донишгоҳ ва нақшаи ҳуҷҷатсупорӣ — " +
+      "платформаи роҳнамоии касбӣ барои хатмкунандагони Тоҷикистон.",
+    path: "/",
+  });
+
   useEffect(() => {
     // Агар бо лангар омада бошанд ("/#cluster-groups"), Layout ба ҳамон бахш
     // скролл мекунад — ба боло бурдан онро вайрон мекард.

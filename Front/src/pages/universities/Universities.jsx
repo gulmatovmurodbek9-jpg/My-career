@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import TajikistanMap from "../../components/map/TajikistanMap";
 import { API } from "../../lib/config";
+import { usePageMeta } from "../../lib/usePageMeta";
 
 const CITY_KEYWORDS = [
   "Душанбе",
@@ -113,6 +114,14 @@ export default function Universities() {
     () => filteredUnis.reduce((acc, uni) => acc + (uni.careerCount || 0), 0),
     [filteredUnis]
   );
+
+  usePageMeta({
+    title: "Донишгоҳҳои Тоҷикистон — харита ва рӯйхат",
+    description:
+      "128 донишгоҳ ва коллеҷи Тоҷикистон дар як харита: ҷойгиршавӣ, шаҳр, " +
+      "ихтисосҳо, нархи таҳсил ва ҷойҳои ройгон.",
+    path: "/universities",
+  });
 
   return (
     <div className="min-h-screen bg-background pb-24 pt-24">

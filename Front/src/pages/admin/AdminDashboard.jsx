@@ -7,8 +7,9 @@ import {
   Heart,
   Loader2,
   AlertCircle,
-  TrendingUp,
+  Bookmark,
   BarChart3,
+  Inbox,
 } from "lucide-react";
 import {
   BarChart,
@@ -21,8 +22,6 @@ import {
   Cell,
   PieChart,
   Pie,
-  AreaChart,
-  Area,
 } from "recharts";
 import axios from "axios";
 import { API } from "../../lib/config";
@@ -31,6 +30,24 @@ import { useTranslation } from "react-i18next";
 import StatsCard from "../../components/admin/StatsCard";
 
 const CHART_COLORS = ["#6366f1", "#8b5cf6", "#a78bfa", "#c084fc", "#e879f9", "#f472b6", "#fb923c"];
+
+/* Номи ихтисосҳои тоҷикӣ дароз аст — «Автоматикунонии раванди технологӣ ва
+   истеҳсоли саноати химиявӣ». Дар диаграммаи амудӣ ҷой намешуд, барои ҳамин
+   `tick={false}` гузошта шуда буд ва сутунҳо бе ном мемонданд. Ҳоло диаграмма
+   уфуқӣ аст: ном дар тарафи чап пурра ҷой мегирад. */
+const LABEL_WIDTH = 210;
+const MAX_LABEL_CHARS = 30;
+
+const shortLabel = (name = "") =>
+  name.length > MAX_LABEL_CHARS ? name.slice(0, MAX_LABEL_CHARS - 1) + "…" : name;
+
+const EmptyChart = ({ title, hint }) => (
+  <div className="h-full flex flex-col items-center justify-center text-center px-6">
+    <Inbox className="w-8 h-8 text-white/15 mb-3" />
+    <p className="text-sm font-semibold text-white/40">{title}</p>
+    <p className="text-xs text-white/25 mt-1 max-w-xs leading-relaxed">{hint}</p>
+  </div>
+);
 
 const AdminDashboard = () => {
   const { token } = useAuthStore();
@@ -74,21 +91,58 @@ const AdminDashboard = () => {
     );
   }
 
-  // Pie chart data from topLiked
-  const pieData = stats?.topLiked?.map((c, i) => ({
-    name: c.name?.length > 18 ? c.name.substring(0, 18) + "…" : c.name,
-    value: c.likesCount || 0,
-    fill: CHART_COLORS[i % CHART_COLORS.length],
-  })) || [];
+  /* Ихтисосе, ки 0 лайк дорад, дар диаграмма сутуни нонамоён месозад ва дар
+     легенда сатри «0» — фақат шавшув. Танҳо онҳое, ки воқеан хол доранд. */
+  const likedData = (stats?.topLiked || [])
+    .filter((c) => (c.likesCount || 0) > 0)
+    .map((c, i) => ({
+      name: c.name,
+      label: shortLabel(c.name),
+      value: c.likesCount || 0,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const savedData = (stats?.topSaved || [])
+    .filter((c) => (c.savedCount || 0) > 0)
+    .map((c) => ({
+      name: c.name,
+      label: shortLabel(c.name),
+      value: c.savedCount || 0,
+    }));
+
+  const noData = t("admin.dashboard.no_data");
+  const noDataHint = t("admin.dashboard.no_data_hint");
+
+  const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
+    const row = payload[0]?.payload || {};
     return (
-      <div className="bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 shadow-2xl">
-        <p className="text-xs font-semibold text-white mb-1">{payload[0]?.payload?.name || label}</p>
+      <div className="bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 shadow-2xl max-w-xs">
+        <p className="text-xs font-semibold text-white mb-1 leading-snug">{row.name}</p>
         <p className="text-sm font-bold text-indigo-400">{payload[0]?.value}</p>
       </div>
     );
+  };
+
+  /* Меҳвари рақамӣ: холҳо ҳамеша бутунанд, вале recharts бо қимати 1
+     «0.25 / 0.5 / 0.75» мекашид ва диаграмма вайрон менамуд. */
+  const numberAxis = {
+    type: "number",
+    allowDecimals: false,
+    stroke: "rgba(255,255,255,0.2)",
+    fontSize: 11,
+    tickLine: false,
+    axisLine: false,
+  };
+
+  const categoryAxis = {
+    type: "category",
+    dataKey: "label",
+    width: LABEL_WIDTH,
+    stroke: "rgba(255,255,255,0.45)",
+    fontSize: 11,
+    tickLine: false,
+    axisLine: false,
   };
 
   return (
@@ -139,7 +193,7 @@ const AdminDashboard = () => {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Liked — Bar Chart */}
+        {/* Top Liked */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,23 +205,35 @@ const AdminDashboard = () => {
             {t("admin.dashboard.top_liked")}
           </h3>
           <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.topLiked || []} barSize={32}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="name" tick={false} axisLine={{ stroke: "rgba(255,255,255,0.06)" }} />
-                <YAxis stroke="rgba(255,255,255,0.15)" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.02)" }} />
-                <Bar dataKey="likesCount" radius={[8, 8, 0, 0]}>
-                  {(stats?.topLiked || []).map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {likedData.length === 0 ? (
+              <EmptyChart title={noData} hint={noDataHint} />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={likedData}
+                  layout="vertical"
+                  barSize={18}
+                  margin={{ top: 4, right: 24, bottom: 4, left: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+                  <XAxis {...numberAxis} />
+                  <YAxis {...categoryAxis} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                    {likedData.map((entry, i) => (
+                      <Cell key={i} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
 
-        {/* Top Saved — Area Chart */}
+        {/* Top Saved — ҳамон шакл, то ки ду диаграмма ҳамоҳанг бошанд.
+            Пештар AreaChart буд: он хатти вақтро нишон медиҳад, вале ин ҷо
+            рӯйхати ихтисосҳост, на вақт — бо як қимат он як росткунҷаи
+            холӣ мекашид. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -175,29 +241,32 @@ const AdminDashboard = () => {
           className="bg-[#0f172a]/60 border border-white/[0.06] rounded-2xl p-6"
         >
           <h3 className="font-bold text-sm text-white flex items-center gap-2 mb-6">
-            <TrendingUp className="w-4 h-4 text-cyan-400" />
+            <Bookmark className="w-4 h-4 text-cyan-400" />
             {t("admin.dashboard.top_saved")}
           </h3>
           <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stats?.topSaved || []}>
-                <defs>
-                  <linearGradient id="savedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="name" tick={false} axisLine={{ stroke: "rgba(255,255,255,0.06)" }} />
-                <YAxis stroke="rgba(255,255,255,0.15)" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="savedCount" stroke="#06b6d4" strokeWidth={2} fill="url(#savedGradient)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {savedData.length === 0 ? (
+              <EmptyChart title={noData} hint={noDataHint} />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={savedData}
+                  layout="vertical"
+                  barSize={18}
+                  margin={{ top: 4, right: 24, bottom: 4, left: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+                  <XAxis {...numberAxis} />
+                  <YAxis {...categoryAxis} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]} fill="#06b6d4" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
 
-        {/* Likes Distribution — Pie Chart */}
+        {/* Likes Distribution */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -208,38 +277,48 @@ const AdminDashboard = () => {
             <Heart className="w-4 h-4 text-pink-400" />
             {t("admin.dashboard.likes_distribution")}
           </h3>
-          <div className="flex flex-col lg:flex-row items-center gap-8">
-            <div className="h-[250px] w-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={4}
-                    dataKey="value"
-                    strokeWidth={0}
+          {likedData.length === 0 ? (
+            <div className="h-[160px]">
+              <EmptyChart title={noData} hint={noDataHint} />
+            </div>
+          ) : (
+            <div className="flex flex-col lg:flex-row items-center gap-8">
+              <div className="h-[250px] w-[250px] flex-shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={likedData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={4}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {likedData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {likedData.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.02]"
+                    title={item.name}
                   >
-                    {pieData.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.fill }} />
+                    <span className="text-xs text-white/60 truncate flex-1">{item.name}</span>
+                    <span className="text-xs font-bold text-white">{item.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {pieData.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.02]">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.fill }} />
-                  <span className="text-xs text-white/60 truncate flex-1">{item.name}</span>
-                  <span className="text-xs font-bold text-white">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </motion.div>
       </div>
 
@@ -257,27 +336,35 @@ const AdminDashboard = () => {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/[0.04] text-white/30 text-xs uppercase tracking-wider">
-                <th className="px-6 py-3">#</th>
+                <th className="px-6 py-3 w-12">#</th>
                 <th className="px-6 py-3">{t("admin.dashboard.career_name")}</th>
-                <th className="px-6 py-3">Likes</th>
-                <th className="px-6 py-3">{t("admin.dashboard.saves")}</th>
+                <th className="px-6 py-3 w-24">Likes</th>
+                <th className="px-6 py-3 w-24">{t("admin.dashboard.saves")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03]">
-              {(stats?.topLiked || []).map((career, i) => (
-                <tr key={career.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-6 py-3 text-white/30 font-mono text-xs">{i + 1}</td>
-                  <td className="px-6 py-3 font-semibold text-white">{career.name}</td>
-                  <td className="px-6 py-3">
-                    <span className="inline-flex items-center gap-1 text-rose-400 text-xs font-bold">
-                      <Heart className="w-3 h-3" /> {career.likesCount}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-white/50">
-                    {stats?.topSaved?.find((s) => s.id === career.id)?.savedCount || 0}
+              {(stats?.topLiked || []).length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-10 text-center text-sm text-white/30">
+                    {noData}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                (stats?.topLiked || []).map((career, i) => (
+                  <tr key={career.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-3 text-white/30 font-mono text-xs">{i + 1}</td>
+                    <td className="px-6 py-3 font-semibold text-white">{career.name}</td>
+                    <td className="px-6 py-3">
+                      <span className="inline-flex items-center gap-1 text-rose-400 text-xs font-bold">
+                        <Heart className="w-3 h-3" /> {career.likesCount}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-white/50">
+                      {stats?.topSaved?.find((s) => s.id === career.id)?.savedCount || 0}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

@@ -8,6 +8,7 @@ import {
   Shield,
   ShieldOff,
   User as UserIcon,
+  BadgeCheck,
 } from "lucide-react";
 import axios from "axios";
 import { API } from "../../lib/config";
@@ -137,12 +138,19 @@ const AdminUsers = () => {
                 <AnimatePresence>
                   {filtered.map((user, i) => {
                     const isSelf = user.id === currentUser?.id;
+
+                    /* Ҳисоби бо Google сохташуда ё сабти кӯҳна ном надорад.
+                       «—» ҷадвалро пур аз хат мекард ва админ намедонист бо
+                       кӣ кор дорад; қисми имейл ҳадди ақал шиносост. */
+                    const displayName = user.name?.trim() || user.email?.split("@")[0] || "—";
                     return (
                       <motion.tr
                         key={user.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.02 }}
+                        /* Бе маҳдудият сатри 100-ум 2 сония дер мебаромад —
+                           ҷадвал «суст» менамуд. Пас аз 0.3 сония ҳама якҷо. */
+                        transition={{ delay: Math.min(i * 0.02, 0.3) }}
                         className="hover:bg-white/[0.02] transition-colors group"
                       >
                         <td className="px-6 py-3.5 text-white/20 font-mono text-xs">{i + 1}</td>
@@ -150,12 +158,12 @@ const AdminUsers = () => {
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-600/20 flex items-center justify-center border border-indigo-500/10">
                               <span className="text-xs font-bold text-indigo-400">
-                                {user.name?.charAt(0)?.toUpperCase() || "?"}
+                                {displayName.charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div>
                               <div className="font-semibold text-white text-sm">
-                                {user.name || "—"}
+                                {displayName}
                                 {isSelf && (
                                   <span className="ml-2 text-[10px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-md font-bold">
                                     {t("admin.users.you")}
@@ -167,9 +175,17 @@ const AdminUsers = () => {
                         </td>
                         <td className="px-6 py-3.5 text-white/40 text-xs">{user.email}</td>
                         <td className="px-6 py-3.5 text-center">
+                          {/* Се нақш ҳаст, на ду. Пештар танҳо `admin` ҷудо
+                              мешуд, ва мутахассисон ҳамчун «User» нишон дода
+                              мешуданд — админ онҳоро аз довталабон фарқ карда
+                              наметавонист. */}
                           {user.role === "admin" ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold">
                               <Shield className="w-3 h-3" /> Admin
+                            </span>
+                          ) : user.role === "specialist" ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-bold">
+                              <BadgeCheck className="w-3 h-3" /> {t("admin.users.specialist", "Мутахассис")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 text-white/40 text-xs font-semibold">
@@ -179,7 +195,12 @@ const AdminUsers = () => {
                         </td>
                         <td className="px-6 py-3.5 text-white/30 text-xs">{formatDate(user.createdAt)}</td>
                         <td className="px-6 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Пештар `opacity-0 group-hover:opacity-100` буд:
+                              сутуни «Амалҳо» холӣ менамуд, ва дар экрани
+                              ламсӣ, ки hover надорад, тугмаҳо ҳеҷ гоҳ
+                              намебаромаданд. Ҳоло онҳо ҳамеша дида мешаванд
+                              ва ҳангоми hover равшантар. */}
+                          <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                             <button
                               onClick={() => handleRoleChange(user)}
                               disabled={isSelf || roleLoading === user.id}

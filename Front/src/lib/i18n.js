@@ -359,6 +359,8 @@ i18n
                             popular_list: "Рӯйхати маъмултарин",
                             career_name: "Ихтисос",
                             saves: "Saves",
+                            no_data: "Ҳанӯз маълумот нест",
+                            no_data_hint: "Вақте корбарон ихтисосҳоро лайк ё захира кунанд, инҷо диаграмма пайдо мешавад.",
                             loading_error: "Хатогӣ ҳангоми боргузории омор."
                         },
                         careers: {
@@ -407,6 +409,7 @@ i18n
                             user: "Корбар",
                             email: "Email",
                             role: "Нақш",
+                            specialist: "Мутахассис",
                             date: "Сана",
                             actions: "Амалҳо",
                             you: "Шумо",
@@ -796,6 +799,8 @@ i18n
                             popular_list: "Список популярных",
                             career_name: "Профессия",
                             saves: "Saves",
+                            no_data: "Пока нет данных",
+                            no_data_hint: "Диаграммы появятся, когда пользователи начнут ставить лайки и сохранять профессии.",
                             loading_error: "Ошибка при загрузке статистики."
                         },
                         careers: {
@@ -844,6 +849,7 @@ i18n
                             user: "Пользователь",
                             email: "Email",
                             role: "Роль",
+                            specialist: "Специалист",
                             date: "Дата",
                             actions: "Действия",
                             you: "Вы",
@@ -1233,6 +1239,8 @@ i18n
                             popular_list: "Popular List",
                             career_name: "Career",
                             saves: "Saves",
+                            no_data: "No data yet",
+                            no_data_hint: "Charts appear once users like or save careers.",
                             loading_error: "Error loading statistics."
                         },
                         careers: {
@@ -1281,6 +1289,7 @@ i18n
                             user: "User",
                             email: "Email",
                             role: "Role",
+                            specialist: "Specialist",
                             date: "Date",
                             actions: "Actions",
                             you: "You",

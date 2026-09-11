@@ -97,26 +97,34 @@ const Layout = () => {
     },
   };
 
+  /*
+   * Қатори боло танҳо саҳифаҳои оммавиро мебарад.
+   *
+   * Пештар «Панел» ва «Машваратҳо» низ ин ҷо буданд — ҳафт истинод. Дар
+   * тоҷикӣ онҳо базӯр меғунҷиданд, дар русӣ («Университеты»,
+   * «Консультации») намеғунҷиданд, ва `overflow-hidden` истиноди охиринро
+   * бесадо мебурид: аз «Консультации» «Консул…» мемонд ва пахш намешуд.
+   *
+   * Фосила ва андозаи ҳарфро боз ҳам кам кардан мумкин буд, вале ҳар забони
+   * нав ҳамон мушкилро бармегардонд. Ин ду истинод ҷои дурусти худро доранд:
+   * ҳарду ба минтақаи шахсӣ тааллуқ доранд ва дар сайдбари панел аллакай
+   * ҳастанд, ва ном акнун пайванд ба панел аст.
+   */
   const navLinks = [
     { to: "/", label: t("nav.home", "Асосӣ") },
     { to: "/#cluster-groups", label: t("nav.clusters", "Кластерҳо") },
     { to: "/careers", label: t("nav.careers", "Ихтисосҳо") },
     { to: "/universities", label: t("nav.universities", "Донишгоҳҳо") },
     { to: "/about", label: t("nav.about", "Дар бора") },
-    ...(isAuthenticated
-      ? [
-          { to: "/dashboard", label: t("nav.dashboard", "Панел") },
-          { to: "/dashboard/appointments", label: t("nav.appointments", "Машваратҳо") },
-        ]
-      : []),
-    /*
-     * «Админ» дар ин ҷо нест — вай ба сайдбари панел гузашт.
-     *
-     * Ҳафт истиноди боло дар тоҷикӣ ва русӣ базӯр меғунҷанд; ҳаштумин
-     * берун мемонд ва бурида мешуд, аз ин рӯ админ панели худро тамоман
-     * намедид.
-     */
   ];
+
+  /* Дар экрани хурд ҷой маҳдуд нест — менюи кушодашаванда ҳардуро нишон медиҳад. */
+  const accountLinks = isAuthenticated
+    ? [
+        { to: "/dashboard", label: t("nav.dashboard", "Панел") },
+        { to: "/dashboard/appointments", label: t("nav.appointments", "Машваратҳо") },
+      ]
+    : [];
 
   const changeLanguage = (code) => {
     i18n.changeLanguage(code);
@@ -161,13 +169,15 @@ const Layout = () => {
               </Link>
 
               {/*
-                `justify-start`, на `justify-center`.
-                Қатори марказонидашуда ҳангоми нағунҷидан аз ҲАРДУ тараф
-                мебарояд, ва канори чапаш маҳз ба болои номи бренд меафтод:
-                аз «Асосӣ» танҳо «сосӣ» мемонд. Бо оғоз аз чап барзиёдӣ
-                ҳамеша аз тарафи рост бурида мешавад — дур аз бренд.
+                Марказонидашуда: акнун панҷ истиноди оммавӣ ҳаст, на ҳафт, ва
+                онҳо дар ҳар се забон бо фосила меғунҷанд. Бо `justify-start`
+                тамоми қатор ба чап мечаспид ва дар мобайн холигии калон
+                мемонд.
+
+                `overflow-hidden` ҳамчун эҳтиёт мемонад — агар рӯзе забони
+                нав ё истиноди нав илова шавад, қатор ба болои бренд намехазад.
               */}
-              <div className="hidden md:flex min-w-0 flex-1 items-center justify-start gap-0.5 overflow-hidden pl-1 2xl:gap-1">
+              <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden px-2 lg:gap-2">
                 {navLinks.map((link) => {
                   // Истиноди лангарӣ ("/#cluster-groups") ба бахши дохили
                   // саҳифа ишора мекунад, на ба саҳифаи алоҳида, аз ин рӯ
@@ -244,10 +254,16 @@ const Layout = () => {
 
                 {isAuthenticated ? (
                   <div className="flex items-center gap-2">
-                    <div className="hidden 2xl:flex max-w-[150px] items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-xs uppercase tracking-normal">
-                      <UserIcon className="w-3.5 h-3.5" />
+                    {/* Ном акнун пайванд ба панел аст: «Панел» аз қатори боло
+                        бароварда шуд, ва бе ин ба он ҷо роҳи зуд намемонд. */}
+                    <Link
+                      to="/dashboard"
+                      title={t("nav.dashboard", "Панел")}
+                      className="hidden xl:flex max-w-[170px] items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-xs uppercase tracking-normal transition-colors hover:bg-primary/20"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">{user?.name}</span>
-                    </div>
+                    </Link>
                     <button
                       onClick={() => {
                         logout();
@@ -294,7 +310,7 @@ const Layout = () => {
                 className="md:hidden absolute top-full left-3 right-3 mt-2 overflow-hidden glass-card shadow-2xl z-50 p-4 max-h-[calc(100vh-88px)] overflow-y-auto"
               >
                 <div className="space-y-1">
-                  {navLinks.map((link) => (
+                  {[...navLinks, ...accountLinks].map((link) => (
                     <Link
                       key={link.to}
                       to={link.to}

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight, ChevronLeft, ChevronRight,
-  Grid3X3, LayoutList, Search, SlidersHorizontal,
+  ChevronDown, Grid3X3, LayoutList, Search, SlidersHorizontal,
 } from "lucide-react";
 import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router";
@@ -166,6 +166,11 @@ const Careers = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+
+  /* Дар телефон панели филтр зери ҳамаи кортҳо меафтод: то ба он расидан
+     корбар бояд 12 ихтисосро мегузашт. Акнун он дар боло аст, вале
+     ҷамъшуда — вагарна худи он тамоми экранро мегирифт. */
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const { refreshProfile } = useAuthStore();
 
   // Debounced search
@@ -422,7 +427,31 @@ const Careers = () => {
 
           {/* ─── Рост: филтрҳо ───
               lg:sticky — панел ҳангоми скролли рӯйхати дароз дар назар мемонад. */}
-          <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+          <aside className="order-first space-y-5 lg:order-none lg:sticky lg:top-24 lg:self-start">
+            {/* Дар телефон тугмаи кушодан; аз lg панел ҳамеша кушода аст ва
+                ин тугма лозим нест. */}
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((open) => !open)}
+              aria-expanded={filtersOpen}
+              className="flex min-h-[3.25rem] w-full items-center justify-between rounded-2xl border-2 border-border bg-card px-4 text-[15px] font-semibold text-foreground transition-colors hover:bg-muted focus-ring lg:hidden"
+            >
+              <span className="flex items-center gap-2.5">
+                <SlidersHorizontal className="h-5 w-5 text-primary" strokeWidth={2} aria-hidden />
+                {t("careers_page.filters", "Филтр ва тартиб")}
+                {hasFilters && (
+                  <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
+                    {t("careers_page.active", "фаъол")}
+                  </span>
+                )}
+              </span>
+              <ChevronDown
+                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${filtersOpen ? "rotate-180" : ""}`}
+                aria-hidden
+              />
+            </button>
+
+            <div className={`space-y-5 ${filtersOpen ? "" : "hidden"} lg:block`}>
             <div className="rounded-2xl border-2 border-border bg-card p-4">
               <h2 className="mb-3 flex items-center gap-2.5 px-2 pt-1 text-lg font-semibold text-foreground">
                 <SlidersHorizontal className="h-5 w-5 text-primary" strokeWidth={2} aria-hidden />
@@ -496,6 +525,7 @@ const Careers = () => {
                   {t("careers_page.clear_btn", "Пок кардан")}
                 </button>
               )}
+            </div>
             </div>
           </aside>
         </div>

@@ -201,9 +201,16 @@ export default function SpecialtyCard({ specialty }) {
         </div>
 
         <div className="space-y-4 flex-1">
-          <h3 className="font-extrabold text-2xl text-foreground group-hover:text-primary transition-colors leading-tight">
-            {specialty.name}
-          </h3>
+          <div>
+            <h3 className="font-extrabold text-2xl text-foreground group-hover:text-primary transition-colors leading-tight">
+              {specialty.nameTranslated || specialty.name}
+            </h3>
+            {/* Номи расмии тоҷикӣ дар зер мемонад: маҳз бо ҳамин ном
+                довталаб ихтисосро дар китобчаи ММТ меёбад. */}
+            {specialty.nameTranslated && (
+              <p className="mt-1 text-sm text-muted-foreground">{specialty.name}</p>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground font-medium leading-relaxed line-clamp-3">
             {specialty.description || specialty.purpose || t('common.default_desc', "Ин ихтисоси ҷолиб ояндаи шуморо пурра тағйир дода метавонад.")}
           </p>

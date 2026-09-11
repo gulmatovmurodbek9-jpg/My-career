@@ -29,6 +29,7 @@ import {
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/authStore";
 import PsychologicalProfile from "../../components/PsychologicalProfile";
 import { API } from "../../lib/config";
@@ -36,6 +37,7 @@ import { useToast } from "../../components/toast/ToastProvider";
 import { resourceUrl } from "../../lib/resourceLinks";
 import { buildRoadmap } from "../../lib/buildRoadmap";
 import { usePageMeta } from "../../lib/usePageMeta";
+import { withLang } from "../../lib/apiLang";
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
 
@@ -131,6 +133,7 @@ function ChoosingHelp({ offerings }) {
 
 const Info = () => {
   const { id } = useParams();
+  const { i18n } = useTranslation();
   const { user, token, updateUser, refreshProfile } = useAuthStore();
   const { error: showError, success: showSuccess } = useToast();
   const [career, setCareer] = useState(null);
@@ -220,7 +223,7 @@ const Info = () => {
     async function fetchCareer() {
       try {
         setLoading(true);
-        const { data } = await axios.get(`${API}/careers/${id}`);
+        const { data } = await axios.get(`${API}/careers/${id}`, { params: withLang() });
         setCareer(data);
         setLikesCount(data.likesCount || 0);
       } catch (error) {
@@ -241,7 +244,9 @@ const Info = () => {
     fetchCareer();
     fetchOfferings();
     window.scrollTo(0, 0);
-  }, [id]); // ← user-ро набояд гузорем — infinite loop мешавад
+    /* Забон дар вобастагиҳост: бе он иваз кардани забон танҳо интерфейсро
+       мегардонд ва мазмуни ихтисос бо забони кӯҳна мемонд. */
+  }, [id, i18n.language]); // user-ро набояд гузорем — infinite loop мешавад
 
   // Like/Save холати аввалро аз user нишон деҳ (танҳо вақте user ё id тағйир ёбад)
   useEffect(() => {
@@ -483,8 +488,13 @@ const Info = () => {
                   )}
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight">
-                  {career.name}
+                  {career.nameTranslated || career.name}
                 </h1>
+                {/* Номи расмии тоҷикӣ ҳамеша дида мешавад — ҳуҷҷат маҳз бо
+                    ҳамин ном ва бо ҳамин код супорида мешавад. */}
+                {career.nameTranslated && (
+                  <p className="mt-2 text-base text-muted-foreground">{career.name}</p>
+                )}
               </div>
             </div>
 

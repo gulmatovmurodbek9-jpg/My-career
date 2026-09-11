@@ -12,6 +12,7 @@ import LucideIconRenderer from "../../components/admin/LucideIconRenderer";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
 import { usePageMeta } from "../../lib/usePageMeta";
+import { withLang } from "../../lib/apiLang";
 
 const LIMIT = 12; // items per page
 
@@ -119,7 +120,7 @@ const FilterRow = ({ active, onClick, icon, label, count }) => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const Careers = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [careers, setCareers] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: LIMIT, lastPage: 1 });
@@ -211,7 +212,7 @@ const Careers = () => {
     };
 
     axios
-      .get(`${API}/careers`, { params, signal: controller.signal })
+      .get(`${API}/careers`, { params: withLang(params), signal: controller.signal })
       .then(({ data }) => {
         setCareers(data.data || []);
         setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
@@ -226,7 +227,9 @@ const Careers = () => {
       });
 
     return () => controller.abort();
-  }, [currentPage, debouncedSearch, selectedCluster, priceFilter, cityFilter]);
+    /* Забон дар вобастагиҳост: бе он рӯйхат ҳангоми иваз шудани забон
+       бо матни кӯҳна мемонад. */
+  }, [currentPage, debouncedSearch, selectedCluster, priceFilter, cityFilter, i18n.language]);
 
   // Fetch clusters and cities once
   useEffect(() => {

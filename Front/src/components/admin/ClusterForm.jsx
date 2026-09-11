@@ -27,8 +27,8 @@ const ClusterForm = ({ open, onClose, onSubmit, cluster = null, loading = false 
     onSubmit(form);
   };
 
-  const inputClass = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all";
-  const labelClass = "block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider";
+  const inputClass = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-[15px] text-white placeholder:text-white/35 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all";
+  const labelClass = "block text-[13px] font-semibold text-white/50 mb-1.5 uppercase tracking-wider";
 
   return (
     <AnimatePresence>
@@ -38,10 +38,10 @@ const ClusterForm = ({ open, onClose, onSubmit, cluster = null, loading = false 
           <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: "spring", damping: 25, stiffness: 400 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md bg-[#0c1222] border border-white/10 rounded-2xl shadow-2xl z-10">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/5">
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="text-xl font-bold text-white">
                 {cluster ? t("admin.clusters.edit_title") : t("admin.clusters.create_title")}
               </h2>
-              <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors">
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-white/55 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -62,16 +62,16 @@ const ClusterForm = ({ open, onClose, onSubmit, cluster = null, loading = false 
               </div>
               <div>
                 <label className={labelClass}>{t("admin.form.purpose", "Барои чӣ?")}</label>
-                <textarea value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} className={`${inputClass} min-h-[80px] resize-none`} placeholder="Мақсади ин кластер дар чист?" />
+                <textarea value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} className={`${inputClass} min-h-[80px] resize-none`} placeholder={t("admin.form.cluster_purpose_hint", "Мақсади ин кластер дар чист?")} />
               </div>
             </form>
 
             {/* Footer */}
             <div className="flex justify-end gap-3 p-6 border-t border-white/5">
-              <button type="button" onClick={onClose} disabled={loading} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-sm font-semibold border border-white/10 transition-all cursor-pointer">
+              <button type="button" onClick={onClose} disabled={loading} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-[15px] font-semibold border border-white/10 transition-all cursor-pointer">
                 {t("admin.form.cancel")}
               </button>
-              <button onClick={handleSubmit} disabled={loading || !form.clusterName.trim()} className="px-5 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-sm font-bold border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40">
+              <button onClick={handleSubmit} disabled={loading || !form.clusterName.trim()} className="px-5 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-[15px] font-bold border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {cluster ? t("admin.form.save") : t("admin.form.create")}
               </button>

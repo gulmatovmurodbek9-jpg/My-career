@@ -19,6 +19,15 @@ export class UsersController {
         return this.usersService.findSpecialists(true);
     }
 
+    @Get('admin/activity')
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Who is on the site right now, and how many use it (Admin only)' })
+    async getActivity() {
+        return this.usersService.getActivityStats();
+    }
+
     @Get('admin/specialists')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles('admin')

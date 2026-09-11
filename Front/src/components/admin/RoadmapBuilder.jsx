@@ -65,10 +65,10 @@ const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-foreground">Роҳнамои касб (Roadmap)</h3>
+                <h3 className="text-xl font-bold text-foreground">Роҳнамои касб (Roadmap)</h3>
                 <button
                     onClick={addStep}
-                    className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5 h-auto"
+                    className="btn-primary text-[13px] px-3 py-1.5 flex items-center gap-1.5 h-auto"
                 >
                     <Plus className="w-3.5 h-3.5" />
                     Қадами нав
@@ -87,13 +87,13 @@ const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
                         >
                             {/* Step Header */}
                             <div className="flex items-center gap-3 bg-muted/20 px-4 py-3 border-b border-border/50">
-                                <div className="w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-full bg-primary/20 text-primary text-[13px] font-bold flex items-center justify-center">
                                     {step.step}
                                 </div>
                                 <input
                                     value={step.title}
                                     onChange={(e) => updateStepTitle(idx, e.target.value)}
-                                    className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold text-foreground py-0"
+                                    className="flex-1 bg-transparent border-none focus:ring-0 text-[15px] font-bold text-foreground py-0"
                                     placeholder="Номи қадам..."
                                 />
                                 <button
@@ -106,7 +106,7 @@ const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
 
                             {/* Tasks List */}
                             <div className="p-4 space-y-3">
-                                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                                <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
                                     Вазифаҳо / Мавзӯъҳо
                                 </div>
                                 {step.tasks.map((task, tIdx) => (
@@ -115,7 +115,7 @@ const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
                                         <input
                                             value={task}
                                             onChange={(e) => updateTask(idx, tIdx, e.target.value)}
-                                            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-foreground/80 py-0"
+                                            className="flex-1 bg-transparent border-none focus:ring-0 text-[15px] text-foreground/80 py-0"
                                         />
                                         <button
                                             onClick={() => removeTask(idx, tIdx)}

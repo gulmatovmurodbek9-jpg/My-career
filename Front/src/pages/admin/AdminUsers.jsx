@@ -91,21 +91,21 @@ const AdminUsers = () => {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("admin.users.title")}</h1>
-          <p className="text-sm text-white/30 mt-1">{t("admin.users.count", { count: users.length })}</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">{t("admin.users.title")}</h1>
+          <p className="text-[15px] text-white/45 mt-1">{t("admin.users.count", { count: users.length })}</p>
         </div>
       </motion.div>
 
       {/* Search */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("admin.users.search")}
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-all"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-[15px] text-white placeholder:text-white/35 outline-none focus:border-indigo-500/50 transition-all"
           />
         </div>
       </motion.div>
@@ -117,15 +117,15 @@ const AdminUsers = () => {
             <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-white/30">
+          <div className="flex flex-col items-center justify-center py-20 text-white/45">
             <UsersIcon className="w-8 h-8 mb-3" />
-            <p className="text-sm">{t("admin.users.not_found")}</p>
+            <p className="text-[15px]">{t("admin.users.not_found")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-[15px]">
               <thead>
-                <tr className="border-b border-white/[0.04] text-white/30 text-xs uppercase tracking-wider">
+                <tr className="border-b border-white/[0.04] text-white/45 text-[13px] uppercase tracking-wider">
                   <th className="px-6 py-3 w-12">#</th>
                   <th className="px-6 py-3">{t("admin.users.user")}</th>
                   <th className="px-6 py-3">{t("admin.users.email")}</th>
@@ -153,19 +153,19 @@ const AdminUsers = () => {
                         transition={{ delay: Math.min(i * 0.02, 0.3) }}
                         className="hover:bg-white/[0.02] transition-colors group"
                       >
-                        <td className="px-6 py-3.5 text-white/20 font-mono text-xs">{i + 1}</td>
+                        <td className="px-6 py-3.5 text-white/35 font-mono text-[13px]">{i + 1}</td>
                         <td className="px-6 py-3.5">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-600/20 flex items-center justify-center border border-indigo-500/10">
-                              <span className="text-xs font-bold text-indigo-400">
+                              <span className="text-[13px] font-bold text-indigo-400">
                                 {displayName.charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div>
-                              <div className="font-semibold text-white text-sm">
+                              <div className="font-semibold text-white text-[15px]">
                                 {displayName}
                                 {isSelf && (
-                                  <span className="ml-2 text-[10px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-md font-bold">
+                                  <span className="ml-2 text-[11px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-md font-bold">
                                     {t("admin.users.you")}
                                   </span>
                                 )}
@@ -173,27 +173,27 @@ const AdminUsers = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-3.5 text-white/40 text-xs">{user.email}</td>
+                        <td className="px-6 py-3.5 text-white/55 text-[13px]">{user.email}</td>
                         <td className="px-6 py-3.5 text-center">
                           {/* Се нақш ҳаст, на ду. Пештар танҳо `admin` ҷудо
                               мешуд, ва мутахассисон ҳамчун «User» нишон дода
                               мешуданд — админ онҳоро аз довталабон фарқ карда
                               наметавонист. */}
                           {user.role === "admin" ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-[13px] font-bold">
                               <Shield className="w-3 h-3" /> Admin
                             </span>
                           ) : user.role === "specialist" ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-bold">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[13px] font-bold">
                               <BadgeCheck className="w-3 h-3" /> {t("admin.users.specialist", "Мутахассис")}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 text-white/40 text-xs font-semibold">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 text-white/55 text-[13px] font-semibold">
                               <UserIcon className="w-3 h-3" /> User
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-3.5 text-white/30 text-xs">{formatDate(user.createdAt)}</td>
+                        <td className="px-6 py-3.5 text-white/45 text-[13px]">{formatDate(user.createdAt)}</td>
                         <td className="px-6 py-3.5 text-right">
                           {/* Пештар `opacity-0 group-hover:opacity-100` буд:
                               сутуни «Амалҳо» холӣ менамуд, ва дар экрани
@@ -204,7 +204,7 @@ const AdminUsers = () => {
                             <button
                               onClick={() => handleRoleChange(user)}
                               disabled={isSelf || roleLoading === user.id}
-                              className={`p-2 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold ${
+                              className={`p-2 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[13px] font-semibold ${
                                 isSelf
                                   ? "opacity-20 cursor-not-allowed"
                                   : user.role === "admin"

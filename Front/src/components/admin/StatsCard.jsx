@@ -28,10 +28,10 @@ const StatsCard = ({ icon: Icon, label, value, color, bg, delay = 0 }) => {
         </div>
       </div>
 
-      <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
+      <div className="text-4xl font-extrabold text-white tracking-tight mb-1">
         {value ?? "—"}
       </div>
-      <div className="text-sm font-medium text-white/40">{label}</div>
+      <div className="text-[15px] font-medium text-white/55">{label}</div>
     </motion.div>
   );
 };

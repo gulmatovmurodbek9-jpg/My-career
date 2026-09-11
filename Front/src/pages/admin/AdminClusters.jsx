@@ -113,12 +113,12 @@ const AdminClusters = () => {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("admin.clusters.title")}</h1>
-          <p className="text-sm text-white/30 mt-1">{t("admin.clusters.count", { count: clusters.length })}</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">{t("admin.clusters.title")}</h1>
+          <p className="text-[15px] text-white/45 mt-1">{t("admin.clusters.count", { count: clusters.length })}</p>
         </div>
         <button
           onClick={() => { setEditingCluster(null); setFormOpen(true); }}
-          className="px-4 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-sm font-bold border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-2"
+          className="px-4 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-[15px] font-bold border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           {t("admin.clusters.create")}
@@ -131,9 +131,9 @@ const AdminClusters = () => {
           <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
         </div>
       ) : clusters.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-white/30">
+        <div className="flex flex-col items-center justify-center py-20 text-white/45">
           <FolderKanban className="w-8 h-8 mb-3" />
-          <p className="text-sm">{t("admin.clusters.not_found")}</p>
+          <p className="text-[15px]">{t("admin.clusters.not_found")}</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -160,9 +160,9 @@ const AdminClusters = () => {
                           <LucideIconRenderer name={cluster.clusterIcon} className="w-5 h-5" />
                         </div>
                         <div>
-                          <h3 className="font-bold text-white text-[15px] leading-tight">{cluster.clusterName}</h3>
+                          <h3 className="font-bold text-white text-[17px] leading-tight">{cluster.clusterName}</h3>
                           {riasec && (
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold mt-1 ${riasec.bg} ${riasec.text} border ${riasec.border}`}>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold mt-1 ${riasec.bg} ${riasec.text} border ${riasec.border}`}>
                               {cluster.riasecPrimary}: {riasec.label}
                             </span>
                           )}
@@ -186,14 +186,14 @@ const AdminClusters = () => {
 
                     {/* Description */}
                     {cluster.description && (
-                      <p className="text-xs text-white/30 leading-relaxed line-clamp-2 mb-4">{cluster.description}</p>
+                      <p className="text-[13px] text-white/45 leading-relaxed line-clamp-2 mb-4">{cluster.description}</p>
                     )}
 
                     {/* Footer stats */}
                     <div className="flex items-center gap-2 pt-3 border-t border-white/[0.04]">
-                      <Briefcase className="w-3.5 h-3.5 text-white/20" />
-                      <span className="text-xs text-white/30">{t("admin.clusters.careers_count")}:</span>
-                      <span className="text-xs font-bold text-white/60">{cluster.careers?.length ?? 0}</span>
+                      <Briefcase className="w-3.5 h-3.5 text-white/35" />
+                      <span className="text-[13px] text-white/45">{t("admin.clusters.careers_count")}:</span>
+                      <span className="text-[13px] font-bold text-white/60">{cluster.careers?.length ?? 0}</span>
                     </div>
                   </div>
                 </motion.div>

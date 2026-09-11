@@ -14,6 +14,14 @@ export class Career {
     @Index()
     code: string;
 
+    /**
+     * Ҳамон код, вале барои тартиб: танҳо рақамҳо, то 20 аломат бо сифр.
+     * Дар база триггер онро пур мекунад (ниг. scripts/career-code-sort.sql),
+     * барои ҳамин аз ин ҷо навишта намешавад.
+     */
+    @Column({ type: 'text', nullable: true, select: false, insert: false, update: false })
+    codeSort: string;
+
     @Column()
     name: string;
 

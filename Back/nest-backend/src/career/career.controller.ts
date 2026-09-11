@@ -197,9 +197,10 @@ export class CareerController {
         @Body() body: { scores: any; careers: string[]; lang?: string; compareQuestion?: string },
         @Request() req,
     ) {
-        if (!body.scores) {
-            throw new BadRequestException('Натиҷаҳои санҷишро фиристед');
-        }
+        /* Санҷиш ҳатмӣ набуд ва набояд бошад: муқоисаи ду ихтисос дар бораи
+           худи ҳамон ду ихтисос ва саволи корбар аст. Холҳои ММТ танҳо
+           ҷавобро шахсӣ мекунанд. Пештар корбаре, ки санҷиш насупорида буд,
+           ба ҷои муқоиса «Хатогӣ рӯй дод» мегирифт. */
         if (!body.careers || body.careers.length < 2) {
             throw new BadRequestException('Ҳадди ақал 2 ихтисосро интихоб кунед');
         }

@@ -667,7 +667,7 @@ const AiChat = () => {
                             </motion.div>
                         </div>
                         <div className="space-y-2 max-w-sm">
-                            <h2 className="text-2xl font-black tracking-tight bg-gradient-to-r from-primary to-accent-blue bg-clip-text text-transparent">
+                            <h2 className="text-2xl font-black tracking-tight text-gradient-primary">
                                 {currentDict.heroTitle}
                             </h2>
                             <p className="text-[hsl(var(--muted-foreground))] text-sm font-medium leading-relaxed opacity-70">

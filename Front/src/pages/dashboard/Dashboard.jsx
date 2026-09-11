@@ -11,6 +11,7 @@ import {
     Scale,
     MessageSquare,
     FileText,
+    ShieldCheck,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LazyPsychologicalProfile } from "../../components/PsychologicalProfile";
@@ -134,14 +135,28 @@ const Dashboard = () => {
                         </h1>
                     </div>
 
-                    {!matches.length && (
-                        <Link to="/quiz">
-                            <button className="btn-primary !px-6 !py-3 !text-xs !rounded-xl group cursor-pointer">
-                                <BrainCircuit className="w-4 h-4" />
-                                {t('dashboard.start_quiz_btn')}
-                            </button>
-                        </Link>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* Админ ба ҳамин саҳифа меафтад ва паёми «тестро
+                            супоред»-ро мебинад, ки ба ӯ дахл надорад. Роҳ ба
+                            панели идора бояд ҳамин ҷо намоён бошад. */}
+                        {user?.role === 'admin' && (
+                            <Link to="/admin">
+                                <button className="flex cursor-pointer items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-6 py-3 text-xs font-bold text-primary transition-colors hover:bg-primary/20">
+                                    <ShieldCheck className="h-4 w-4" />
+                                    {t('nav.admin', 'Панели админ')}
+                                </button>
+                            </Link>
+                        )}
+
+                        {!matches.length && (
+                            <Link to="/quiz">
+                                <button className="btn-primary !px-6 !py-3 !text-xs !rounded-xl group cursor-pointer">
+                                    <BrainCircuit className="w-4 h-4" />
+                                    {t('dashboard.start_quiz_btn')}
+                                </button>
+                            </Link>
+                        )}
+                    </div>
                 </header>
 
                 {matches.length > 0 ? (

@@ -6,19 +6,30 @@ import {
     MessageCircle,
     Settings,
     User,
-    ChevronRight
+    ChevronRight,
+    ShieldCheck
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../store/authStore';
 
 const DashboardSidebar = () => {
     const { t } = useTranslation();
     const location = useLocation();
+    const { user } = useAuthStore();
 
+    /*
+     * Барои админ пайванд ба панели идора маҳз ин ҷост, на дар навбари боло.
+     * Дар боло ҳафт истинод аллакай ҷой надоранд ва ҳаштумин бурида мешуд —
+     * админ панели худро тамоман намедид.
+     */
     const menuItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), to: '/dashboard' },
         { icon: BrainCircuit, label: t('nav.quiz'), to: '/quiz' },
         { icon: MessageCircle, label: t('nav.ai_advisor'), to: '/dashboard/ai-chat' },
+        ...(user?.role === 'admin'
+            ? [{ icon: ShieldCheck, label: t('nav.admin', 'Панели админ'), to: '/admin' }]
+            : []),
     ];
 
     return (

@@ -18,6 +18,10 @@ i18n
         resources: {
             tj: {
                 translation: {
+                    not_found: {
+                        title: "Саҳифа ёфт нашуд",
+                        text: "Чунин саҳифа вуҷуд надорад ё кӯчонида шудааст. Аз ин ҷо давом диҳед:",
+                    },
                     nav: {
                         home: "Асосӣ",
                         careers: "Ихтисосҳо",
@@ -48,6 +52,7 @@ i18n
                         back: "Ба ақиб",
                         loading: "Боргузорӣ...",
                         career_steps: "Қадамҳои Касб",
+                        code: "Код",
                         course: "Курси таълимӣ",
                         default_desc: "Ин ихтисоси ҷолиб ояндаи шуморо пурра тағйир дода метавонад.",
                         career_desc_short: "Ихтисоси ояндадор барои донишҷӯён.",
@@ -224,6 +229,8 @@ i18n
                         empty_title: "Роҳи худро кашф кунед",
                         empty_desc: "Шумо ҳанӯз санҷиши психолологиро нагузаштаед. Ин қадами аввалин ба сӯи касби орзуҳои шумост.",
                         start_quiz_btn: "Гузаштани санҷиш",
+                        plan_title: "Рӯйхати ҳуҷҷатсупорӣ",
+                        plan_desc: "Ихтисос ва донишгоҳро интихоб кунед ва рӯйхатро чоп намоед",
                         ai_advisor_title: "Тавсияи AI барои касб",
                         ai_advisor_desc: "Таҳлили мушаххаси касбӣ бо зеҳни сунъӣ дар асоси натиҷаи санҷиши шумо",
                         compare_title: "Муқоисаи ихтисосҳо",
@@ -501,6 +508,9 @@ i18n
                             riasec_primary: "RIASEC Асосӣ",
                             tab_basic: "Асосӣ",
                             tab_skills: "Малакаҳо",
+                            name_required: "Аввал номи ихтисосро нависед",
+                            search: "Ҷустуҷӯ...",
+                            cluster_purpose_hint: "Мақсади ин кластер дар чист?",
                             tab_career: "Касб",
                             tab_riasec: "RIASEC"
                         }
@@ -509,6 +519,10 @@ i18n
             },
             ru: {
                 translation: {
+                    not_found: {
+                        title: "Страница не найдена",
+                        text: "Такой страницы нет или она была перемещена. Продолжите отсюда:",
+                    },
                     nav: {
                         home: "Главная",
                         careers: "Профессии",
@@ -539,6 +553,7 @@ i18n
                         back: "Назад",
                         loading: "Загрузка...",
                         career_steps: "Этапы карьеры",
+                        code: "Код",
                         course: "Учебный курс",
                         default_desc: "Эта интересная профессия может полностью изменить ваше будущее.",
                         career_desc_short: "Перспективная профессия для студентов.",
@@ -655,6 +670,8 @@ i18n
                         empty_title: "Откройте свой путь",
                         empty_desc: "Вы еще не прошли психологический тест. Это первый шаг к карьере вашей мечты.",
                         start_quiz_btn: "Пройти тест",
+                        plan_title: "Список для подачи документов",
+                        plan_desc: "Выберите специальность и вуз, затем распечатайте список",
                         ai_advisor_title: "AI Карьерный Отчёт",
                         ai_advisor_desc: "Подробный анализ карьеры с помощью ИИ на основе результата вашего теста",
                         compare_title: "Сравнение профессий",
@@ -990,6 +1007,9 @@ i18n
                             riasec_primary: "Основной RIASEC",
                             tab_basic: "Основное",
                             tab_skills: "Навыки",
+                            name_required: "Сначала укажите название специальности",
+                            search: "Поиск...",
+                            cluster_purpose_hint: "В чём цель этого кластера?",
                             tab_career: "Карьера",
                             tab_riasec: "RIASEC"
                         }
@@ -998,6 +1018,10 @@ i18n
             },
             en: {
                 translation: {
+                    not_found: {
+                        title: "Page not found",
+                        text: "This page does not exist or has moved. Continue from here:",
+                    },
                     nav: {
                         home: "Home",
                         careers: "Careers",
@@ -1028,6 +1052,7 @@ i18n
                         back: "Back",
                         loading: "Loading...",
                         career_steps: "Career Steps",
+                        code: "Code",
                         course: "Educational Course",
                         default_desc: "This interesting career can completely change your future.",
                         career_desc_short: "Promising career for students.",
@@ -1144,6 +1169,8 @@ i18n
                         empty_title: "Discover Your Path",
                         empty_desc: "You haven't taken the career test yet. It's the first step towards your dream career.",
                         start_quiz_btn: "Take the Quiz",
+                        plan_title: "Application list",
+                        plan_desc: "Pick a specialty and a university, then print the list",
                         ai_advisor_title: "AI Career Report",
                         ai_advisor_desc: "Get a detailed AI-powered career analysis based on your quiz result",
                         compare_title: "Career Comparison",
@@ -1479,6 +1506,9 @@ i18n
                             riasec_primary: "Primary RIASEC",
                             tab_basic: "Basic",
                             tab_skills: "Skills",
+                            name_required: "Enter the specialty name first",
+                            search: "Search...",
+                            cluster_purpose_hint: "What is this cluster for?",
                             tab_career: "Career",
                             tab_riasec: "RIASEC"
                         }

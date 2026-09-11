@@ -9,6 +9,7 @@ import { ProtectedRoute, PublicRoute, AdminRoute } from "./components/RouteGuard
 // Бақияи саҳифаҳо ҳангоми гузариш бор мешаванд: пеш аз ин ҳама чиз (Leaflet,
 // Recharts, three.js, тамоми панели админ) дар як bundle-и 2.4 МБ ҷамъ мешуд,
 // ки корбари сафҳаи асосӣ 90%-и онро ҳеҷ гоҳ истифода намебарад.
+const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/about/about"));
 const Careers = lazy(() => import("./pages/careers/careers"));
 const Universities = lazy(() => import("./pages/universities/Universities"));
@@ -93,6 +94,10 @@ const App = () => {
                 мепартояд, ва касе ки дар як таб кушода мондааст, саҳифаи
                 барқарорсозиро ҳеҷ гоҳ дида наметавонист. */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
+
+            {/* Роҳи захиравӣ. Бе он ҳар суроғаи номаълум экрани комилан
+                сафед медод — аз ҷумла ду истиноди худи сайдбар. */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

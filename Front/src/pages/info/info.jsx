@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import {
+  AlertCircle,
   BookOpen,
   ArrowLeft,
   Award,
@@ -25,7 +26,7 @@ import {
   Heart,
   Bookmark,
 } from "lucide-react";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
@@ -130,7 +131,7 @@ function ChoosingHelp({ offerings }) {
 const Info = () => {
   const { id } = useParams();
   const { user, token, updateUser, refreshProfile } = useAuthStore();
-  const { error: showError, success: showSuccess, warning: showWarning } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
   const [career, setCareer] = useState(null);
   const [offerings, setOfferings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,15 +147,6 @@ const Info = () => {
   const [planIds, setPlanIds] = useState(new Set());
   const [planBusyId, setPlanBusyId] = useState(null);
   const [clusterConflict, setClusterConflict] = useState(null);
-  const conflictRef = useRef(null);
-
-  /* Панели бархӯрд дар БОЛОИ ҷадвал меистад, вале тугмаи «Илова» дар поёни
-     он аст. Корбар пахш мекард, паём берун аз экран пайдо мешуд, ва аз
-     нигоҳи ӯ тугма умуман кор намекард — бе ҳеҷ хатое. */
-  useEffect(() => {
-    if (!clusterConflict) return;
-    conflictRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [clusterConflict]);
 
   useEffect(() => {
     if (!token) return;
@@ -190,20 +182,12 @@ const Info = () => {
       }
     } catch (err) {
       /*
-       * Хатои «кластери дигар» роҳи баромад дорад, аз ин рӯ ба ҷои паёми
-       * оддӣ панели тасдиқ нишон дода мешавад: корбар мебинад чаро рад шуд
-       * ва метавонад ҳамон ҷо рӯйхатро тоза кунад. Пештар ӯ бояд худаш
-       * мефаҳмид, ки ба кадом саҳифа гузарад.
-       *
-       * Танҳо бархӯрди кластерро бо панели «тоза кунам» ҳал кардан мумкин
-       * аст. Агар рӯйхат пур бошад, ҳамон панел ҳамаи 12 интихобро нест
-       * мекард — барои он ҳолат паёми оддӣ бас аст.
+       * «Кластери дигар» роҳи баромад дорад, аз ин рӯ равзанаи тасдиқ
+       * кушода мешавад. «Рӯйхат пур» бошад — не: ҳамон равзана ҳамаи 12
+       * интихобро нест мекард, барои он ҳолат паёми оддӣ бас аст.
        */
       if (err.response?.status === 409 && err.response.data?.code !== "PLAN_FULL") {
         setClusterConflict({ message: err.response.data?.message, offeringId });
-        /* Панел дар болои ҷадвал аст — то саҳифа то он ҷо мелағжад, ҳушдор
-           дарҳол дар назди чашм мемонад. */
-        showWarning("Ин ихтисос аз кластери дигар аст — шарҳ дар боло");
       } else {
         showError(err.response?.data?.message || "Иҷро нашуд");
       }
@@ -710,39 +694,6 @@ const Info = () => {
               subtitle={`${offerings.length} пешниҳод дар ${new Set(offerings.map(o => o.university?.name)).size} муассиса — аз арзонтарин сар карда`}
               gradient="from-blue-500 to-cyan-500"
             >
-              {/* Ҳангоми бархӯрди кластер: сабаб ва роҳи баромад дар як ҷо. */}
-              {clusterConflict && (
-                <div ref={conflictRef} className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/10 p-5">
-                  <p className="text-sm leading-relaxed text-foreground">
-                    {clusterConflict.message}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={clearPlanAndAdd}
-                      className="cursor-pointer rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
-                    >
-                      Рӯйхатро тоза кунам ва инро илова намоям
-                    </button>
-                    <Link to="/dashboard/plan">
-                      <button
-                        type="button"
-                        className="cursor-pointer rounded-xl border border-border px-4 py-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        Рӯйхатро дидан
-                      </button>
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => setClusterConflict(null)}
-                      className="cursor-pointer rounded-xl px-4 py-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      Бекор
-                    </button>
-                  </div>
-                </div>
-              )}
-
               <ChoosingHelp offerings={offerings} />
 
               <div className="overflow-x-auto -mx-2 px-2">
@@ -937,6 +888,62 @@ const Info = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Бархӯрди кластер — равзанаи марказӣ, на панели дохили саҳифа.
+          Панел дар болои ҷадвал меистод ва саҳифа то он ҷо мелағжид: корбар
+          ҷои худро дар рӯйхати дарози пешниҳодҳо гум мекард. Равзана дар
+          ҳамон ҷое мебарояд, ки чашм аст, ва саҳифа ҳеҷ намеҷунбад. */}
+      {clusterConflict && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          onClick={() => setClusterConflict(null)}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="mb-1.5 font-bold text-foreground">Ин ихтисос аз кластери дигар аст</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {clusterConflict.message}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={clearPlanAndAdd}
+                className="cursor-pointer rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Рӯйхатро тоза кунам ва инро илова намоям
+              </button>
+              <Link to="/dashboard/plan">
+                <button
+                  type="button"
+                  className="w-full cursor-pointer rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Рӯйхатро дидан
+                </button>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setClusterConflict(null)}
+                className="cursor-pointer rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground sm:ml-auto"
+              >
+                Бекор
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

@@ -181,6 +181,25 @@ export class CareerService {
             qb.andWhere('career.hasFreeSeats = true');
         }
 
+        /*
+         * Тартиб аз рӯи рақами расмии ММТ.
+         *
+         * Пештар ҳеҷ ORDER BY набуд ва Postgres сатрҳоро бо тартиби дилхоҳ
+         * бармегардонд: як саҳифа имрӯз як хел, фардо дигар хел меомад.
+         *
+         * Кодҳо дарозии гуногун доранд (аз 5 то 18 рақам), барои ҳамин
+         * муқоисаи оддии матнӣ «10020503»-ро пеш аз «1010101» мегузошт.
+         * Ҳамаи рақамҳо гирифта ва то 20 аломат бо сифр пур карда мешаванд.
+         * Ин ҳисоб дар худи база ҳамчун сутуни GENERATED нигоҳ дошта мешавад:
+         * TypeORM ифодаи хомро дар ORDER BY ҳангоми саҳифабандӣ қабул намекунад
+         * («alias was not found»), вале сутуни ҳақиқиро бемалол мефаҳмад.
+         */
+        /* Сутун бо select: false аст, вале ҳангоми саҳифабандӣ TypeORM
+           зердархости DISTINCT месозад ва он ҷо танҳо сутунҳои интихобшуда
+           ҳастанд — бе ин сатр «distinctAlias.career_codeSort не существует». */
+        qb.addSelect('career.codeSort');
+        qb.orderBy('career.codeSort', 'ASC').addOrderBy('career.name', 'ASC');
+
         qb.skip(skip).take(limit);
 
         const [data, total] = await qb.getManyAndCount();
@@ -1329,7 +1348,10 @@ ${instr.format}
 
     async compareCarers(scores: any, careerNames: string[], lang: string = 'tj', compareQuestion?: string): Promise<any> {
         const mmt = scores?.mmtClusters || scores;
-        
+        /* Бе санҷиш «undefined» ба промпт мерафт ва модел дар бораи «профили
+           холии корбар» сафсата менавишт. Набудани сатр тозатар аст. */
+        const hasQuizScores = !!mmt && typeof mmt === 'object' && Object.keys(mmt).length > 0;
+
         // 1. Fetch careers by names
         const careers = await this.careerRepository.find({
             where: { name: In(careerNames) },
@@ -1438,7 +1460,9 @@ If the user asks for differences, give direct differences plus plus/minus for ea
 `;
 
         const prompt = `${instr.role}
-Натиҷаҳои санҷиши MMT-и корбар: ${JSON.stringify(mmt)}.
+${hasQuizScores
+                ? `Натиҷаҳои санҷиши MMT-и корбар: ${JSON.stringify(mmt)}.`
+                : 'Корбар ҳанӯз санҷиши ММТ-ро насупоридааст — муқоисаро аз рӯи худи ихтисосҳо ва саволи ӯ кунед, дар бораи майлу хислати ӯ тахмин назанед.'}
 Ихтисосҳо барои муқоиса:
 ${careersContext}
 

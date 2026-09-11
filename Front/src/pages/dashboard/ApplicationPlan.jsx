@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
     ArrowLeft,
     Printer,
+    Download,
     Trash2,
     Loader2,
     AlertCircle,
@@ -85,6 +86,99 @@ const ApplicationPlan = () => {
         }
     };
 
+    /*
+     * Боргирии рӯйхат ба файл.
+     *
+     * Чоп воқеан PDF медиҳад (браузер «Save as PDF» дорад), вале он ҳамеша
+     * пеш аз худ равзанаи чопро мекушояд ва интернет лозим аст, то саҳифа
+     * кушода бошад. Ин ҷо як ҳуҷҷати мустақил сохта мешавад: файл дар
+     * компютер мемонад, бе сервер кушода мешавад ва аз он ҷо низ чоп кардан
+     * мумкин аст.
+     *
+     * HTML аст, на PDF-и сохташуда дар браузер: ҳарфҳои ғ ӣ қ ӯ ҳ ҷ дар
+     * китобхонаҳои PDF шрифти алоҳидаи дарунсохт талаб мекунанд, ва агар он
+     * нарасад, ба ҷои ҳарф мураббаъ мебарояд. Ин хатар дар намоиш ҷои худро
+     * надорад.
+     */
+    const escapeHtml = (value) =>
+        String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+
+    const downloadPlan = () => {
+        const today = new Date().toLocaleDateString("ru-RU");
+        const rows = items
+            .map((item) => `
+        <tr>
+          <td class="num">${item.order}</td>
+          <td class="code">${escapeHtml(item.code)}</td>
+          <td><strong>${escapeHtml(item.careerName)}</strong></td>
+          <td>${escapeHtml(item.universityName)}${item.city ? `<div class="dim">${escapeHtml(item.city)}</div>` : ""}</td>
+          <td>${escapeHtml(item.studyForm)}</td>
+          <td><span class="${item.isFree ? "free" : "paid"}">${escapeHtml(item.paymentType)}</span>${item.seats > 0 ? `<div class="dim">${item.seats} ҷой</div>` : ""}</td>
+          <td class="price">${item.isFree ? "—" : money(item.tuitionFee) ? `${money(item.tuitionFee)} сом.` : "—"}</td>
+        </tr>`)
+            .join("");
+
+        const html = `<!doctype html>
+<html lang="tg">
+<head>
+<meta charset="utf-8">
+<title>Рӯйхати ҳуҷҷатсупорӣ</title>
+<style>
+  body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; color: #0f172a; margin: 32px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #64748b; font-size: 13px; margin: 0 0 4px; }
+  .cluster { display: inline-block; margin: 10px 0 18px; padding: 5px 12px; border-radius: 999px;
+             background: #eef2ff; color: #3730a3; font-size: 13px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+       color: #64748b; border-bottom: 1px solid #e2e8f0; padding: 0 8px 8px 0; }
+  td { padding: 10px 8px 10px 0; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  .num { color: #94a3b8; width: 28px; }
+  .code { font-family: Consolas, monospace; color: #64748b; white-space: nowrap; }
+  .dim { color: #94a3b8; font-size: 12px; margin-top: 2px; }
+  .price { white-space: nowrap; font-weight: 700; }
+  .free { color: #047857; font-weight: 700; }
+  .paid { color: #475569; font-weight: 700; }
+  footer { margin-top: 22px; color: #64748b; font-size: 12px; line-height: 1.6; }
+  @media print { body { margin: 0; } }
+</style>
+</head>
+<body>
+  <h1>Рӯйхати ҳуҷҷатсупорӣ</h1>
+  <p class="sub">${items.length} интихоб · ${freeCount} ҷои ройгон · ${today}</p>
+  ${cluster ? `<div class="cluster">Кластери ${cluster.number} — ${escapeHtml(cluster.name)}</div>` : ""}
+  <table>
+    <thead>
+      <tr><th>№</th><th>Код</th><th>Ихтисос</th><th>Донишгоҳ</th><th>Шакл</th><th>Ҷой</th><th>Нарх</th></tr>
+    </thead>
+    <tbody>${rows}
+    </tbody>
+  </table>
+  <footer>
+    Нархҳо ва шумораи ҷойҳо аз маълумоти мавҷудаи мо гирифта шудаанд ва метавонанд тағйир ёбанд.<br>
+    Пеш аз супоридани ҳуҷҷат онҳоро дар худи донишгоҳ тасдиқ кунед.
+  </footer>
+</body>
+</html>`;
+
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `ruyhati-hujjatsupori-${new Date().toISOString().slice(0, 10)}.html`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        /* Браузер файлро дарҳол намехонад — URL-ро зуд озод кардан боргириро
+           дар баъзе браузерҳо канда мекунад. */
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        showSuccess("Файл боргирӣ шуд");
+    };
+
     if (loading) {
         return (
             <div className="flex min-h-[60vh] items-center justify-center">
@@ -129,6 +223,14 @@ const ApplicationPlan = () => {
                             >
                                 <Printer className="h-4 w-4" />
                                 Чоп / PDF
+                            </button>
+                            <button
+                                type="button"
+                                onClick={downloadPlan}
+                                className="flex cursor-pointer items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                            >
+                                <Download className="h-4 w-4" />
+                                Боргирӣ
                             </button>
                             <button
                                 type="button"

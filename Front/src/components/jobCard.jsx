@@ -30,12 +30,15 @@ export function formatTuition(specialty) {
 /** Official NTC code + tuition range + a badge when state-funded seats exist. */
 export function SpecialtyMeta({ specialty, size = "normal" }) {
   const tuition = formatTuition(specialty);
-  const pad = size === "small" ? "px-2 py-0.5 text-[9px]" : "px-3 py-1 text-[10px]";
+  const pad = size === "small" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]";
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {specialty.code && (
-        <span className={`inline-flex items-center rounded-full font-black tracking-wider bg-white/5 text-muted-foreground border border-white/10 ${pad}`}>
+        /* Рақами расмии ММТ. Ранг аз токенҳои мавзӯъ: сафеди шаффоф танҳо
+           дар реҷаи торик дида мешуд, ва дар равшан рақам сафед рӯи сафед
+           мемонд — гӯё умуман набошад. */
+        <span className={`inline-flex items-center rounded-full border border-border bg-muted font-mono font-bold tabular-nums tracking-wider text-foreground/70 ${pad}`}>
           {specialty.code}
         </span>
       )}
@@ -142,7 +145,7 @@ export default function SpecialtyCard({ specialty }) {
 
           <button
             onClick={handleSave}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 z-20 ${isSaved ? "bg-secondary/20 text-secondary border border-secondary/30" : "bg-white/5 border border-white/10 hover:border-white/20 text-muted-foreground"
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 z-20 ${isSaved ? "bg-secondary/20 text-secondary border border-secondary/30" : "bg-muted/40 border border-border hover:border-white/20 text-muted-foreground"
               }`}
           >
             <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
@@ -150,7 +153,7 @@ export default function SpecialtyCard({ specialty }) {
         </div>
 
         <div className="flex items-center justify-between mb-8">
-          <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 border border-white/10 shadow-xl shadow-primary/5">
+          <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 border border-border shadow-xl shadow-primary/5">
             <Briefcase className="h-8 w-8" />
           </div>
 

@@ -106,8 +106,17 @@ function payloadOf(career) {
     return out;
 }
 
-function buildPrompt(items, lang) {
-    return `You translate Tajik higher-education content into ${LANG_NAME[lang]}.
+/*
+ * Ҳарду забон дар ЯК дархост.
+ *
+ * Пештар ҳар забон дархости худро дошт, ва матни тоҷикӣ ду маротиба
+ * фиристода мешуд. Азбаски лимити Groq токенист, на дархост, ин тақрибан
+ * чоряки ҳаҷмро беҳуда месӯзонд. Ҳоло сарчашма як бор меравад ва модел
+ * ҳарду тарҷумаро якҷо бармегардонад.
+ */
+function buildPrompt(items, langs) {
+    const names = langs.map((l) => `"${l}" (${LANG_NAME[l]})`).join(" and ");
+    return `You translate Tajik higher-education content into ${names}.
 
 RULES
 - Translate the MEANING, naturally, as a careers website would word it.
@@ -119,7 +128,8 @@ RULES
 INPUT (array of objects, each has an "id"):
 ${JSON.stringify(items, null, 0)}
 
-Return a JSON object shaped {"items": [...]} where items has the same length and the same ids, each entry holding the translated fields.`;
+Return a JSON object shaped {"items": [...]} with the same length and the same ids.
+Each entry must be {"id": <id>, ${langs.map((l) => `"${l}": { ...translated fields... }`).join(", ")}}.`;
 }
 
 /*
@@ -284,36 +294,40 @@ async function main() {
     for (let i = 0; i < rows.length; i += BATCH) {
         const slice = rows.slice(i, i + BATCH);
 
-        for (const lang of LANGS) {
-            const pending = slice.filter((r) => !r.translations?.[lang]);
-            if (!pending.length) continue;
-
+        /* Як дархост барои ҳамаи забонҳои нарасида. */
+        const pending = slice.filter((r) => LANGS.some((l) => !r.translations?.[l]));
+        if (pending.length) {
             const items = pending.map((r) => ({ id: r.id, ...payloadOf(r) }));
             try {
-                const raw = await translate(buildPrompt(items, lang));
+                const raw = await translate(buildPrompt(items, LANGS));
                 const list = extractArray(raw);
                 const byId = new Map(list.map((x) => [x.id, x]));
 
                 for (const row of pending) {
                     const got = byId.get(row.id);
-                    if (!got) { failed++; continue; }
-                    const clean = validate(payloadOf(row), got);
-                    if (!Object.keys(clean).length) { failed++; continue; }
-                    /* Нишонаи маҷмӯа — то гузариши баъдӣ бидонад, ки ин сатр
-                       танҳо майдонҳои асосиро дорад. */
-                    clean._fields = FIELD_SET_NAME;
+                    if (!got) { failed += LANGS.length; continue; }
 
-                    await pool.query(
-                        `UPDATE career
-                            SET translations = jsonb_set(COALESCE(translations,'{}'::jsonb), $2, $3::jsonb, true)
-                          WHERE id = $1`,
-                        [row.id, `{${lang}}`, JSON.stringify(clean)],
-                    );
-                    row.translations = { ...(row.translations || {}), [lang]: clean };
+                    for (const lang of LANGS) {
+                        if (row.translations?.[lang]) continue;
+
+                        const clean = validate(payloadOf(row), got[lang]);
+                        if (!Object.keys(clean).length) { failed++; continue; }
+                        /* Нишонаи маҷмӯа — то гузариши баъдӣ бидонад, ки ин
+                           сатр танҳо майдонҳои асосиро дорад. */
+                        clean._fields = FIELD_SET_NAME;
+
+                        await pool.query(
+                            `UPDATE career
+                                SET translations = jsonb_set(COALESCE(translations,'{}'::jsonb), $2, $3::jsonb, true)
+                              WHERE id = $1`,
+                            [row.id, `{${lang}}`, JSON.stringify(clean)],
+                        );
+                        row.translations = { ...(row.translations || {}), [lang]: clean };
+                    }
                 }
             } catch (err) {
-                failed += pending.length;
-                console.log(`   ✗ ${lang}: ${err.message}`);
+                failed += pending.length * LANGS.length;
+                process.stdout.write(`\n   ✗ ${err.message}`);
             }
         }
 

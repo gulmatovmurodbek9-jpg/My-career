@@ -47,6 +47,15 @@ export default defineConfig({
           if (name === 'maplibre-gl' || name.startsWith('@maplibre')) {
             return 'vendor-maplibre'
           }
+          // jsPDF танҳо ҳангоми боргирии рӯйхати ҳуҷҷатсупорӣ лозим аст.
+          // Бе ин қоида он ба  меафтод ва бандли асосиро аз 391 КБ
+          // ба 1 213 КБ мебардошт — барои ҳар меҳмоне, ки ин тугмаро ҳеҷ гоҳ
+          // намезанад.
+          if (name === 'jspdf' || name === 'jspdf-autotable' || name === 'fflate' ||
+              name === 'fast-png' || name === 'iobuffer' || name === 'pako' ||
+              name === 'canvg' || name === 'html2canvas' || name === 'dompurify') {
+            return 'vendor-pdf'
+          }
           if (name === 'recharts' || name.startsWith('d3-') || name === 'victory-vendor' ||
               name === 'internmap' || name === 'decimal.js-light') {
             return 'vendor-charts'

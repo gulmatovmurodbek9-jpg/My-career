@@ -87,97 +87,128 @@ const ApplicationPlan = () => {
     };
 
     /*
-     * Боргирии рӯйхат ба файл.
+     * Боргирии рӯйхат ҳамчун PDF.
      *
-     * Чоп воқеан PDF медиҳад (браузер «Save as PDF» дорад), вале он ҳамеша
-     * пеш аз худ равзанаи чопро мекушояд ва интернет лозим аст, то саҳифа
-     * кушода бошад. Ин ҷо як ҳуҷҷати мустақил сохта мешавад: файл дар
-     * компютер мемонад, бе сервер кушода мешавад ва аз он ҷо низ чоп кардан
-     * мумкин аст.
+     * Шрифтҳои стандартии PDF (Helvetica ва ғайра) кириллро умуман надоранд:
+     * бо онҳо ба ҷои ҳар ҳарфи тоҷикӣ мураббаъ мебарояд. Барои ҳамин DejaVu
+     * Sans дохил карда мешавад — санҷида шуд, ки ғ ӣ қ ӯ ҳ ҷ ҳамаашон дар
+     * он ҳастанд.
      *
-     * HTML аст, на PDF-и сохташуда дар браузер: ҳарфҳои ғ ӣ қ ӯ ҳ ҷ дар
-     * китобхонаҳои PDF шрифти алоҳидаи дарунсохт талаб мекунанд, ва агар он
-     * нарасад, ба ҷои ҳарф мураббаъ мебарояд. Ин хатар дар намоиш ҷои худро
-     * надорад.
+     * Ду файли шрифт (оддӣ ва bold) якҷо 1,4 МБ мешаванд, аз ин рӯ на ба
+     * бандли асосӣ дохил мешаванд ва на ҳангоми кушодани саҳифа бор
+     * мегарданд: онҳо ва худи китобхонаи jsPDF танҳо пас аз пахши тугма
+     * гирифта мешаванд.
      */
-    const escapeHtml = (value) =>
-        String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;");
+    const [downloading, setDownloading] = useState(false);
 
-    const downloadPlan = () => {
-        const today = new Date().toLocaleDateString("ru-RU");
-        const rows = items
-            .map((item) => `
-        <tr>
-          <td class="num">${item.order}</td>
-          <td class="code">${escapeHtml(item.code)}</td>
-          <td><strong>${escapeHtml(item.careerName)}</strong></td>
-          <td>${escapeHtml(item.universityName)}${item.city ? `<div class="dim">${escapeHtml(item.city)}</div>` : ""}</td>
-          <td>${escapeHtml(item.studyForm)}</td>
-          <td><span class="${item.isFree ? "free" : "paid"}">${escapeHtml(item.paymentType)}</span>${item.seats > 0 ? `<div class="dim">${item.seats} ҷой</div>` : ""}</td>
-          <td class="price">${item.isFree ? "—" : money(item.tuitionFee) ? `${money(item.tuitionFee)} сом.` : "—"}</td>
-        </tr>`)
-            .join("");
+    const downloadPlan = async () => {
+        setDownloading(true);
+        try {
+            const [{ jsPDF }, autoTableModule, regularUrl, boldUrl] = await Promise.all([
+                import("jspdf"),
+                import("jspdf-autotable"),
+                import("../../assets/fonts/DejaVuSans.ttf?url").then((m) => m.default),
+                import("../../assets/fonts/DejaVuSans-Bold.ttf?url").then((m) => m.default),
+            ]);
+            const autoTable = autoTableModule.default;
 
-        const html = `<!doctype html>
-<html lang="tg">
-<head>
-<meta charset="utf-8">
-<title>Рӯйхати ҳуҷҷатсупорӣ</title>
-<style>
-  body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; color: #0f172a; margin: 32px; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  .sub { color: #64748b; font-size: 13px; margin: 0 0 4px; }
-  .cluster { display: inline-block; margin: 10px 0 18px; padding: 5px 12px; border-radius: 999px;
-             background: #eef2ff; color: #3730a3; font-size: 13px; font-weight: 700; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-       color: #64748b; border-bottom: 1px solid #e2e8f0; padding: 0 8px 8px 0; }
-  td { padding: 10px 8px 10px 0; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-  .num { color: #94a3b8; width: 28px; }
-  .code { font-family: Consolas, monospace; color: #64748b; white-space: nowrap; }
-  .dim { color: #94a3b8; font-size: 12px; margin-top: 2px; }
-  .price { white-space: nowrap; font-weight: 700; }
-  .free { color: #047857; font-weight: 700; }
-  .paid { color: #475569; font-weight: 700; }
-  footer { margin-top: 22px; color: #64748b; font-size: 12px; line-height: 1.6; }
-  @media print { body { margin: 0; } }
-</style>
-</head>
-<body>
-  <h1>Рӯйхати ҳуҷҷатсупорӣ</h1>
-  <p class="sub">${items.length} интихоб · ${freeCount} ҷои ройгон · ${today}</p>
-  ${cluster ? `<div class="cluster">Кластери ${cluster.number} — ${escapeHtml(cluster.name)}</div>` : ""}
-  <table>
-    <thead>
-      <tr><th>№</th><th>Код</th><th>Ихтисос</th><th>Донишгоҳ</th><th>Шакл</th><th>Ҷой</th><th>Нарх</th></tr>
-    </thead>
-    <tbody>${rows}
-    </tbody>
-  </table>
-  <footer>
-    Нархҳо ва шумораи ҷойҳо аз маълумоти мавҷудаи мо гирифта шудаанд ва метавонанд тағйир ёбанд.<br>
-    Пеш аз супоридани ҳуҷҷат онҳоро дар худи донишгоҳ тасдиқ кунед.
-  </footer>
-</body>
-</html>`;
+            /* Порча-порча, вагарна `String.fromCharCode(...)` бо массиви
+               720 000-элемента стекро мешиканад. */
+            const toBase64 = async (url) => {
+                const buffer = await (await fetch(url)).arrayBuffer();
+                const bytes = new Uint8Array(buffer);
+                let binary = "";
+                for (let i = 0; i < bytes.length; i += 8192) {
+                    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+                }
+                return btoa(binary);
+            };
 
-        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `ruyhati-hujjatsupori-${new Date().toISOString().slice(0, 10)}.html`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        /* Браузер файлро дарҳол намехонад — URL-ро зуд озод кардан боргириро
-           дар баъзе браузерҳо канда мекунад. */
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-        showSuccess("Файл боргирӣ шуд");
+            const [regular, bold] = await Promise.all([toBase64(regularUrl), toBase64(boldUrl)]);
+
+            const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+            doc.addFileToVFS("DejaVuSans.ttf", regular);
+            doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
+            /* Шрифти bold ҳатмист: autoTable сарлавҳаро bold мекашад ва агар
+               ин навъ набошад, ба шрифти стандартии PDF бармегардад — он
+               кириллро надорад ва сарлавҳа мураббаъ мешавад. */
+            doc.addFileToVFS("DejaVuSans-Bold.ttf", bold);
+            doc.addFont("DejaVuSans-Bold.ttf", "DejaVu", "bold");
+            doc.setFont("DejaVu", "normal");
+
+            const today = new Date().toLocaleDateString("ru-RU");
+
+            doc.setFontSize(16);
+            doc.text("Рӯйхати ҳуҷҷатсупорӣ", 40, 44);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(
+                `${items.length} интихоб · ${freeCount} ҷои ройгон · ${today}`,
+                40,
+                62,
+            );
+            if (cluster) {
+                doc.text(`Кластери ${cluster.number} — ${cluster.name}`, 40, 78);
+            }
+
+            autoTable(doc, {
+                startY: cluster ? 94 : 78,
+                head: [["№", "Код", "Ихтисос", "Донишгоҳ", "Шакл", "Ҷой", "Нарх"]],
+                body: items.map((item) => [
+                    item.order,
+                    item.code,
+                    item.careerName,
+                    [item.universityName, item.city].filter(Boolean).join("\n"),
+                    item.studyForm,
+                    [item.paymentType, item.seats > 0 ? `${item.seats} ҷой` : null]
+                        .filter(Boolean)
+                        .join("\n"),
+                    item.isFree
+                        ? "—"
+                        : money(item.tuitionFee)
+                            ? `${money(item.tuitionFee)} сом.`
+                            : "—",
+                ]),
+                /* Ҳар се ҷой шрифт бояд зикр шавад: сарлавҳа ва бадана
+                   стилҳои алоҳида доранд ва ба styles барнамегарданд. */
+                styles: { font: "DejaVu", fontSize: 9, cellPadding: 5, valign: "middle" },
+                headStyles: { font: "DejaVu", fillColor: [37, 99, 235], textColor: 255, fontSize: 9 },
+                bodyStyles: { font: "DejaVu" },
+                alternateRowStyles: { fillColor: [246, 248, 252] },
+                columnStyles: {
+                    0: { cellWidth: 26, halign: "center", textColor: 130 },
+                    1: { cellWidth: 78 },
+                    3: { cellWidth: 210 },
+                    6: { halign: "right" },
+                },
+                margin: { left: 40, right: 40 },
+            });
+
+            doc.setFontSize(8);
+            doc.setTextColor(120);
+            const afterTable = doc.lastAutoTable.finalY + 18;
+            doc.text(
+                "Нархҳо ва шумораи ҷойҳо аз маълумоти мавҷудаи мо гирифта шудаанд ва метавонанд тағйир ёбанд.",
+                40,
+                afterTable,
+            );
+            doc.text(
+                "Пеш аз супоридани ҳуҷҷат онҳоро дар худи донишгоҳ тасдиқ кунед.",
+                40,
+                afterTable + 12,
+            );
+
+            doc.save(`ruyhati-hujjatsupori-${new Date().toISOString().slice(0, 10)}.pdf`);
+            showSuccess("PDF боргирӣ шуд");
+        } catch (err) {
+            console.error("PDF:", err);
+            showError("PDF сохта нашуд");
+        } finally {
+            setDownloading(false);
+        }
     };
+
 
     if (loading) {
         return (
@@ -227,10 +258,11 @@ const ApplicationPlan = () => {
                             <button
                                 type="button"
                                 onClick={downloadPlan}
-                                className="flex cursor-pointer items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                                disabled={downloading}
+                                className="flex cursor-pointer items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50"
                             >
-                                <Download className="h-4 w-4" />
-                                Боргирӣ
+                                {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                {downloading ? "Тайёр мешавад…" : "Боргирии PDF"}
                             </button>
                             <button
                                 type="button"

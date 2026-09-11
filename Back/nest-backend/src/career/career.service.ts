@@ -336,6 +336,8 @@ export class CareerService {
         matchPercentage: number;
         careers: Career[];
         clusterScores: { cluster: Cluster; score: number }[];
+        /** Холи калидвожаи ҳар ихтисос — барои фоизи инфиродии корт. */
+        careerRanks: Map<string, number>;
     }> {
         const mmtScores = userScores?.mmtClusters || { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
         const clusters = await this.clusterRepository.find();
@@ -349,7 +351,7 @@ export class CareerService {
 
         const top = clusterScores[0];
         if (!top) {
-            return { cluster: null, matchPercentage: 0, careers: [], clusterScores };
+            return { cluster: null, matchPercentage: 0, careers: [], clusterScores, careerRanks: new Map() };
         }
 
         const matchPercentage = Math.min(
@@ -424,11 +426,82 @@ export class CareerService {
             matchPercentage,
             careers: topCareers,
             clusterScores,
+            careerRanks: new Map(ranked.map((r) => [r.career.id, r.rank])),
         };
     }
 
     async matchCareers(userScores: any): Promise<any[]> {
-        const { careers, matchPercentage } = await this.selectMatchedCareers(userScores);
+        const { careers, matchPercentage, clusterScores, cluster, careerRanks } =
+            await this.selectMatchedCareers(userScores);
+
+        /*
+         * Профили корбар дар миқёси 0–10 барои диаграммаи радар.
+         * Холи ММТ то 40 мерасад, диаграмма то 10 — бе ин тақсим ҳама
+         * нуқтаҳо аз ҳудуди диаграмма мебаромаданд.
+         */
+        const userProfile: Record<string, number> = {};
+        for (const entry of clusterScores) {
+            userProfile[`c${entry.cluster.clusterId}`] = Number(
+                ((entry.score / CareerService.MMT_MAX_SCORE) * 10).toFixed(1),
+            );
+        }
+
+        /* Ихтисос маҳз ба ЯК кластер тааллуқ дорад — профилаш ҳамин аст,
+           на тахмини нарм дар панҷ тараф. */
+        const careerProfile: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+        if (cluster) careerProfile[`c${cluster.clusterId}`] = 10;
+
+        /*
+         * Косинус байни вектори корбар ва вектори «як кластер» ба
+           u[c] / ||u|| баробар мешавад: чӣ қадар холи корбар маҳз дар ҳамин
+           кластер ҷамъ шудааст.
+         */
+        const values = clusterScores.map((entry) => entry.score);
+        const norm = Math.sqrt(values.reduce((sum, v) => sum + v * v, 0));
+        const topScore = clusterScores[0]?.score ?? 0;
+        const secondScore = clusterScores[1]?.score ?? 0;
+        const cosineSimilarity = norm > 0 ? Number((topScore / norm).toFixed(3)) : 0;
+
+        /* Масофа то вектори идеалӣ (ҳамаи 40 хол дар як кластер). */
+        const ideal = CareerService.MMT_MAX_SCORE;
+        const distance = Math.sqrt(
+            clusterScores.reduce((sum, entry, index) => {
+                const target = index === 0 ? ideal : 0;
+                return sum + (entry.score - target) ** 2;
+            }, 0),
+        );
+        const maxDistance = Math.sqrt(ideal * ideal * clusterScores.length);
+        const euclideanSimilarity = maxDistance > 0
+            ? Number(Math.max(0, 1 - distance / maxDistance).toFixed(3))
+            : 0;
+
+        /* Боварӣ = чӣ қадар кластери аввал аз дуюм ҷудо истодааст. Вақте
+           ду кластер қариб баробаранд, натиҷа воқеан номуайян аст ва
+           довталаб бояд инро бидонад. */
+        const confidenceIndex = topScore > 0
+            ? Number(((topScore - secondScore) / topScore).toFixed(3))
+            : 0;
+
+        const dimensionBreakdown: Record<string, number> = {};
+        for (const entry of clusterScores) {
+            const key = `c${entry.cluster.clusterId}`;
+            dimensionBreakdown[key] = topScore > 0
+                ? Number((entry.score / topScore).toFixed(3))
+                : 0;
+        }
+
+        /*
+         * Фоизи ҳар корт алоҳида.
+         *
+         * Пештар ин ҷо холи КЛАСТЕР мерафт — як рақам барои ҳар 12 корт,
+         * ва рӯйхат чунин менамуд, ки ҳисоб умуман кор намекунад. Ҳоло
+         * холи кластер асос аст, ва холи калидвожаи худи ихтисос онро то
+         * чоряк поён мефарорад: ихтисоси беҳтарин дар боло мемонад,
+         * сусттаринаш поёнтар. Агар калидвожа набошад, ҳамаи холҳо сифр
+         * мешаванд ва фоиз ба ҳамон холи кластер бармегардад — рақами
+         * бофта илова намешавад.
+         */
+        const maxRank = Math.max(0, ...careers.map((c) => careerRanks.get(c.id) ?? 0));
 
         return careers.map(career => {
             /*
@@ -439,6 +512,13 @@ export class CareerService {
              */
             const universities = (career.universities || []);
 
+            const rank = careerRanks.get(career.id) ?? 0;
+            const relative = maxRank > 0 ? rank / maxRank : 1;
+            const careerMatch = Math.max(
+                35,
+                Math.min(99, Math.round(matchPercentage * (0.75 + 0.25 * relative))),
+            );
+
             return {
                 id: career.id,
                 /* Коди расмии ихтисос — маҳз ҳамин рақам ҳангоми супоридани
@@ -447,7 +527,16 @@ export class CareerService {
                 name: career.name,
                 description: career.description,
                 purpose: career.purpose,
-                matchPercentage,
+                matchPercentage: careerMatch,
+                /* Ҳамон рақамҳое, ки равзанаи «Таҳлили мувофиқат» мехонад.
+                   Пештар ҳеҷ яке аз онҳо фиристода намешуд ва равзана ҳама
+                   ҷо 0% бо диаграммаи ҷамъшуда нишон медод. */
+                cosineSimilarity,
+                euclideanSimilarity,
+                confidenceIndex,
+                dimensionBreakdown,
+                userProfile,
+                careerProfile,
                 likesCount: career.likesCount,
                 universities: universities.slice(0, 3).map(uni => ({
                     id: uni.id,

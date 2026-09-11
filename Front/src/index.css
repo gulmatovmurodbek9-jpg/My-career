@@ -1076,3 +1076,54 @@
     display: none;
   }
 }
+
+/* ── Матни градиентӣ ───────────────────────────────────────────────────────
+   `.text-gradient-primary` дар панҷ ҷо истифода мешуд, вале ҳеҷ ҷо таъриф
+   нашуда буд — он сарлавҳаҳо умуман градиент надоштанд.
+
+   Дар реҷаи равшан градиент хуб менамояд. Дар реҷаи торик нимаи аввали он
+   --primary (#2563eb) аст, ки рӯи заминаи қариб сиёҳ ҳамагӣ 3.8:1 контраст
+   медиҳад: ҳарфҳо ним-ғайб мешаванд. Барои ҳамин дар торикӣ ҳама матни
+   градиентӣ як ранги сахти фирӯзаӣ мешавад — 7.9:1, пурра хоно. */
+:root {
+  --text-accent: 190 90% 45%;
+}
+
+.text-gradient-primary,
+.text-gradient-animated {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-blue)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.text-gradient-animated {
+  background: linear-gradient(90deg,
+      hsl(var(--primary)),
+      hsl(var(--accent-blue)),
+      hsl(var(--primary)));
+  background-size: 200% auto;
+  animation: text-gradient-slide 4s linear infinite;
+}
+
+@keyframes text-gradient-slide {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.dark .text-gradient-primary,
+.dark .text-gradient-animated,
+.dark .ai-msg-content .ai-h2 {
+  background: none;
+  animation: none;
+  -webkit-text-fill-color: hsl(var(--text-accent));
+  color: hsl(var(--text-accent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-gradient-animated {
+    animation: none;
+  }
+}

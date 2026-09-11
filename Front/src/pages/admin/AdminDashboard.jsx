@@ -35,8 +35,8 @@ const CHART_COLORS = ["#6366f1", "#8b5cf6", "#a78bfa", "#c084fc", "#e879f9", "#f
    истеҳсоли саноати химиявӣ». Дар диаграммаи амудӣ ҷой намешуд, барои ҳамин
    `tick={false}` гузошта шуда буд ва сутунҳо бе ном мемонданд. Ҳоло диаграмма
    уфуқӣ аст: ном дар тарафи чап пурра ҷой мегирад. */
-const LABEL_WIDTH = 210;
-const MAX_LABEL_CHARS = 30;
+const LABEL_WIDTH = 250;
+const MAX_LABEL_CHARS = 34;
 
 const shortLabel = (name = "") =>
   name.length > MAX_LABEL_CHARS ? name.slice(0, MAX_LABEL_CHARS - 1) + "…" : name;
@@ -129,8 +129,8 @@ const AdminDashboard = () => {
   const numberAxis = {
     type: "number",
     allowDecimals: false,
-    stroke: "rgba(255,255,255,0.2)",
-    fontSize: 11,
+    stroke: "rgba(255,255,255,0.3)",
+    fontSize: 12,
     tickLine: false,
     axisLine: false,
   };
@@ -139,8 +139,8 @@ const AdminDashboard = () => {
     type: "category",
     dataKey: "label",
     width: LABEL_WIDTH,
-    stroke: "rgba(255,255,255,0.45)",
-    fontSize: 11,
+    stroke: "rgba(255,255,255,0.65)",
+    fontSize: 13,
     tickLine: false,
     axisLine: false,
   };
@@ -312,8 +312,8 @@ const AdminDashboard = () => {
                     title={item.name}
                   >
                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.fill }} />
-                    <span className="text-xs text-white/60 truncate flex-1">{item.name}</span>
-                    <span className="text-xs font-bold text-white">{item.value}</span>
+                    <span className="text-[13px] text-white/70 truncate flex-1">{item.name}</span>
+                    <span className="text-[13px] font-bold text-white">{item.value}</span>
                   </div>
                 ))}
               </div>

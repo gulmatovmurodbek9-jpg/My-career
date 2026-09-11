@@ -100,7 +100,7 @@ const SalaryVisualization3D = ({ salaryData }) => {
           whileInView={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary via-blue-500 to-purple-500 bg-clip-text text-transparent">
+          <h3 className="text-3xl font-bold mb-2 text-gradient-primary">
             Сатҳи музди меҳнат
           </h3>
           <p className="text-muted-foreground">Дар асоси таҷриба ва малака</p>

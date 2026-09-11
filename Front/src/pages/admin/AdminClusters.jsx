@@ -168,7 +168,7 @@ const AdminClusters = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
                         <button
                           onClick={() => { setEditingCluster(cluster); setFormOpen(true); }}
                           className="p-1.5 rounded-lg hover:bg-indigo-500/10 text-indigo-400/40 hover:text-indigo-400 transition-all cursor-pointer"

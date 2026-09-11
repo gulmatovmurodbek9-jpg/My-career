@@ -34,6 +34,10 @@ const AdminCareers = () => {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
+  /* Матни ҷустуҷӯ бевосита ба дархост мерафт: навиштани «Барномасоз» 10 дархости
+     пайиҳамро ба сервер мефиристод ва ҷавобҳо метавонистанд бо тартиби
+     дигар баргарданд. Акнун 350 мс пас аз охирин ҳарф як дархост меравад. */
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCluster, setSelectedCluster] = useState("");
   const [page, setPage] = useState(1);
 
@@ -53,7 +57,7 @@ const AdminCareers = () => {
     setLoading(true);
     try {
       const params = { page, limit: 10 };
-      if (search) params.search = search;
+      if (debouncedSearch) params.search = debouncedSearch;
       if (selectedCluster) params.clusterId = selectedCluster;
       const { data } = await axios.get(`${API}/careers`, { params, ...authHeaders });
       setCareers(data.data || []);
@@ -63,7 +67,7 @@ const AdminCareers = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, page, search, selectedCluster]);
+  }, [token, page, debouncedSearch, selectedCluster]);
 
   const fetchClusters = useCallback(async () => {
     try {
@@ -74,9 +78,14 @@ const AdminCareers = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search), 350);
+    return () => clearTimeout(id);
+  }, [search]);
+
   useEffect(() => { fetchClusters(); }, []);
   useEffect(() => { fetchCareers(); }, [fetchCareers]);
-  useEffect(() => { setPage(1); }, [search, selectedCluster]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, selectedCluster]);
 
   const handleSubmit = async (formData) => {
     setFormLoading(true);
@@ -247,7 +256,9 @@ const AdminCareers = () => {
                           </span>
                         </td>
                         <td className="px-6 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Дар экрани ламсӣ hover нест — тугмаҳо ҳеҷ гоҳ
+                              намебаромаданд ва сутун холӣ менамуд. */}
+                          <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                             <button
                               onClick={() => { setEditingCareer(career); setFormOpen(true); }}
                               className="p-2 rounded-lg hover:bg-indigo-500/10 text-indigo-400/60 hover:text-indigo-400 transition-all cursor-pointer"

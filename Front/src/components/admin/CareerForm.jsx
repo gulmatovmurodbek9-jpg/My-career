@@ -236,7 +236,20 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
             </form>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 p-6 border-t border-white/5">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-white/5">
+              {/* Майдони ҳатмии «Ном» дар варақаи «Асосӣ» аст, вале тугмаи
+                  сабт дар ҳама варақаҳо дида мешавад. Пештар он танҳо
+                  хомӯш мешуд — админ пахш мекард, ҳеҷ чиз намешуд ва сабаб
+                  нонамоён буд, чунки худи майдон дар варақаи дигар аст. */}
+              {!form.name.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("basic")}
+                  className="mr-auto text-xs text-amber-400/80 hover:text-amber-400 underline underline-offset-4 cursor-pointer"
+                >
+                  {t("admin.form.name_required", "Аввал номи ихтисосро нависед")}
+                </button>
+              )}
               <button type="button" onClick={onClose} disabled={loading} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-sm font-semibold border border-white/10 transition-all cursor-pointer">
                 {t("admin.form.cancel")}
               </button>

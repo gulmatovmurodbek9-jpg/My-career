@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { API } from "../../lib/config";
+import { usePageMeta } from "../../lib/usePageMeta";
 import { 
   Building2, MapPin, ArrowLeft, BookOpen, Clock, 
   GraduationCap, Info, Search, Filter, ShieldCheck 
@@ -47,6 +48,47 @@ export default function UniversityDetail() {
     };
     fetchData();
   }, [id]);
+
+  /* Ҷустуҷӯи «Донишгоҳи миллии Тоҷикистон ихтисосҳо» бояд маҳз ба ин саҳифа
+     барад, на ба саҳифаи асосӣ. */
+  usePageMeta({
+    ready: !!university,
+    title: university ? `${university.name}${university.city ? ` — ${university.city}` : ""}` : undefined,
+    description: university
+      ? [
+        university.description,
+        specialties.length ? `${specialties.length} ихтисос бо нархи таҳсил ва шумораи ҷойҳо.` : null,
+      ].filter(Boolean).join(" ") ||
+      `${university.name}${university.city ? `, ${university.city}` : ""} — ихтисосҳо, нархи таҳсил ва ҷойҳои ройгон.`
+      : undefined,
+    path: `/universities/${id}`,
+    image: university?.logo || undefined,
+    jsonLd: university
+      ? {
+        "@context": "https://schema.org",
+        "@type": "CollegeOrUniversity",
+        name: university.name,
+        alternateName: university.shortName || undefined,
+        description: university.description || undefined,
+        url: university.website || undefined,
+        address: university.city
+          ? {
+            "@type": "PostalAddress",
+            streetAddress: university.address || undefined,
+            addressLocality: university.city,
+            addressCountry: "TJ",
+          }
+          : undefined,
+        geo: university.latitude && university.longitude
+          ? {
+            "@type": "GeoCoordinates",
+            latitude: university.latitude,
+            longitude: university.longitude,
+          }
+          : undefined,
+      }
+      : undefined,
+  });
 
   const clusters = Array.from(new Set(specialties.map(s => s.cluster?.clusterId))).filter(Boolean).sort();
 

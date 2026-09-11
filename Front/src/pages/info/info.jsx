@@ -35,6 +35,7 @@ import { API } from "../../lib/config";
 import { useToast } from "../../components/toast/ToastProvider";
 import { resourceUrl } from "../../lib/resourceLinks";
 import { buildRoadmap } from "../../lib/buildRoadmap";
+import { usePageMeta } from "../../lib/usePageMeta";
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
 
@@ -249,6 +250,47 @@ const Info = () => {
       setIsSaved(user.savedCareers?.some(c => c.id === id) || false);
     }
   }, [id, user?.id, user?.likedCareers, user?.savedCareers]);
+
+  /*
+   * Ин саҳифа 884 маротиба такрор мешавад — маҳз он чизест, ки довталаб дар
+   * Google меҷӯяд. Бе сарлавҳа ва тавсифи худӣ ҳамаашон барои Google як
+   * саҳифаи такрорӣ буданд, ва ҷустуҷӯи «Ҳуқуқшиносӣ Тоҷикистон» ба ин ҷо
+   * ҳеҷ гоҳ намеовард.
+   */
+  const metaUniversities = career?.universities || [];
+  usePageMeta({
+    ready: !!career,
+    title: career ? `${career.name}${career.code ? ` (коди ${career.code})` : ""}` : undefined,
+    description: career
+      ? [
+        career.description || career.purpose,
+        metaUniversities.length
+          ? `Дар ${metaUniversities.length} донишгоҳи Тоҷикистон таълим дода мешавад.`
+          : null,
+      ].filter(Boolean).join(" ")
+      : undefined,
+    path: `/info/${id}`,
+    jsonLd: career
+      ? {
+        "@context": "https://schema.org",
+        /* Ихтисоси таҳсилотист, на касби озод — Google маҳз ин навъро барои
+           барномаҳои донишгоҳӣ мефаҳмад. */
+        "@type": "EducationalOccupationalProgram",
+        name: career.name,
+        description: career.description || career.purpose || undefined,
+        identifier: career.code || undefined,
+        occupationalCategory: career.cluster?.clusterName || undefined,
+        educationalProgramMode: "full-time",
+        provider: metaUniversities.slice(0, 10).map((uni) => ({
+          "@type": "CollegeOrUniversity",
+          name: uni.name,
+          address: uni.city
+            ? { "@type": "PostalAddress", addressLocality: uni.city, addressCountry: "TJ" }
+            : undefined,
+        })),
+      }
+      : undefined,
+  });
 
   const handleLike = async () => {
     if (!token || isLiking) return;

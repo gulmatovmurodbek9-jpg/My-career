@@ -11,6 +11,7 @@ import SpecialtyCard, { SpecialtyCardList } from "../../components/jobCard";
 import LucideIconRenderer from "../../components/admin/LucideIconRenderer";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
+import { usePageMeta } from "../../lib/usePageMeta";
 
 const LIMIT = 12; // items per page
 
@@ -268,6 +269,14 @@ const Careers = () => {
 
   const selectClass =
     "w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-[15px] font-medium text-foreground transition-colors focus-ring";
+
+  usePageMeta({
+    title: "Ихтисосҳои ММТ — 884 ихтисос бо рақами расмӣ",
+    description:
+      "Рӯйхати пурраи ихтисосҳои Маркази миллии тестӣ: рақами расмӣ, кластер, " +
+      "донишгоҳҳо, нархи таҳсил ва ҷойҳои ройгон.",
+    path: "/careers",
+  });
 
   return (
     <div className="pb-24">

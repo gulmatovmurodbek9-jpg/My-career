@@ -50,10 +50,32 @@ const BATCH = Number(argValue("--batch", 4));
 const LANGS = ONLY_LANG ? [ONLY_LANG] : ["ru", "en"];
 const LANG_NAME = { ru: "Russian", en: "English" };
 
-/* Майдонҳои тарҷумашаванда. `code` дида намешавад — қасдан. */
-const TEXT_FIELDS = ["name", "description", "purpose", "advice"];
-const LIST_FIELDS = ["technologies", "roadmap", "projectsExamples", "careerOpportunities", "relatedSpecializations", "certification"];
-const NESTED_FIELDS = { skills: ["technical", "soft"], learningResources: ["books", "courses", "blogs"] };
+/*
+ * Майдонҳои тарҷумашаванда. `code` дида намешавад — қасдан.
+ *
+ * Ду маҷмӯа: «core» он чизест, ки корбар дар корт ва сарлавҳаи саҳифа
+ * мехонад; «all» боқимондаро низ мегирад. Ҷудо кардан барои лимит лозим
+ * аст: рӯйхати қадамҳо, малакаҳо ва манбаъҳо се чоряки ҳаҷмро мегиранд, ва
+ * бо онҳо як баста ба лимити 8 000 токени Groq намеғунҷад.
+ */
+const FIELD_SETS = {
+    core: {
+        text: ["name", "description", "purpose"],
+        list: [],
+        nested: {},
+    },
+    all: {
+        text: ["name", "description", "purpose", "advice"],
+        list: ["technologies", "roadmap", "projectsExamples", "careerOpportunities", "relatedSpecializations", "certification"],
+        nested: { skills: ["technical", "soft"], learningResources: ["books", "courses", "blogs"] },
+    },
+};
+
+const FIELD_SET_NAME = argValue("--fields", "core");
+const FIELDS = FIELD_SETS[FIELD_SET_NAME] || FIELD_SETS.core;
+const TEXT_FIELDS = FIELDS.text;
+const LIST_FIELDS = FIELDS.list;
+const NESTED_FIELDS = FIELDS.nested;
 
 const GROQ_KEY = env.GROQ_API_KEY;
 const GROQ_MODEL = env.GROQ_MODEL || "openai/gpt-oss-120b";
@@ -138,12 +160,31 @@ async function callGemini(prompt, attempt = 1) {
     return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 }
 
+/*
+ * Groq аввал меистад, Gemini захира.
+ *
+ * Gemini зудтар аст, вале дар амал 503 «серталабӣ» бармегардонд ва даҳ
+ * дақиқа барои чор ихтисос сарф шуд. Groq лимити сахт дорад (8 000 токен
+ * дар як дақиқа), вале устувор ҷавоб медиҳад — ва бо маҷмӯи «core» баста
+ * ба ҳамон лимит меғунҷад.
+ */
+let geminiPausedUntil = 0;
+
 async function translate(prompt) {
-    if (GEMINI_KEY) {
-        try { return await callGemini(prompt); }
-        catch (err) { process.stdout.write(`\n   Gemini афтод (${err.message}), Groq...`); }
+    try {
+        return await callGroq(prompt);
+    } catch (groqError) {
+        /* Пас аз афтиши Gemini онро панҷ дақиқа даст намезанем — вагарна
+           ҳар дархост чор кӯшиши беҳудаи интизорӣ мекунад. */
+        if (GEMINI_KEY && Date.now() > geminiPausedUntil) {
+            try {
+                return await callGemini(prompt, 4);
+            } catch {
+                geminiPausedUntil = Date.now() + 5 * 60 * 1000;
+            }
+        }
+        throw groqError;
     }
-    return callGroq(prompt);
 }
 
 async function callGroq(prompt, attempt = 1) {
@@ -216,7 +257,13 @@ const pool = new pg.Pool({
 });
 
 async function main() {
-    const need = LANGS.map((l) => `NOT (translations ? '${l}')`).join(" OR ");
+    /* Сатре, ки бо маҷмӯи «core» тарҷума шудааст, барои гузариши «all»
+       ҳанӯз нотамом аст — вагарна кӯшиши дуюм ҳамаашро мегузарад. */
+    const need = LANGS.map((l) =>
+        FIELD_SET_NAME === "all"
+            ? `(NOT (translations ? '${l}') OR translations->'${l}'->>'_fields' IS DISTINCT FROM 'all')`
+            : `NOT (translations ? '${l}')`,
+    ).join(" OR ");
     const { rows } = await pool.query(
         `SELECT id, name, description, purpose, advice, skills, technologies, roadmap,
                 "projectsExamples", "careerOpportunities", "relatedSpecializations",
@@ -252,6 +299,9 @@ async function main() {
                     if (!got) { failed++; continue; }
                     const clean = validate(payloadOf(row), got);
                     if (!Object.keys(clean).length) { failed++; continue; }
+                    /* Нишонаи маҷмӯа — то гузариши баъдӣ бидонад, ки ин сатр
+                       танҳо майдонҳои асосиро дорад. */
+                    clean._fields = FIELD_SET_NAME;
 
                     await pool.query(
                         `UPDATE career

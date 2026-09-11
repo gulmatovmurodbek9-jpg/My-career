@@ -25,6 +25,16 @@ export class Career {
     @Column()
     name: string;
 
+    /**
+     * Тарҷумаи мазмун: `{ ru: {...}, en: {...} }`.
+     *
+     * `code` ин ҷо нест — он шиносаи расмии ММТ аст ва дар ҳама забон як хел
+     * мемонад. Номи аслии тоҷикӣ низ дар `name` мемонад: довталаб маҳз бо
+     * ҳамон ном ихтисосро дар китобчаи ММТ меёбад ва ариза месупорад.
+     */
+    @Column({ type: 'jsonb', default: {} })
+    translations: Record<string, Record<string, any>>;
+
     @Column({ type: 'text', nullable: true })
     description: string;
 

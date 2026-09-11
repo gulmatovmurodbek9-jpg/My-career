@@ -315,11 +315,16 @@ const ApplicationPlan = () => {
                         Ба саҳифаи ихтисос гузаред, донишгоҳ ва намуди ҷойро интихоб кунед — онҳо ин ҷо
                         ҷамъ мешаванд ва шумо метавонед рӯйхатро чоп кунед.
                     </p>
-                    <Link to="/careers">
-                        <button className="btn-primary mt-6 !px-6 !py-3 !text-sm !rounded-xl cursor-pointer">
-                            <GraduationCap className="h-4 w-4" />
-                            Ихтисосҳоро дидан
-                        </button>
+                    {/* Услуб рост ба `Link` меравад, на ба тугмаи дохилӣ.
+                        `.btn-primary` `display: flex` аст — яъне блокӣ, ва дар
+                        дохили `<a>`-и сатрӣ он `text-center`-и волидро нодида
+                        мегирифт ва ба канори чап мечаспид. */}
+                    <Link
+                        to="/careers"
+                        className="btn-primary mt-6 inline-flex !px-6 !py-3 !text-sm !rounded-xl cursor-pointer"
+                    >
+                        <GraduationCap className="h-4 w-4" />
+                        Ихтисосҳоро дидан
                     </Link>
                 </div>
             ) : (

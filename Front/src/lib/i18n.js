@@ -292,6 +292,8 @@ i18n
                         all_clusters: "Ҳамаи Кластерҳо",
                         not_found_title: "Ихтисосе ёфт нашуд",
                         not_found_desc: "Ҷустуҷӯ ё филтри худро иваз кунед.",
+                            filters: "Филтр ва тартиб",
+                            active: "фаъол",
                         clear_btn: "Пок кардан",
                         specialties_count: "ихтисос",
                         page_info: "Саҳ. {{current}} аз {{last}}"
@@ -779,6 +781,8 @@ i18n
                         all_clusters: "Все кластеры",
                         not_found_title: "Профессия не найдена",
                         not_found_desc: "Измените поиск или фильтр.",
+                            filters: "Фильтр и сортировка",
+                            active: "активен",
                         clear_btn: "Очистить",
                         specialties_count: "профессий",
                         page_info: "Стр. {{current}} из {{last}}"
@@ -1266,6 +1270,8 @@ i18n
                         all_clusters: "All Clusters",
                         not_found_title: "Career not found",
                         not_found_desc: "Change your search or filter.",
+                            filters: "Filters & sorting",
+                            active: "active",
                         clear_btn: "Clear",
                         specialties_count: "careers",
                         page_info: "Pg. {{current}} of {{last}}"

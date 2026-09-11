@@ -242,7 +242,13 @@ export default function Universities() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.25 }}
               >
-                <TajikistanMap universities={filteredUnis} />
+                {/* Ҳангоми ҷустуҷӯ харита худаш ба натиҷаҳо меравад —
+                    бе ин корбар се нишонаро дар харитаи пурраи кишвар
+                    мебоист худаш меҷуст. */}
+                <TajikistanMap
+                  universities={filteredUnis}
+                  focusResults={normalizedQuery.length > 0}
+                />
               </motion.div>
             ) : (
               <motion.div

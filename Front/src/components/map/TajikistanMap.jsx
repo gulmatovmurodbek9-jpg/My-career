@@ -238,7 +238,45 @@ function CityOverviewMap({ activeCity, onViewportChange, preferredCity }) {
   return null;
 }
 
-export default function TajikistanMap({ universities = [] }) {
+/**
+ * Ҳангоми ҷустуҷӯ харитаро ба натиҷаҳо мебарад.
+ *
+ * Пештар ҷустуҷӯ танҳо рӯйхати нишонаҳоро кам мекард, вале камера дар ҷои
+ * худ мемонд: корбар «милли» менавишт, се натиҷа мегирифт ва харитаро худаш
+ * бояд ба Душанбе меовард ва zoom мекард. Дар телефон ин қариб ғайриимкон
+ * буд.
+ */
+function FitToResults({ points, enabled }) {
+  const map = useMap();
+
+  /* Калиди матнӣ: массив ҳар рендер нав аст, ва бе ин эффект бемаврид
+     такрор мешуд ва камераро ҳангоми ҳаракати корбар бармегардонд. */
+  const key = enabled ? points.map((p) => p.id).join(",") : "";
+
+  useEffect(() => {
+    if (!enabled || points.length === 0) return;
+
+    /* Ҷустуҷӯ филтри фаврӣ аст — бе таъхир харита ҳангоми навиштани
+       «милли» панҷ бор парвоз мекард. Пас аз истодани дастҳо як парвоз. */
+    const timer = setTimeout(() => {
+      if (points.length === 1) {
+        const only = points[0];
+        map.flyTo([only.displayLat, only.displayLng], 16, { duration: 0.8 });
+        return;
+      }
+
+      const bounds = points.map((p) => [p.displayLat, p.displayLng]);
+      map.flyToBounds(bounds, { padding: [60, 60], maxZoom: 15, duration: 0.8 });
+    }, 400);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, map, enabled]);
+
+  return null;
+}
+
+export default function TajikistanMap({ universities = [], focusResults = false }) {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -468,6 +506,8 @@ export default function TajikistanMap({ universities = [] }) {
             onViewportChange={setViewport}
             preferredCity={DEFAULT_CITY}
           />
+
+          <FitToResults points={displayUniversities} enabled={focusResults} />
 
           {geoData && <GeoJSON data={geoData} style={geojsonStyle} />}
 

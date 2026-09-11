@@ -573,10 +573,13 @@ export default function TajikistanMap({ universities = [] }) {
             transition={{ duration: 0.22 }}
             className="absolute inset-x-4 bottom-4 z-[700] md:left-auto md:right-6 md:top-6 md:bottom-6 md:w-[430px]"
           >
-            <div className="flex max-h-[78vh] flex-col rounded-[2rem] border border-white/10 bg-black/72 p-5 text-white shadow-[0_24px_64px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+            {/* Дар телефон баландӣ камтар аст, то харита зери панел
+                намонад; мазмун скролл мешавад — пештар он танҳо бурида
+                мешуд ва тугмаи «Муфассал дидан» ба поён намерасид. */}
+            <div className="flex max-h-[58vh] flex-col overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-black/72 p-4 text-white shadow-[0_24px_64px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:max-h-[78vh] md:p-5">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-lg font-black leading-tight">{selectedUni.name}</p>
+                  <p className="text-[15px] font-black leading-snug md:text-lg md:leading-tight">{selectedUni.name}</p>
                   {/* Суроғаи пурра, вақте маълум аст — довталабро маҳз ҳамин
                       ба бинои дуруст мебарад, на номи шаҳр. */}
                   <p className="mt-1 flex items-start gap-1.5 text-sm text-white/65">
@@ -614,7 +617,9 @@ export default function TajikistanMap({ universities = [] }) {
               </div>
 
               <div className="flex-1 rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
-                <div className="flex items-start gap-3">
+                {/* Ном дар сарлавҳаи панел аллакай ҳаст. Дар телефон
+                    такрори он ним экранро мегирифт. */}
+                <div className="hidden items-start gap-3 md:flex">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5">
                     {selectedUni.logo ? (
                       <img src={selectedUni.logo} alt={selectedUni.name} className="h-full w-full object-contain p-1.5" />
@@ -642,7 +647,7 @@ export default function TajikistanMap({ universities = [] }) {
 
                 <button
                   onClick={() => navigate(`/universities/${selectedUni.id}`)}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:shadow-primary/40"
+                  className="mt-4 inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:shadow-primary/40 md:mt-5"
                 >
                   Муфассал дидан
                   <ExternalLink className="h-4 w-4" />

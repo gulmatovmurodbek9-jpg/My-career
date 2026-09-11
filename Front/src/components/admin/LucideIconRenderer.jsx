@@ -115,7 +115,7 @@ const LucideIconRenderer = ({ name, className = "w-5 h-5", fallback = null }) =>
 
   // Check if it's an emoji (starts with non-ASCII)
   if (/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}]/u.test(name)) {
-    return <span className="text-lg">{name}</span>;
+    return <span className="text-xl">{name}</span>;
   }
 
   const IconComponent = ICON_MAP[name];

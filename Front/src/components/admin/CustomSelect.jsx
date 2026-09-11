@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check, X } from "lucide-react";
 
@@ -16,6 +17,7 @@ const CustomSelect = ({
   searchable = false,
   clearable = false,
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef(null);
@@ -68,18 +70,18 @@ const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center gap-2.5 bg-white/[0.04] border rounded-xl px-3.5 py-2.5 text-sm transition-all duration-200 cursor-pointer
+        className={`w-full flex items-center gap-2.5 bg-white/[0.04] border rounded-xl px-3.5 py-2.5 text-[15px] transition-all duration-200 cursor-pointer
           ${isOpen
             ? "border-indigo-500/50 ring-1 ring-indigo-500/20 bg-white/[0.06]"
             : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06]"
           }`}
       >
-        {Icon && <Icon className="w-4 h-4 text-white/20 flex-shrink-0" />}
+        {Icon && <Icon className="w-4 h-4 text-white/35 flex-shrink-0" />}
 
-        <span className={`flex-1 text-left truncate ${selectedOption ? "text-white" : "text-white/30"}`}>
+        <span className={`flex-1 text-left truncate ${selectedOption ? "text-white" : "text-white/45"}`}>
           {selectedOption ? (
             <span className="flex items-center gap-2">
-              {selectedOption.icon && <span className="text-xs">{selectedOption.icon}</span>}
+              {selectedOption.icon && <span className="text-[13px]">{selectedOption.icon}</span>}
               {selectedOption.label}
             </span>
           ) : (
@@ -90,14 +92,14 @@ const CustomSelect = ({
         {clearable && value && (
           <span
             onClick={handleClear}
-            className="p-0.5 rounded-md hover:bg-white/10 text-white/30 hover:text-white/60 transition-all"
+            className="p-0.5 rounded-md hover:bg-white/10 text-white/45 hover:text-white/60 transition-all"
           >
             <X className="w-3.5 h-3.5" />
           </span>
         )}
 
         <ChevronDown
-          className={`w-4 h-4 text-white/30 flex-shrink-0 transition-transform duration-200 ${
+          className={`w-4 h-4 text-white/45 flex-shrink-0 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -121,8 +123,8 @@ const CustomSelect = ({
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Ҷустуҷӯ..."
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 outline-none focus:border-indigo-500/40 transition-all"
+                  placeholder={t("admin.form.search", "Ҷустуҷӯ...")}
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-[13px] text-white placeholder:text-white/35 outline-none focus:border-indigo-500/40 transition-all"
                 />
               </div>
             )}
@@ -134,19 +136,19 @@ const CustomSelect = ({
                 <button
                   type="button"
                   onClick={() => handleSelect("")}
-                  className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer
+                  className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[15px] transition-all duration-150 cursor-pointer
                     ${!value
                       ? "bg-indigo-500/10 text-indigo-400"
-                      : "text-white/30 hover:bg-white/[0.04] hover:text-white/50"
+                      : "text-white/45 hover:bg-white/[0.04] hover:text-white/50"
                     }`}
                 >
-                  <span className="flex-1 text-left text-xs">{placeholder}</span>
+                  <span className="flex-1 text-left text-[13px]">{placeholder}</span>
                   {!value && <Check className="w-3.5 h-3.5 text-indigo-400" />}
                 </button>
               )}
 
               {filteredOptions.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-white/20">
+                <div className="px-4 py-6 text-center text-[13px] text-white/35">
                   Ёфт нашуд
                 </div>
               ) : (
@@ -157,7 +159,7 @@ const CustomSelect = ({
                       key={opt.value}
                       type="button"
                       onClick={() => handleSelect(opt.value)}
-                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm transition-all duration-150 cursor-pointer
+                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[15px] transition-all duration-150 cursor-pointer
                         ${isSelected
                           ? "bg-indigo-500/10 text-indigo-400"
                           : "text-white/60 hover:bg-white/[0.04] hover:text-white"

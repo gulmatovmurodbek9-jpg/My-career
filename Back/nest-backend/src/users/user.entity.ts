@@ -123,6 +123,12 @@ export class User {
     @OneToMany('Appointment', 'specialist')
     specialistAppointments: any[];
 
+    /* Охирин лаҳзае, ки корбар дархости воридшуда фиристод. Аз updatedAt
+       фарқ мекунад: updatedAt танҳо ҳангоми навиштан дигар мешавад, вале
+       корбаре, ки танҳо ихтисосҳоро мехонад, ҳеҷ чиз намениависад. */
+    @Column({ type: 'timestamptz', nullable: true })
+    lastSeenAt: Date | null;
+
     @CreateDateColumn()
     createdAt: Date;
 

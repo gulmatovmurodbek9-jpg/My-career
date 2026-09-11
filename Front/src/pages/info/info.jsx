@@ -25,7 +25,7 @@ import {
   Heart,
   Bookmark,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useParams, Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
@@ -146,6 +146,15 @@ const Info = () => {
   const [planIds, setPlanIds] = useState(new Set());
   const [planBusyId, setPlanBusyId] = useState(null);
   const [clusterConflict, setClusterConflict] = useState(null);
+  const conflictRef = useRef(null);
+
+  /* Панели бархӯрд дар БОЛОИ ҷадвал меистад, вале тугмаи «Илова» дар поёни
+     он аст. Корбар пахш мекард, паём берун аз экран пайдо мешуд, ва аз
+     нигоҳи ӯ тугма умуман кор намекард — бе ҳеҷ хатое. */
+  useEffect(() => {
+    if (!clusterConflict) return;
+    conflictRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [clusterConflict]);
 
   useEffect(() => {
     if (!token) return;
@@ -181,7 +190,10 @@ const Info = () => {
        * ва метавонад ҳамон ҷо рӯйхатро тоза кунад. Пештар ӯ бояд худаш
        * мефаҳмид, ки ба кадом саҳифа гузарад.
        */
-      if (err.response?.status === 409) {
+      /* Танҳо бархӯрди кластерро бо панели «тоза кунам» ҳал кардан мумкин
+         аст. Агар рӯйхат пур бошад, ҳамон панел ҳамаи 12 интихобро нест
+         мекард — барои он ҳолат паёми оддӣ бас аст. */
+      if (err.response?.status === 409 && err.response.data?.code !== "PLAN_FULL") {
         setClusterConflict({ message: err.response.data?.message, offeringId });
       } else {
         showError(err.response?.data?.message || "Иҷро нашуд");
@@ -691,7 +703,7 @@ const Info = () => {
             >
               {/* Ҳангоми бархӯрди кластер: сабаб ва роҳи баромад дар як ҷо. */}
               {clusterConflict && (
-                <div className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/10 p-5">
+                <div ref={conflictRef} className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/10 p-5">
                   <p className="text-sm leading-relaxed text-foreground">
                     {clusterConflict.message}
                   </p>

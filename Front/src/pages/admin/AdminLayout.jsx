@@ -27,7 +27,7 @@ const AdminLayout = () => {
     { path: "/admin", label: t("admin.nav.dashboard"), icon: LayoutDashboard, end: true },
     { path: "/admin/careers", label: t("admin.nav.careers"), icon: Briefcase },
     { path: "/admin/clusters", label: t("admin.nav.clusters"), icon: FolderKanban },
-    { path: "/admin/specialists", label: "Мутахассисҳо", icon: UserRoundCheck },
+    { path: "/admin/specialists", label: t("admin.nav.specialists"), icon: UserRoundCheck },
     { path: "/admin/users", label: t("admin.nav.users"), icon: Users },
   ];
 
@@ -62,7 +62,7 @@ const AdminLayout = () => {
                 exit={{ opacity: 0, x: -10 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                <span className="text-sm font-extrabold text-white tracking-tight">
+                <span className="text-[15px] font-extrabold text-white tracking-tight">
                   {t("admin.panel_title")}
                 </span>
               </motion.div>
@@ -78,10 +78,10 @@ const AdminLayout = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold transition-all duration-200 ${
                   active
                     ? "bg-indigo-500/15 text-indigo-400"
-                    : "text-white/40 hover:text-white/70 hover:bg-white/[0.03]"
+                    : "text-white/55 hover:text-white/70 hover:bg-white/[0.03]"
                 }`}
               >
                 {active && (
@@ -114,7 +114,7 @@ const AdminLayout = () => {
           {/* Back to site link */}
           <Link
             to="/"
-            className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-emerald-400/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
+            className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-emerald-400/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
           >
             <Globe className="w-[18px] h-[18px] flex-shrink-0" />
             <AnimatePresence>
@@ -136,7 +136,7 @@ const AdminLayout = () => {
         <div className="p-3 border-t border-white/[0.04] space-y-2">
           <div className={`flex items-center gap-3 px-3 py-2 rounded-xl bg-white/[0.02] ${collapsed ? 'justify-center' : ''}`}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500/30 to-purple-600/30 flex items-center justify-center flex-shrink-0 border border-indigo-500/20">
-              <span className="text-xs font-bold text-indigo-400">
+              <span className="text-[13px] font-bold text-indigo-400">
                 {user?.name?.charAt(0)?.toUpperCase() || "A"}
               </span>
             </div>
@@ -148,8 +148,8 @@ const AdminLayout = () => {
                   exit={{ opacity: 0 }}
                   className="flex-1 min-w-0"
                 >
-                  <div className="text-xs font-semibold text-white truncate">{user?.name || "Admin"}</div>
-                  <div className="text-[10px] text-white/30 truncate">{user?.email}</div>
+                  <div className="text-[13px] font-semibold text-white truncate">{user?.name || "Admin"}</div>
+                  <div className="text-[11px] text-white/45 truncate">{user?.email}</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -157,7 +157,7 @@ const AdminLayout = () => {
 
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer ${collapsed ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer ${collapsed ? 'justify-center' : ''}`}
           >
             <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
             <AnimatePresence>
@@ -171,7 +171,7 @@ const AdminLayout = () => {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-white/[0.03] text-white/20 hover:text-white/40 transition-all cursor-pointer"
+            className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-white/[0.03] text-white/35 hover:text-white/55 transition-all cursor-pointer"
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>

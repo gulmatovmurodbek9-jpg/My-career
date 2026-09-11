@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, MoreThan, Not, Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateSpecialistDto } from './dto/create-specialist.dto';
@@ -17,6 +17,9 @@ const STUDY_FORM_ORDER = ['рӯзона', 'шабона', 'ғоибона', 'ф�
 
 /* Ҳадди интихобҳо дар як рӯйхати ҳуҷҷатсупорӣ. */
 const MAX_APPLICATION_CHOICES = 12;
+const LAST_SEEN_WRITE_INTERVAL_MS = 2 * 60 * 1000;
+const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /* Коди барқарорсозӣ 15 дақиқа эътибор дорад. */
 const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000;
@@ -372,10 +375,17 @@ export class UsersService {
         const current = user.applicationChoices || [];
         if (current.includes(offeringId)) return { added: false };
 
+        /* Ҳар ду ҳолат 409 медиҳанд, аммо роҳи баромадашон тамоман фарқ
+           мекунад: «кластери дигар» бо тоза кардани рӯйхат ҳал мешавад,
+           «рӯйхат пур» бо тоза кардан ҳамаи 12 интихобро нобуд мекунад.
+            ба фронт мегӯяд, кадомаш рӯй додааст. */
         if (current.length >= MAX_APPLICATION_CHOICES) {
-            throw new ConflictException(
-                `Дар рӯйхат аз ${MAX_APPLICATION_CHOICES} интихоб зиёд шуда наметавонад`,
-            );
+            throw new ConflictException({
+                code: 'PLAN_FULL',
+                limit: MAX_APPLICATION_CHOICES,
+                message: `Дар рӯйхат аз ${MAX_APPLICATION_CHOICES} интихоб зиёд шуда наметавонад. ` +
+                    `Барои иловаи нав аввал яке аз интихобҳои кӯҳнаро аз рӯйхат бароред.`,
+            });
         }
 
         if (current.length) {
@@ -387,11 +397,13 @@ export class UsersService {
             const newCluster = offering.career?.cluster;
 
             if (existingCluster && newCluster && existingCluster.id !== newCluster.id) {
-                throw new ConflictException(
-                    `Дар рӯйхат аллакай ихтисоси кластери «${existingCluster.clusterName}» ҳаст. ` +
-                    `Дар ММТ ҳуҷҷат танҳо ба як кластер супорида мешавад — ` +
-                    `аввал рӯйхатро тоза кунед ё ихтисоси ҳамон кластерро интихоб намоед.`,
-                );
+                throw new ConflictException({
+                    code: 'CLUSTER_CONFLICT',
+                    clusterName: existingCluster.clusterName,
+                    message: `Дар рӯйхат аллакай ихтисоси кластери «${existingCluster.clusterName}» ҳаст. ` +
+                        `Дар ММТ ҳуҷҷат танҳо ба як кластер супорида мешавад — ` +
+                        `аввал рӯйхатро тоза кунед ё ихтисоси ҳамон кластерро интихоб намоед.`,
+                });
             }
         }
 
@@ -515,6 +527,77 @@ export class UsersService {
             remainingToday: DAILY_LIMIT > 0 ? Math.max(0, DAILY_LIMIT - usedToday) : null,
             limit: DAILY_LIMIT > 0 ? DAILY_LIMIT : null,
             isAdmin: false,
+        };
+    }
+    /* ── Фаъолияти корбарон ────────────────────────────────────────────────
+       lastSeenAt-ро дар ҳар дархости воридшуда навиштан гарон аст: як UPDATE
+       ба ҳар клик. Дар хотира вақти охирин навиштани ҳар корбарро нигоҳ
+       медорем ва на зиёдтар аз як бор дар 2 дақиқа менависем. Дар демо ин
+       кофист: «ҳозир дар сайт» бо равзанаи 5-дақиқагӣ ҳисоб мешавад. */
+    private readonly lastSeenWrites = new Map<string, number>();
+
+    async touchLastSeen(userId: string): Promise<void> {
+        if (!userId) return;
+        const now = Date.now();
+        const previous = this.lastSeenWrites.get(userId) ?? 0;
+        if (now - previous < LAST_SEEN_WRITE_INTERVAL_MS) return;
+        this.lastSeenWrites.set(userId, now);
+
+        /* Агар корбар нест карда шуда бошад, update танҳо 0 сатр мегардонад —
+           хато намедиҳад, ва дархости ҷорӣ набояд аз ин шикаст хӯрад. */
+        try {
+            await this.usersRepository.update(userId, { lastSeenAt: new Date() });
+        } catch {
+            this.lastSeenWrites.delete(userId);
+        }
+    }
+
+    async getActivityStats() {
+        const now = Date.now();
+        const since = (ms: number) => new Date(now - ms);
+
+        const [total, online, today, week, withQuiz, newThisWeek, byRole] = await Promise.all([
+            this.usersRepository.count(),
+            this.usersRepository.count({ where: { lastSeenAt: MoreThan(since(ONLINE_WINDOW_MS)) } }),
+            this.usersRepository.count({ where: { lastSeenAt: MoreThan(since(DAY_MS)) } }),
+            this.usersRepository.count({ where: { lastSeenAt: MoreThan(since(7 * DAY_MS)) } }),
+            this.usersRepository.count({ where: { quizResults: Not(IsNull()) } }),
+            this.usersRepository.count({ where: { createdAt: MoreThan(since(7 * DAY_MS)) } }),
+            this.usersRepository
+                .createQueryBuilder('u')
+                .select('u.role', 'role')
+                .addSelect('COUNT(*)', 'count')
+                .groupBy('u.role')
+                .getRawMany<{ role: string; count: string }>(),
+        ]);
+
+        /* Рӯйхати онҳое, ки ҳозир дар сайтанд — админ мехоҳад номҳоро бинад,
+           на танҳо рақамро. Ҳадди 20 нафар, то ҷадвал дароз нашавад. */
+        const onlineUsers = await this.usersRepository.find({
+            where: { lastSeenAt: MoreThan(since(ONLINE_WINDOW_MS)) },
+            select: ['id', 'name', 'email', 'role', 'lastSeenAt'],
+            order: { lastSeenAt: 'DESC' },
+            take: 20,
+        });
+
+        const recentUsers = await this.usersRepository.find({
+            where: { lastSeenAt: Not(IsNull()) },
+            select: ['id', 'name', 'email', 'role', 'lastSeenAt'],
+            order: { lastSeenAt: 'DESC' },
+            take: 10,
+        });
+
+        return {
+            total,
+            online,
+            today,
+            week,
+            withQuiz,
+            newThisWeek,
+            onlineWindowMinutes: ONLINE_WINDOW_MS / 60000,
+            byRole: Object.fromEntries(byRole.map((r) => [r.role, Number(r.count)])),
+            onlineUsers,
+            recentUsers,
         };
     }
 }

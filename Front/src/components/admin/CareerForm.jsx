@@ -103,8 +103,8 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
     { id: "career", label: t("admin.form.tab_career") },
   ];
 
-  const inputClass = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all";
-  const labelClass = "block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider";
+  const inputClass = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-[15px] text-white placeholder:text-white/35 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all";
+  const labelClass = "block text-[13px] font-semibold text-white/50 mb-1.5 uppercase tracking-wider";
 
   return (
     <AnimatePresence>
@@ -114,10 +114,10 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
           <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: "spring", damping: 25, stiffness: 400 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-2xl bg-[#0c1222] border border-white/10 rounded-2xl shadow-2xl z-10 max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/5">
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="text-xl font-bold text-white">
                 {career ? t("admin.careers.edit_title") : t("admin.careers.create_title")}
               </h2>
-              <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors">
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-white/55 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -125,7 +125,7 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
             {/* Tabs */}
             <div className="flex gap-1 px-6 pt-4">
               {tabs.map((tab) => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === tab.id ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/20" : "bg-white/5 text-white/40 hover:text-white/60 border border-transparent"}`}>
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${activeTab === tab.id ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/20" : "bg-white/5 text-white/55 hover:text-white/60 border border-transparent"}`}>
                   {tab.label}
                 </button>
               ))}
@@ -245,15 +245,15 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
                 <button
                   type="button"
                   onClick={() => setActiveTab("basic")}
-                  className="mr-auto text-xs text-amber-400/80 hover:text-amber-400 underline underline-offset-4 cursor-pointer"
+                  className="mr-auto text-[13px] text-amber-400/80 hover:text-amber-400 underline underline-offset-4 cursor-pointer"
                 >
                   {t("admin.form.name_required", "Аввал номи ихтисосро нависед")}
                 </button>
               )}
-              <button type="button" onClick={onClose} disabled={loading} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-sm font-semibold border border-white/10 transition-all cursor-pointer">
+              <button type="button" onClick={onClose} disabled={loading} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-[15px] font-semibold border border-white/10 transition-all cursor-pointer">
                 {t("admin.form.cancel")}
               </button>
-              <button onClick={handleSubmit} disabled={loading || !form.name.trim()} className="px-5 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-sm font-bold border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40">
+              <button onClick={handleSubmit} disabled={loading || !form.name.trim()} className="px-5 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-[15px] font-bold border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {career ? t("admin.form.save") : t("admin.form.create")}
               </button>

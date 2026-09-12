@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { UniversityService } from './university.service';
 import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
 
@@ -9,21 +9,21 @@ export class UniversityController {
 
     @Get()
     @ApiOperation({ summary: 'Get all universities with mapped career counts' })
-    async findAll() {
-        return this.universityService.findAll();
+    async findAll(@Query('lang') lang?: string) {
+        return this.universityService.findAll(lang);
     }
 
     @Get('cities')
     @ApiOperation({ summary: 'List cities that have institutions, with counts' })
-    async findCities() {
-        return this.universityService.findCities();
+    async findCities(@Query('lang') lang?: string) {
+        return this.universityService.findCities(lang);
     }
 
     @Get(':id')
     @ApiOperation({ summary: 'Get details of a single university' })
     @ApiParam({ name: 'id', description: 'UUID of the university' })
-    async findOne(@Param('id') id: string) {
-        return this.universityService.findOne(id);
+    async findOne(@Param('id') id: string, @Query('lang') lang?: string) {
+        return this.universityService.findOne(id, lang);
     }
 
     @Get(':id/specialties')

@@ -14,6 +14,7 @@ import {
 import TajikistanMap from "../../components/map/TajikistanMap";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
+import { withLang } from "../../lib/apiLang";
 
 const CITY_KEYWORDS = [
   "Душанбе",
@@ -73,7 +74,7 @@ export default function Universities() {
     const fetchUniversities = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`${API}/universities`);
+        const { data } = await axios.get(`${API}/universities`, { params: withLang() });
         setUniversities(data || []);
       } catch (error) {
         console.error("Failed to fetch universities:", error);

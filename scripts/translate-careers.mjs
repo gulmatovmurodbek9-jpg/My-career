@@ -45,6 +45,10 @@ const argValue = (flag, fallback) => {
 
 const LIMIT = Number(argValue("--limit", 0)) || null;
 
+/* Вақте маҷмӯи майдонҳо худаш тағйир меёбад, сатрҳои аллакай коркардшуда
+   бояд аз нав гузаранд — нишонаи _fields дар бораи ин чизе намедонад. */
+const REDO = args.includes("--redo");
+
 /** `--shard 1/4` — ҳиссаи 1 аз 4. Барои кори параллели чанд ҷараён. */
 const SHARD = (() => {
     const raw = argValue("--shard", null);
@@ -100,12 +104,35 @@ if (!GROQ_KEY && !GEMINI_KEY) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/*
+ * Панҷ сутун дар TypeORM `simple-array` ҳастанд — дар Postgres онҳо матни
+ * оддии бо вергул ҷудошуда мемонанд, на массив. Скрипт бо `pg` рост мехонад,
+ * аз ин рӯ сатр мегирад; санҷиши `Array.isArray` онҳоро бесадо мепартофт ва
+ * технологияҳо, имкониятҳои касбӣ, лоиҳаҳо, сертификатҳо ва ихтисосҳои
+ * вобаста ҳеҷ гоҳ тарҷума намешуданд.
+ */
+const SIMPLE_ARRAY_FIELDS = new Set([
+    "technologies",
+    "projectsExamples",
+    "careerOpportunities",
+    "relatedSpecializations",
+    "certification",
+]);
+
+const asList = (value) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+        return value.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+    return [];
+};
+
 /** Танҳо майдонҳои холинабуда мефиристем — ҳар аломат вақт ва лимит аст. */
 function payloadOf(career) {
     const out = {};
     for (const f of TEXT_FIELDS) if (career[f]) out[f] = career[f];
     for (const f of LIST_FIELDS) {
-        const v = career[f];
+        const v = SIMPLE_ARRAY_FIELDS.has(f) ? asList(career[f]) : career[f];
         if (Array.isArray(v) && v.length) out[f] = v;
     }
     for (const [parent, keys] of Object.entries(NESTED_FIELDS)) {
@@ -375,6 +402,7 @@ function validate(original, translated) {
  * «240/240 · хато 0» менавишт, дар ҳоле ки ба база ҳеҷ чиз наменавишт.
  */
 function needsWork(row, lang) {
+    if (REDO) return true;
     const existing = row.translations?.[lang];
     if (!existing) return true;
     return FIELD_SET_NAME === "all" && existing._fields !== "all";
@@ -391,7 +419,7 @@ const pool = new pg.Pool({
 async function main() {
     /* Сатре, ки бо маҷмӯи «core» тарҷума шудааст, барои гузариши «all»
        ҳанӯз нотамом аст — вагарна кӯшиши дуюм ҳамаашро мегузарад. */
-    const need = LANGS.map((l) =>
+    const need = REDO ? "TRUE" : LANGS.map((l) =>
         FIELD_SET_NAME === "all"
             ? `(NOT (translations ? '${l}') OR translations->'${l}'->>'_fields' IS DISTINCT FROM 'all')`
             : `NOT (translations ? '${l}')`,

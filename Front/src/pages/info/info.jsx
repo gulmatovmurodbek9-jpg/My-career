@@ -415,7 +415,7 @@ const Info = () => {
    * ҷойҳои кор. Нақшаи дар база захирашуда шаблон буд ва ҳамаи ин маълумотро
    * нодида мегирифт. Агар сохтан имконнопазир бошад, захирашуда мемонад.
    */
-  const roadmap = buildRoadmap(career) ?? career.roadmap ?? [];
+  const roadmap = buildRoadmap(career, t) ?? career.roadmap ?? [];
   const salary = career.salaryAndMarket;
   const techs = career.technologies || [];
   const opportunities = career.careerOpportunities || [];

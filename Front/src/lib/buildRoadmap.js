@@ -21,7 +21,13 @@ function share(items, buckets) {
   );
 }
 
-export function buildRoadmap(career) {
+/*
+ *  ҳамчун параметр меояд, на аз i18n рост гирифта мешавад: ин файл
+ * ҳуки React нест ва ба контексти забон дастрасӣ надорад. Бе он қадамҳо
+ * дар ҳама забон тоҷикӣ мемонданд — дар экран «Соли 1» бо рӯйхати англисӣ
+ * дар як ҷо менишаст.
+ */
+export function buildRoadmap(career, t = (k, o) => o?.defaultValue ?? k) {
   const technical = career?.skills?.technical ?? [];
   const soft = career?.skills?.soft ?? [];
   const tech = career?.technologies ?? [];
@@ -44,19 +50,19 @@ export function buildRoadmap(career) {
     const tasks = [...skills];
 
     if (year === 1) {
-      tasks.unshift("Фанҳои умумӣ ва заминаи назариявии ихтисос");
+      tasks.unshift(t("career_page.rm_basics"));
       if (soft.length) tasks.push(...soft.slice(0, 2));
     }
     if (year === 2 && tech.length) {
-      tasks.push("Кор бо барномаҳо: " + tech.slice(0, 4).join(", "));
+      tasks.push(t("career_page.rm_software", { list: tech.slice(0, 4).join(", ") }));
     }
     if (year === studyYears) {
-      tasks.push("Таҷрибаомӯзӣ дар ташкилоти соҳавӣ");
+      tasks.push(t("career_page.rm_internship"));
     }
 
     steps.push({
       step: year,
-      title: `Соли ${year}`,
+      title: t("career_page.rm_year", { year }),
       tasks: tasks.filter(Boolean),
     });
   }
@@ -64,10 +70,10 @@ export function buildRoadmap(career) {
   if (years > studyYears) {
     steps.push({
       step: years,
-      title: `Соли ${years} — кори хатм`,
+      title: t("career_page.rm_thesis_year", { year: years }),
       tasks: [
-        "Кори хатм (дипломӣ) аз рӯи мавзӯи интихобшуда",
-        tech.length ? "Ҳимоя бо истифодаи " + tech.slice(0, 2).join(" ва ") : null,
+        t("career_page.rm_thesis"),
+        tech.length ? t("career_page.rm_defense", { list: tech.slice(0, 2).join(", ") }) : null,
       ].filter(Boolean),
     });
   }
@@ -75,10 +81,10 @@ export function buildRoadmap(career) {
   if (jobs.length || certs.length) {
     steps.push({
       step: steps.length + 1,
-      title: "Баъди хатм",
+      title: t("career_page.rm_after"),
       tasks: [
-        jobs.length ? "Ҷойҳои кор: " + jobs.slice(0, 4).join(", ") : null,
-        certs.length ? "Сертификатҳои фоиданок: " + certs.slice(0, 3).join(", ") : null,
+        jobs.length ? t("career_page.rm_jobs", { list: jobs.slice(0, 4).join(", ") }) : null,
+        certs.length ? t("career_page.rm_certs", { list: certs.slice(0, 3).join(", ") }) : null,
       ].filter(Boolean),
     });
   }

@@ -79,6 +79,7 @@ function ResourceItem({ name }) {
  * нишон дода мешавад. Ҳеҷ рақами беруна ё тахминӣ илова намешавад.
  */
 function ChoosingHelp({ offerings }) {
+  const { t } = useTranslation();
   if (offerings.length < 2) return null;
 
   const free = offerings.filter(
@@ -93,28 +94,28 @@ function ChoosingHelp({ offerings }) {
 
   const rows = [
     free.length && {
-      label: "Ҷойҳои ройгон",
-      value: `${free.length} пешниҳод`,
+      label: t("career_page.free_seats"),
+      value: t("career_page.offers_count", { count: free.length }),
       hint: [...new Set(free.map((o) => o.university?.name))].slice(0, 2).join(", "),
     },
     cheapest && {
-      label: "Арзонтарин пулакӣ",
+      label: t("career_page.cheapest_paid"),
       value: `${cheapest.tuitionFee.toLocaleString("ru-RU")} сом./сол`,
       hint: cheapest.university?.name,
     },
     cities.length && {
-      label: "Шаҳрҳо",
-      value: cities.length > 1 ? `${cities.length} шаҳр` : cities[0],
+      label: t("career_page.cities"),
+      value: cities.length > 1 ? t("career_page.cities_count", { count: cities.length }) : cities[0],
       hint: cities.length > 1 ? cities.slice(0, 3).join(", ") : null,
     },
-    totalSeats > 0 && { label: "Ҳамагӣ ҷойҳо", value: String(totalSeats), hint: null },
+    totalSeats > 0 && { label: t("career_page.total_seats"), value: String(totalSeats), hint: null },
   ].filter(Boolean);
 
   return (
     <div className="mb-5 rounded-2xl border border-border bg-muted/30 p-5">
-      <h3 className="text-base font-semibold text-foreground">Кадомашро интихоб кунам?</h3>
+      <h3 className="text-base font-semibold text-foreground">{t("career_page.choose_title")}</h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        Муқоисаи кӯтоҳ аз рӯи ҷадвали поён
+        {t("career_page.choose_sub")}
       </p>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {rows.map((row) => (
@@ -133,7 +134,7 @@ function ChoosingHelp({ offerings }) {
 
 const Info = () => {
   const { id } = useParams();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, token, updateUser, refreshProfile } = useAuthStore();
   const { error: showError, success: showSuccess } = useToast();
   const [career, setCareer] = useState(null);
@@ -162,7 +163,7 @@ const Info = () => {
 
   const togglePlan = async (offeringId) => {
     if (!token) {
-      showError("Барои интихоб аввал ворид шавед");
+      showError(t("career_page.login_first"));
       return;
     }
     setPlanBusyId(offeringId);
@@ -178,11 +179,11 @@ const Info = () => {
           next.delete(offeringId);
           return next;
         });
-        showSuccess("Аз рӯйхати ҳуҷҷатсупорӣ бароварда шуд");
+        showSuccess(t("career_page.removed_ok"));
       } else {
         await axios.post(`${API}/users/application-plan/${offeringId}`, {}, { headers });
         setPlanIds((prev) => new Set(prev).add(offeringId));
-        showSuccess("Ба рӯйхати ҳуҷҷатсупорӣ илова шуд");
+        showSuccess(t("career_page.added_ok"));
       }
     } catch (err) {
       /*
@@ -193,7 +194,7 @@ const Info = () => {
       if (err.response?.status === 409 && err.response.data?.code !== "PLAN_FULL") {
         setClusterConflict({ message: err.response.data?.message, offeringId });
       } else {
-        showError(err.response?.data?.message || "Иҷро нашуд");
+        showError(err.response?.data?.message || t("career_page.failed"));
       }
     } finally {
       setPlanBusyId(null);
@@ -213,7 +214,7 @@ const Info = () => {
       await axios.post(`${API}/users/application-plan/${offeringId}`, {}, { headers });
       setPlanIds(new Set([offeringId]));
     } catch (err) {
-      showError(err.response?.data?.message || "Иҷро нашуд");
+      showError(err.response?.data?.message || t("career_page.failed"));
     } finally {
       setPlanBusyId(null);
     }
@@ -366,9 +367,9 @@ const Info = () => {
             <Target className="w-8 h-8 text-primary" />
           </div>
           <h2 className="text-2xl font-bold text-foreground">Ихтисос ёфт нашуд</h2>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto">Мутаассифона, ихтисоси дархостшуда дар базаи маълумот мавҷуд нест.</p>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">{t("career_page.not_found")}</p>
           <Link to="/careers" className="inline-flex items-center gap-2 btn-primary px-6 py-3 text-sm">
-            <ArrowLeft className="w-4 h-4" /> Ба рӯйхати ихтисосҳо
+            <ArrowLeft className="w-4 h-4" /> {t("career_page.back_to_list")}
           </Link>
         </div>
       </div>
@@ -438,7 +439,7 @@ const Info = () => {
             {/* Top row: Back link & Actions */}
             <div className="flex items-center justify-between">
               <Link to="/careers" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group">
-                <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> Ба рӯйхати ихтисосҳо
+                <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> {t("career_page.back_to_list")}
               </Link>
 
               <div className="flex items-center gap-2">
@@ -483,7 +484,7 @@ const Info = () => {
                   )}
                   {career.hasFreeSeats && (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      Ҷойҳои ройгон ҳастанд
+                      {t("career_page.has_free_seats")}
                     </span>
                   )}
                 </div>
@@ -508,7 +509,7 @@ const Info = () => {
               {(career.minTuitionFee || career.maxTuitionFee) && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <DollarSign className="h-3.5 w-3.5 text-secondary" />
-                  <span className="text-muted-foreground">Нархи таҳсил:</span>
+                  <span className="text-muted-foreground">{t("career_page.tuition_label")}</span>
                   <span className="font-bold text-secondary">
                     {career.minTuitionFee === career.maxTuitionFee
                       ? `${career.minTuitionFee.toLocaleString('ru-RU')} сом./сол`
@@ -527,14 +528,14 @@ const Info = () => {
               {career.contentWritten && salary?.junior && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="text-muted-foreground">Маоши ибтидоӣ:</span>
+                  <span className="text-muted-foreground">{t("career_page.starting_salary")}</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">{salary.junior}</span>
                 </div>
               )}
               {roadmap.length > 0 && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <Map className="h-3.5 w-3.5 text-primary" />
-                  <span className="font-bold text-primary">{roadmap.length} қадами омӯзишӣ</span>
+                  <span className="font-bold text-primary">{t("career_page.steps_count", { count: roadmap.length })}</span>
                 </div>
               )}
               {techs.length > 0 && (
@@ -562,7 +563,7 @@ const Info = () => {
 
           {/* --- Мақсади ихтисос --- */}
           {career.purpose && (
-            <Section icon={Target} title="Мақсади ихтисос" subtitle="Ин ихтисос барои чӣ зарур аст" gradient="from-blue-500 to-indigo-500">
+            <Section icon={Target} title={t("career_page.purpose_title")} subtitle={t("career_page.purpose_sub")} gradient="from-blue-500 to-indigo-500">
               <p className="text-muted-foreground leading-relaxed">{career.purpose}</p>
             </Section>
           )}
@@ -575,7 +576,7 @@ const Info = () => {
           )}
 
           {/* --- Маоши меҳнат --- */}
-          <Section icon={DollarSign} title="Маоши меҳнат" subtitle="Маош чӣ гуна муайян карда мешавад" gradient="from-emerald-500 to-green-500">
+          <Section icon={DollarSign} title={t("career_page.salary_title")} subtitle={t("career_page.salary_sub")} gradient="from-emerald-500 to-green-500">
             <SalarySection
               salary={salary}
               contentWritten={career.contentWritten}
@@ -586,13 +587,13 @@ const Info = () => {
 
           {/* --- Маҳоратҳо --- */}
           {career.skills && (
-            <Section icon={Code} title="Маҳоратҳои зарурӣ" subtitle="Чӣ маҳоратҳо бояд дошта бошед" gradient="from-violet-500 to-purple-500">
+            <Section icon={Code} title={t("career_page.skills_title")} subtitle={t("career_page.skills_sub")} gradient="from-violet-500 to-purple-500">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {techSkills.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
                       <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center"><Code className="w-3.5 h-3.5 text-primary" /></div>
-                      Маҳоратҳои техникӣ
+                      {t("career_page.skills_technical")}
                     </h3>
                     <div className="space-y-1.5">
                       {techSkills.map((skill, i) => (
@@ -608,7 +609,7 @@ const Info = () => {
                   <div>
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
                       <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center"><Users className="w-3.5 h-3.5 text-purple-500" /></div>
-                      Маҳоратҳои муоширатӣ
+                      {t("career_page.skills_soft")}
                     </h3>
                     <div className="space-y-1.5">
                       {softSkills.map((skill, i) => (
@@ -626,7 +627,7 @@ const Info = () => {
 
           {/* --- Технологияҳо --- */}
           {techs.length > 0 && (
-            <Section icon={Lightbulb} title="Технологияҳо ва абзорҳо" subtitle="Чӣ технологияҳоро бояд донед" gradient="from-cyan-500 to-blue-500">
+            <Section icon={Lightbulb} title={t("career_page.tech_title")} subtitle={t("career_page.tech_sub")} gradient="from-cyan-500 to-blue-500">
               <div className="flex flex-wrap gap-2">
                 {techs.map((tech, i) => (
                   <span key={i} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium bg-primary/6 text-primary border border-primary/10 hover:bg-primary/10 transition-colors">
@@ -640,7 +641,7 @@ const Info = () => {
 
           {/* --- Нақшаи роҳ --- */}
           {roadmap.length > 0 && (
-            <Section icon={Map} title="Нақшаи роҳи омӯзиш" subtitle="Қадам ба қадам ба мутахассиси касбӣ табдил ёбед" gradient="from-emerald-500 to-teal-500">
+            <Section icon={Map} title={t("career_page.roadmap_title")} subtitle={t("career_page.roadmap_sub")} gradient="from-emerald-500 to-teal-500">
               <div className="space-y-1">
                 {roadmap.map((entry, index) => {
                   // A step is either a plain string ("Соли 1: ...") or the richer
@@ -686,7 +687,7 @@ const Info = () => {
 
           {/* --- Намунаҳои лоиҳаҳо --- */}
           {career.projectsExamples?.length > 0 && (
-            <Section icon={Building} title="Намунаҳои лоиҳаҳо" subtitle="Чӣ лоиҳаҳо метавонед эҷод кунед" gradient="from-orange-500 to-amber-500">
+            <Section icon={Building} title={t("career_page.projects_title")} subtitle={t("career_page.projects_sub")} gradient="from-orange-500 to-amber-500">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {career.projectsExamples.map((project, i) => (
                   <div key={i} className="flex items-center gap-3 glass-card-sm p-4 rounded-xl hover:shadow-sm transition-shadow">
@@ -702,7 +703,7 @@ const Info = () => {
 
           {/* --- Имкониятҳои касбӣ --- */}
           {opportunities.length > 0 && (
-            <Section icon={Briefcase} title="Имкониятҳои касбӣ" subtitle="Дар оянда кадом вазифаҳоро гирифта метавонед" gradient="from-indigo-500 to-violet-500">
+            <Section icon={Briefcase} title={t("career_page.jobs_title")} subtitle={t("career_page.jobs_sub")} gradient="from-indigo-500 to-violet-500">
               {/*
                 Пештар ҳаббҳои бунафш бо ситорачаи «AI» буданд. Ин ҷойҳои кори
                 воқеӣ ҳастанд, на теги ороишӣ, аз ин рӯ ҳамчун рӯйхат нишон
@@ -723,7 +724,7 @@ const Info = () => {
 
           {/* --- Сертификатҳо --- */}
           {certs.length > 0 && (
-            <Section icon={Award} title="Сертификатҳо" subtitle="Сертификатҳое ки арзиши касбиро баланд мебардоранд" gradient="from-amber-500 to-yellow-500">
+            <Section icon={Award} title={t("career_page.certs_title")} subtitle={t("career_page.certs_sub")} gradient="from-amber-500 to-yellow-500">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {certs.map((cert, i) => (
                   <div key={i} className="flex items-center gap-3 glass-card-sm p-4 rounded-xl hover:shadow-sm transition-shadow">
@@ -742,8 +743,8 @@ const Info = () => {
             <Section
               id="universities"
               icon={GraduationCap}
-              title="Дар куҷо омӯхтан мумкин аст"
-              subtitle={`${offerings.length} пешниҳод дар ${new Set(offerings.map(o => o.university?.name)).size} муассиса — аз арзонтарин сар карда`}
+              title={t("career_page.where_title")}
+              subtitle={t("career_page.offers_summary", { offers: offerings.length, places: new Set(offerings.map(o => o.university?.name)).size })}
               gradient="from-blue-500 to-cyan-500"
             >
               <ChoosingHelp offerings={offerings} />
@@ -752,13 +753,13 @@ const Info = () => {
                 <table className="w-full min-w-[720px] text-sm border-separate border-spacing-y-1.5">
                   <thead>
                     <tr className="text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      <th className="px-4 py-2">Муассиса</th>
-                      <th className="px-4 py-2">Шаҳр</th>
-                      <th className="px-4 py-2">Шакл</th>
-                      <th className="px-4 py-2">Забон</th>
-                      <th className="px-4 py-2 text-center">Ҷойҳо</th>
-                      <th className="px-4 py-2 text-right">Нарх (сол)</th>
-                      <th className="px-4 py-2 text-right">Интихоб</th>
+                      <th className="px-4 py-2">{t("career_page.th_institution")}</th>
+                      <th className="px-4 py-2">{t("career_page.th_city")}</th>
+                      <th className="px-4 py-2">{t("career_page.th_form")}</th>
+                      <th className="px-4 py-2">{t("career_page.th_language")}</th>
+                      <th className="px-4 py-2 text-center">{t("career_page.th_seats")}</th>
+                      <th className="px-4 py-2 text-right">{t("career_page.th_price")}</th>
+                      <th className="px-4 py-2 text-right">{t("career_page.th_choose")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -767,7 +768,7 @@ const Info = () => {
                         <td className="px-4 py-3 rounded-l-xl">
                           <div className="font-semibold text-foreground leading-snug">{offering.university?.name}</div>
                           {offering.university?.isState === false && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">ғайридавлатӣ</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">{t("career_page.non_state")}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
@@ -800,7 +801,7 @@ const Info = () => {
                           >
                             {planBusyId === offering.id
                               ? "…"
-                              : planIds.has(offering.id) ? "✓ Дар рӯйхат" : "+ Илова"}
+                              : planIds.has(offering.id) ? t("career_page.in_list") : t("career_page.add")}
                           </button>
                         </td>
                       </tr>
@@ -810,7 +811,7 @@ const Info = () => {
               </div>
             </Section>
           ) : unis.length > 0 && (
-            <Section icon={GraduationCap} title="Донишгоҳҳо" subtitle="Дар куҷо метавонед ин ихтисосро омӯзед" gradient="from-blue-500 to-cyan-500">
+            <Section icon={GraduationCap} title={t("career_page.unis_title")} subtitle={t("career_page.where_sub_short")} gradient="from-blue-500 to-cyan-500">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {unis.map((uni, i) => (
                   <div key={i} className="glass-card-sm p-5 rounded-xl hover:shadow-sm transition-shadow">
@@ -833,13 +834,13 @@ const Info = () => {
 
           {/* --- Манбаъҳои омӯзишӣ --- */}
           {resources && (
-            <Section icon={BookOpen} title="Манбаъҳои омӯзишӣ" subtitle="Китобҳо, курсҳо ва блогҳо барои омӯзиш" gradient="from-rose-500 to-pink-500">
+            <Section icon={BookOpen} title={t("career_page.resources_title")} subtitle={t("career_page.resources_sub")} gradient="from-rose-500 to-pink-500">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {resources.books?.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
                       <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-primary" /></div>
-                      Китобҳо
+                      {t("career_page.books")}
                     </h3>
                     <div className="space-y-1.5">
                       {resources.books.map((book, i) => (
@@ -852,7 +853,7 @@ const Info = () => {
                   <div>
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
                       <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center"><ExternalLink className="w-3.5 h-3.5 text-purple-500" /></div>
-                      Курсҳо
+                      {t("career_page.courses")}
                     </h3>
                     <div className="space-y-1.5">
                       {resources.courses.map((course, i) => (
@@ -865,7 +866,7 @@ const Info = () => {
                   <div>
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
                       <div className="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center"><ExternalLink className="w-3.5 h-3.5 text-cyan-500" /></div>
-                      Блогҳо
+                      {t("career_page.blogs")}
                     </h3>
                     <div className="space-y-1.5">
                       {resources.blogs.map((blog, i) => (
@@ -880,7 +881,7 @@ const Info = () => {
 
           {/* --- Ихтисосҳои вобаста --- */}
           {related.length > 0 && (
-            <Section icon={Layers} title="Ихтисосҳои вобаста" subtitle="Ихтисосҳои наздик ба ин соҳа" gradient="from-violet-500 to-purple-500">
+            <Section icon={Layers} title={t("career_page.related_title")} subtitle={t("career_page.related_sub")} gradient="from-violet-500 to-purple-500">
               {/*
                 Инҳо `span` буданд — намуди зернашаванда доштанд, вале ҳеҷ ҷо
                 намебурданд. Ҳоло ба рӯйхати ихтисосҳо бо ҷустуҷӯи ҳамон ном
@@ -915,7 +916,7 @@ const Info = () => {
                       <Lightbulb className="w-5.5 h-5.5 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-foreground mb-2">Маслиҳати тиллоӣ 💡</h2>
+                      <h2 className="text-lg font-bold text-foreground mb-2">{t("career_page.golden_advice")} 💡</h2>
                       <p className="text-muted-foreground leading-relaxed italic text-base">
                         &ldquo;{career.advice}&rdquo;
                       </p>
@@ -933,9 +934,9 @@ const Info = () => {
 
           {/* --- Back to careers --- */}
           <motion.div {...fadeIn} className="text-center pt-8 pb-4">
-            <p className="text-sm text-muted-foreground mb-4">Ихтисосҳои дигарро низ дидан мехоҳед?</p>
+            <p className="text-sm text-muted-foreground mb-4">{t("career_page.more_careers")}</p>
             <Link to="/careers" className="inline-flex items-center gap-2 btn-primary px-8 py-3.5 text-sm shadow-lg hover:shadow-xl transition-shadow">
-              <ArrowLeft className="w-4 h-4" /> Ба рӯйхати ихтисосҳо
+              <ArrowLeft className="w-4 h-4" /> {t("career_page.back_to_list")}
             </Link>
           </motion.div>
         </div>
@@ -962,7 +963,7 @@ const Info = () => {
                 <AlertCircle className="h-5 w-5 text-amber-500" />
               </div>
               <div className="min-w-0">
-                <h3 className="mb-1.5 font-bold text-foreground">Ин ихтисос аз кластери дигар аст</h3>
+                <h3 className="mb-1.5 font-bold text-foreground">{t("career_page.other_cluster_title")}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {clusterConflict.message}
                 </p>
@@ -975,14 +976,14 @@ const Info = () => {
                 onClick={clearPlanAndAdd}
                 className="cursor-pointer rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
               >
-                Рӯйхатро тоза кунам ва инро илова намоям
+                {t("career_page.clear_and_add")}
               </button>
               <Link to="/dashboard/plan">
                 <button
                   type="button"
                   className="w-full cursor-pointer rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  Рӯйхатро дидан
+                  {t("career_page.view_list")}
                 </button>
               </Link>
               <button
@@ -990,7 +991,7 @@ const Info = () => {
                 onClick={() => setClusterConflict(null)}
                 className="cursor-pointer rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground sm:ml-auto"
               >
-                Бекор
+                {t("career_page.cancel")}
               </button>
             </div>
           </motion.div>

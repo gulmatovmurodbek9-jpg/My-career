@@ -197,6 +197,39 @@ async function translate(prompt) {
     }
 }
 
+/*
+ * Танзими суръат аз рӯи худи Groq.
+ *
+ * Лимит 8 000 токен дар як дақиқа аст — тақрибан ду дархост. Скрипт бе
+ * танзим онҳоро пай дар пай мепартофт, аз лимит мегузашт ва 429 мегирифт;
+ * интизории 2-4-6 сония кӯтоҳ буд, кӯшишҳо тамом мешуданд ва тамоми баста
+ * партофта мешуд. Дар як гузариш ин 136 хато дод.
+ *
+ * Ҳоло сарлавҳаҳои ҷавоб хонда мешаванд: агар токен ба охир расида бошад,
+ * скрипт то пур шудани равзана мехобад ва танҳо баъд дархости навбатӣ
+ * мефиристад. Интизории огоҳона аз 429-и такрорӣ хеле арзонтар аст.
+ */
+const secondsFrom = (value) => {
+    if (!value) return 0;
+    const m = String(value).match(/(?:([\d.]+)m)?([\d.]+)s/);
+    if (m) return (Number(m[1] || 0) * 60 + Number(m[2] || 0));
+    return Number(value) || 0;
+};
+
+async function respectGroqBudget(headers) {
+    const left = Number(headers.get("x-ratelimit-remaining-tokens"));
+    if (!Number.isFinite(left)) return;
+
+    /* Як дархост тақрибан 4 500 токен мегирад — бо камтар аз ин пеш нарафтан. */
+    if (left > 5000) return;
+
+    const wait = Math.min(secondsFrom(headers.get("x-ratelimit-reset-tokens")) + 1, 65);
+    if (wait > 0) {
+        process.stdout.write(`\n   ⏸ ${left} токен мондааст — ${wait.toFixed(0)}с интизор`);
+        await sleep(wait * 1000);
+    }
+}
+
 async function callGroq(prompt, attempt = 1) {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -210,16 +243,24 @@ async function callGroq(prompt, attempt = 1) {
     });
 
     if (res.status === 429 || res.status >= 500) {
-        if (attempt > 4) throw new Error(`Groq ${res.status} пас аз 4 кӯшиш`);
-        const wait = 2000 * attempt;
-        console.log(`   … ${res.status}, ${wait / 1000}с интизор`);
-        await sleep(wait);
+        if (attempt > 6) throw new Error(`Groq ${res.status} пас аз 6 кӯшиш`);
+        /* Худи Groq мегӯяд, чӣ қадар интизор шудан лозим — тахмин накунем. */
+        const wait = Math.min(
+            (secondsFrom(res.headers.get("retry-after")) ||
+                secondsFrom(res.headers.get("x-ratelimit-reset-tokens")) ||
+                attempt * 8) + 1,
+            70,
+        );
+        process.stdout.write(`\n   … ${res.status}, ${wait.toFixed(0)}с интизор`);
+        await sleep(wait * 1000);
         return callGroq(prompt, attempt + 1);
     }
     if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 180)}`);
 
     const data = await res.json();
-    return data?.choices?.[0]?.message?.content ?? "";
+    const text = data?.choices?.[0]?.message?.content ?? "";
+    await respectGroqBudget(res.headers);
+    return text;
 }
 
 /** Модел баъзан массивро дар калиди дилхоҳ мепечонад. */

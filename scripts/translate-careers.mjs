@@ -180,7 +180,62 @@ async function callGemini(prompt, attempt = 1) {
  */
 let geminiPausedUntil = 0;
 
+/*
+ * Vertex — провайдери аввал, вақте танзим шуда бошад.
+ *
+ * Vertex ба лоиҳаи воқеии Google Cloud мебандад, на ба лимити ройгон:
+ * маҳдудияти 8 000 токен дар дақиқаи Groq ва квотаи рӯзонаи Gemini дар ин
+ * ҷо нест. Барои 884 ихтисос фарқ байни тақрибан ду соат ва бист дақиқа аст.
+ *
+ * Эътимоднома аз `GOOGLE_APPLICATION_CREDENTIALS` (файли service account)
+ * гирифта мешавад — ҳамон тавре, ки худи барнома мегирад.
+ */
+let vertexClient = null;
+if (env.VERTEX_PROJECT_ID && env.GOOGLE_APPLICATION_CREDENTIALS) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = env.GOOGLE_APPLICATION_CREDENTIALS;
+    try {
+        const { GoogleGenAI } = require("@google/genai");
+        vertexClient = new GoogleGenAI({
+            vertexai: true,
+            project: env.VERTEX_PROJECT_ID,
+            location: env.VERTEX_LOCATION || "global",
+        });
+        console.log(`Vertex: лоиҳаи ${env.VERTEX_PROJECT_ID}, минтақаи ${env.VERTEX_LOCATION || "global"}`);
+    } catch (err) {
+        console.log(`Vertex дастрас нест (${err.message}) — Groq истифода мешавад`);
+    }
+}
+
+async function callVertex(prompt) {
+    const res = await vertexClient.models.generateContent({
+        model: env.VERTEX_MODEL || "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            temperature: 0.2,
+            /* Тарҷума мулоҳиза намехоҳад, ва ҳар токени «фикр» вақт аст. */
+            thinkingConfig: { thinkingBudget: 0 },
+        },
+    });
+    const text = res?.text ?? "";
+    if (!text) throw new Error("Vertex ҷавоби холӣ дод");
+    return text;
+}
+
+let vertexPausedUntil = 0;
+
 async function translate(prompt) {
+    if (vertexClient && Date.now() > vertexPausedUntil) {
+        try {
+            return await callVertex(prompt);
+        } catch (err) {
+            /* Як афтиш тамоми гузаришро суст накунад: Vertex як дақиқа
+               даст нахӯрад, ва кор дар ин муддат тавассути Groq меравад. */
+            vertexPausedUntil = Date.now() + 60 * 1000;
+            process.stdout.write(`\n   Vertex афтод (${String(err.message).slice(0, 70)}) — Groq`);
+        }
+    }
+
     try {
         return await callGroq(prompt);
     } catch (groqError) {

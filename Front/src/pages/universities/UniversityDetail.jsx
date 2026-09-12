@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
+import { withLang } from "../../lib/apiLang";
 import { 
   Building2, MapPin, ArrowLeft, BookOpen, Clock, 
   GraduationCap, Info, Search, Filter, ShieldCheck 
@@ -35,8 +36,8 @@ export default function UniversityDetail() {
       try {
         setLoading(true);
         const [uniRes, specRes] = await Promise.all([
-          axios.get(`${API}/universities/${id}`),
-          axios.get(`${API}/universities/${id}/specialties`),
+          axios.get(`${API}/universities/${id}`, { params: withLang() }),
+          axios.get(`${API}/universities/${id}/specialties`, { params: withLang() }),
         ]);
         setUniversity(uniRes.data);
         setSpecialties(specRes.data);
@@ -149,9 +150,15 @@ export default function UniversityDetail() {
             
             <div className="flex-1 space-y-4">
               <div className="space-y-2">
+                {/* Номи тарҷумашуда сарлавҳа мешавад, вале номи расмии тоҷикӣ
+                    зери он мемонад: ҳуҷҷат маҳз бо ҳамон ном супорида мешавад
+                    ва довталаб бояд онро дар рӯйхати ММТ ёфта тавонад. */}
                 <h1 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
-                  {university.name}
+                  {university.nameTranslated || university.name}
                 </h1>
+                {university.nameTranslated && (
+                  <p className="text-sm text-muted-foreground">{university.name}</p>
+                )}
                 {/*
                   Нишонҳо танҳо аз маълумоти воқеии база сохта мешаванд.
                   Пештар дар ин ҷо «Аккредитатсияшуда» сахт навишта шуда буд ва

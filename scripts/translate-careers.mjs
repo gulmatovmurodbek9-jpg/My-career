@@ -366,6 +366,20 @@ function validate(original, translated) {
     return clean;
 }
 
+/**
+ * Оё ин сатр барои ин забон кор мехоҳад?
+ *
+ * Ҳамон шарте, ки дар дархости SQL аст — ва бояд ҳамон бошад. Пештар
+ * филтри ҳалқа танҳо «забон ҳаст?» мепурсид: пас аз гузариши «core» ҳарду
+ * забон мавҷуд буданд, гузариши «all» ҳар сатрро бесадо мегузаронд ва
+ * «240/240 · хато 0» менавишт, дар ҳоле ки ба база ҳеҷ чиз наменавишт.
+ */
+function needsWork(row, lang) {
+    const existing = row.translations?.[lang];
+    if (!existing) return true;
+    return FIELD_SET_NAME === "all" && existing._fields !== "all";
+}
+
 const pool = new pg.Pool({
     host: env.DB_HOST,
     port: Number(env.DB_PORT || 5432),
@@ -415,7 +429,7 @@ async function main() {
         const slice = rows.slice(i, i + BATCH);
 
         /* Як дархост барои ҳамаи забонҳои нарасида. */
-        const pending = slice.filter((r) => LANGS.some((l) => !r.translations?.[l]));
+        const pending = slice.filter((r) => LANGS.some((l) => needsWork(r, l)));
         if (pending.length) {
             const items = pending.map((r) => ({ id: r.id, ...payloadOf(r) }));
             try {
@@ -428,7 +442,7 @@ async function main() {
                     if (!got) { failed += LANGS.length; continue; }
 
                     for (const lang of LANGS) {
-                        if (row.translations?.[lang]) continue;
+                        if (!needsWork(row, lang)) continue;
 
                         const clean = validate(payloadOf(row), got[lang]);
                         if (!Object.keys(clean).length) { failed++; continue; }

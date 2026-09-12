@@ -87,8 +87,44 @@ const FIELD_SETS = {
     },
 };
 
+/*
+ * Ду ҷадвал тарҷума мешавад. Донишгоҳҳо маҷмӯи майдонҳо надоранд — онҳо
+ * ҳамагӣ панҷ сатри кӯтоҳанд ва як гузариш кифоя аст.
+ *
+ * `name` тарҷума мешавад, вале сутуни аслӣ ҳеҷ гоҳ иваз намегардад: ҳуҷҷат
+ * бо номи расмии тоҷикӣ супорида мешавад.
+ */
+const TABLES = {
+    career: {
+        table: "career",
+        order: '"codeSort"',
+        columns: `id, name, description, purpose, advice, skills, technologies, roadmap,
+                  "projectsExamples", "careerOpportunities", "relatedSpecializations",
+                  certification, "learningResources", translations`,
+        fieldSets: FIELD_SETS,
+        subject: "Tajik higher-education specialty descriptions",
+    },
+    universities: {
+        table: "universities",
+        order: "name",
+        columns: 'id, name, city, region, "institutionType", address, translations',
+        fieldSets: {
+            core: { text: ["name", "city", "region", "institutionType", "address"], list: [], nested: {} },
+            all: { text: ["name", "city", "region", "institutionType", "address"], list: [], nested: {} },
+        },
+        subject: "Tajik university and college records",
+    },
+};
+
+const TABLE_NAME = argValue("--table", "career");
+const TABLE = TABLES[TABLE_NAME];
+if (!TABLE) {
+    console.error(`--table нодуруст: ${TABLE_NAME} (career ё universities)`);
+    process.exit(1);
+}
+
 const FIELD_SET_NAME = argValue("--fields", "core");
-const FIELDS = FIELD_SETS[FIELD_SET_NAME] || FIELD_SETS.core;
+const FIELDS = TABLE.fieldSets[FIELD_SET_NAME] || TABLE.fieldSets.core;
 const TEXT_FIELDS = FIELDS.text;
 const LIST_FIELDS = FIELDS.list;
 const NESTED_FIELDS = FIELDS.nested;
@@ -155,7 +191,7 @@ function payloadOf(career) {
  */
 function buildPrompt(items, langs) {
     const names = langs.map((l) => `"${l}" (${LANG_NAME[l]})`).join(" and ");
-    return `You translate Tajik higher-education content into ${names}.
+    return `You translate ${TABLE.subject} into ${names}.
 
 RULES
 - Translate the MEANING, naturally, as a careers website would word it.
@@ -453,16 +489,14 @@ async function main() {
         : "";
 
     const { rows } = await pool.query(
-        `SELECT id, name, description, purpose, advice, skills, technologies, roadmap,
-                "projectsExamples", "careerOpportunities", "relatedSpecializations",
-                certification, "learningResources", translations
-           FROM career
+        `SELECT ${TABLE.columns}
+           FROM ${TABLE.table}
           WHERE (${need}) ${shardFilter}
-          ORDER BY "codeSort"
+          ORDER BY ${TABLE.order}
           ${LIMIT ? `LIMIT ${LIMIT}` : ""}`,
     );
 
-    console.log(`Коркарднашуда: ${rows.length} ихтисос · забонҳо: ${LANGS.join(", ")} · бастаи ${BATCH}`);
+    console.log(`Коркарднашуда: ${rows.length} сатри ${TABLE_NAME} · забонҳо: ${LANGS.join(", ")} · бастаи ${BATCH}`);
     if (!rows.length) return;
 
     let done = 0;
@@ -495,7 +529,7 @@ async function main() {
                         clean._fields = FIELD_SET_NAME;
 
                         await pool.query(
-                            `UPDATE career
+                            `UPDATE ${TABLE.table}
                                 SET translations = jsonb_set(COALESCE(translations,'{}'::jsonb), $2, $3::jsonb, true)
                               WHERE id = $1`,
                             [row.id, `{${lang}}`, JSON.stringify(clean)],

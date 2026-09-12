@@ -71,6 +71,15 @@ export class University {
     @OneToMany(() => CareerOffering, (offering) => offering.university)
     offerings: CareerOffering[];
 
+    /**
+     * Тарҷумаи маълумот: { ru: {...}, en: {...} }.
+     *
+     * Номи тоҷикӣ дар сутуни name мемонад — ҳуҷҷат маҳз бо номи расмӣ супорида
+     * мешавад ва довталаб бояд онро дар рӯйхати ММТ ёфта тавонад.
+     */
+    @Column({ type: 'jsonb', default: {} })
+    translations: Record<string, Record<string, any>>;
+
     @CreateDateColumn()
     createdAt: Date;
 

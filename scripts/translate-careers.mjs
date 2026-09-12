@@ -371,6 +371,22 @@ function extractArray(raw) {
  * Бе ин модел метавонад як элементи массивро партояд ва рӯйхати қадамҳо
  * кӯтоҳ шавад — дар база ин бесадо мемонад ва баъд дар экран пайдо мешавад.
  */
+/*
+ * Рӯйхатро ба дарозии аслӣ меорад.
+ *
+ * Пештар ҳангоми нобаробарии дарозӣ майдон ТАМОМАН партофта мешавад, ва
+ * модел баъзан як элементро мепартояд ё дуто якҷо мекунад. Натиҷа: рӯйхати
+ * технологияҳо ё имкониятҳо дар даҳҳо ихтисос тарҷума намешуд ва бо забони
+ * тоҷикӣ мемонд. Ҳоло он чи омадааст нигоҳ дошта мешавад, ҷойҳои холӣ аз
+ * матни аслӣ пур мегарданд, ва зиёдатӣ бурида мешавад — дарозӣ ҳамеша ба
+ * сарчашма баробар мемонад.
+ */
+const alignList = (source, value) =>
+    source.map((fallback, i) => {
+        const item = value[i];
+        return typeof item === "string" && item.trim() ? item.trim() : fallback;
+    });
+
 function validate(original, translated) {
     const clean = {};
     for (const [key, value] of Object.entries(translated || {})) {
@@ -378,13 +394,13 @@ function validate(original, translated) {
         const source = original[key];
         if (typeof source === "string" && typeof value === "string" && value.trim()) {
             clean[key] = value.trim();
-        } else if (Array.isArray(source) && Array.isArray(value) && value.length === source.length) {
-            clean[key] = value.map((x, i) => (typeof x === "string" && x.trim() ? x.trim() : source[i]));
+        } else if (Array.isArray(source) && Array.isArray(value) && value.length) {
+            clean[key] = alignList(source, value);
         } else if (source && typeof source === "object" && value && typeof value === "object") {
             const inner = {};
             for (const [k, arr] of Object.entries(value)) {
-                if (Array.isArray(source[k]) && Array.isArray(arr) && arr.length === source[k].length) {
-                    inner[k] = arr.map((x, i) => (typeof x === "string" && x.trim() ? x.trim() : source[k][i]));
+                if (Array.isArray(source[k]) && Array.isArray(arr) && arr.length) {
+                    inner[k] = alignList(source[k], arr);
                 }
             }
             if (Object.keys(inner).length) clean[key] = inner;

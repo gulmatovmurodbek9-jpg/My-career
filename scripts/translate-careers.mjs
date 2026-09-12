@@ -44,6 +44,18 @@ const argValue = (flag, fallback) => {
 };
 
 const LIMIT = Number(argValue("--limit", 0)) || null;
+
+/** `--shard 1/4` — ҳиссаи 1 аз 4. Барои кори параллели чанд ҷараён. */
+const SHARD = (() => {
+    const raw = argValue("--shard", null);
+    if (!raw) return null;
+    const [index, total] = raw.split("/").map(Number);
+    if (!Number.isInteger(index) || !Number.isInteger(total) || total < 1 || index >= total) {
+        console.error(`--shard нодуруст: ${raw} (интизор: 0/4)`);
+        process.exit(1);
+    }
+    return { index, total };
+})();
 const ONLY_LANG = argValue("--lang", null);
 const BATCH = Number(argValue("--batch", 4));
 
@@ -370,12 +382,24 @@ async function main() {
             ? `(NOT (translations ? '${l}') OR translations->'${l}'->>'_fields' IS DISTINCT FROM 'all')`
             : `NOT (translations ? '${l}')`,
     ).join(" OR ");
+    /*
+     * Тақсим байни якчанд ҷараён: `--shard 0/4`, `--shard 1/4` ва ғайра.
+     *
+     * Як ҷараён тақрибан 34 ихтисос дар дақиқа медиҳад, ва маҳдудият дар
+     * шабака аст, на дар Vertex. Тақсим аз рӯи hash-и `id` меравад, на аз
+     * рӯи OFFSET: сатрҳо ҳангоми кор аз рӯйхат мебароянд ва OFFSET қисми
+     * онҳоро мегузаронд, ва ду ҷараён як сатрро ду бор тарҷума мекарданд.
+     */
+    const shardFilter = SHARD
+        ? `AND abs(hashtext(id::text)) % ${SHARD.total} = ${SHARD.index}`
+        : "";
+
     const { rows } = await pool.query(
         `SELECT id, name, description, purpose, advice, skills, technologies, roadmap,
                 "projectsExamples", "careerOpportunities", "relatedSpecializations",
                 certification, "learningResources", translations
            FROM career
-          WHERE ${need}
+          WHERE (${need}) ${shardFilter}
           ORDER BY "codeSort"
           ${LIMIT ? `LIMIT ${LIMIT}` : ""}`,
     );

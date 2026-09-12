@@ -1,4 +1,5 @@
 import { Building2, Info, Rocket, Star, TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { SALARY_SOURCE, sectorFor } from "../lib/salarySectors";
 
 /**
@@ -18,14 +19,15 @@ import { SALARY_SOURCE, sectorFor } from "../lib/salarySectors";
  */
 
 const TIERS = [
-  { key: "junior", label: "Навкор", years: "0-1 соли таҷриба", icon: Rocket },
-  { key: "mid", label: "Миёна", years: "2-4 соли таҷриба", icon: TrendingUp },
-  { key: "senior", label: "Таҷрибадор", years: "5+ соли таҷриба", icon: Star },
+  { key: "junior", icon: Rocket },
+  { key: "mid", icon: TrendingUp },
+  { key: "senior", icon: Star },
 ];
 
 const som = (value) => value.toLocaleString("ru-RU");
 
 function SectorAverage({ sector }) {
+  const { t } = useTranslation();
   // Нисбат ба миёнаи кишвар — рақами танҳо маъное надорад.
   const ratio = Math.round((sector.amount / SALARY_SOURCE.nationalAverage) * 100);
   const diff = ratio - 100;
@@ -33,45 +35,45 @@ function SectorAverage({ sector }) {
   return (
     <div className="rounded-2xl border border-border p-5">
       <p className="text-sm text-muted-foreground">
-        Маоши миёна дар соҳаи «{sector.label}»
+        {t("career_page.sal_avg_in", { sector: sector.label })}
       </p>
       <p className="mt-1 text-3xl font-semibold text-foreground">
-        {som(sector.amount)} <span className="text-xl font-normal text-muted-foreground">сомонӣ/моҳ</span>
+        {som(sector.amount)} <span className="text-xl font-normal text-muted-foreground">{t("career_page.sal_per_month")}</span>
       </p>
 
       <div className="mt-4 space-y-2 border-t border-border pt-4">
         <div className="flex items-baseline justify-between gap-4">
-          <span className="text-sm text-muted-foreground">Миёнаи кишвар</span>
+          <span className="text-sm text-muted-foreground">{t("career_page.sal_national")}</span>
           <span className="text-sm font-medium text-foreground">
-            {som(SALARY_SOURCE.nationalAverage)} сомонӣ
+            {som(SALARY_SOURCE.nationalAverage)} {t("career_page.sal_somoni")}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-4">
-          <span className="text-sm text-muted-foreground">Нисбат ба миёнаи кишвар</span>
+          <span className="text-sm text-muted-foreground">{t("career_page.sal_vs_national")}</span>
           <span className="text-sm font-medium text-foreground">
-            {diff === 0 ? "баробар" : `${diff > 0 ? "+" : ""}${diff}%`}
+            {diff === 0 ? t("career_page.sal_equal") : `${diff > 0 ? "+" : ""}${diff}%`}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-4">
-          <span className="text-sm text-muted-foreground">Ҳадди ақали қонунӣ</span>
+          <span className="text-sm text-muted-foreground">{t("career_page.sal_minimum")}</span>
           <span className="text-sm font-medium text-foreground">
-            {som(SALARY_SOURCE.minimumWage)} сомонӣ
+            {som(SALARY_SOURCE.minimumWage)} {t("career_page.sal_somoni")}
           </span>
         </div>
       </div>
 
       <p className="mt-4 text-sm leading-6 text-muted-foreground">
-        Ин миёнаи тамоми соҳа аст, на маоши маҳз ин ихтисос. Маоши шумо аз
-        корфармо, шаҳр ва таҷрибаатон вобаста аст.
+        {t("career_page.sal_note")}
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        Манбаъ: {SALARY_SOURCE.agency}, {SALARY_SOURCE.period}
+        {t("career_page.sal_source", { source: `${SALARY_SOURCE.agency}, ${SALARY_SOURCE.period}` })}
       </p>
     </div>
   );
 }
 
 function LegalBasis() {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div className="rounded-2xl border border-border p-4">
@@ -79,13 +81,10 @@ function LegalBasis() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Building2 className="h-4 w-4 text-primary" />
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Дар соҳаи давлатӣ</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t("career_page.sal_public")}</h3>
         </div>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Маош аз рӯи Кодекси меҳнати Ҷумҳурии Тоҷикистон ва шабакаи ягонаи
-          тарифӣ муайян мешавад: музди ҳадди ақали қонунӣ зарб бар зинаи тарифии
-          вазифа. Ба он иловапулиҳо барои дараҷа, собиқаи кор ва шароити меҳнат
-          зам мешаванд.
+          {t("career_page.sal_public_text")}
         </p>
       </div>
 
@@ -94,12 +93,10 @@ function LegalBasis() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <TrendingUp className="h-4 w-4 text-primary" />
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Дар соҳаи хусусӣ</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t("career_page.sal_private")}</h3>
         </div>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Маош бо шартномаи меҳнатӣ байни корманд ва корфармо муайян мешавад ва
-          аз музди ҳадди ақали қонунӣ паст буда наметавонад. Рақами дақиқ аз
-          ширкат, шаҳр ва таҷрибаи шумо вобаста аст.
+          {t("career_page.sal_private_text")}
         </p>
       </div>
     </div>
@@ -107,8 +104,14 @@ function LegalBasis() {
 }
 
 export default function SalarySection({ salary, contentWritten, careerName, clusterName }) {
+  const { t } = useTranslation();
   const sector = sectorFor(careerName, clusterName);
-  const tiers = TIERS.map((tier) => ({ ...tier, value: salary?.[tier.key] })).filter(
+  const tiers = TIERS.map((tier) => ({
+    ...tier,
+    label: t(`career_page.lvl_${tier.key}`),
+    years: t(`career_page.lvl_${tier.key}_years`),
+    value: salary?.[tier.key],
+  })).filter(
     (tier) => tier.value,
   );
   const showTiers = contentWritten && tiers.length > 0;
@@ -120,7 +123,7 @@ export default function SalarySection({ salary, contentWritten, careerName, clus
       {showTiers && (
         <div>
           <p className="mb-3 text-sm text-muted-foreground">
-            Аз рӯи таҷриба дар ҳамин ихтисос
+            {t("career_page.sal_by_experience")}
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {tiers.map((tier) => (
@@ -139,8 +142,7 @@ export default function SalarySection({ salary, contentWritten, careerName, clus
         <div className="flex gap-3 rounded-2xl border border-border bg-muted/30 p-4">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p className="text-sm leading-6 text-muted-foreground">
-            Барои ин ихтисос маълумоти тасдиқшудаи маош надорем. Рақами тахминӣ
-            нишон намедиҳем, то шумо дар асоси маълумоти нодуруст қарор нагиред.
+            {t("career_page.sal_no_data")}
           </p>
         </div>
       )}

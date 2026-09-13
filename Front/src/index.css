@@ -1167,3 +1167,24 @@
     animation: none;
   }
 }
+
+/* Нуқтаҳои шарҳи харита.
+
+   Ҳамон рангҳое, ки маркерҳо доранд — вагарна шарҳ ба он чи дар харита аст
+   рост намеояд ва аз набудани он бадтар мешавад. */
+.legend-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.legend-dot--university { background: linear-gradient(135deg, #003bb3, #3b82f6); }
+.legend-dot--academy    { background: linear-gradient(135deg, #6d28d9, #a78bfa); }
+.legend-dot--institute  { background: linear-gradient(135deg, #0f766e, #2dd4bf); }
+.legend-dot--college    { background: linear-gradient(135deg, #b45309, #f59e0b); }
+.legend-dot--branch     { background: linear-gradient(135deg, #475569, #94a3b8); }

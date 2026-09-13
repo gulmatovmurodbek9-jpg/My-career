@@ -113,6 +113,10 @@ function createClusterIcon({ count, isActive }) {
  * SVG дарунсохт аст, на ҷузъи React: Leaflet DivIcon танҳо сатри HTML
  * мегирад ва компонент дар он рендер намешавад.
 */
+/** Тартиб аз рӯи шумораи муассиса дар база: 77 коллеҷ, 20 донишгоҳ, 17
+    донишкада, 13 филиал, 1 академия. */
+const LEGEND_KINDS = ["university", "college", "institute", "branch", "academy"];
+
 const INSTITUTION_ICONS = {
   // Донишгоҳ — кулоҳи хатм
   university: '<path d="M12 3 1 9l11 6 9-4.9V17h2V9L12 3z"/><path d="M5 13.2V17c0 1.7 3.1 3 7 3s7-1.3 7-3v-3.8l-7 3.8-7-3.8z"/>',
@@ -602,6 +606,35 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             ))}
         </MapContainer>
       </div>
+      )}
+
+      {/* Шарҳи нишонаҳо.
+
+          Иконкаҳо панҷ навъи муассисаро фарқ мекунанд, вале бе шарҳ корбар
+          намедонад, ки норинҷӣ коллеҷ аст ва кабуд донишгоҳ. Дар телефон он
+          ҷамъ мешавад — дар экрани хурд ҷои харита муҳимтар аст. */}
+      {cityGroups.length > 0 && (
+        <details
+          open
+          className="absolute bottom-4 left-4 z-[600] max-w-[calc(100%-2rem)] rounded-2xl border border-white/10 bg-black/70 text-white shadow-xl backdrop-blur-md [&[open]>summary]:mb-2"
+        >
+          <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">
+            {t("career_page.m_legend")}
+          </summary>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1.5 px-3 pb-3">
+            {LEGEND_KINDS.map((kind) => (
+              <li key={kind} className="flex items-center gap-2 text-[12px] text-white/85">
+                <span
+                  className={`legend-dot legend-dot--${kind}`}
+                  dangerouslySetInnerHTML={{
+                    __html: `<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" aria-hidden="true">${INSTITUTION_ICONS[kind]}</svg>`,
+                  }}
+                />
+                {t(`career_page.m_kind_${kind}`)}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
 
       {!cityGroups.length && (

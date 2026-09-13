@@ -30,6 +30,17 @@ const DEFAULT_CITY = "Душанбе";
 const DEFAULT_ZOOM = 11;
 const CITY_OVERVIEW_ZOOM = 10;
 
+/*
+ * То чанд муассиса дар як шаҳр дар назари умумии кишвар нишонаи худро дошта
+ * бошад.
+ *
+ * Пештар дар зуми кишвар ҳама чиз доирачаи хокистарии рақамдор буд ва
+ * Хоруғ, Исфара ё Истаравшан аз ҳам фарқ намекарданд — гӯё дар он ҷо чизе
+ * набошад. Вале дар Душанбе даҳҳо муассиса ҳаст ва нишонаҳояшон ба як
+ * пиксел меафтанд, бинобар ин шаҳрҳои калон ҳамон доирача мемонанд.
+ */
+const OVERVIEW_ICON_LIMIT = 4;
+
 // Every city and district that actually appears in the university data — all 42
 // of them. The previous table held only 20, and inferCity() quietly sent every
 // unlisted district to DEFAULT_CITY, so roughly a quarter of the country's
@@ -370,6 +381,17 @@ export default function TajikistanMap({ universities = [], focusResults = false 
     }));
   }, [displayUniversities]);
 
+  /* Шаҳрҳои камшумор: нишонаи ҳар муассиса рост дар назари умумӣ. */
+  const overviewSingles = useMemo(
+    () => cityGroups.filter((group) => group.count <= OVERVIEW_ICON_LIMIT).flatMap((group) => group.items),
+    [cityGroups],
+  );
+
+  const overviewClusters = useMemo(
+    () => cityGroups.filter((group) => group.count > OVERVIEW_ICON_LIMIT),
+    [cityGroups],
+  );
+
   const visibleUniversities = useMemo(() => {
     if (viewport.zoom <= CITY_OVERVIEW_ZOOM) return [];
 
@@ -555,7 +577,33 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           {geoData && <GeoJSON data={geoData} style={geojsonStyle} />}
 
           {viewport.zoom <= CITY_OVERVIEW_ZOOM &&
-            cityGroups.map((group) => (
+            overviewSingles.map((uni) => (
+              <Marker
+                key={"overview-" + uni.id}
+                position={[uni.displayLat, uni.displayLng]}
+                icon={createDotIcon(selectedUni?.id === uni.id, uni)}
+                eventHandlers={{
+                  click: () => {
+                    setActiveCity(uni.inferredCity);
+                    setSelectedUni(uni);
+                    setPanelOpen(true);
+                  },
+                }}
+              >
+                <Popup className="university-popup" offset={[0, -10]}>
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold leading-tight text-foreground">{uni.name}</p>
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {uni.inferredCity}
+                    </p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
+          {viewport.zoom <= CITY_OVERVIEW_ZOOM &&
+            overviewClusters.map((group) => (
               <Marker
                 key={group.city}
                 position={[group.lat, group.lng]}

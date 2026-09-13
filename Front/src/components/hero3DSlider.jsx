@@ -106,7 +106,7 @@ export const LazyHero3DSlider = (props) => (
             <div className="glass-card w-full h-full flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                    <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Боргузорӣ...</p>
+                    <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Loading…</p>
                 </div>
             </div>
         </div>

@@ -14,6 +14,8 @@ import { useEffect } from "react";
  * пешрендери сервер.
  */
 
+import i18n from "./i18n";
+
 const SITE_NAME = "Ихтисоси ман";
 const ORIGIN = "https://ikhtisosiman.qobus.tj";
 const DEFAULT_IMAGE = `${ORIGIN}/logo.png`;
@@ -69,10 +71,9 @@ export function usePageMeta({
     useEffect(() => {
         if (!ready) return;
 
-        const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Роҳнамоии Касбӣ`;
+        const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — ${i18n.t("misc2.meta_site_tagline")}`;
         const desc = trim(
-            description ||
-            "Платформаи роҳнамоии касбӣ барои хатмкунандагони Тоҷикистон: санҷиши ММТ, ихтисосҳо, донишгоҳҳо ва нақшаи ҳуҷҷатсупорӣ.",
+            description || i18n.t("misc2.meta_site_desc"),
         );
         const url = path ? `${ORIGIN}${path}` : ORIGIN;
         const img = image || DEFAULT_IMAGE;

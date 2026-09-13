@@ -16,28 +16,28 @@
  */
 
 export const SALARY_SOURCE = {
-  agency: "Агентии омори назди Президенти ҶТ",
-  period: "июни 2026",
+  agencyKey: "sectors.agency",
+  periodKey: "sectors.period",
   nationalAverage: 3800,
   minimumWage: 1000,
 };
 
 /** Маоши миёна аз рӯи соҳа, сомонӣ дар як моҳ. */
 export const SECTORS = {
-  finance: { label: "Молия ва суғурта", amount: 8300 },
-  it: { label: "Иттилоот ва алоқа", amount: 7000 },
-  energy: { label: "Энергетика", amount: 5700 },
-  mining: { label: "Саноати кӯҳӣ", amount: 5300 },
-  education: { label: "Маориф", amount: 4400 },
-  construction: { label: "Сохтмон", amount: 4000 },
-  transport: { label: "Нақлиёт ва анборпарварӣ", amount: 3700 },
-  manufacturing: { label: "Саноати коркард", amount: 3300 },
-  services: { label: "Хизматрасонӣ", amount: 3200 },
-  publicAdmin: { label: "Идораи давлатӣ", amount: 2779 },
-  realEstate: { label: "Амволи ғайриманқул", amount: 2500 },
-  health: { label: "Тандурустӣ", amount: 2400 },
-  water: { label: "Обтаъминкунӣ ва партовҳо", amount: 2000 },
-  agriculture: { label: "Кишоварзӣ ва ҷангалпарварӣ", amount: 1388 },
+  finance: { labelKey: "sectors.finance", amount: 8300 },
+  it: { labelKey: "sectors.it", amount: 7000 },
+  energy: { labelKey: "sectors.energy", amount: 5700 },
+  mining: { labelKey: "sectors.mining", amount: 5300 },
+  education: { labelKey: "sectors.education", amount: 4400 },
+  construction: { labelKey: "sectors.construction", amount: 4000 },
+  transport: { labelKey: "sectors.transport", amount: 3700 },
+  manufacturing: { labelKey: "sectors.manufacturing", amount: 3300 },
+  services: { labelKey: "sectors.services", amount: 3200 },
+  publicAdmin: { labelKey: "sectors.publicAdmin", amount: 2779 },
+  realEstate: { labelKey: "sectors.realEstate", amount: 2500 },
+  health: { labelKey: "sectors.health", amount: 2400 },
+  water: { labelKey: "sectors.water", amount: 2000 },
+  agriculture: { labelKey: "sectors.agriculture", amount: 1388 },
 };
 
 /**

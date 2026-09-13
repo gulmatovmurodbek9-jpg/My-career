@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import axios from "axios";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import HomeHero from "./HomeHero";
 import ClusterList from "./ClusterList";
@@ -234,10 +235,9 @@ function ClosingScene() {
 import { usePageMeta } from "../../lib/usePageMeta";
 
 export default function Home() {
+  const { t } = useTranslation();
   usePageMeta({
-    description:
-      "Санҷиши ММТ, 884 ихтисос, 128 донишгоҳ ва нақшаи ҳуҷҷатсупорӣ — " +
-      "платформаи роҳнамоии касбӣ барои хатмкунандагони Тоҷикистон.",
+    description: t("misc2.meta_home_desc"),
     path: "/",
   });
 
@@ -255,7 +255,7 @@ export default function Home() {
         мекард ва такрор менамуд.
       */}
       <SceneSlider
-        label="Муқаддимаи сомона"
+        label={t("misc.intro_label")}
         slides={[<HomeHero key="hero" />, <OverwhelmScene key="overwhelm" />]}
       />
       <EntryDoors />

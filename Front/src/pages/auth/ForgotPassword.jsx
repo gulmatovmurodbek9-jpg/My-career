@@ -4,6 +4,7 @@ import { Mail, KeyRound, Lock, ArrowRight, ArrowLeft, Loader2, AlertCircle, Chec
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { API } from "../../lib/config";
+import { useTranslation } from "react-i18next";
 
 const MIN_LENGTH = 6;
 
@@ -13,6 +14,7 @@ const MIN_LENGTH = 6;
  * ва бозгашт нороҳат буд — коди 6-рақамаро оддӣ нусха кардан мумкин аст.
  */
 const ForgotPassword = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [step, setStep] = useState("email");
@@ -33,7 +35,7 @@ const ForgotPassword = () => {
             await axios.post(`${API}/auth/forgot-password`, { email });
             setStep("code");
         } catch (err) {
-            setError(err.response?.data?.message || "Дархост нашуд. Дертар боз кӯшиш кунед.");
+            setError(err.response?.data?.message || t("auth.fp_error_request"));
         } finally {
             setLoading(false);
         }
@@ -43,15 +45,15 @@ const ForgotPassword = () => {
         e.preventDefault();
 
         if (!/^\d{6}$/.test(code.trim())) {
-            setError("Код бояд 6 рақам бошад");
+            setError(t("auth.fp_error_code_len"));
             return;
         }
         if (password.length < MIN_LENGTH) {
-            setError(`Парол бояд на кам аз ${MIN_LENGTH} аломат бошад`);
+            setError(t("auth.fp_error_short", { min: MIN_LENGTH }));
             return;
         }
         if (password !== confirm) {
-            setError("Паролҳо мувофиқат намекунанд");
+            setError(t("auth.fp_error_mismatch"));
             return;
         }
 
@@ -62,7 +64,7 @@ const ForgotPassword = () => {
             setDone(true);
             setTimeout(() => navigate("/login"), 2500);
         } catch (err) {
-            setError(err.response?.data?.message || "Код нодуруст ё кӯҳна шудааст");
+            setError(err.response?.data?.message || t("auth.fp_error_code"));
         } finally {
             setLoading(false);
         }
@@ -92,12 +94,12 @@ const ForgotPassword = () => {
                             <KeyRound className="w-8 h-8 text-primary-foreground" />
                         </motion.div>
                         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                            {step === "email" ? "Паролро фаромӯш кардед?" : "Коди тасдиқ"}
+                            {step === "email" ? t("auth.fp_title") : t("auth.fp_code_title")}
                         </h1>
                         <p className="text-muted-foreground text-sm">
                             {step === "email"
-                                ? "Имейли худро нависед — мо коди 6-рақама мефиристем"
-                                : "Кодро аз нома нависед ва пароли навро гузоред"}
+                                ? t("auth.fp_sub")
+                                : t("auth.fp_code_sub")}
                         </p>
                     </div>
 
@@ -124,20 +126,20 @@ const ForgotPassword = () => {
                                 </span>
                             </div>
                             <div className="space-y-2">
-                                <h2 className="text-lg font-bold text-foreground">Парол иваз шуд</h2>
+                                <h2 className="text-lg font-bold text-foreground">{t("auth.fp_done_title")}</h2>
                                 <p className="text-sm text-muted-foreground">
-                                    Ба саҳифаи вуруд бурда мешавед…
+                                    {t("auth.fp_done_sub")}
                                 </p>
                             </div>
                             <Link to="/login" className="text-sm font-bold text-primary hover:underline">
-                                Ҳозир ворид шудан
+                                {t("auth.fp_done_now")}
                             </Link>
                         </motion.div>
                     ) : step === "email" ? (
                         <form onSubmit={sendCode} className="space-y-6">
                             <div className="space-y-2">
                                 <label htmlFor="fp-email" className="text-sm font-medium text-muted-foreground ml-1">
-                                    Имейл
+                                    {t("auth.email")}
                                 </label>
                                 <div className="relative group">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -162,7 +164,7 @@ const ForgotPassword = () => {
                             >
                                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                                     <>
-                                        Фиристодани код
+                                        {t("auth.fp_send")}
                                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -171,13 +173,12 @@ const ForgotPassword = () => {
                     ) : (
                         <form onSubmit={submitNewPassword} className="space-y-6">
                             <p className="text-center text-xs text-muted-foreground">
-                                Код ба <span className="font-semibold text-foreground break-all">{email}</span> фиристода
-                                шуд. 15 дақиқа эътибор дорад.
+                                {t("auth.fp_sent", { email })}
                             </p>
 
                             <div className="space-y-2">
                                 <label htmlFor="fp-code" className="text-sm font-medium text-muted-foreground ml-1">
-                                    Коди 6-рақама
+                                    {t("auth.fp_code_label")}
                                 </label>
                                 <input
                                     id="fp-code"
@@ -195,7 +196,7 @@ const ForgotPassword = () => {
 
                             <div className="space-y-2">
                                 <label htmlFor="fp-password" className="text-sm font-medium text-muted-foreground ml-1">
-                                    Пароли нав
+                                    {t("auth.fp_new_password")}
                                 </label>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -213,7 +214,7 @@ const ForgotPassword = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShow((v) => !v)}
-                                        aria-label={show ? "Пинҳон кардани парол" : "Нишон додани парол"}
+                                        aria-label={show ? t("auth.hide_password") : t("auth.show_password")}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {show ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -223,7 +224,7 @@ const ForgotPassword = () => {
 
                             <div className="space-y-2">
                                 <label htmlFor="fp-confirm" className="text-sm font-medium text-muted-foreground ml-1">
-                                    Такрори парол
+                                    {t("auth.fp_repeat_password")}
                                 </label>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -249,7 +250,7 @@ const ForgotPassword = () => {
                             >
                                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                                     <>
-                                        Иваз кардани парол
+                                        {t("auth.fp_submit")}
                                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -262,14 +263,14 @@ const ForgotPassword = () => {
                                     disabled={loading}
                                     className="font-bold text-primary hover:underline disabled:opacity-50"
                                 >
-                                    Кодро дубора фиристед
+                                    {t("auth.fp_resend")}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => { setStep("email"); setError(null); setCode(""); }}
                                     className="font-bold text-muted-foreground hover:text-foreground"
                                 >
-                                    Имейлро иваз кунед
+                                    {t("auth.fp_change_email")}
                                 </button>
                             </div>
                         </form>
@@ -281,7 +282,7 @@ const ForgotPassword = () => {
                             className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Бозгашт ба вуруд
+                            {t("auth.fp_back")}
                         </Link>
                     </div>
                 </div>

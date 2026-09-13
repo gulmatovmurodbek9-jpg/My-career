@@ -72,7 +72,7 @@ export default function CareerChat({ careerId, careerName }) {
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           {t(
             "career_chat.login_hint",
-            "Барои пурсидан дар бораи ин ихтисос ба ҳисоби худ ворид шавед.",
+            t("misc.chat_login"),
           )}
         </p>
         <Link to="/login" className="btn-primary mt-4 inline-flex px-6 py-2.5 text-sm">
@@ -181,7 +181,7 @@ export default function CareerChat({ careerId, careerName }) {
       <p className="mt-3 text-sm text-muted-foreground">
         {t(
           "career_chat.disclaimer",
-          "Ҷавобҳо аз маълумоти базаи мо сохта мешаванд. Барои қарори ниҳоӣ маълумоти расмии донишгоҳро тафтиш кунед.",
+          t("misc.chat_disclaimer"),
         )}
       </p>
     </div>

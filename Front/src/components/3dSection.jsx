@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Box, Float } from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
@@ -11,36 +12,36 @@ const cubes = [
     position: [0, 0, 0],
     color: "#6366f1",
     image: "https://media.istockphoto.com/id/1179633351/photo/nature-and-technology-abstract-concept-robot-hand-and-natural-hand-covered-with-grass.jpg?s=612x612&w=0&k=20&c=oIrNivd6U6lJfaf2sFEQydQo4ojRW-H5atud7xXF_Eo=",
-    category: "Табиӣ ва техникӣ",
-    description: "Математика, физика, техника ва технологияҳо. Омӯзиши назария ва амал барои сохтмон, муҳандисӣ ва барномасозӣ.",
+    categoryKey: "cubes.c1_cat",
+    descriptionKey: "cubes.c1_desc",
   },
   {
     position: [2, 0, 0],
     color: "#8b5cf6",
     image: "https://thumbs.dreamstime.com/b/macroeconomics-illustrated-flat-design-concept-featuring-financial-charts-global-gdp-budget-stock-capital-rates-economy-384358494.jpg",
-    category: "Иқтисод ва география",
-    description: "Иқтисод, менеҷмент, молия ва география. Омӯзиши бозори кор, таҳлили маълумот ва идоракунии ресурсҳо.",
+    categoryKey: "cubes.c2_cat",
+    descriptionKey: "cubes.c2_desc",
   },
   {
     position: [-2, 0, 0],
     color: "#06b6d4",
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVMNLiXDL0J8iYU7ECu2hLz9nmfmExZDAtJw&s",
-    category: "Филология, педагогика ва санъат",
-    description: "Забон, адабиёт, педагогика ва санъат. Омӯзиши муошират, эҷодкорӣ ва таълими касбӣ.",
+    categoryKey: "cubes.c3_cat",
+    descriptionKey: "cubes.c3_desc",
   },
   {
     position: [0, 2, 0],
     color: "#10b981",
     image: "https://thumbs.dreamstime.com/b/doctor-showing-tablet-sports-medicine-text-isolated-white-49825392.jpg",
-    category: "Тиб, биология ва варзиш",
-    description: "Тиб, биология, саломатӣ ва варзиш. Омӯзиши ташхис, нигоҳубин ва рушди ҷисмонӣ.",
+    categoryKey: "cubes.c4_cat",
+    descriptionKey: "cubes.c4_desc",
   },
   {
     position: [0, -2, 0],
     color: "#f59e0b",
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIbsd7pZ6OTRtlyJ8NsaPRSzAvMicBPXBbgA&s",
-    category: "Ҷомеашиносӣ ва ҳуқуқ",
-    description: "Сиёсат, ҳуқуқ, ҷамъиятшиносӣ ва соҳаҳои иҷтимоӣ. Омӯзиши қонун, таҳлили ҷомеа ва роҳҳои ҳалли мушкилот.",
+    categoryKey: "cubes.c5_cat",
+    descriptionKey: "cubes.c5_desc",
   },
 ];
 
@@ -84,7 +85,7 @@ function Scene3D({ setHoveredInfo }) {
             setHoveredCube(cube);
             setHoveredInfo(cube);
           }}
-          isActive={hoveredCube?.category === cube.category}
+          isActive={hoveredCube?.categoryKey === cube.categoryKey}
         />
       ))}
 
@@ -101,6 +102,7 @@ function Scene3D({ setHoveredInfo }) {
 }
 
 export default function Interactive3DSection() {
+  const { t } = useTranslation();
   const [hoveredInfo, setHoveredInfo] = useState(null);
 
   return (
@@ -114,10 +116,10 @@ export default function Interactive3DSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground tracking-tight">
-            Ҳар бахш ва ихтисосро <span className="text-gradient-primary">омӯзед</span>
+            {t("cubes.heading_1")} <span className="text-gradient-primary">{t("cubes.heading_2")}</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Бар рӯи кубҳо курсор гузоред ва ихтисосҳоро кашф кунед.
+            {t("cubes.sub")}
           </p>
         </motion.div>
 
@@ -145,21 +147,21 @@ export default function Interactive3DSection() {
           >
             <div className="glass-card p-6">
               <h3 className="text-2xl font-semibold mb-4 text-gradient-primary">
-                Чӣ гуна истифода бурдан
+                {t("cubes.how")}
               </h3>
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                  <span>Барои чарх додан клик кунед</span>
+                  <span>{t("cubes.how_click")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0" />
-                  <span>Барои тағйир додани назар чарх занонед</span>
+                  <span>{t("cubes.how_drag")}</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0" />
                   <span>
-                    Бар рӯи кубҳо курсор гузоред, то гуруҳи ихтисосҳоро бинед
+                    {t("cubes.how_hover")}
                   </span>
                 </li>
               </ul>
@@ -178,16 +180,16 @@ export default function Interactive3DSection() {
                       style={{ backgroundColor: hoveredInfo.color }}
                     />
                     <h4 className="text-xl font-semibold text-foreground">
-                      {hoveredInfo.category}
+                      {t(hoveredInfo.categoryKey)}
                     </h4>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">
-                    {hoveredInfo.description}
+                    {t(hoveredInfo.descriptionKey)}
                   </p>
                 </motion.div>
               ) : (
                 <p className="text-muted-foreground text-center">
-                  Курсорро ба куб равона кунед ва ихтисосро кашф кунед
+                  {t("cubes.hint")}
                 </p>
               )}
             </div>
@@ -207,7 +209,7 @@ export const LazyInteractive3DSection = (props) => (
                     <div className="glass-card overflow-hidden aspect-square !p-0 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-4">
                             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                            <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Боргузорӣ...</p>
+                            <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">{t("common.loading")}</p>
                         </div>
                     </div>
                     <div className="space-y-6">

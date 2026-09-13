@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import i18n from '../../lib/i18n';
 
 /**
  * Error Boundary Component
@@ -65,10 +66,10 @@ export class ErrorBoundary extends Component {
 
             <div className="space-y-2">
               <h2 className="text-2xl font-black uppercase tracking-tight text-foreground">
-                Упс! Чизи рух дод
+                {i18n.t("misc.err_title")}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Чизе рух дод. Лутфан муҳлати дертар кӯшиш кунед ё ба маъмурият хабар диҳед.
+                {i18n.t("misc.err_text")}
               </p>
             </div>
 
@@ -88,7 +89,7 @@ export class ErrorBoundary extends Component {
               onClick={this.handleReset}
               className="btn-primary w-full py-3 text-sm cursor-pointer"
             >
-              Барқарор кардан
+              {i18n.t("misc.err_retry")}
             </button>
           </div>
         </div>

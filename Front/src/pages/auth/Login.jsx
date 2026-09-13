@@ -3,11 +3,13 @@ import { motion } from "framer-motion";
 import { Mail, Lock, LogIn, ArrowRight, UserPlus, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/authStore";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "../../lib/config";
 import { googleClientId, loadGoogleIdentity, loginWithGoogleToken } from "../../lib/googleAuth";
 
 const Login = () => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -66,7 +68,7 @@ const Login = () => {
             setAuth(data.user, data.access_token);
             navigate("/dashboard");
         } catch (err) {
-            setError(err.response?.data?.message || "Имейл ё пароли нодуруст");
+            setError(err.response?.data?.message || t("auth.login_error"));
         } finally {
             setLoading(false);
         }
@@ -96,8 +98,8 @@ const Login = () => {
                         >
                             <LogIn className="w-8 h-8 text-primary-foreground" />
                         </motion.div>
-                        <h1 className="text-3xl font-bold text-foreground mb-2">Хуш омадед!</h1>
-                        <p className="text-muted-foreground">Барои давом додан ба профили худ ворид шавед</p>
+                        <h1 className="text-3xl font-bold text-foreground mb-2">{t("auth.login_title")}</h1>
+                        <p className="text-muted-foreground">{t("auth.login_sub")}</p>
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-6">
@@ -113,7 +115,7 @@ const Login = () => {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">Имейл</label>
+                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.email")}</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
@@ -129,8 +131,8 @@ const Login = () => {
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center ml-1">
-                                <label className="text-sm font-medium text-muted-foreground">Парол</label>
-                                <Link to="/forgot-password" size="sm" className="text-xs text-primary hover:underline font-medium">Паролро фаромӯш кардам?</Link>
+                                <label className="text-sm font-medium text-muted-foreground">{t("auth.password")}</label>
+                                <Link to="/forgot-password" size="sm" className="text-xs text-primary hover:underline font-medium">{t("auth.forgot_link")}</Link>
                             </div>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -149,7 +151,7 @@ const Login = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((v) => !v)}
-                                    aria-label={showPassword ? "Пинҳон кардани парол" : "Нишон додани парол"}
+                                    aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -168,7 +170,7 @@ const Login = () => {
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
                                 <>
-                                    Ворид шудан
+                                    {t("auth.login_btn")}
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -190,9 +192,9 @@ const Login = () => {
 
                     <div className="mt-8 text-center border-t border-border/50 pt-8">
                         <p className="text-muted-foreground text-sm">
-                            Ҳисоб надоред?{" "}
+                            {t("auth.no_account")}{" "}
                             <Link to="/register" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
-                                Бақайдгирӣ <UserPlus className="w-4 h-4" />
+                                {t("auth.register")} <UserPlus className="w-4 h-4" />
                             </Link>
                         </p>
                     </div>

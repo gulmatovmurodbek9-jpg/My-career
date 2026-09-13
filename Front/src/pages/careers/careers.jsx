@@ -164,7 +164,7 @@ const Careers = () => {
   const [priceFilter, setPriceFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [cities, setCities] = useState([]);
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("list");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -285,10 +285,8 @@ const Careers = () => {
     "w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-[15px] font-medium text-foreground transition-colors focus-ring";
 
   usePageMeta({
-    title: "Ихтисосҳои ММТ — 884 ихтисос бо рақами расмӣ",
-    description:
-      "Рӯйхати пурраи ихтисосҳои Маркази миллии тестӣ: рақами расмӣ, кластер, " +
-      "донишгоҳҳо, нархи таҳсил ва ҷойҳои ройгон.",
+    title: t("misc2.meta_careers_title"),
+    description: t("misc2.meta_careers_desc"),
     path: "/careers",
   });
 
@@ -346,19 +344,6 @@ const Careers = () => {
               <div className="flex shrink-0 gap-1 rounded-xl border-2 border-border p-1">
                 <button
                   type="button"
-                  onClick={() => setViewMode("grid")}
-                  aria-pressed={viewMode === "grid"}
-                  aria-label={t("careers_page.view_grid", "Тӯр")}
-                  className={`rounded-lg p-2.5 transition-colors focus-ring ${
-                    viewMode === "grid"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Grid3X3 className="h-5 w-5" strokeWidth={2} />
-                </button>
-                <button
-                  type="button"
                   onClick={() => setViewMode("list")}
                   aria-pressed={viewMode === "list"}
                   aria-label={t("careers_page.view_list", "Рӯйхат")}
@@ -369,6 +354,19 @@ const Careers = () => {
                   }`}
                 >
                   <LayoutList className="h-5 w-5" strokeWidth={2} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  aria-pressed={viewMode === "grid"}
+                  aria-label={t("careers_page.view_grid", "Тӯр")}
+                  className={`rounded-lg p-2.5 transition-colors focus-ring ${
+                    viewMode === "grid"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Grid3X3 className="h-5 w-5" strokeWidth={2} />
                 </button>
               </div>
             </div>

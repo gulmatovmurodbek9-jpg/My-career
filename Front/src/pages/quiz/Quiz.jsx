@@ -292,7 +292,7 @@ const Quiz = () => {
     const progress = questions.length > 0 ? ((currentStep + 1) / questions.length) * 100 : 0;
     const answeredCount = answers.length;
     // Stage badge shown on the question screen
-    const stageLabel = quizStage === 1 ? 'ТЕСТ 1 — Кластер' : 'ТЕСТ 2 — Ихтисос';
+    const stageLabel = quizStage === 1 ? t('misc.quiz_stage_1') : t('misc.quiz_stage_2');
 
     const getIcon = (type) => {
         switch (type) {
@@ -563,7 +563,7 @@ const Quiz = () => {
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 py-4">
                         {results.scores?.mmtClusters && Object.entries(results.scores.mmtClusters).map(([cat, score], i) => (
                             <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5 text-center group hover:bg-white/10 transition-colors">
-                                <div className="text-[7px] font-black uppercase tracking-widest text-primary mb-1">КЛАСТЕРИ {cat.replace('c', '')}</div>
+                                <div className="text-[7px] font-black uppercase tracking-widest text-primary mb-1">{t('misc2.cluster_num', { number: cat.replace('c', '') })}</div>
                                 <div className="text-xl font-black">{Math.round((score / 12) * 100)}%</div>
                                 <div className="mt-1.5 h-1 w-full bg-white/5 rounded-full overflow-hidden">
                                     <motion.div
@@ -596,7 +596,7 @@ const Quiz = () => {
                                         <button
                                             onClick={() => fetchClusterCareers(true)}
                                             className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group"
-                                            title="Навсозӣ (Refresh)"
+                                            title={t("misc.quiz_refresh")}
                                         >
                                             <Zap className="w-5 h-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
                                         </button>
@@ -650,7 +650,7 @@ const Quiz = () => {
                                                     <div className="mt-3 flex flex-wrap gap-2 items-center">
                                                         {career.tuitionFee ? (
                                                             <span className="px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-wider">
-                                                                {career.tuitionFee.toLocaleString('ru-RU')} сомонӣ/сол
+                                                                {t('misc2.per_year_long', { price: career.tuitionFee.toLocaleString('ru-RU') })}
                                                             </span>
                                                         ) : (
                                                             <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-wider">
@@ -772,7 +772,7 @@ const Quiz = () => {
                                     className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-[2rem]"
                                 >
                                     <div className="w-12 h-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin mb-4"></div>
-                                    <h3 className="text-xl font-black uppercase tracking-widest text-primary">Таҳлили Кластер...</h3>
+                                    <h3 className="text-xl font-black uppercase tracking-widest text-primary">{t("misc2.cluster_analysis")}</h3>
                                     <p className="text-sm text-muted-foreground mt-2">Омодасозии саволҳои махсус</p>
                                 </motion.div>
                             )}

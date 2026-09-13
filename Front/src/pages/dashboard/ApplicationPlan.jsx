@@ -17,6 +17,7 @@ import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../components/toast/ToastProvider";
 import { currentApiLang } from "../../lib/apiLang";
+import { useTranslation } from "react-i18next";
 
 const money = (value) =>
     value === null || value === undefined
@@ -33,6 +34,7 @@ const money = (value) =>
  */
 const ApplicationPlan = () => {
     const { token } = useAuthStore();
+    const { t } = useTranslation();
     const { error: showError, success: showSuccess } = useToast();
 
     const [plan, setPlan] = useState({ cluster: null, items: [] });
@@ -48,7 +50,7 @@ const ApplicationPlan = () => {
             });
             setPlan(data);
         } catch (err) {
-            setError(err.response?.data?.message || "Рӯйхат бор нашуд");
+            setError(err.response?.data?.message || t("plan.err_load"));
         } finally {
             setLoading(false);
         }
@@ -66,7 +68,7 @@ const ApplicationPlan = () => {
             });
             await load();
         } catch (err) {
-            showError(err.response?.data?.message || "Бароварда нашуд");
+            showError(err.response?.data?.message || t("plan.err_remove"));
         } finally {
             setBusyId(null);
         }
@@ -79,9 +81,9 @@ const ApplicationPlan = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
             await load();
-            showSuccess("Рӯйхат тоза шуд");
+            showSuccess(t("plan.ok_cleared"));
         } catch (err) {
-            showError(err.response?.data?.message || "Тоза нашуд");
+            showError(err.response?.data?.message || t("plan.err_clear"));
         } finally {
             setBusyId(null);
         }
@@ -219,10 +221,10 @@ const ApplicationPlan = () => {
             );
 
             doc.save(`ruyhati-hujjatsupori-${new Date().toISOString().slice(0, 10)}.pdf`);
-            showSuccess("PDF боргирӣ шуд");
+            showSuccess(t("plan.ok_pdf"));
         } catch (err) {
             console.error("PDF:", err);
-            showError("PDF сохта нашуд");
+            showError(t("plan.err_pdf"));
         } finally {
             setDownloading(false);
         }
@@ -249,18 +251,18 @@ const ApplicationPlan = () => {
                     className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Бозгашт ба панел
+                    {t("plan.back")}
                 </Link>
 
                 <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-black uppercase tracking-tighter md:text-3xl">
-                            Рӯйхати ҳуҷҷатсупорӣ
+                            {t("plan.title")}
                         </h1>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {items.length
-                                ? `${items.length} интихоб · ${freeCount} ҷои ройгон`
-                                : "Ҳанӯз ягон интихоб нест"}
+                                ? t("plan.summary", { count: items.length, free: freeCount })
+                                : t("plan.empty_sub")}
                         </p>
                     </div>
 
@@ -272,7 +274,7 @@ const ApplicationPlan = () => {
                                 className="btn-primary !px-5 !py-3 !text-sm !rounded-xl cursor-pointer"
                             >
                                 <Printer className="h-4 w-4" />
-                                Чоп / PDF
+                                {t("plan.print")}
                             </button>
                             <button
                                 type="button"
@@ -281,7 +283,7 @@ const ApplicationPlan = () => {
                                 className="flex cursor-pointer items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50"
                             >
                                 {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                                {downloading ? "Тайёр мешавад…" : "Боргирии PDF"}
+                                {downloading ? t("plan.downloading") : t("plan.download")}
                             </button>
                             <button
                                 type="button"
@@ -290,7 +292,7 @@ const ApplicationPlan = () => {
                                 className="flex cursor-pointer items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-50"
                             >
                                 {busyId === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                Тоза кардан
+                                {t("plan.clear")}
                             </button>
                         </div>
                     )}
@@ -299,7 +301,7 @@ const ApplicationPlan = () => {
                 {cluster && (
                     <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2 text-sm font-bold text-primary">
                         <Layers className="h-4 w-4" />
-                        Кластери {cluster.number} — {cluster.name}
+                        {t("plan.cluster", { number: cluster.number, name: cluster.name })}
                     </div>
                 )}
 
@@ -313,14 +315,14 @@ const ApplicationPlan = () => {
 
             {/* Сарлавҳаи танҳо барои чоп */}
             <div className="hidden print:block">
-                <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Рӯйхати ҳуҷҷатсупорӣ</h1>
+                <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{t("plan.title")}</h1>
                 {cluster && (
                     <p style={{ margin: "4px 0 0", fontSize: 13 }}>
-                        Кластери {cluster.number} — {cluster.name}
+                        {t("plan.cluster", { number: cluster.number, name: cluster.name })}
                     </p>
                 )}
                 <p style={{ margin: "2px 0 0", fontSize: 11, color: "#555" }}>
-                    Ихтисоси ман · {new Date().toLocaleDateString("ru-RU")}
+                    {t("plan.brand_line", { date: new Date().toLocaleDateString("ru-RU") })}
                 </p>
             </div>
 
@@ -329,10 +331,9 @@ const ApplicationPlan = () => {
                     <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
                         <FileText className="h-8 w-8 text-primary" />
                     </span>
-                    <h2 className="text-xl font-black uppercase tracking-tighter">Рӯйхат холист</h2>
+                    <h2 className="text-xl font-black uppercase tracking-tighter">{t("plan.empty_title")}</h2>
                     <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-                        Ба саҳифаи ихтисос гузаред, донишгоҳ ва намуди ҷойро интихоб кунед — онҳо ин ҷо
-                        ҷамъ мешаванд ва шумо метавонед рӯйхатро чоп кунед.
+                        {t("plan.empty_text")}
                     </p>
                     {/* Услуб рост ба `Link` меравад, на ба тугмаи дохилӣ.
                         `.btn-primary` `display: flex` аст — яъне блокӣ, ва дар
@@ -343,7 +344,7 @@ const ApplicationPlan = () => {
                         className="btn-primary mt-6 inline-flex !px-6 !py-3 !text-sm !rounded-xl cursor-pointer"
                     >
                         <GraduationCap className="h-4 w-4" />
-                        Ихтисосҳоро дидан
+                        {t("plan.empty_cta")}
                     </Link>
                 </div>
             ) : (
@@ -351,13 +352,13 @@ const ApplicationPlan = () => {
                     <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                         <thead>
                             <tr className="border-b border-border text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
-                                <th className="py-3 pr-3">№</th>
-                                <th className="py-3 pr-3">Код</th>
-                                <th className="py-3 pr-3">Ихтисос</th>
-                                <th className="py-3 pr-3">Донишгоҳ</th>
-                                <th className="py-3 pr-3">Шакл</th>
-                                <th className="py-3 pr-3">Ҷой</th>
-                                <th className="py-3 pr-3 text-right">Нарх</th>
+                                <th className="py-3 pr-3">{t("plan.th_num")}</th>
+                                <th className="py-3 pr-3">{t("plan.th_code")}</th>
+                                <th className="py-3 pr-3">{t("plan.th_specialty")}</th>
+                                <th className="py-3 pr-3">{t("plan.th_university")}</th>
+                                <th className="py-3 pr-3">{t("plan.th_form")}</th>
+                                <th className="py-3 pr-3">{t("plan.th_seats")}</th>
+                                <th className="py-3 pr-3 text-right">{t("plan.th_price")}</th>
                                 <th className="py-3 print:hidden" />
                             </tr>
                         </thead>
@@ -394,19 +395,19 @@ const ApplicationPlan = () => {
                                         </span>
                                         {item.seats > 0 && (
                                             <div className="mt-1 text-xs text-muted-foreground">
-                                                {item.seats} ҷой
+                                                {t("plan.seats", { count: item.seats })}
                                             </div>
                                         )}
                                     </td>
                                     <td className="py-3 pr-3 text-right tabular-nums">
-                                        {item.isFree ? "—" : money(item.tuitionFee) ? `${money(item.tuitionFee)} сом.` : "—"}
+                                        {item.isFree ? "—" : money(item.tuitionFee) ? `${money(item.tuitionFee)} ${t("career_page.sal_somoni")}` : "—"}
                                     </td>
                                     <td className="py-3 text-right print:hidden">
                                         <button
                                             type="button"
                                             onClick={() => removeItem(item.offeringId)}
                                             disabled={busyId === item.offeringId}
-                                            aria-label="Баровардан"
+                                            aria-label={t("plan.remove")}
                                             className="cursor-pointer rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                                         >
                                             {busyId === item.offeringId
@@ -420,8 +421,7 @@ const ApplicationPlan = () => {
                     </table>
 
                     <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-                        Нархҳо ва шумораи ҷойҳо аз маълумоти мавҷудаи мо гирифта шудаанд ва метавонанд
-                        тағйир ёбанд. Пеш аз супоридани ҳуҷҷат онҳоро дар худи донишгоҳ тасдиқ кунед.
+                        {t("plan.footnote")}
                     </p>
                 </div>
             )}

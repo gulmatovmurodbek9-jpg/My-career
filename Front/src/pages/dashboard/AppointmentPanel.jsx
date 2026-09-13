@@ -20,13 +20,14 @@ import {
 import axios from "axios";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
+import { useTranslation } from "react-i18next";
 
 const statusLabels = {
-  PENDING: "Интизор",
-  IN_PROGRESS: "Дар раванд",
-  CONFIRMED: "Тасдиқ шуд",
-  COMPLETED: "Анҷом ёфт",
-  CANCELLED: "Бекор",
+  PENDING: "appt.st_pending",
+  IN_PROGRESS: "appt.st_in_progress",
+  CONFIRMED: "appt.st_confirmed",
+  COMPLETED: "appt.st_completed",
+  CANCELLED: "appt.st_cancelled",
 };
 
 const statusClass = {
@@ -49,6 +50,7 @@ export default function AppointmentPanel() {
 }
 
 function UserBooking({ user, token }) {
+  const { t } = useTranslation();
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
   const [specialists, setSpecialists] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -91,7 +93,7 @@ function UserBooking({ user, token }) {
     } catch {
       setSpecialists([]);
       setSelectedSpecialist(null);
-      setSpecialistsError("Мутахассисон бор нашуданд. Backend ё пайвастшавиро санҷед.");
+      setSpecialistsError(t("appt.specialists_error"));
     } finally {
       setLoading(false);
     }
@@ -126,9 +128,9 @@ function UserBooking({ user, token }) {
     event.preventDefault();
     if (submitting) return;
     setMessage(null);
-    if (!selectedSpecialist) return setMessage({ type: "error", text: "Мутахассисро интихоб кунед" });
-    if (!selectedTime) return setMessage({ type: "error", text: "Вақти озодро интихоб кунед" });
-    if (!form.email || !form.phoneNumber) return setMessage({ type: "error", text: "Email ва телефон зарур аст" });
+    if (!selectedSpecialist) return setMessage({ type: "error", text: t("appt.pick_specialist") });
+    if (!selectedTime) return setMessage({ type: "error", text: t("appt.pick_time") });
+    if (!form.email || !form.phoneNumber) return setMessage({ type: "error", text: t("appt.need_contacts") });
 
     setSubmitting(true);
     try {
@@ -140,17 +142,17 @@ function UserBooking({ user, token }) {
         contactMethod: selectedType === "ONLINE" ? form.contactMethod : undefined,
         appointmentDate: selectedDate,
         appointmentTime: selectedTime,
-        location: selectedType === "OFFLINE" ? selected?.meetingLocation || "Маркази машваратӣ" : undefined,
+        location: selectedType === "OFFLINE" ? selected?.meetingLocation || t("appt.default_location") : undefined,
         notes: form.notes,
       };
       await axios.post(`${API}/appointments`, payload, { headers });
-      setMessage({ type: "success", text: "Дархост қабул шуд. Мутахассис дар вақти интихобшуда ба шумо кӯмак мекунад." });
+      setMessage({ type: "success", text: t("appt.booked") });
       setForm((prev) => ({ ...prev, notes: "" }));
       setSlots((prev) => prev.map((slot) => (slot.time === selectedTime ? { ...slot, available: false } : slot)));
       setSelectedTime("");
       await fetchInitial();
     } catch (error) {
-      setMessage({ type: "error", text: error.response?.data?.message || "Хато ҳангоми фиристодани дархост" });
+      setMessage({ type: "error", text: error.response?.data?.message || t("appt.book_error") });
     } finally {
       setSubmitting(false);
     }
@@ -161,7 +163,7 @@ function UserBooking({ user, token }) {
       await axios.post(`${API}/appointments/${appointment.id}/rating`, { rating }, { headers });
       await fetchInitial();
     } catch (error) {
-      setMessage({ type: "error", text: error.response?.data?.message || "Рейтинг сабт нашуд" });
+      setMessage({ type: "error", text: error.response?.data?.message || t("appt.rate_error") });
     }
   };
 
@@ -170,7 +172,7 @@ function UserBooking({ user, token }) {
       await axios.delete(`${API}/appointments/${appointmentId}`, { headers });
       await fetchInitial();
     } catch (error) {
-      setMessage({ type: "error", text: error.response?.data?.message || "Дархост бекор нашуд" });
+      setMessage({ type: "error", text: error.response?.data?.message || t("appt.cancel_error") });
     }
   };
 
@@ -181,9 +183,9 @@ function UserBooking({ user, token }) {
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-10">
       <header className="max-w-3xl">
-        <h1 className="text-2xl md:text-3xl font-black leading-tight text-foreground">Машварати офлайн ва онлайн</h1>
+        <h1 className="text-2xl md:text-3xl font-black leading-tight text-foreground">{t("appt.title")}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Мутахассисро интихоб кунед, вақти озоди ӯро бинед ва барои машварат брон кунед.
+          {t("appt.subtitle")}
         </p>
       </header>
 
@@ -191,7 +193,7 @@ function UserBooking({ user, token }) {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
             <UserRoundCheck className="h-4 w-4" />
-            Мутахассисон
+            {t("appt.specialists")}
           </div>
           <div className="grid gap-3">
             {specialists.map((specialist) => (
@@ -207,14 +209,14 @@ function UserBooking({ user, token }) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-black text-foreground">{specialist.name || specialist.email}</h3>
-                    <p className="mt-1 text-xs font-bold text-primary">{specialist.specialization || "Мушовири касбӣ"}</p>
+                    <p className="mt-1 text-xs font-bold text-primary">{specialist.specialization || t("appt.default_role")}</p>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400">
                     <Star className="h-3 w-3 fill-current" />
                     {Number(specialist.ratingAverage || 0).toFixed(1)}
                   </span>
                 </div>
-                <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">{specialist.bio || "Маълумоти мутахассис ҳоло пурра нашудааст."}</p>
+                <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">{specialist.bio || t("appt.no_bio")}</p>
                 {specialist.meetingLocation && (
                   <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5" />
@@ -230,7 +232,7 @@ function UserBooking({ user, token }) {
             )}
             {!specialistsError && specialists.length === 0 && (
               <div className="rounded-2xl border border-dashed border-white/10 bg-card/50 p-5 text-sm leading-6 text-muted-foreground">
-                Мутахассиси дастрас ҳоло нест.
+                {t("appt.no_specialists")}
               </div>
             )}
           </div>
@@ -238,8 +240,8 @@ function UserBooking({ user, token }) {
 
         <motion.form onSubmit={submit} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-white/10 bg-card/70 p-5 md:p-6 shadow-xl">
           <div className="mb-5 flex flex-wrap gap-2">
-            <ModeButton active={selectedType === "OFFLINE"} onClick={() => setSelectedType("OFFLINE")} icon={Building2} label="Офлайн" />
-            <ModeButton active={selectedType === "ONLINE"} onClick={() => setSelectedType("ONLINE")} icon={Wifi} label="Онлайн" />
+            <ModeButton active={selectedType === "OFFLINE"} onClick={() => setSelectedType("OFFLINE")} icon={Building2} label={t("appt.offline")} />
+            <ModeButton active={selectedType === "ONLINE"} onClick={() => setSelectedType("ONLINE")} icon={Wifi} label={t("appt.online")} />
           </div>
 
           {message && (
@@ -251,13 +253,13 @@ function UserBooking({ user, token }) {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field icon={Mail} label="Email" type="email" value={form.email} onChange={(value) => updateForm("email", value)} />
-            <Field icon={Phone} label="Телефон" value={form.phoneNumber} onChange={(value) => updateForm("phoneNumber", value)} placeholder="+992..." />
-            <Field icon={Calendar} label="Сана" type="date" value={selectedDate} onChange={setSelectedDate} />
+            <Field icon={Phone} label={t("appt.phone")} value={form.phoneNumber} onChange={(value) => updateForm("phoneNumber", value)} placeholder="+992..." />
+            <Field icon={Calendar} label={t("appt.date")} type="date" value={selectedDate} onChange={setSelectedDate} />
             {selectedType === "ONLINE" && (
               <label className="block">
                 <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   <MessageCircle className="h-4 w-4" />
-                  Тарзи тамос
+                  {t("appt.contact_way")}
                 </span>
                 <select value={form.contactMethod} onChange={(event) => updateForm("contactMethod", event.target.value)} className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-foreground outline-none">
                   <option value="telegram">Telegram</option>
@@ -271,7 +273,7 @@ function UserBooking({ user, token }) {
           <div className="mt-5">
             <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               <Clock className="h-4 w-4" />
-              Вақтҳои озод
+              {t("appt.free_slots")}
             </div>
             {slotsLoading ? (
               <div className="flex h-24 items-center justify-center rounded-xl border border-white/10">
@@ -279,7 +281,7 @@ function UserBooking({ user, token }) {
               </div>
             ) : slots.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/10 p-5 text-center text-sm text-muted-foreground">
-                Барои ин сана вақти озод нест.
+                {t("appt.no_slots")}
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -312,41 +314,41 @@ function UserBooking({ user, token }) {
           )}
 
           <label className="mt-5 block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Эзоҳ</span>
+            <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("appt.note")}</span>
             <textarea
               value={form.notes}
               onChange={(event) => updateForm("notes", event.target.value)}
               rows={4}
               className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-foreground outline-none"
-              placeholder="Масалан: мехоҳам дар интихоби ихтисоси тиббӣ кӯмак гирам..."
+              placeholder={t("appt.note_placeholder")}
             />
           </label>
 
           <button disabled={submitting} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground hover:opacity-90 disabled:opacity-60">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Брон кардан
+            {t("appt.book_btn")}
           </button>
         </motion.form>
       </div>
 
       <section className="rounded-2xl border border-white/10 bg-card/60 p-5 md:p-6">
-        <h2 className="mb-4 font-black text-foreground">Дархостҳои ман</h2>
+        <h2 className="mb-4 font-black text-foreground">{t("appt.my_requests")}</h2>
         {appointments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Ҳоло дархост нест.</p>
+          <p className="text-sm text-muted-foreground">{t("appt.no_requests")}</p>
         ) : (
           <div className="grid gap-3">
             {appointments.map((appointment) => (
               <article key={appointment.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="font-bold text-foreground">{appointment.specialist?.name || "AI / Мутахассис"}</h3>
+                    <h3 className="font-bold text-foreground">{appointment.specialist?.name || t("appt.ai_or_specialist")}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {appointment.type} · {appointment.appointmentDate ? new Date(appointment.appointmentDate).toLocaleDateString() : ""} {appointment.appointmentTime || ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass[appointment.status] || "border-white/10 text-muted-foreground"}`}>
-                      {statusLabels[appointment.status] || appointment.status}
+                      {statusLabels[appointment.status] ? t(statusLabels[appointment.status]) : appointment.status}
                     </span>
                     {["PENDING", "IN_PROGRESS", "CONFIRMED"].includes(appointment.status) && (
                       <button
@@ -355,14 +357,14 @@ function UserBooking({ user, token }) {
                         className="inline-flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-300 hover:bg-red-500/20"
                       >
                         <XCircle className="h-3.5 w-3.5" />
-                        Бекор
+                        {t("appt.cancel")}
                       </button>
                     )}
                   </div>
                 </div>
                 {appointment.status === "COMPLETED" && appointment.specialistId && !appointment.rating && (
                   <div className="mt-4 flex items-center gap-2">
-                    <span className="text-xs font-bold text-muted-foreground">Рейтинг:</span>
+                    <span className="text-xs font-bold text-muted-foreground">{t("appt.rating")}</span>
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <button key={rating} onClick={() => rateAppointment(appointment, rating)} className="text-amber-400 hover:scale-110">
                         <Star className="h-5 w-5 fill-current" />
@@ -386,6 +388,7 @@ function UserBooking({ user, token }) {
 }
 
 function SpecialistSchedule({ token }) {
+  const { t } = useTranslation();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
@@ -414,8 +417,8 @@ function SpecialistSchedule({ token }) {
   return (
     <div className="space-y-6 pb-16">
       <header>
-        <h1 className="text-2xl font-black text-foreground">Ҷадвали машваратҳои ман</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Дархостҳои корбаронро бинед ва ҳолаташонро нав кунед.</p>
+        <h1 className="text-2xl font-black text-foreground">{t("appt.admin_title")}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t("appt.admin_subtitle")}</p>
       </header>
       <div className="grid gap-4">
         {appointments.map((appointment) => (
@@ -430,19 +433,19 @@ function SpecialistSchedule({ token }) {
                 {appointment.notes && <p className="mt-3 text-sm text-muted-foreground">{appointment.notes}</p>}
               </div>
               <span className={`h-fit rounded-full border px-3 py-1 text-xs font-bold ${statusClass[appointment.status] || "border-white/10 text-muted-foreground"}`}>
-                {statusLabels[appointment.status] || appointment.status}
+                {statusLabels[appointment.status] ? t(statusLabels[appointment.status]) : appointment.status}
               </span>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {["CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((status) => (
                 <button key={status} onClick={() => updateStatus(appointment.id, status)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-muted-foreground hover:border-primary/30 hover:text-primary">
-                  {statusLabels[status]}
+                  {t(statusLabels[status])}
                 </button>
               ))}
             </div>
           </article>
         ))}
-        {appointments.length === 0 && <p className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-muted-foreground">Ҳоло дархост нест.</p>}
+        {appointments.length === 0 && <p className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-muted-foreground">{t("appt.no_requests")}</p>}
       </div>
     </div>
   );

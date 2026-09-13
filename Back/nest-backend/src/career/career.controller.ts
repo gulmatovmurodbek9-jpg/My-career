@@ -48,12 +48,12 @@ export class CareerController {
     @Get(':id/offerings')
     @ApiOperation({ summary: 'List every university offering this specialty, with tuition and seats' })
     @ApiParam({ name: 'id', description: 'Career UUID' })
-    async getOfferings(@Param('id') id: string) {
+    async getOfferings(@Param('id') id: string, @Query('lang') lang?: string) {
         const career = await this.careerService.findOne(id);
         if (!career) {
             throw new NotFoundException(`Ихтисос бо ID "${id}" ёфт нашуд`);
         }
-        return this.careerService.findOfferings(id);
+        return this.careerService.findOfferings(id, lang);
     }
 
     @Get(':id')

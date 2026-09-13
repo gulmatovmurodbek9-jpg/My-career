@@ -38,6 +38,7 @@ import { resourceUrl } from "../../lib/resourceLinks";
 import { buildRoadmap } from "../../lib/buildRoadmap";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
+import { studyFormLabel, paymentTypeLabel, languageLabel } from "../../lib/offeringLabels";
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
 
@@ -236,7 +237,7 @@ const Info = () => {
     // Offerings load separately — the page is useful without them.
     async function fetchOfferings() {
       try {
-        const { data } = await axios.get(`${API}/careers/${id}/offerings`);
+        const { data } = await axios.get(`${API}/careers/${id}/offerings`, { params: withLang() });
         setOfferings(Array.isArray(data) ? data : []);
       } catch (error) {
         setOfferings([]);
@@ -521,7 +522,7 @@ const Info = () => {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <GraduationCap className="h-3.5 w-3.5 text-blue-500" />
                   <span className="font-bold text-blue-500">
-                    {new Set(offerings.map(o => o.university?.name)).size} муассиса
+                    {t("career_page.of_institutions", { count: new Set(offerings.map(o => o.university?.name)).size })}
                   </span>
                 </div>
               )}
@@ -766,7 +767,7 @@ const Info = () => {
                     {offerings.map((offering) => (
                       <tr key={offering.id} className="glass-card-sm">
                         <td className="px-4 py-3 rounded-l-xl">
-                          <div className="font-semibold text-foreground leading-snug">{offering.university?.name}</div>
+                          <div className="font-semibold text-foreground leading-snug">{offering.university?.nameTranslated || offering.university?.name}</div>
                           {offering.university?.isState === false && (
                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">{t("career_page.non_state")}</span>
                           )}
@@ -776,15 +777,15 @@ const Info = () => {
                             <MapPin className="h-3 w-3" /> {offering.university?.city || '—'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{offering.studyForm}</td>
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{offering.language}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{studyFormLabel(t, offering.studyForm)}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{languageLabel(t, offering.language)}</td>
                         <td className="px-4 py-3 text-center text-muted-foreground">{offering.seats || '—'}</td>
                         <td className="px-4 py-3 text-right whitespace-nowrap">
                           {offering.paymentType === 'ройгон' || offering.tuitionFee === null ? (
-                            <span className="font-bold text-emerald-500">Ройгон</span>
+                            <span className="font-bold text-emerald-500">{t("career_page.of_free")}</span>
                           ) : (
                             <span className="font-bold text-foreground">
-                              {offering.tuitionFee.toLocaleString('ru-RU')} сом.
+                              {offering.tuitionFee.toLocaleString('ru-RU')} {t("career_page.sal_somoni")}
                             </span>
                           )}
                         </td>

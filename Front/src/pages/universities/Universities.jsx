@@ -95,7 +95,7 @@ export default function Universities() {
       universities.filter((uni) => {
         if (!normalizedQuery) return true;
 
-        return [uni.name, uni.city, uni.shortName]
+        return [uni.name, uni.nameTranslated, uni.city, uni.shortName]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(normalizedQuery));
       }),
@@ -280,7 +280,12 @@ export default function Universities() {
                         </span>
                       </div>
 
-                      <h3 className="text-xl font-black leading-snug text-foreground">{uni.name}</h3>
+                      <h3 className="text-xl font-black leading-snug text-foreground">
+                        {uni.nameTranslated || uni.name}
+                      </h3>
+                      {uni.nameTranslated && (
+                        <p className="mt-1 text-xs leading-snug text-muted-foreground">{uni.name}</p>
+                      )}
                       <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
                         {uni.description || "Барои ин донишгоҳ маълумоти кӯтоҳ дар ҳоли ҳозир дастрас нест."}
                       </p>

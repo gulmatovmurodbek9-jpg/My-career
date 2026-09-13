@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Float, MeshDistortMaterial, Sphere, Box } from "@react-three/drei";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 // 3D Scene Component
 function Scene() {
@@ -55,9 +56,10 @@ function Scene() {
 }
 
 const SalaryVisualization3D = ({ salaryData }) => {
+  const { t } = useTranslation();
   const levels = [
     {
-      title: "Навкор",
+      title: "salary3d.junior",
       salary: salaryData?.junior,
       gradient: "from-green-500/20 via-green-500/10 to-transparent",
       borderColor: "border-green-500/30",
@@ -66,7 +68,7 @@ const SalaryVisualization3D = ({ salaryData }) => {
       icon: "💼"
     },
     {
-      title: "Таҷрибаи миёна",
+      title: "salary3d.middle",
       salary: salaryData?.mid,
       gradient: "from-blue-500/20 via-blue-500/10 to-transparent",
       borderColor: "border-blue-500/30",
@@ -75,7 +77,7 @@ const SalaryVisualization3D = ({ salaryData }) => {
       icon: "🚀"
     },
     {
-      title: "Тарҷрибаи кории калон",
+      title: "salary3d.senior",
       salary: salaryData?.senior,
       gradient: "from-purple-500/20 via-purple-500/10 to-transparent",
       borderColor: "border-purple-500/30",
@@ -101,9 +103,9 @@ const SalaryVisualization3D = ({ salaryData }) => {
           className="text-center mb-8"
         >
           <h3 className="text-3xl font-bold mb-2 text-gradient-primary">
-            Сатҳи музди меҳнат
+            {t("salary3d.title")}
           </h3>
-          <p className="text-muted-foreground">Дар асоси таҷриба ва малака</p>
+          <p className="text-muted-foreground">{t("salary3d.sub")}</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -125,7 +127,7 @@ const SalaryVisualization3D = ({ salaryData }) => {
                   </div>
 
                   <div className="text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wider">
-                    {level.title}
+                    {t(level.title)}
                   </div>
 
                   <div className={`text-2xl font-bold ${level.textColor} mb-2`}>
@@ -142,9 +144,9 @@ const SalaryVisualization3D = ({ salaryData }) => {
                   </div>
 
                   <div className="mt-3 text-xs text-muted-foreground">
-                    {index === 0 && "0-2 сол таҷриба"}
-                    {index === 1 && "2-5 сол таҷриба"}
-                    {index === 2 && "5+ сол таҷриба"}
+                    {index === 0 && t("salary3d.exp_junior")}
+                    {index === 1 && t("salary3d.exp_middle")}
+                    {index === 2 && t("salary3d.exp_senior")}
                   </div>
                 </div>
 
@@ -163,7 +165,7 @@ const SalaryVisualization3D = ({ salaryData }) => {
           className="mt-8 text-center"
         >
           <p className="text-sm text-muted-foreground">
-             Музди меҳнат вобаста ба ҷойгиршавӣ, компания ва малакаҳои шахсӣ фарқ мекунад
+             {t("salary3d.note")}
           </p>
         </motion.div>
       </div>

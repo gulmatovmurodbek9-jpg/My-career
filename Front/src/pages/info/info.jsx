@@ -101,7 +101,7 @@ function ChoosingHelp({ offerings }) {
     },
     cheapest && {
       label: t("career_page.cheapest_paid"),
-      value: `${cheapest.tuitionFee.toLocaleString("ru-RU")} сом./сол`,
+      value: t("misc.per_year", { price: cheapest.tuitionFee.toLocaleString("ru-RU") }),
       hint: cheapest.university?.name,
     },
     cities.length && {
@@ -267,12 +267,16 @@ const Info = () => {
   const metaUniversities = career?.universities || [];
   usePageMeta({
     ready: !!career,
-    title: career ? `${career.name}${career.code ? ` (коди ${career.code})` : ""}` : undefined,
+    title: career
+      ? career.code
+        ? t("misc2.meta_career_title", { name: career.name, code: career.code })
+        : career.name
+      : undefined,
     description: career
       ? [
         career.description || career.purpose,
         metaUniversities.length
-          ? `Дар ${metaUniversities.length} донишгоҳи Тоҷикистон таълим дода мешавад.`
+          ? t("misc2.meta_career_unis", { count: metaUniversities.length })
           : null,
       ].filter(Boolean).join(" ")
       : undefined,
@@ -353,7 +357,7 @@ const Info = () => {
           </div>
           <div className="space-y-2">
             <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto" />
-            <p className="text-sm text-muted-foreground">Маълумот бор карда истодааст...</p>
+            <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
           </div>
         </div>
       </div>
@@ -367,7 +371,7 @@ const Info = () => {
           <div className="w-20 h-20 rounded-2xl icon-box flex items-center justify-center mx-auto">
             <Target className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">Ихтисос ёфт нашуд</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t("misc2.no_specialty")}</h2>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto">{t("career_page.not_found")}</p>
           <Link to="/careers" className="inline-flex items-center gap-2 btn-primary px-6 py-3 text-sm">
             <ArrowLeft className="w-4 h-4" /> {t("career_page.back_to_list")}
@@ -478,7 +482,7 @@ const Info = () => {
                   )}
                   {career.code && (
                     <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm bg-white/5 border border-white/10">
-                      <span className="text-muted-foreground">Коди МНТ</span>
+                      <span className="text-muted-foreground">{t("misc2.mmt_code")}</span>
                       {/* Рақам бо моношрифт: рақамҳо ба як паҳно меафтанд ва хондан осон мешавад. */}
                       <span className="font-mono font-semibold tracking-wide text-foreground">{career.code}</span>
                     </span>
@@ -513,8 +517,8 @@ const Info = () => {
                   <span className="text-muted-foreground">{t("career_page.tuition_label")}</span>
                   <span className="font-bold text-secondary">
                     {career.minTuitionFee === career.maxTuitionFee
-                      ? `${career.minTuitionFee.toLocaleString('ru-RU')} сом./сол`
-                      : `${career.minTuitionFee?.toLocaleString('ru-RU')} – ${career.maxTuitionFee?.toLocaleString('ru-RU')} сом./сол`}
+                      ? t("misc.per_year", { price: career.minTuitionFee.toLocaleString('ru-RU') })
+                      : t("misc.per_year", { price: `${career.minTuitionFee?.toLocaleString('ru-RU')} – ${career.maxTuitionFee?.toLocaleString('ru-RU')}` })}
                   </span>
                 </div>
               )}
@@ -542,13 +546,13 @@ const Info = () => {
               {techs.length > 0 && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <Code className="h-3.5 w-3.5 text-cyan-500" />
-                  <span className="font-bold text-cyan-600 dark:text-cyan-400">{techs.length} технология</span>
+                  <span className="font-bold text-cyan-600 dark:text-cyan-400">{t("misc2.techs_count", { count: techs.length })}</span>
                 </div>
               )}
               {certs.length > 0 && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <Award className="h-3.5 w-3.5 text-amber-500" />
-                  <span className="font-bold text-amber-600 dark:text-amber-400">{certs.length} сертификат</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">{t("misc2.certs_count", { count: certs.length })}</span>
                 </div>
               )}
             </div>

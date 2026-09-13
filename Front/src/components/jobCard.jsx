@@ -8,10 +8,9 @@ import { useAuthStore } from "../store/authStore";
 import {
   ArrowRight,
   Briefcase,
-  TrendingUp,
   Heart,
   Bookmark,
-  Star,
+
 } from "lucide-react";
 
 /**
@@ -19,17 +18,20 @@ import {
  * since the same programme costs very different amounts in Душанбе and a
  * district college. Collapses to one number when min and max agree.
  */
-export function formatTuition(specialty) {
+export function formatTuition(specialty, t) {
   const min = specialty.minTuitionFee ?? specialty.tuitionFee;
   const max = specialty.maxTuitionFee ?? specialty.tuitionFee;
   if (!min && !max) return null;
-  if (!max || min === max) return `${min.toLocaleString("ru-RU")} сом./сол`;
-  return `${min.toLocaleString("ru-RU")} – ${max.toLocaleString("ru-RU")} сом./сол`;
+  const range = !max || min === max
+    ? min.toLocaleString("ru-RU")
+    : `${min.toLocaleString("ru-RU")} – ${max.toLocaleString("ru-RU")}`;
+  return t("misc.per_year", { price: range });
 }
 
 /** Official NTC code + tuition range + a badge when state-funded seats exist. */
 export function SpecialtyMeta({ specialty, size = "normal" }) {
-  const tuition = formatTuition(specialty);
+  const { t } = useTranslation();
+  const tuition = formatTuition(specialty, t);
   const pad = size === "small" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]";
 
   return (
@@ -54,7 +56,7 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
       {specialty.degreeType && (
         <span className={`inline-flex items-center rounded-full border border-primary/20 bg-primary/10 font-bold text-primary ${pad}`}>
           {specialty.degreeType}
-          {specialty.durationYears ? ` · ${specialty.durationYears} сол` : ""}
+          {specialty.durationYears ? ` · ${t("misc.years", { count: specialty.durationYears })}` : ""}
         </span>
       )}
       {tuition && (
@@ -64,7 +66,7 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
       )}
       {specialty.hasFreeSeats && (
         <span className={`inline-flex items-center rounded-full font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ${pad}`}>
-          Ройгон ҳаст
+          {t("misc.free_available")}
         </span>
       )}
       {/* Дуюмин фарқи ҳамномҳо: се «Информатика»-и бакалаврӣ дар 3, 1 ва 7
@@ -72,7 +74,7 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
           донистан мехоҳад. */}
       {specialty.universities?.length > 0 && (
         <span className={`inline-flex items-center rounded-full border border-border bg-muted/60 font-semibold text-muted-foreground ${pad}`}>
-          {specialty.universities.length} донишгоҳ
+          {t("misc2.universities_count", { count: specialty.universities.length })}
         </span>
       )}
     </div>
@@ -322,9 +324,6 @@ export function SpecialtyCardList({ specialty }) {
             >
               <Bookmark className={`w-3.5 h-3.5 ${isSaved ? "fill-current" : ""}`} />
             </button>
-            <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
-              <TrendingUp className="w-4 h-4" />
-            </div>
           </div>
         </div>
 
@@ -338,10 +337,6 @@ export function SpecialtyCardList({ specialty }) {
 
         <div className="flex items-center justify-between mt-auto">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-              <span className="text-[10px] font-black">PREMIUM</span>
-            </div>
             <button
               onClick={handleLike}
               className={`flex items-center gap-1.5 z-20 transition-all active:scale-95`}

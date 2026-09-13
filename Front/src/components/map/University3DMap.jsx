@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 // MapLibre v6 экспорти default надорад — танҳо номдор.
 import { Map as MapLibreMap, Marker, NavigationControl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useTranslation } from "react-i18next";
 
 /*
  * Харитаи сеченака.
@@ -24,6 +25,7 @@ const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_HEIGHT = 8;
 
 const University3DMap = ({ universities = [], center, zoom = 15, onSelect }) => {
+    const { t } = useTranslation();
     const containerRef = useRef(null);
     const mapRef = useRef(null);
     const markersRef = useRef([]);
@@ -121,7 +123,7 @@ const University3DMap = ({ universities = [], center, zoom = 15, onSelect }) => 
             el.className = uni.hasExactLocation ? "map3d-pin map3d-pin--exact" : "map3d-pin";
             el.title = uni.hasExactLocation
                 ? [uni.name, uni.address].filter(Boolean).join("\n")
-                : `${uni.name} — ҷои тахминӣ (маркази шаҳр)`;
+                : t("misc.map3d_approx", { name: uni.name });
             el.setAttribute("aria-label", uni.name);
             if (onSelect) el.addEventListener("click", () => onSelect(uni));
 
@@ -144,7 +146,7 @@ const University3DMap = ({ universities = [], center, zoom = 15, onSelect }) => 
         return (
             <div className="flex h-full w-full items-center justify-center p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                    Харитаи 3D бор нашуд. Реҷаи «Нақша» ё «Моҳвора»-ро истифода баред.
+                    {t("misc.map3d_failed")}
                 </p>
             </div>
         );

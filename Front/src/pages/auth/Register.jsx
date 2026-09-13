@@ -3,11 +3,13 @@ import { motion } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, LogIn, Loader2, AlertCircle, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/authStore";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "../../lib/config";
 import { googleClientId, loadGoogleIdentity, loginWithGoogleToken } from "../../lib/googleAuth";
 
 const Register = () => {
+    const { t } = useTranslation();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -68,7 +70,7 @@ const Register = () => {
             setAuth(data.user, data.access_token);
             navigate("/quiz"); // Go to quiz after registration as per project vision
         } catch (err) {
-            setError(err.response?.data?.message || "Хатогӣ ҳангоми бақайдгирӣ. Имейл шояд аллакай истифода шуда бошад.");
+            setError(err.response?.data?.message || t("auth.register_error"));
         } finally {
             setLoading(false);
         }
@@ -97,8 +99,8 @@ const Register = () => {
                         >
                             <ShieldCheck className="w-8 h-8 text-primary-foreground" />
                         </motion.div>
-                        <h1 className="text-3xl font-bold text-foreground mb-2">Бақайдгирӣ</h1>
-                        <p className="text-muted-foreground">Барои оғози кашфиёт ҳисоби нав созед</p>
+                        <h1 className="text-3xl font-bold text-foreground mb-2">{t("auth.register_title")}</h1>
+                        <p className="text-muted-foreground">{t("auth.register_sub")}</p>
                     </div>
 
                     <form onSubmit={handleRegister} className="space-y-5">
@@ -114,13 +116,13 @@ const Register = () => {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">Ному насаб</label>
+                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.full_name")}</label>
                             <div className="relative group">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Мурод Исмоилов"
+                                    placeholder={t("auth.name_placeholder")}
                                     className="w-full bg-muted/20 border border-border/50 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:bg-muted/30 transition-all text-foreground"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
@@ -129,7 +131,7 @@ const Register = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">Имейл</label>
+                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.email")}</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
@@ -144,7 +146,7 @@ const Register = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">Парол</label>
+                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.password")}</label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
@@ -162,7 +164,7 @@ const Register = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((v) => !v)}
-                                    aria-label={showPassword ? "Пинҳон кардани парол" : "Нишон додани парол"}
+                                    aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -181,7 +183,7 @@ const Register = () => {
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
                                 <>
-                                    Ҳисоб сохтан
+                                    {t("auth.register_btn")}
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -203,9 +205,9 @@ const Register = () => {
 
                     <div className="mt-8 text-center border-t border-border/50 pt-8">
                         <p className="text-muted-foreground text-sm">
-                            Аллакай ҳисоб доред?{" "}
+                            {t("auth.have_account")}{" "}
                             <Link to="/login" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
-                                Ворид шудан <LogIn className="w-4 h-4" />
+                                {t("auth.login_btn")} <LogIn className="w-4 h-4" />
                             </Link>
                         </p>
                     </div>

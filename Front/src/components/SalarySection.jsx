@@ -35,7 +35,7 @@ function SectorAverage({ sector }) {
   return (
     <div className="rounded-2xl border border-border p-5">
       <p className="text-sm text-muted-foreground">
-        {t("career_page.sal_avg_in", { sector: sector.label })}
+        {t("career_page.sal_avg_in", { sector: t(sector.labelKey) })}
       </p>
       <p className="mt-1 text-3xl font-semibold text-foreground">
         {som(sector.amount)} <span className="text-xl font-normal text-muted-foreground">{t("career_page.sal_per_month")}</span>
@@ -66,7 +66,7 @@ function SectorAverage({ sector }) {
         {t("career_page.sal_note")}
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        {t("career_page.sal_source", { source: `${SALARY_SOURCE.agency}, ${SALARY_SOURCE.period}` })}
+        {t("career_page.sal_source", { source: `${t(SALARY_SOURCE.agencyKey)}, ${t(SALARY_SOURCE.periodKey)}` })}
       </p>
     </div>
   );

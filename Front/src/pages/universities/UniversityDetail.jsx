@@ -273,7 +273,7 @@ export default function UniversityDetail() {
           </div>
 
           <p className="text-sm font-bold text-muted-foreground">
-            Нишон дода шуд: <span className="text-foreground">{filteredSpecialties.length}</span> ихтисос
+            {t("misc.shown", { count: filteredSpecialties.length })}
           </p>
         </section>
 
@@ -298,7 +298,7 @@ export default function UniversityDetail() {
                       className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
                       style={{ backgroundColor: cData?.bg || "var(--primary/10)", color: cData?.text || "var(--primary)" }}
                     >
-                      Класстери {spec.cluster?.clusterId}
+                      {t("misc.cluster_short", { id: spec.cluster?.clusterId })}
                     </div>
                     <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all">
                       <Clock className="w-4 h-4" />
@@ -313,15 +313,15 @@ export default function UniversityDetail() {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                         <Clock className="w-3.5 h-3.5" />
-                        {spec.durationYears || 4} сол
+                        {t("misc.years", { count: spec.durationYears || 4 })}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                         <GraduationCap className="w-3.5 h-3.5" />
-                        {spec.degreeType || "Бакалавр"}
+                        {spec.degreeType || t("misc.bachelor")}
                       </div>
                     </div>
                     <div className="text-xs font-black uppercase text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      Муфассал
+                      {t("misc2.detail")}
                     </div>
                   </div>
                 </motion.div>
@@ -335,7 +335,7 @@ export default function UniversityDetail() {
             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
               <Search className="w-10 h-10 text-muted-foreground/50" />
             </div>
-            <p className="text-xl font-bold text-muted-foreground">Ихтисос ёфт нашуд</p>
+            <p className="text-xl font-bold text-muted-foreground">{t("misc2.no_specialty")}</p>
             <button 
               onClick={() => {setActiveCluster(null); setSearchQuery("");}}
               className="text-primary font-bold hover:underline"

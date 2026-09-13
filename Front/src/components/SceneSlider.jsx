@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Ба видеои дохили слайдер мегӯяд, ки такрор нашавад ва охирашро хабар диҳад.
@@ -37,6 +38,7 @@ export const useSlider = () => useContext(SliderContext);
  * Тирҳо ва нуқтаҳо тугмаҳои воқеӣ ҳастанд, аз ин рӯ клавиатура кор мекунад.
  */
 export default function SceneSlider({ slides, interval = 20000, label }) {
+  const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   // Танҳо фокуси клавиатура гардишро мебандад; ҳаракати муш не.
@@ -99,7 +101,7 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -40 }}
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           aria-roledescription="slide"
-          aria-label={`${index + 1} аз ${total}`}
+          aria-label={t("misc.slide_of", { index: index + 1, total })}
         >
           <SliderContext.Provider value={context}>{slides[index]}</SliderContext.Provider>
         </motion.div>
@@ -110,7 +112,7 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
           <button
             type="button"
             onClick={() => step(-1)}
-            aria-label="Экрани пешина"
+            aria-label={t("misc.slide_prev")}
             className="focus-ring inline-flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border text-foreground transition-colors hover:bg-muted"
           >
             <ChevronLeft className="h-5 w-5" aria-hidden />
@@ -118,7 +120,7 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
           <button
             type="button"
             onClick={() => step(1)}
-            aria-label="Экрани навбатӣ"
+            aria-label={t("misc.slide_next")}
             className="focus-ring inline-flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border text-foreground transition-colors hover:bg-muted"
           >
             <ChevronRight className="h-5 w-5" aria-hidden />
@@ -130,7 +132,7 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
                 key={i}
                 type="button"
                 onClick={() => go(i)}
-                aria-label={`Экрани ${i + 1}`}
+                aria-label={t("misc.slide_go", { index: i + 1 })}
                 aria-current={i === index}
                 className={`focus-ring h-3 rounded-full transition-all ${
                   i === index ? "w-8 bg-foreground" : "w-3 bg-border hover:bg-foreground/40"
@@ -143,7 +145,7 @@ export default function SceneSlider({ slides, interval = 20000, label }) {
       )}
 
       <p className="sr-only" aria-live="polite">
-        Экрани {index + 1} аз {total}
+        {t("misc.slide_go", { index: index + 1 })} / {total}
       </p>
     </section>
   );

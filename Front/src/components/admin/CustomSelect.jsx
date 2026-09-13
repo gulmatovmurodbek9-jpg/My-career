@@ -149,7 +149,7 @@ const CustomSelect = ({
 
               {filteredOptions.length === 0 ? (
                 <div className="px-4 py-6 text-center text-[13px] text-white/35">
-                  Ёфт нашуд
+                  {t("common.not_found")}
                 </div>
               ) : (
                 filteredOptions.map((opt) => {

@@ -104,7 +104,7 @@ const Dashboard = () => {
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                    <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-[10px]">Боргузорӣ...</p>
+                    <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-[10px]">{t("common.loading")}</p>
                 </div>
             </div>
         );
@@ -218,7 +218,7 @@ const Dashboard = () => {
                                 <div className="glass-card p-6 flex items-center justify-center min-h-[300px]">
                                     <div className="flex flex-col items-center gap-3">
                                         <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                                        <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Боргузорӣ...</p>
+                                        <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">{t("common.loading")}</p>
                                     </div>
                                 </div>
                             }>
@@ -260,10 +260,10 @@ const Dashboard = () => {
                                         </span>
                                         <div>
                                             <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
-                                                AI Чат — Мушовири касбӣ
+                                                {t("misc.ai_chat_title")}
                                             </h3>
                                             <p className="text-muted-foreground text-xs font-medium">
-                                                Саволҳои худро дар бораи ихтисосҳо, маошҳо ва донишгоҳҳо пурсед
+                                                {t("misc.ai_chat_sub")}
                                             </p>
                                         </div>
                                     </div>

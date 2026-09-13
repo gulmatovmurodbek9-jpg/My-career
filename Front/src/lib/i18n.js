@@ -279,6 +279,12 @@ i18n
                         shortcuts: "Enter — фиристодан · Shift+Enter — хати нав"
                     },
                     career_page: {
+                        m_legend: "Нишонаҳо",
+                        m_kind_university: "Донишгоҳ",
+                        m_kind_academy: "Академия",
+                        m_kind_institute: "Донишкада",
+                        m_kind_college: "Коллеҷ",
+                        m_kind_branch: "Филиал",
                         u_meta_fallback: "{{name}}{{city}} — ихтисосҳо, нархи таҳсил ва ҷойҳои ройгон.",
                         u_title: "Донишгоҳҳои Тоҷикистон дар як харита",
                         u_meta_title: "Донишгоҳҳои Тоҷикистон — харита ва рӯйхат",
@@ -918,6 +924,12 @@ i18n
                         top_matches_desc: "Это направления, которые оказались наиболее сильными по вашим ответам."
                     },
                     career_page: {
+                        m_legend: "Обозначения",
+                        m_kind_university: "Университет",
+                        m_kind_academy: "Академия",
+                        m_kind_institute: "Институт",
+                        m_kind_college: "Колледж",
+                        m_kind_branch: "Филиал",
                         u_meta_fallback: "{{name}}{{city}} — специальности, стоимость обучения и бюджетные места.",
                         u_title: "Университеты Таджикистана на одной карте",
                         u_meta_title: "Университеты Таджикистана — карта и список",
@@ -1557,6 +1569,12 @@ i18n
                         back: "Back"
                     },
                     career_page: {
+                        m_legend: "Legend",
+                        m_kind_university: "University",
+                        m_kind_academy: "Academy",
+                        m_kind_institute: "Institute",
+                        m_kind_college: "College",
+                        m_kind_branch: "Branch",
                         u_meta_fallback: "{{name}}{{city}} — specialties, tuition and state-funded places.",
                         u_title: "Universities of Tajikistan on one map",
                         u_meta_title: "Universities of Tajikistan — map and list",

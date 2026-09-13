@@ -593,15 +593,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                   },
                 }}
               >
-                <Popup className="university-popup" offset={[0, -10]}>
-                  <div className="space-y-2">
-                    <p className="text-sm font-bold leading-tight text-foreground">{uni.name}</p>
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {uni.inferredCity}
-                    </p>
-                  </div>
-                </Popup>
               </Marker>
             ))}
         </MapContainer>
@@ -616,7 +607,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
       {cityGroups.length > 0 && (
         <details
           open
-          className="absolute bottom-4 left-4 z-[600] max-w-[calc(100%-2rem)] rounded-2xl border border-white/10 bg-black/70 text-white shadow-xl backdrop-blur-md [&[open]>summary]:mb-2"
+          className="absolute bottom-[4.75rem] left-5 z-[600] max-w-[calc(100%-2.5rem)] rounded-2xl border border-white/10 bg-black/70 text-white shadow-xl backdrop-blur-md [&[open]>summary]:mb-2"
         >
           <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">
             {t("career_page.m_legend")}
@@ -643,7 +634,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
               <SearchX className="h-8 w-8 text-white/65" />
             </div>
-            <h3 className="text-2xl font-black">Маълумот барои харита ёфт нашуд</h3>
+            <h3 className="text-2xl font-black">{t("career_page.m_no_map_data_title")}</h3>
             <p className="mt-2 text-sm leading-6 text-white/70">
               {t("career_page.m_no_data")}
             </p>
@@ -673,7 +664,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         className="absolute bottom-5 left-5 z-[700] inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/65 px-4 py-3 text-sm font-bold text-white shadow-xl backdrop-blur-xl transition hover:bg-black/80"
       >
         <LocateFixed className="h-4 w-4" />
-        Ба Душанбе
+        {t("career_page.m_to_dushanbe")}
       </button>
 
       <AnimatePresence>
@@ -689,8 +680,16 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                 намонад; мазмун скролл мешавад — пештар он танҳо бурида
                 мешуд ва тугмаи «Муфассал дидан» ба поён намерасид. */}
             <div className="flex max-h-[58vh] flex-col overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-black/72 p-4 text-white shadow-[0_24px_64px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:max-h-[78vh] md:p-5">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div>
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 md:flex">
+                    {selectedUni.logo ? (
+                      <img src={selectedUni.logo} alt={selectedUni.name} className="h-full w-full object-contain p-1.5" />
+                    ) : (
+                      <Building2 className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+                <div className="min-w-0">
                   <p className="text-[15px] font-black leading-snug md:text-lg md:leading-tight">{selectedUni.name}</p>
                   {/* Суроғаи пурра, вақте маълум аст — довталабро маҳз ҳамин
                       ба бинои дуруст мебарад, на номи шаҳр. */}
@@ -703,6 +702,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                       {t("career_page.m_approx")}
                     </p>
                   )}
+                </div>
                 </div>
 
                 <button
@@ -719,11 +719,11 @@ export default function TajikistanMap({ universities = [], focusResults = false 
 
               <div className="mb-4 grid grid-cols-2 gap-2">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">Шаҳр</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.m_city_label")}</p>
                   <p className="mt-1 text-lg font-black">{selectedUni.inferredCity}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">Ихтисосҳо</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.u_specialties")}</p>
                   <p className="mt-1 text-lg font-black">{selectedUni.careerCount || 0}</p>
                 </div>
               </div>
@@ -731,29 +731,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               <div className="flex-1 rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
                 {/* Ном дар сарлавҳаи панел аллакай ҳаст. Дар телефон
                     такрори он ним экранро мегирифт. */}
-                <div className="hidden items-start gap-3 md:flex">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                    {selectedUni.logo ? (
-                      <img src={selectedUni.logo} alt={selectedUni.name} className="h-full w-full object-contain p-1.5" />
-                    ) : (
-                      <Building2 className="h-5 w-5 text-primary" />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-black leading-6 text-white">{selectedUni.name}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/70">
-                        {t("career_page.m_city", { city: selectedUni.inferredCity })}
-                      </span>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/70">
-                        {selectedUni.careerCount || 0} ихтисос
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="mt-4 text-sm leading-7 text-white/70">
+                <p className="text-sm leading-7 text-white/70">
                   {selectedUni.description || t("career_page.m_no_short")}
                 </p>
 
@@ -761,7 +739,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                   onClick={() => navigate(`/universities/${selectedUni.id}`)}
                   className="mt-4 inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:shadow-primary/40 md:mt-5"
                 >
-                  Муфассал дидан
+                  {t("career_page.m_details")}
                   <ExternalLink className="h-4 w-4" />
                 </button>
               </div>

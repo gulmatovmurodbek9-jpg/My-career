@@ -263,7 +263,7 @@ export class CareerService {
      * language and seat count. Cheapest first so the list opens on the most
      * affordable option; state-funded (ройгон) seats sort to the top.
      */
-    async findOfferings(careerId: string) {
+    async findOfferings(careerId: string, lang?: string) {
         const offerings = await this.offeringRepository.find({
             where: { careerId },
             relations: ['university'],
@@ -278,14 +278,21 @@ export class CareerService {
                 language: offering.language,
                 seats: offering.seats,
                 basedOn: offering.basedOn,
-                university: {
-                    id: offering.university?.id,
-                    name: offering.university?.name,
-                    city: offering.university?.city,
-                    region: offering.university?.region,
-                    institutionType: offering.university?.institutionType,
-                    isState: offering.university?.isState,
-                },
+                /* Номи расмии тоҷикӣ дар 'name' мемонад — ҳуҷҷат маҳз бо он
+                   супорида мешавад — ва тарҷума ба 'nameTranslated' меравад. */
+                university: (() => {
+                    const uni = offering.university;
+                    const tr = lang && lang !== 'tj' ? (uni as any)?.translations?.[lang] : null;
+                    return {
+                        id: uni?.id,
+                        name: uni?.name,
+                        nameTranslated: tr?.name,
+                        city: tr?.city ?? uni?.city,
+                        region: tr?.region ?? uni?.region,
+                        institutionType: tr?.institutionType ?? uni?.institutionType,
+                        isState: uni?.isState,
+                    };
+                })(),
             }))
             /*
              * Ҷойҳои РОЙГОН аввал.

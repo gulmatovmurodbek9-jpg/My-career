@@ -15,6 +15,7 @@ import TajikistanMap from "../../components/map/TajikistanMap";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
+import { useTranslation } from "react-i18next";
 
 const CITY_KEYWORDS = [
   "Душанбе",
@@ -58,10 +59,11 @@ function inferCity(uni) {
 
   if (uni.latitude == null || uni.longitude == null) return null;
   const key = `${Number(uni.latitude).toFixed(5)},${Number(uni.longitude).toFixed(5)}`;
-  return COORDINATE_CITY_FALLBACKS[key] || "Ҷойгиршавӣ номаълум";
+  return COORDINATE_CITY_FALLBACKS[key] || null;
 }
 
 export default function Universities() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -117,10 +119,8 @@ export default function Universities() {
   );
 
   usePageMeta({
-    title: "Донишгоҳҳои Тоҷикистон — харита ва рӯйхат",
-    description:
-      "128 донишгоҳ ва коллеҷи Тоҷикистон дар як харита: ҷойгиршавӣ, шаҳр, " +
-      "ихтисосҳо, нархи таҳсил ва ҷойҳои ройгон.",
+    title: t("career_page.u_meta_title"),
+    description: t("career_page.u_meta_desc"),
     path: "/universities",
   });
 
@@ -138,20 +138,18 @@ export default function Universities() {
             <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
               <div className="space-y-4">
                 <h1 className="text-3xl font-bold leading-[1.15] tracking-tight text-foreground md:text-[2.75rem]">
-                  Донишгоҳҳои Тоҷикистон дар як харита
+                  {t("career_page.u_title")}
                 </h1>
                 <p className="max-w-2xl text-[15px] leading-7 text-muted-foreground">
-                  Ҷустуҷӯ кунед, байни харита ва рӯйхат гузаред ва донишгоҳҳоро аз рӯи шаҳр
-                  ва барномаҳои таълимӣ муқоиса намоед. Нишонаҳо аз рӯи шаҳр гузошта шудаанд,
-                  на аз рӯи суроғаи дақиқи бино.
+                  {t("career_page.u_intro")}
                 </p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Донишгоҳҳо", value: universities.length },
-                  { label: "Шаҳру ноҳияҳо", value: cityCount },
-                  { label: "Барномаҳо", value: totalPrograms },
+                  { label: t("career_page.u_stat_institutions"), value: universities.length },
+                  { label: t("career_page.u_stat_cities"), value: cityCount },
+                  { label: t("career_page.u_stat_programs"), value: totalPrograms },
                 ].map((stat) => (
                   <div
                     key={stat.label}
@@ -176,17 +174,17 @@ export default function Universities() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Ҷустуҷӯи донишгоҳ ё шаҳр..."
+                placeholder={t("career_page.u_search")}
                 className="w-full bg-transparent text-sm font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="flex flex-wrap gap-2">
               <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-[13px] font-bold text-muted-foreground">
-                {filteredUnis.length} натиҷа
+                {t("career_page.u_results", { count: filteredUnis.length })}
               </span>
               <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-[13px] font-bold text-muted-foreground">
-                {cityCount} шаҳр
+                {t("career_page.u_cities_found", { count: cityCount })}
               </span>
             </div>
           </div>
@@ -201,7 +199,7 @@ export default function Universities() {
               }`}
             >
               <MapIcon className="h-4 w-4" />
-              Харита
+              {t("career_page.u_view_map")}
             </button>
             <button
               onClick={() => setViewMode("grid")}
@@ -212,7 +210,7 @@ export default function Universities() {
               }`}
             >
               <List className="h-4 w-4" />
-              Рӯйхат
+              {t("career_page.u_view_list")}
             </button>
           </div>
         </div>
@@ -228,9 +226,9 @@ export default function Universities() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-muted/40">
               <Search className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h2 className="mt-5 text-2xl font-black text-foreground">Натиҷа пайдо нашуд</h2>
+            <h2 className="mt-5 text-2xl font-black text-foreground">{t("career_page.u_empty_title")}</h2>
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Барои пайдо кардани донишгоҳ, номи дигар ё номи шаҳрро санҷед.
+              {t("career_page.u_empty_hint")}
             </p>
           </div>
         ) : (
@@ -278,7 +276,7 @@ export default function Universities() {
 
                         <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-3 py-1 text-[11px] font-bold text-muted-foreground">
                           <MapPin className="h-3.5 w-3.5" />
-                          {uni.city || "Шаҳр номаълум"}
+                          {uni.city || t("career_page.u_city_unknown")}
                         </span>
                       </div>
 

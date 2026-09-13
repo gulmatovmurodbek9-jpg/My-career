@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   GeoJSON,
   MapContainer,
@@ -101,17 +102,54 @@ function createClusterIcon({ count, isActive }) {
   });
 }
 
-function createDotIcon(isActive) {
+/*
+ * Иконка аз рӯи навъи муассиса.
+ *
+ * Ҳамаи нишонаҳо рақами «1»-ро мебароварданд — маълумоти сифр ва дар харита
+ * як девори якхела. Дар база панҷ навъ ҳаст (77 коллеҷ, 20 донишгоҳ, 17
+ * донишкада, 13 филиал, 1 академия), ва довталаб маҳз ҳаминро фарқ кардан
+ * мехоҳад: коллеҷ пас аз синфи 9, донишгоҳ пас аз 11.
+ *
+ * SVG дарунсохт аст, на ҷузъи React: Leaflet DivIcon танҳо сатри HTML
+ * мегирад ва компонент дар он рендер намешавад.
+*/
+const INSTITUTION_ICONS = {
+  // Донишгоҳ — кулоҳи хатм
+  university: '<path d="M12 3 1 9l11 6 9-4.9V17h2V9L12 3z"/><path d="M5 13.2V17c0 1.7 3.1 3 7 3s7-1.3 7-3v-3.8l-7 3.8-7-3.8z"/>',
+  // Академия — ситора
+  academy: '<path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z"/>',
+  // Донишкада — бино бо сутунҳо
+  institute: '<path d="M12 2 2 7v2h20V7L12 2zM4 11v7H2v2h20v-2h-2v-7h-2v7h-3v-7h-2v7h-3v-7H6v7H4v-7z"/>',
+  // Коллеҷ — китоби кушода
+  college: '<path d="M12 6.2C10.3 5 8 4.3 5.5 4.3c-1.2 0-2.4.2-3.5.5v14c1.1-.3 2.3-.5 3.5-.5 2.5 0 4.8.7 6.5 1.9 1.7-1.2 4-1.9 6.5-1.9 1.2 0 2.4.2 3.5.5v-14c-1.1-.3-2.3-.5-3.5-.5-2.5 0-4.8.7-6.5 1.9z"/>',
+  // Филиал — бино
+  branch: '<path d="M4 3h10v18H4V3zm2 2v2h2V5H6zm4 0v2h2V5h-2zM6 9v2h2V9H6zm4 0v2h2V9h-2zm-4 4v2h2v-2H6zm4 0v2h2v-2h-2zM16 8h4v13h-4V8zm1.5 2v2h1v-2h-1zm0 4v2h1v-2h-1z"/>',
+};
+
+/** Навъро аз сатри тоҷикӣ ё тарҷумашуда мешиносад. */
+function institutionKind(uni) {
+  const type = (uni?.institutionType || "").toLowerCase();
+  if (type.includes("академ") || type.includes("academ")) return "academy";
+  if (type.includes("донишкада") || type.includes("институт") || type.includes("institut")) return "institute";
+  if (type.includes("филиал") || type.includes("branch")) return "branch";
+  if (type.includes("коллеҷ") || type.includes("колледж") || type.includes("college")) return "college";
+  return "university";
+}
+
+function createDotIcon(isActive, uni) {
+  const kind = institutionKind(uni);
   return new L.DivIcon({
     className: "university-marker-wrapper",
     html: `
-      <div class="university-cluster-marker is-single ${isActive ? "is-active" : ""}">
+      <div class="university-cluster-marker is-single is-${kind} ${isActive ? "is-active" : ""}">
         <span class="university-cluster-marker__ring"></span>
-        <span class="university-cluster-marker__core">1</span>
+        <span class="university-cluster-marker__core">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" aria-hidden="true">${INSTITUTION_ICONS[kind]}</svg>
+        </span>
       </div>
     `,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
   });
 }
 
@@ -277,6 +315,7 @@ function FitToResults({ points, enabled }) {
 }
 
 export default function TajikistanMap({ universities = [], focusResults = false }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -393,8 +432,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           z-index 400 мебароянд ва тугмаро мепӯшонанд. */}
       <div className="absolute right-4 top-4 z-[500] flex gap-1 rounded-xl border border-border bg-card/90 p-1 shadow-lg backdrop-blur">
         {[
-          { id: "canvas", label: "Нақша" },
-          { id: "satellite", label: "Моҳвора" },
+          { id: "canvas", label: t("career_page.m_plan") },
+          { id: "satellite", label: t("career_page.m_satellite") },
           { id: "3d", label: "3D" },
         ].map((mode) => (
           <button
@@ -530,7 +569,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                     <p className="text-sm font-bold leading-tight text-foreground">{group.city}</p>
                     <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="h-3.5 w-3.5" />
-                      {group.count} донишгоҳ
+                      {t("career_page.m_count", { count: group.count })}
                     </p>
                   </div>
                 </Popup>
@@ -542,7 +581,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               <Marker
                 key={uni.id}
                 position={[uni.displayLat, uni.displayLng]}
-                icon={createDotIcon(selectedUni?.id === uni.id)}
+                icon={createDotIcon(selectedUni?.id === uni.id, uni)}
                 eventHandlers={{
                   click: () => {
                     setSelectedUni(uni);
@@ -573,7 +612,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             </div>
             <h3 className="text-2xl font-black">Маълумот барои харита ёфт нашуд</h3>
             <p className="mt-2 text-sm leading-6 text-white/70">
-              Барои ин саҳифа ҳоло ягон донишгоҳ бо маълумоти намоишӣ дастрас нест.
+              {t("career_page.m_no_data")}
             </p>
           </div>
         </div>
@@ -587,7 +626,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         viewport.zoom > CITY_OVERVIEW_ZOOM &&
         !visibleUniversities.length && (
           <div className="pointer-events-none absolute left-1/2 top-6 z-[650] -translate-x-1/2 rounded-2xl border border-white/10 bg-black/70 px-4 py-2.5 text-sm font-semibold text-white shadow-xl backdrop-blur-xl">
-            Дар ин ҳудуд донишгоҳ нест — камтар наздик кунед
+            {t("career_page.m_zoom_out")}
           </div>
         )}
 
@@ -628,7 +667,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                   </p>
                   {!selectedUni.hasExactLocation && (
                     <p className="mt-1 text-xs text-white/45">
-                      Ҷои тахминӣ — маркази шаҳр
+                      {t("career_page.m_approx")}
                     </p>
                   )}
                 </div>
@@ -639,7 +678,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                     setPanelOpen(false);
                   }}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
-                  aria-label="Пӯшидан"
+                  aria-label={t("career_page.m_close")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -672,7 +711,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                     <p className="text-base font-black leading-6 text-white">{selectedUni.name}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/70">
-                        Шаҳр: {selectedUni.inferredCity}
+                        {t("career_page.m_city", { city: selectedUni.inferredCity })}
                       </span>
                       <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/70">
                         {selectedUni.careerCount || 0} ихтисос
@@ -682,7 +721,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                 </div>
 
                 <p className="mt-4 text-sm leading-7 text-white/70">
-                  {selectedUni.description || "Маълумоти кӯтоҳ дастрас нест."}
+                  {selectedUni.description || t("career_page.m_no_short")}
                 </p>
 
                 <button

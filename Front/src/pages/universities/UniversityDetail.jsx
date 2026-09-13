@@ -11,13 +11,16 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+/* Номи кластер аз i18n меояд, на аз ин ҷадвал: ранг доимист, ном не. */
 const CLUSTER_COLORS = {
-  1: { bg: "#FAEEDA", text: "#633806", name: "Илмҳои табиӣ ва техникӣ" },
-  2: { bg: "#E1F5EE", text: "#085041", name: "Иқтисод ва география" },
-  3: { bg: "#FAECE7", text: "#712B13", name: "Филология ва санъат" },
-  4: { bg: "#EEEDFE", text: "#3C3489", name: "Ҷомеашиносӣ ва ҳуқуқ" },
-  5: { bg: "#FBEAF0", text: "#72243E", name: "Тиб ва биология" },
+  1: { bg: "#FAEEDA", text: "#633806" },
+  2: { bg: "#E1F5EE", text: "#085041" },
+  3: { bg: "#FAECE7", text: "#712B13" },
+  4: { bg: "#EEEDFE", text: "#3C3489" },
+  5: { bg: "#FBEAF0", text: "#72243E" },
 };
+
+const clusterName = (t, id) => t(`career_page.cl_${id}`);
 
 export default function UniversityDetail() {
   const { id } = useParams();
@@ -58,9 +61,12 @@ export default function UniversityDetail() {
     description: university
       ? [
         university.description,
-        specialties.length ? `${specialties.length} ихтисос бо нархи таҳсил ва шумораи ҷойҳо.` : null,
+        specialties.length ? t("career_page.u_specialties_meta", { count: specialties.length }) : null,
       ].filter(Boolean).join(" ") ||
-      `${university.name}${university.city ? `, ${university.city}` : ""} — ихтисосҳо, нархи таҳсил ва ҷойҳои ройгон.`
+      t("career_page.u_meta_fallback", {
+        name: university.nameTranslated || university.name,
+        city: university.city ? `, ${university.city}` : "",
+      })
       : undefined,
     path: `/universities/${id}`,
     image: university?.logo || undefined,
@@ -110,9 +116,9 @@ export default function UniversityDetail() {
   if (!university) {
     return (
       <div className="min-h-screen pt-24 pb-12 px-6 text-center">
-        <h2 className="text-2xl font-bold">Донишгоҳ ёфт нашуд</h2>
+        <h2 className="text-2xl font-bold">{t("career_page.u_not_found")}</h2>
         <button onClick={() => navigate("/universities")} className="mt-4 text-primary font-bold">
-          ← Бозгашт ба харита
+          ← {t("career_page.u_back_to_map")}
         </button>
       </div>
     );
@@ -128,7 +134,7 @@ export default function UniversityDetail() {
           className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-bold group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          Бозгашт ба харита
+          {t("career_page.u_back_to_map")}
         </button>
 
         {/* UNIVERSITY HEADER */}
@@ -190,7 +196,7 @@ export default function UniversityDetail() {
                     }`}
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    {university.isState ? "Давлатӣ" : "Ғайридавлатӣ"}
+                    {university.isState ? t("career_page.u_state") : t("career_page.u_non_state")}
                   </span>
                 </div>
               </div>
@@ -203,11 +209,11 @@ export default function UniversityDetail() {
 
               <div className="flex gap-8 pt-4 border-t border-white/5">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Ихтисосҳо</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_specialties")}</p>
                   <p className="text-xl font-bold text-foreground">{specialties.length}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Кластерҳо</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_clusters")}</p>
                   <p className="text-xl font-bold text-foreground">{clusters.length}</p>
                 </div>
               </div>
@@ -220,14 +226,14 @@ export default function UniversityDetail() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-primary" />
-              Ихтисосҳои пешниҳодшуда
+              {t("career_page.u_offered")}
             </h2>
             
             <div className="w-full md:w-80 relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input 
                 type="text" 
-                placeholder="Ҷустуҷӯи ихтисос..."
+                placeholder={t("career_page.u_search_specialty")}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-primary/40 focus:bg-white/10 transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -244,7 +250,7 @@ export default function UniversityDetail() {
                 : "bg-white/5 text-muted-foreground border-white/10 hover:bg-white/10"
               }`}
             >
-              Ҳама
+              {t("career_page.u_all")}
             </button>
             {clusters.map(cId => (
               <button 
@@ -261,7 +267,7 @@ export default function UniversityDetail() {
                   borderColor: CLUSTER_COLORS[cId]?.text || "var(--primary)"
                 } : {}}
               >
-                {CLUSTER_COLORS[cId]?.name || `Кластери ${cId}`}
+                {clusterName(t, cId)}
               </button>
             ))}
           </div>
@@ -334,7 +340,7 @@ export default function UniversityDetail() {
               onClick={() => {setActiveCluster(null); setSearchQuery("");}}
               className="text-primary font-bold hover:underline"
             >
-              Тоза кардани филтрҳо
+              {t("career_page.u_clear_filters")}
             </button>
           </div>
         )}

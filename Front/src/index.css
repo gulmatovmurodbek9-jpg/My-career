@@ -489,8 +489,48 @@
 }
 
 .university-marker-wrapper .university-cluster-marker.is-single {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
+}
+
+/* Ранг аз рӯи навъи муассиса.
+
+   Ҳамаи 128 нишона як хели кабуд буданд ва рақами «1»-ро мебароварданд —
+   харита як девори якхела менамуд. Ранг ва иконка якҷоя кор мекунанд: ранг
+   аз дур фарқ мекунад, иконка аз наздик мефаҳмонад. */
+.university-cluster-marker.is-university .university-cluster-marker__core {
+  background: linear-gradient(135deg, #003bb3, #3b82f6);
+}
+.university-cluster-marker.is-academy .university-cluster-marker__core {
+  background: linear-gradient(135deg, #6d28d9, #a78bfa);
+}
+.university-cluster-marker.is-institute .university-cluster-marker__core {
+  background: linear-gradient(135deg, #0f766e, #2dd4bf);
+}
+.university-cluster-marker.is-college .university-cluster-marker__core {
+  background: linear-gradient(135deg, #b45309, #f59e0b);
+}
+.university-cluster-marker.is-branch .university-cluster-marker__core {
+  background: linear-gradient(135deg, #475569, #94a3b8);
+}
+
+/* Ҳалқаи набзи нишона низ ранги навъро мегирад, вагарна кабуди умумӣ
+   рӯи маркери норинҷӣ мемонад. */
+.university-cluster-marker.is-academy .university-cluster-marker__ring {
+  background: rgba(109, 40, 217, 0.18);
+  border-color: rgba(167, 139, 250, 0.42);
+}
+.university-cluster-marker.is-institute .university-cluster-marker__ring {
+  background: rgba(15, 118, 110, 0.18);
+  border-color: rgba(45, 212, 191, 0.42);
+}
+.university-cluster-marker.is-college .university-cluster-marker__ring {
+  background: rgba(180, 83, 9, 0.18);
+  border-color: rgba(245, 158, 11, 0.42);
+}
+.university-cluster-marker.is-branch .university-cluster-marker__ring {
+  background: rgba(71, 85, 105, 0.18);
+  border-color: rgba(148, 163, 184, 0.42);
 }
 
 .university-cluster-marker__ring,

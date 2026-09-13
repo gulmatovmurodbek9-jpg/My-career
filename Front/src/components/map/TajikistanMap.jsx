@@ -174,7 +174,7 @@ function createDotIcon(isActive, uni) {
 function inferCity(uni) {
   if (uni.city && CITY_CENTERS[uni.city]) return uni.city;
 
-  const haystack = `${uni.city || ""} ${uni.name || ""}`;
+  const haystack = `${uni.city || ""} ${uni.name || ""} ${uni.nameTranslated || ""}`;
   return CITY_KEYWORDS.find((keyword) => haystack.includes(keyword)) || null;
 }
 
@@ -592,7 +592,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               >
                 <Popup className="university-popup" offset={[0, -10]}>
                   <div className="space-y-2">
-                    <p className="text-sm font-bold leading-tight text-foreground">{uni.name}</p>
+                    <p className="text-sm font-bold leading-tight text-foreground">{uni.nameTranslated || uni.name}</p>
                     <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3.5 w-3.5" />
                       {uni.inferredCity}
@@ -738,7 +738,12 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                     )}
                   </div>
                 <div className="min-w-0">
-                  <p className="text-[15px] font-black leading-snug md:text-lg md:leading-tight">{selectedUni.name}</p>
+                  <p className="text-[15px] font-black leading-snug md:text-lg md:leading-tight">
+                    {selectedUni.nameTranslated || selectedUni.name}
+                  </p>
+                  {selectedUni.nameTranslated && (
+                    <p className="mt-0.5 text-xs leading-snug text-white/50">{selectedUni.name}</p>
+                  )}
                   {/* Суроғаи пурра, вақте маълум аст — довталабро маҳз ҳамин
                       ба бинои дуруст мебарад, на номи шаҳр. */}
                   <p className="mt-1 flex items-start gap-1.5 text-sm text-white/65">

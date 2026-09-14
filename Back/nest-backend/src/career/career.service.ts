@@ -425,7 +425,7 @@ export class CareerService {
             'нависед, ки хонанда яке аз гурӯҳҳоро интихоб кунад.',
             '',
             'ФОРМАТИ ҶАВОБ — танҳо JSON:',
-            '{"question": "савол", "options": [{"label": "номи гурӯҳ", "keyword": "як калимаи тоҷикӣ"}]}',
+            '{"question": "савол", "options": [{"label": "номи гурӯҳ", "keyword": "як калимаи тоҷикӣ", "hint": "шарҳи кӯтоҳ"}]}',
             '',
             'ҚОИДАҲО:',
             `- "question" ва "label" бо забони ${langName} нависед.`,
@@ -433,6 +433,12 @@ export class CareerService {
             '  воқеан вомехӯрад — вагарна гурӯҳ холӣ мемонад.',
             '- Гурӯҳҳо бояд аз ҳам фарқ кунанд, на такрори якдигар.',
             '- "label" кӯтоҳ: 2–5 калима.',
+            '- "hint" ду чизро мегӯяд: чунин мутахассис ЧӢ КОР МЕКУНАД ва ин кор',
+            '  БАРОИ ЧӢ лозим аст. Як-ду ҷумлаи кӯтоҳ, то 20 калима.',
+            '  Масалан: «Нерӯгоҳ, шабакаи барқ ва бино тарҳрезӣ ва сохта мешавад —',
+            '  то шаҳрҳо барқ ва манзили боэътимод дошта бошанд.»',
+            '  Танҳо аз рӯи ихтисосҳои боло нависед.',
+            '  Рақам, маош, фоиз ё номи донишгоҳ НАСОЗЕД.',
             '- Танҳо JSON, бе матни дигар.',
         ].join('\n');
 
@@ -458,6 +464,7 @@ export class CareerService {
         for (const raw of Array.isArray(grouped?.options) ? grouped.options.slice(0, 6) : []) {
             const label = typeof raw?.label === 'string' ? raw.label.trim().slice(0, 60) : '';
             const keyword = typeof raw?.keyword === 'string' ? raw.keyword.trim().slice(0, 40) : '';
+            const hint = typeof raw?.hint === 'string' ? raw.hint.trim().slice(0, 220) : '';
             if (!label || !keyword) continue;
 
             const key = keyword.toLowerCase();
@@ -468,7 +475,7 @@ export class CareerService {
             const check = await this.findAll(toDto(optionFilters, 1, 1));
             if (!check.meta.total) continue;
 
-            options.push({ label, count: check.meta.total, filters: optionFilters });
+            options.push({ label, hint, count: check.meta.total, filters: optionFilters });
             if (options.length >= 5) break;
         }
 

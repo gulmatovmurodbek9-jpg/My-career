@@ -285,9 +285,32 @@ export class CareerService {
             ...(filters.onlyFree ? { freeSeatsOnly: 'true' } : {}),
         }) as GetCareersDto;
 
+        /*
+         * Вақте ҷустуҷӯ ҳеҷ чиз наёфт, панҷ кластер ҳамчун роҳи баромад
+         * пешниҳод мешаванд. Корбар ҳатто вақте саволаш номаълум аст —
+         * «намедонам чӣ кор кунам» — аз ҷои холӣ ба интихоб мегузарад.
+         */
+        const clusterFallback = async () => {
+            const all = await this.clusterRepository.find();
+            const list: any[] = [];
+            for (const cluster of all.sort((a, b) => (a.clusterId ?? 9) - (b.clusterId ?? 9))) {
+                const check = await this.findAll(toDto({ clusterId: cluster.id }, 1, 1));
+                if (!check.meta.total) continue;
+                list.push({
+                    label: cluster.clusterName,
+                    clusterNumber: cluster.clusterId,
+                    count: check.meta.total,
+                    filters: { clusterId: cluster.id, clusterNumber: cluster.clusterId },
+                });
+            }
+            return list;
+        };
+
         const finish = async (understood: boolean, filters: any, options: any[] = [], ask: string | null = null) => {
             const result = await this.findAll(toDto(filters));
-            return { ...result, filters, understood, question: ask, options };
+            /* Натиҷаи холӣ — ҷои ягонаест, ки кластерҳо ба ҷои вариантҳо меоянд. */
+            const finalOptions = !result.meta.total && !options.length ? await clusterFallback() : options;
+            return { ...result, filters, understood, question: ask, options: finalOptions };
         };
 
         if (!question) return finish(false, {});

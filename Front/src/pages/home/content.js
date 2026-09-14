@@ -15,7 +15,7 @@ const tj = {
     badge: "Роҳнамоии касбӣ · Тоҷикистон",
     title: "Кадом касб ба шумо мувофиқ аст?",
     lead:
-      "Дар Тоҷикистон зиёда аз 150 ихтисос ҳаст. Мо кӯмак мекунем, ки аз онҳо " +
+      "Дар Тоҷикистон 884 ихтисоси расмии ММТ ҳаст. Мо кӯмак мекунем, ки аз онҳо " +
       "интихоби дуруст кунед.",
     ctaPrimary: "Тестро оғоз кунед",
     ctaSecondary: "Ихтисосҳоро дидан",
@@ -42,7 +42,7 @@ const tj = {
       {
         to: "/careers",
         label: "Ихтисосҳоро бинед",
-        body: "Зиёда аз 150 ихтисос: маош, талабот ва фанҳои лозимӣ.",
+        body: "884 ихтисос: маош, талабот ва фанҳои лозимӣ.",
         cta: "Кушодан",
       },
       {
@@ -244,7 +244,7 @@ const ru = {
     badge: "Профориентация · Таджикистан",
     title: "Какая профессия вам подходит?",
     lead:
-      "В Таджикистане более 150 специальностей. Мы поможем выбрать из них " +
+      "В Таджикистане 884 официальные специальности НЦТ. Мы поможем выбрать из них " +
       "подходящую.",
     ctaPrimary: "Пройти тест",
     ctaSecondary: "Смотреть специальности",
@@ -271,7 +271,7 @@ const ru = {
       {
         to: "/careers",
         label: "Посмотрите специальности",
-        body: "Более 150 специальностей: зарплата, спрос и нужные предметы.",
+        body: "884 специальности: зарплата, спрос и нужные предметы.",
         cta: "Открыть",
       },
       {
@@ -473,7 +473,7 @@ const en = {
     badge: "Career guidance · Tajikistan",
     title: "Which career fits you?",
     lead:
-      "Tajikistan has over 150 specialties. We help you choose the right one.",
+      "Tajikistan has 884 official NTC specialties. We help you choose the right one.",
     ctaPrimary: "Start the test",
     ctaSecondary: "Browse specialties",
     imageAlt: "An engineer, a teacher and a doctor at their workplaces",
@@ -499,7 +499,7 @@ const en = {
       {
         to: "/careers",
         label: "Browse specialties",
-        body: "Over 150 specialties, with pay, demand and the subjects you need.",
+        body: "884 specialties, with pay, demand and the subjects you need.",
         cta: "Open",
       },
       {

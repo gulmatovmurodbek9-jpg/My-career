@@ -47,3 +47,21 @@ export function languageLabel(t, value) {
         })
         .join(", ");
 }
+
+/**
+ * Дараҷаи таҳсил.
+ *
+ * Дар тамоми база ҳамагӣ ду қимат ҳаст — «Бакалавр» (692 ихтисос) ва
+ * «Миёнаи касбӣ» (192). Мисли шакли таҳсил, ин маҷмӯи пӯшида аст ва
+ * тарҷумаи базавӣ талаб намекунад.
+ */
+const DEGREE_TYPES = {
+    "бакалавр": "of_degree_bachelor",
+    "миёнаи касбӣ": "of_degree_vocational",
+};
+
+export function degreeLabel(t, value) {
+    if (!value) return value;
+    const key = DEGREE_TYPES[value.trim().toLowerCase()];
+    return key ? t(`career_page.${key}`) : value;
+}

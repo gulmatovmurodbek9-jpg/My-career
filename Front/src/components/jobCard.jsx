@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { degreeLabel } from "../lib/offeringLabels";
 import { clusterLabelNumbered } from "../lib/clusterLabel";
 import axios from "axios";
 import { API } from "../lib/config";
@@ -56,7 +57,7 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
           фарқашон аст: яке бакалаври 4-сола, дигаре миёнаи касбии 3-сола. */}
       {specialty.degreeType && (
         <span className={`inline-flex items-center rounded-full border border-primary/20 bg-primary/10 font-bold text-primary ${pad}`}>
-          {specialty.degreeType}
+          {degreeLabel(t, specialty.degreeType)}
           {specialty.durationYears ? ` · ${t("misc.years", { count: specialty.durationYears })}` : ""}
         </span>
       )}
@@ -313,7 +314,12 @@ export function SpecialtyCardList({ specialty }) {
               ? clusterLabelNumbered(t, specialty.cluster)
               : t('common.course', "Курси таълимӣ")}</span>
             <h3 className="font-black text-lg text-foreground group-hover:text-primary transition-colors leading-tight">
-              {specialty.name}
+              {specialty.nameTranslated || specialty.name}
+              {specialty.nameTranslated && (
+                <span className="mt-1 block text-sm font-medium text-muted-foreground">
+                  {specialty.name}
+                </span>
+              )}
             </h3>
           </div>
           <div className="flex items-center gap-2">

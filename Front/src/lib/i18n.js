@@ -500,6 +500,8 @@ i18n
                         shortcuts: "Enter — фиристодан · Shift+Enter — хати нав"
                     },
                     career_page: {
+                        of_degree_bachelor: "Бакалавр",
+                        of_degree_vocational: "Миёнаи касбӣ",
                         of_day: "рӯзона",
                         of_evening: "шабона",
                         of_distance: "ғоибона",
@@ -1388,6 +1390,8 @@ i18n
                         top_matches_desc: "Это направления, которые оказались наиболее сильными по вашим ответам."
                     },
                     career_page: {
+                        of_degree_bachelor: "Бакалавр",
+                        of_degree_vocational: "Среднее профессиональное",
                         of_day: "очная",
                         of_evening: "вечерняя",
                         of_distance: "заочная",
@@ -2276,6 +2280,8 @@ i18n
                         back: "Back"
                     },
                     career_page: {
+                        of_degree_bachelor: "Bachelor",
+                        of_degree_vocational: "Vocational secondary",
                         of_day: "full-time",
                         of_evening: "evening",
                         of_distance: "extramural",

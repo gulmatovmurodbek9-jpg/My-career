@@ -529,22 +529,42 @@ const Careers = () => {
                   <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   {aiQuestion || t("ai_search.pick_field")}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {aiOptions.map((option, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => chooseAiOption(option)}
-                      className="inline-flex items-center gap-2 rounded-xl border-2 border-border bg-card px-4 py-2.5 text-[14px] font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary focus-ring"
-                    >
-                      {option.clusterNumber
-                        ? clusterLabel(t, { clusterId: option.clusterNumber })
-                        : option.label}
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[12px] font-black text-muted-foreground">
-                        {option.count}
-                      </span>
-                    </button>
-                  ))}
+                {/* Корт, на чип: бе шарҳ хонанда намедонад, ки «Энергетика ва
+                    бинокорӣ» дар амал чӣ кор аст. */}
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {aiOptions.map((option, index) => {
+                    const label = option.clusterNumber
+                      ? clusterLabel(t, { clusterId: option.clusterNumber })
+                      : option.label;
+                    /* Кластерҳо тавсифи тайёри тарҷумашуда доранд; гурӯҳҳои
+                       AI шарҳи худро бо ҳамон забон меоранд. */
+                    const hint = option.clusterNumber
+                      ? t(`career_page.cl_${option.clusterNumber}_desc`)
+                      : option.hint;
+
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => chooseAiOption(option)}
+                        className="group flex h-full flex-col items-start gap-1.5 rounded-xl border-2 border-border bg-card p-4 text-left transition-colors hover:border-primary/40 focus-ring"
+                      >
+                        <span className="flex w-full items-start justify-between gap-3">
+                          <span className="text-[15px] font-bold leading-snug text-foreground group-hover:text-primary">
+                            {label}
+                          </span>
+                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[12px] font-black text-muted-foreground">
+                            {option.count}
+                          </span>
+                        </span>
+                        {hint && (
+                          <span className="line-clamp-3 text-[13px] leading-relaxed text-muted-foreground">
+                            {hint}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

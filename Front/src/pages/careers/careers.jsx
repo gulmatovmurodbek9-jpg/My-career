@@ -277,6 +277,7 @@ const Careers = () => {
             page: currentPage,
             limit: LIMIT,
             ...(aiChoice.filters?.search && { search: aiChoice.filters.search }),
+            ...(aiChoice.filters?.searchAny?.length && { searchAny: aiChoice.filters.searchAny }),
             ...(aiChoice.filters?.clusterId && { clusterId: aiChoice.filters.clusterId }),
             ...(aiChoice.filters?.maxPrice && { maxPrice: aiChoice.filters.maxPrice }),
             ...(aiChoice.filters?.city && { city: aiChoice.filters.city }),

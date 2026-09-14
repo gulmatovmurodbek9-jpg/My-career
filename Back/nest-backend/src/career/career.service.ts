@@ -272,8 +272,10 @@ export class CareerService {
         lang = 'tj',
         page = 1,
         limit = 12,
-    ): Promise<{ data: Career[]; meta: any; filters: any; understood: boolean; question: string | null; options: any[] }> {
+    ): Promise<{ data: Career[]; meta: any; filters: any; understood: boolean; question: string | null; options: any[]; answerLang: string }> {
         const question = (rawQuery || '').trim().slice(0, 300);
+        /* То даме модел забони саволро нагӯяд, забони саҳифа меистад. */
+        let answerLang = ['tj', 'ru', 'en'].includes(lang) ? lang : 'tj';
 
         const toDto = (filters: any, p = page, l = limit) => ({
             page: p,
@@ -310,7 +312,7 @@ export class CareerService {
             const result = await this.findAll(toDto(filters));
             /* Натиҷаи холӣ — ҷои ягонаест, ки кластерҳо ба ҷои вариантҳо меоянд. */
             const finalOptions = !result.meta.total && !options.length ? await clusterFallback() : options;
-            return { ...result, filters, understood, question: ask, options: finalOptions };
+            return { ...result, filters, understood, question: ask, options: finalOptions, answerLang };
         };
 
         if (!question) return finish(false, {});
@@ -322,7 +324,7 @@ export class CareerService {
         );
         const cityNames = rows.map((r) => r.city).filter(Boolean);
 
-        const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+
 
         const readJson = (raw: string) => {
             let text = raw.trim();
@@ -344,9 +346,12 @@ export class CareerService {
             cityNames.join(', '),
             '',
             'ФОРМАТИ ҶАВОБ — танҳо JSON, бе матни дигар:',
-            '{"search": "калима ё null", "clusterNumber": 1-5 ё null, "maxPrice": рақам ё null, "city": "ном ё null", "onlyFree": true ё false}',
+            '{"lang": "tj ё ru ё en", "search": "калима ё null", "clusterNumber": 1-5 ё null, "maxPrice": рақам ё null, "city": "ном ё null", "onlyFree": true ё false}',
             '',
             'ҚОИДАҲО:',
+            '- "lang" забонест, ки корбар САВОЛРО бо он навиштааст: "tj", "ru" ё "en".',
+            '  Диққат: тоҷикӣ метавонад бе ҳарфҳои ӣ, ӯ, ҳ, ҷ навишта шавад —',
+            '  «Духтур мехохам шавам» тоҷикӣ аст, на русӣ.',
             '- "search" бояд калимае бошад, ки дар НОМИ ихтисоси расмӣ вомехӯрад:',
             '  «барномасоз», «ҳуқуқ», «тиб», «муҳандис», «иқтисод», «омӯзгор».',
             '  Саволро аз ҳар забон бифаҳм: «программист», «юрист», «врач» низ',
@@ -369,6 +374,11 @@ export class CareerService {
         }
 
         /* Ҳеҷ қимати модел бе санҷиш ба дархост намеравад. */
+        if (typeof parsed?.lang === 'string') {
+            const said = parsed.lang.trim().toLowerCase();
+            if (said === 'tj' || said === 'ru' || said === 'en') answerLang = said;
+        }
+
         const filters: any = {};
 
         if (typeof parsed?.search === 'string' && parsed.search.trim()) {
@@ -428,7 +438,7 @@ export class CareerService {
             '{"question": "савол", "options": [{"label": "номи гурӯҳ", "keyword": "як калимаи тоҷикӣ", "hint": "шарҳи кӯтоҳ"}]}',
             '',
             'ҚОИДАҲО:',
-            `- "question" ва "label" бо забони ${langName} нависед.`,
+            `- "question", "label" ва "hint" бо забони ${answerLang === 'ru' ? 'русӣ' : answerLang === 'en' ? 'англисӣ' : 'тоҷикӣ'} нависед.`,
             '- "keyword" ҲАТМАН калимаи тоҷикӣ бошад ва дар НОМИ ихтисосҳои боло',
             '  воқеан вомехӯрад — вагарна гурӯҳ холӣ мемонад.',
             '- Гурӯҳҳо бояд аз ҳам фарқ кунанд, на такрори якдигар.',

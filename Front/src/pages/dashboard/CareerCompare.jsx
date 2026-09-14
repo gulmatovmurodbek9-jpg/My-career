@@ -4,7 +4,7 @@ import {
     ArrowLeft, Search, Scale, Sparkles, Trophy, ThumbsUp, ThumbsDown,
     Target, TrendingUp, GraduationCap, DollarSign, BarChart3,
     Loader2, AlertCircle, CheckCircle, XCircle, Zap, Crown,
-    BrainCircuit, ChevronRight, Plus, X, Star, ArrowUpRight
+    BrainCircuit, ChevronRight, Plus, X, Star, ArrowUpRight, Bookmark
 } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -102,6 +102,7 @@ const labels = {
         factFreeNo: "Нест",
         factsNote: "Ин рақамҳо аз базаи мо гирифта шудаанд, на аз AI.",
         savedTitle: "Захирашуда",
+        savedDesc: "Ихтисосҳое, ки шумо захира кардаед",
         suggestedGroupTitle: "Аз рӯи натиҷаи санҷиш",
         noComparisonData: "Маълумоти муқоисавӣ барои ин касбҳо ҳанӯз дастрас нест.",
     },
@@ -169,6 +170,7 @@ const labels = {
         factFreeNo: "Нет",
         factsNote: "Эти цифры взяты из нашей базы, а не от AI.",
         savedTitle: "Сохранённые",
+        savedDesc: "Специальности, которые вы сохранили",
         suggestedGroupTitle: "По результатам теста",
         noComparisonData: "Данные для сравнения этих профессий пока недоступны.",
     },
@@ -236,6 +238,7 @@ const labels = {
         factFreeNo: "No",
         factsNote: "These figures come from our database, not from the AI.",
         savedTitle: "Saved",
+        savedDesc: "The specialties you saved",
         suggestedGroupTitle: "From your quiz result",
         noComparisonData: "Comparison data is not available for these careers yet.",
     },
@@ -544,7 +547,7 @@ const CareerCompare = () => {
     const displayCareers = useMemo(() => {
         const unique = new Map();
 
-        [...savedCareers, ...suggestedCareers].forEach((career) => {
+        savedCareers.forEach((career) => {
             if (!career?.name) return;
             const key = career.id || career.name.toLowerCase();
             if (!unique.has(key)) {
@@ -556,20 +559,11 @@ const CareerCompare = () => {
         });
 
         return Array.from(unique.values());
-    }, [savedCareers, suggestedCareers]);
+    }, [savedCareers]);
 
     /* Захирашуда аввал, баъд пешниҳодҳои санҷиш. Сарлавҳаҳо ҳамчун сатри
        ҷадвал мераванд, то худи кортҳо бетағйир монанд. */
-    const groupedCareers = useMemo(() => {
-        const saved = displayCareers.filter((career) => career.isSaved);
-        const suggested = displayCareers.filter((career) => !career.isSaved);
-        return [
-            ...(saved.length ? [{ __header: t.savedTitle }] : []),
-            ...saved,
-            ...(suggested.length ? [{ __header: t.suggestedGroupTitle }] : []),
-            ...suggested,
-        ];
-    }, [displayCareers, t]);
+    const groupedCareers = displayCareers;
 
     /* Сабтҳои пурраи ихтисосҳои интихобшуда — барои ҷадвали далелҳо.
        Тартиб ҳамон аст, ки корбар интихоб кард. */
@@ -737,14 +731,8 @@ const CareerCompare = () => {
 
                 {/* ═══ Suggested Careers Grid ═══ */}
                 <motion.div variants={itemVariants} className="space-y-3">
-                    <SectionHeader icon={Target} title={t.suggestedTitle} color="from-blue-500 to-cyan-500" />
-                    <p className="text-muted-foreground text-xs font-medium opacity-60">{t.suggestedDesc}</p>
-                    {quizData?.topCluster?.clusterName && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-wider text-primary mb-4">
-                            <GraduationCap className="w-3 h-3" />
-                            {clusterLabel(i18n.t, quizData.topCluster)}
-                        </div>
-                    )}
+                    <SectionHeader icon={Bookmark} title={t.savedTitle} color="from-blue-500 to-cyan-500" />
+                    <p className="text-muted-foreground text-xs font-medium opacity-60">{t.savedDesc}</p>
 
                     {loadingSuggestions || loadingSavedCareers ? (
                         <div className="flex items-center justify-center py-12">

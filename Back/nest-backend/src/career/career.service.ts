@@ -118,6 +118,9 @@ export class CareerService {
      */
     private static readonly MMT_MAX_SCORE = 40;
 
+    /** То ин шумора рӯйхатро худи корбар аз назар мегузаронад — савол зиёдатист. */
+    private static readonly AI_CHOICE_MIN = 8;
+
     constructor(
         @InjectRepository(Career)
         private careerRepository: Repository<Career>,
@@ -269,22 +272,25 @@ export class CareerService {
         lang = 'tj',
         page = 1,
         limit = 12,
-    ): Promise<{ data: Career[]; meta: any; filters: any; understood: boolean }> {
+    ): Promise<{ data: Career[]; meta: any; filters: any; understood: boolean; question: string | null; options: any[] }> {
         const question = (rawQuery || '').trim().slice(0, 300);
-        const plain = async (understood: boolean, filters: any = {}) => {
-            const result = await this.findAll({
-                page,
-                limit,
-                ...(filters.search ? { search: filters.search } : {}),
-                ...(filters.clusterId ? { clusterId: filters.clusterId } : {}),
-                ...(filters.maxPrice ? { maxPrice: filters.maxPrice } : {}),
-                ...(filters.city ? { city: filters.city } : {}),
-                ...(filters.onlyFree ? { freeSeatsOnly: 'true' } : {}),
-            } as GetCareersDto);
-            return { ...result, filters, understood };
+
+        const toDto = (filters: any, p = page, l = limit) => ({
+            page: p,
+            limit: l,
+            ...(filters.search ? { search: filters.search } : {}),
+            ...(filters.clusterId ? { clusterId: filters.clusterId } : {}),
+            ...(filters.maxPrice ? { maxPrice: filters.maxPrice } : {}),
+            ...(filters.city ? { city: filters.city } : {}),
+            ...(filters.onlyFree ? { freeSeatsOnly: 'true' } : {}),
+        }) as GetCareersDto;
+
+        const finish = async (understood: boolean, filters: any, options: any[] = [], ask: string | null = null) => {
+            const result = await this.findAll(toDto(filters));
+            return { ...result, filters, understood, question: ask, options };
         };
 
-        if (!question) return plain(false);
+        if (!question) return finish(false, {});
 
         /* Шаҳр танҳо аз рӯйхати воқеӣ қабул мешавад — вагарна модел шаҳри
            набударо менависад ва ҷустуҷӯ холӣ бармегардад. */
@@ -293,7 +299,18 @@ export class CareerService {
         );
         const cityNames = rows.map((r) => r.city).filter(Boolean);
 
-        const prompt = [
+        const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+
+        const readJson = (raw: string) => {
+            let text = raw.trim();
+            if (text.startsWith('```json')) text = text.slice(7);
+            else if (text.startsWith('```')) text = text.slice(3);
+            if (text.endsWith('```')) text = text.slice(0, -3);
+            return JSON.parse(text.trim());
+        };
+
+        /* ── Қадами 1: савол → филтрҳо ──────────────────────────────────── */
+        const filterPrompt = [
             'Ту ёрирасони ҷустуҷӯи ихтисосҳои Маркази миллии тестии Тоҷикистон ҳастӣ.',
             'Саволи корбарро ба филтрҳои ҷустуҷӯ табдил деҳ.',
             '',
@@ -309,6 +326,8 @@ export class CareerService {
             'ҚОИДАҲО:',
             '- "search" бояд калимае бошад, ки дар НОМИ ихтисоси расмӣ вомехӯрад:',
             '  «барномасоз», «ҳуқуқ», «тиб», «муҳандис», «иқтисод», «омӯзгор».',
+            '  Саволро аз ҳар забон бифаҳм: «программист», «юрист», «врач» низ',
+            '  ба ҳамон калимаи тоҷикӣ табдил меёбанд.',
             '  Номи касби ғайрирасмиро (масалан «Дизайнери UX/UI») нанавис.',
             '- Агар корбар нархро гӯяд («то 4000 сомонӣ»), онро ба "maxPrice" гузор.',
             '- Агар «ройгон», «бюджет» ё «бепул» гӯяд, "onlyFree" = true.',
@@ -320,14 +339,10 @@ export class CareerService {
 
         let parsed: any = null;
         try {
-            let raw = (await this.aiService.generateContent(prompt)).trim();
-            if (raw.startsWith('```json')) raw = raw.slice(7);
-            else if (raw.startsWith('```')) raw = raw.slice(3);
-            if (raw.endsWith('```')) raw = raw.slice(0, -3);
-            parsed = JSON.parse(raw.trim());
+            parsed = readJson(await this.aiService.generateContent(filterPrompt));
         } catch (error) {
-            /* Модел ё афтод, ё JSON-и вайрон дод — саволро ҳамчун калима мегирем. */
-            return plain(false, { search: question });
+            /* Модел афтод ё JSON-и вайрон дод — саволро ҳамчун калима мегирем. */
+            return finish(false, { search: question });
         }
 
         /* Ҳеҷ қимати модел бе санҷиш ба дархост намеравад. */
@@ -339,9 +354,7 @@ export class CareerService {
 
         const clusterNumber = Number(parsed?.clusterNumber);
         if (clusterNumber >= 1 && clusterNumber <= 5) {
-            const cluster = await this.clusterRepository.findOne({
-                where: { clusterId: clusterNumber },
-            });
+            const cluster = await this.clusterRepository.findOne({ where: { clusterId: clusterNumber } });
             if (cluster) {
                 filters.clusterId = cluster.id;
                 filters.clusterNumber = clusterNumber;
@@ -355,18 +368,93 @@ export class CareerService {
         }
 
         if (typeof parsed?.city === 'string') {
-            const match = cityNames.find(
-                (name) => name.toLowerCase() === parsed.city.trim().toLowerCase(),
-            );
+            const match = cityNames.find((name) => name.toLowerCase() === parsed.city.trim().toLowerCase());
             if (match) filters.city = match;
         }
 
         if (parsed?.onlyFree === true) filters.onlyFree = true;
 
-        /* Агар модел ҳеҷ филтр надода бошад, ҳадди ақал матни саволро ҷӯем. */
-        if (!Object.keys(filters).length) return plain(false, { search: question });
+        if (!Object.keys(filters).length) return finish(false, { search: question });
 
-        return plain(true, filters);
+        /* ── Қадами 2: агар натиҷа зиёд бошад, аниқ мекунем ─────────────── */
+        const broad = await this.findAll(toDto(filters, 1, 40));
+
+        /*
+         * Савол танҳо вақте дода мешавад, ки воқеан интихоб лозим бошад.
+         * Бо ҳашт ихтисос корбар худаш нигоҳ карда метавонад — пурсидан
+         * танҳо як қадами зиёдатӣ мешуд.
+         */
+        if (broad.meta.total <= CareerService.AI_CHOICE_MIN) {
+            return finish(true, filters);
+        }
+
+        const names = broad.data.map((c) => c.name).filter(Boolean).slice(0, 40);
+
+        const groupPrompt = [
+            'Ту мушовири касбӣ ҳастӣ ва бо хонандаи мактаб сӯҳбат мекунӣ.',
+            'Ӯ чунин навишт:',
+            question,
+            '',
+            'Дар базаи мо ин ихтисосҳо ба ӯ мувофиқанд:',
+            ...names.map((n) => '- ' + n),
+            '',
+            'ВАЗИФА: ин рӯйхатро ба 3–5 гурӯҳи фаҳмо тақсим кун ва як саволи кӯтоҳ',
+            'нависед, ки хонанда яке аз гурӯҳҳоро интихоб кунад.',
+            '',
+            'ФОРМАТИ ҶАВОБ — танҳо JSON:',
+            '{"question": "савол", "options": [{"label": "номи гурӯҳ", "keyword": "як калимаи тоҷикӣ"}]}',
+            '',
+            'ҚОИДАҲО:',
+            `- "question" ва "label" бо забони ${langName} нависед.`,
+            '- "keyword" ҲАТМАН калимаи тоҷикӣ бошад ва дар НОМИ ихтисосҳои боло',
+            '  воқеан вомехӯрад — вагарна гурӯҳ холӣ мемонад.',
+            '- Гурӯҳҳо бояд аз ҳам фарқ кунанд, на такрори якдигар.',
+            '- "label" кӯтоҳ: 2–5 калима.',
+            '- Танҳо JSON, бе матни дигар.',
+        ].join('\n');
+
+        let grouped: any = null;
+        try {
+            grouped = readJson(await this.aiService.generateContent(groupPrompt));
+        } catch (error) {
+            /* Аниқкунӣ ихтиёрист — бе он ҳам рӯйхат кор мекунад. */
+            return finish(true, filters);
+        }
+
+        /*
+         * Ҳар вариант дар база санҷида мешавад.
+         *
+         * Модел метавонад гурӯҳи зебо бо калимае пешниҳод кунад, ки дар ягон
+         * ном нест. Чунин вариант дар экран мемонд ва пахш карда шуда, рӯйхати
+         * холӣ медод. Аз ин рӯ шумораи воқеӣ ҳисоб карда мешавад ва варианти
+         * бенатиҷа умуман нишон дода намешавад.
+         */
+        const options: any[] = [];
+        const seen = new Set<string>();
+
+        for (const raw of Array.isArray(grouped?.options) ? grouped.options.slice(0, 6) : []) {
+            const label = typeof raw?.label === 'string' ? raw.label.trim().slice(0, 60) : '';
+            const keyword = typeof raw?.keyword === 'string' ? raw.keyword.trim().slice(0, 40) : '';
+            if (!label || !keyword) continue;
+
+            const key = keyword.toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            const optionFilters = { ...filters, search: keyword };
+            const check = await this.findAll(toDto(optionFilters, 1, 1));
+            if (!check.meta.total) continue;
+
+            options.push({ label, count: check.meta.total, filters: optionFilters });
+            if (options.length >= 5) break;
+        }
+
+        const ask =
+            options.length >= 2 && typeof grouped?.question === 'string'
+                ? grouped.question.trim().slice(0, 160)
+                : null;
+
+        return finish(true, filters, ask ? options : [], ask);
     }
 
     findOne(id: string): Promise<Career | null> {

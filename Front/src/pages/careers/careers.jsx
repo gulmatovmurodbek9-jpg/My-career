@@ -186,6 +186,11 @@ const Careers = () => {
   const [aiFilters, setAiFilters] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
+  /* Саволи аниқкунанда ва вариантҳои он. Вариант филтрҳои тайёри худро
+     дорад — пас пахш кардани он дархости нав ба модел талаб намекунад. */
+  const [aiQuestion, setAiQuestion] = useState(null);
+  const [aiOptions, setAiOptions] = useState([]);
+  const [aiChoice, setAiChoice] = useState(null);
   const aiActive = Boolean(aiQuery);
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 350);
@@ -251,9 +256,39 @@ const Careers = () => {
     if (!aiQuery) return;
 
     const controller = new AbortController();
+    setLoading(true);
+
+    /* Варианти интихобшуда филтрҳои тайёр дорад — рост ба ҷустуҷӯи оддӣ. */
+    if (aiChoice) {
+      axios
+        .get(`${API}/careers`, {
+          params: withLang({
+            page: currentPage,
+            limit: LIMIT,
+            ...(aiChoice.filters?.search && { search: aiChoice.filters.search }),
+            ...(aiChoice.filters?.clusterId && { clusterId: aiChoice.filters.clusterId }),
+            ...(aiChoice.filters?.maxPrice && { maxPrice: aiChoice.filters.maxPrice }),
+            ...(aiChoice.filters?.city && { city: aiChoice.filters.city }),
+            ...(aiChoice.filters?.onlyFree && { freeSeatsOnly: "true" }),
+          }),
+          signal: controller.signal,
+        })
+        .then(({ data }) => {
+          setCareers(data.data || []);
+          setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
+          setLoading(false);
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) return;
+          console.error("AI choice fetch error:", error);
+          setLoading(false);
+        });
+
+      return () => controller.abort();
+    }
+
     setAiLoading(true);
     setAiError(false);
-    setLoading(true);
 
     axios
       .post(
@@ -265,6 +300,8 @@ const Careers = () => {
         setCareers(data.data || []);
         setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
         setAiFilters({ ...(data.filters || {}), understood: data.understood });
+        setAiQuestion(data.question || null);
+        setAiOptions(Array.isArray(data.options) ? data.options : []);
         setAiLoading(false);
         setLoading(false);
       })
@@ -273,24 +310,37 @@ const Careers = () => {
         console.error("AI search error:", error);
         setAiError(true);
         setAiFilters(null);
+        setAiQuestion(null);
+        setAiOptions([]);
         setAiLoading(false);
         setLoading(false);
       });
 
     return () => controller.abort();
-  }, [aiQuery, currentPage, i18n.language]);
+  }, [aiQuery, aiChoice, currentPage, i18n.language]);
 
   const runAiSearch = () => {
     const text = searchQuery.trim();
     if (!text) return;
     setCurrentPage(1);
+    setAiChoice(null);
+    setAiQuestion(null);
+    setAiOptions([]);
     setAiQuery(text);
+  };
+
+  const chooseAiOption = (option) => {
+    setCurrentPage(1);
+    setAiChoice(option);
   };
 
   const clearAiSearch = () => {
     setAiQuery("");
     setAiFilters(null);
     setAiError(false);
+    setAiQuestion(null);
+    setAiOptions([]);
+    setAiChoice(null);
   };
 
   // Fetch clusters and cities once
@@ -461,6 +511,51 @@ const Careers = () => {
                 >
                   <X className="h-3.5 w-3.5" />
                   {t("ai_search.clear")}
+                </button>
+              </div>
+            )}
+
+            {/* Саволи аниқкунанда. Ҳар вариант шумораи воқеии худро нишон
+                медиҳад — он дар сервер аз база ҳисоб шудааст, на аз модел. */}
+            {aiQuestion && aiOptions.length > 0 && !aiChoice && !aiError && (
+              <div className="mt-5 rounded-2xl border-2 border-primary/20 bg-primary/5 p-5">
+                <p className="flex items-start gap-2 text-[15px] font-bold text-foreground">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  {aiQuestion}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {aiOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => chooseAiOption(option)}
+                      className="inline-flex items-center gap-2 rounded-xl border-2 border-border bg-card px-4 py-2.5 text-[14px] font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary focus-ring"
+                    >
+                      {option.label}
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[12px] font-black text-muted-foreground">
+                        {option.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {aiChoice && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                  {aiChoice.label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentPage(1);
+                    setAiChoice(null);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[13px] font-bold text-muted-foreground transition-colors hover:text-foreground focus-ring"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  {t("ai_search.other_options")}
                 </button>
               </div>
             )}

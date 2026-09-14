@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { clusterLabelNumbered } from "../lib/clusterLabel";
 import axios from "axios";
 import { API } from "../lib/config";
 import { useAuthStore } from "../store/authStore";
@@ -164,8 +165,7 @@ export default function SpecialtyCard({ specialty }) {
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/20 w-fit">
                 {/* Рақами кластер пеш аз ном: ариза ба ЯК кластер меравад,
                     ва маҳз ҳамин рақам барои довталаб муҳим аст. */}
-                {specialty.cluster.clusterId ? `${specialty.cluster.clusterId}. ` : ""}
-                {specialty.cluster.clusterName}
+                {clusterLabelNumbered(t, specialty.cluster)}
               </span>
             )}
             <SpecialtyMeta specialty={specialty} />
@@ -310,7 +310,7 @@ export function SpecialtyCardList({ specialty }) {
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
             <span className="text-[9px] font-black uppercase tracking-widest text-primary/70">{specialty.cluster?.clusterName
-              ? `${specialty.cluster.clusterId ? specialty.cluster.clusterId + ". " : ""}${specialty.cluster.clusterName}`
+              ? clusterLabelNumbered(t, specialty.cluster)
               : t('common.course', "Курси таълимӣ")}</span>
             <h3 className="font-black text-lg text-foreground group-hover:text-primary transition-colors leading-tight">
               {specialty.name}

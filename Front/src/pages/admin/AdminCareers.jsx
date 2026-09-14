@@ -18,6 +18,7 @@ import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../components/toast/ToastProvider";
 import { useTranslation } from "react-i18next";
+import { clusterLabel } from "../../lib/clusterLabel";
 import CareerForm from "../../components/admin/CareerForm";
 import ConfirmDialog from "../../components/admin/ConfirmDialog";
 import LucideIconRenderer from "../../components/admin/LucideIconRenderer";
@@ -191,7 +192,7 @@ const AdminCareers = () => {
           clearable
           options={clusters.map((c) => ({
             value: c.id,
-            label: c.clusterName,
+            label: clusterLabel(t, c),
           }))}
           className="min-w-[220px]"
         />
@@ -244,7 +245,7 @@ const AdminCareers = () => {
                           {career.cluster ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 text-[13px] font-semibold">
                               {career.cluster.clusterIcon && <LucideIconRenderer name={career.cluster.clusterIcon} className="w-3.5 h-3.5" />}
-                              {career.cluster.clusterName}
+                              {clusterLabel(t, career.cluster)}
                             </span>
                           ) : (
                             <span className="text-white/35 text-[13px]">—</span>

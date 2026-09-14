@@ -38,6 +38,7 @@ import { resourceUrl } from "../../lib/resourceLinks";
 import { buildRoadmap } from "../../lib/buildRoadmap";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
+import { clusterLabel } from "../../lib/clusterLabel";
 import { studyFormLabel, paymentTypeLabel, languageLabel } from "../../lib/offeringLabels";
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
@@ -290,7 +291,7 @@ const Info = () => {
         name: career.name,
         description: career.description || career.purpose || undefined,
         identifier: career.code || undefined,
-        occupationalCategory: career.cluster?.clusterName || undefined,
+        occupationalCategory: career.cluster ? clusterLabel(t, career.cluster) : undefined,
         educationalProgramMode: "full-time",
         provider: metaUniversities.slice(0, 10).map((uni) => ({
           "@type": "CollegeOrUniversity",
@@ -477,7 +478,7 @@ const Info = () => {
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   {career.cluster?.clusterName && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/15">
-                      <Star className="h-3 w-3" /> {career.cluster.clusterName}
+                      <Star className="h-3 w-3" /> {clusterLabel(t, career.cluster)}
                     </span>
                   )}
                   {career.code && (

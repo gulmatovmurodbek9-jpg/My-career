@@ -11,6 +11,7 @@ import SpecialtyCard, { SpecialtyCardList } from "../../components/jobCard";
 import LucideIconRenderer from "../../components/admin/LucideIconRenderer";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
+import { clusterLabel } from "../../lib/clusterLabel";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
 
@@ -264,7 +265,7 @@ const Careers = () => {
     .map((cluster) => ({
       id: cluster.id,
       number: cluster.clusterId,
-      name: cluster.clusterName,
+      name: clusterLabel(t, cluster),
       icon: cluster.clusterIcon,
       count: Array.isArray(cluster.careers) ? cluster.careers.length : 0,
     }))

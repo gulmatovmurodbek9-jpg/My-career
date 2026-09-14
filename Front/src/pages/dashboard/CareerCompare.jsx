@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { clusterLabel } from "../../lib/clusterLabel";
 import axios from "axios";
 import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
@@ -667,7 +668,7 @@ const CareerCompare = () => {
                     {quizData?.topCluster?.clusterName && (
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-wider text-primary mb-4">
                             <GraduationCap className="w-3 h-3" />
-                            {quizData.topCluster.clusterName}
+                            {clusterLabel(i18n.t, quizData.topCluster)}
                         </div>
                     )}
 

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { clusterLabel, clusterDescription } from "../../lib/clusterLabel";
 import axios from "axios";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
@@ -328,7 +329,7 @@ const Quiz = () => {
                         {results.topCluster && (
                             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
                                 <Award className="w-3.5 h-3.5" />
-                                {results.topCluster.clusterName}
+                                {clusterLabel(t, results.topCluster)}
                             </div>
                         )}
                     </div>
@@ -513,9 +514,9 @@ const Quiz = () => {
                             </div>
                             {topCluster ? (
                                 <>
-                                    <h3 className="text-2xl font-black uppercase leading-tight">{topCluster.clusterName}</h3>
+                                    <h3 className="text-2xl font-black uppercase leading-tight">{clusterLabel(t, topCluster)}</h3>
                                     <p className="text-sm opacity-70 leading-relaxed italic">
-                                        "{topCluster.clusterDescription || t('quiz.cluster_reason', "Ин кластер дар асоси профили RIASEC-и шумо интихоб шудааст.")}"
+                                        "{clusterDescription(t, topCluster, t('quiz.cluster_reason', "Ин кластер дар асоси профили RIASEC-и шумо интихоб шудааст."))}"
                                     </p>
                                     <div className="pt-4 space-y-2">
                                         <div className="text-[9px] font-black uppercase tracking-widest opacity-40">
@@ -553,7 +554,7 @@ const Quiz = () => {
                                     {t('quiz.reasoning_title', "Чаро ин касб? (Reasoning)")}
                                 </div>
                                 <p className="text-[10px] italic leading-tight opacity-70">
-                                    "{t('quiz.analysis_match', { defaultValue: "Интихоби шумо дар асоси мувофиқати {{type}} ва талаботи кластери {{cluster}} анҷом дода шудааст.", type: results.topType, cluster: topCluster?.clusterName })}"
+                                    "{t('quiz.analysis_match', { defaultValue: "Интихоби шумо дар асоси мувофиқати {{type}} ва талаботи кластери {{cluster}} анҷом дода шудааст.", type: results.topType, cluster: clusterLabel(t, topCluster) })}"
                                 </p>
                             </div>
                         </div>
@@ -586,7 +587,7 @@ const Quiz = () => {
                                             {t('quiz.your_cluster_careers', "Ихтисосҳои тавсияшуда")}
                                         </div>
                                         <h3 className="text-xl font-black text-foreground uppercase tracking-tighter">
-                                            {topCluster?.clusterName}
+                                            {clusterLabel(t, topCluster)}
                                         </h3>
                                         <p className="text-xs text-muted-foreground mt-1">
                                             {t('quiz.results_based', "Натиҷаҳо дар асоси 15 савол (Кластер + Ихтисос) муайян шудаанд.")}

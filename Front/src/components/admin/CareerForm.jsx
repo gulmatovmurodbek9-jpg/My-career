@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, Loader2, FolderKanban } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { clusterLabel } from "../../lib/clusterLabel";
 import CustomSelect from "./CustomSelect";
 
 
@@ -157,7 +158,7 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
                       searchable
                       options={clusters.map((c) => ({
                         value: c.id,
-                        label: c.clusterName,
+                        label: clusterLabel(t, c),
                       }))}
                     />
                   </div>

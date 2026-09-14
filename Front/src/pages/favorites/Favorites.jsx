@@ -13,6 +13,7 @@ import { useAuthStore } from "../../store/authStore";
 import axios from "axios";
 import { API } from "../../lib/config";
 import { useTranslation } from "react-i18next";
+import { clusterLabel } from "../../lib/clusterLabel";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -37,7 +38,7 @@ const CareerCard = ({ career, onUnlike, onUnsave, type }) => {
 
             <div className="flex items-start justify-between">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.15em] bg-primary/10 text-primary border border-primary/20">
-                    {career.cluster?.clusterName || t('common.specialty', "Ихтисос")}
+                    {career.cluster?.clusterName ? clusterLabel(t, career.cluster) : t('common.specialty', "Ихтисос")}
                 </span>
                 <button
                     onClick={() => type === "liked" ? onUnlike(career.id) : onUnsave(career.id)}

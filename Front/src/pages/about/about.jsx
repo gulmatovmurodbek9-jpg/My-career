@@ -13,12 +13,51 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { API } from "../../lib/config";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 
 const About = () => {
   const { t } = useTranslation();
+
+  /*
+   * Рақамҳо аз база, на аз код.
+   *
+   * Ҳар рақаме, ки дар ин саҳифа навишта мешавад, бояд дар ҳамон сомона
+   * санҷида шавад: ихтисосҳоро дар саҳифаи ихтисосҳо, донишгоҳҳоро дар
+   * харита. То расидани ҷавоб «—» меистад — рақами тахминӣ нишон додан
+   * ҳамон хатоест, ки ин ҷо ислоҳ мешавад.
+   */
+  const [counts, setCounts] = useState({ careers: null, universities: null, clusters: null });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    Promise.allSettled([
+      axios.get(`${API}/careers`, { params: { limit: 1 }, signal }),
+      axios.get(`${API}/universities`, { signal }),
+      axios.get(`${API}/clusters`, { signal }),
+    ]).then(([careers, universities, clusters]) => {
+      setCounts({
+        careers: careers.status === "fulfilled" ? careers.value.data?.meta?.total ?? null : null,
+        universities:
+          universities.status === "fulfilled" && Array.isArray(universities.value.data)
+            ? universities.value.data.length
+            : null,
+        clusters:
+          clusters.status === "fulfilled" && Array.isArray(clusters.value.data)
+            ? clusters.value.data.length
+            : null,
+      });
+    });
+
+    return () => controller.abort();
+  }, []);
+
+  const show = (value) => (value === null ? "—" : value.toLocaleString("ru-RU"));
   const values = [
     { icon: Target, title: t('about_page.mission_title', "Миссияи мо"), description: t('about_page.mission_desc', "Кӯмак ба ҷавонони Тоҷикистон дар интихоби касби мувофиқ тавассути маълумоти дақиқ ва роҳнамоии ҳамаҷониба."), gradient: "from-blue-500 to-indigo-500" },
     { icon: Lightbulb, title: t('about_page.vision_title', "Визияи мо"), description: t('about_page.vision_desc', "Сохтани ҷомеае, ки дар он ҳар шахс касби мувофиқро ёбад — ояндаи дурахшон аз интихоби дуруст оғоз мешавад."), gradient: "from-amber-500 to-orange-500" },
@@ -27,10 +66,10 @@ const About = () => {
   ];
 
   const impactStats = [
-    { value: "150+", label: t('about_page.stat_careers', "Ихтисосҳо"), icon: BookOpen },
-    { value: "100к+", label: t('about_page.stat_users', "Корбарон"), icon: Users },
-    { value: "50+", label: t('about_page.stat_clusters', "Кластерҳо"), icon: Globe },
-    { value: "95%", label: t('about_page.stat_satisfaction', "Қаноатмандӣ"), icon: Star },
+    { value: show(counts.careers), label: t('about_page.stat_careers', "Ихтисосҳо"), icon: BookOpen },
+    { value: show(counts.universities), label: t('about_page.stat_universities'), icon: GraduationCap },
+    { value: show(counts.clusters), label: t('about_page.stat_clusters', "Кластерҳо"), icon: Globe },
+    { value: "3", label: t('about_page.stat_languages'), icon: Globe },
   ];
 
   const timeline = [

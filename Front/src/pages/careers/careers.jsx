@@ -278,6 +278,7 @@ const Careers = () => {
             limit: LIMIT,
             ...(aiChoice.filters?.search && { search: aiChoice.filters.search }),
             ...(aiChoice.filters?.searchAny?.length && { searchAny: aiChoice.filters.searchAny }),
+            ...(aiChoice.filters?.names?.length && { names: aiChoice.filters.names }),
             ...(aiChoice.filters?.clusterId && { clusterId: aiChoice.filters.clusterId }),
             ...(aiChoice.filters?.maxPrice && { maxPrice: aiChoice.filters.maxPrice }),
             ...(aiChoice.filters?.city && { city: aiChoice.filters.city }),
@@ -502,9 +503,9 @@ const Careers = () => {
                   {aiFilters.understood ? aiT("ai_search.understood") : aiT("ai_search.not_understood")}
                 </span>
 
-                {(aiFilters.search || aiFilters.keywords?.length > 0) && (
+                {(aiFilters.search || aiFilters.keywords?.length > 0 || aiFilters.names?.length > 0) && (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                    {aiT("ai_search.word", { word: aiFilters.keywords?.length ? aiFilters.keywords.join(", ") : aiFilters.search })}
+                    {aiT("ai_search.word", { word: aiFilters.names?.length ? aiFilters.names.join(", ") : aiFilters.keywords?.length ? aiFilters.keywords.join(", ") : aiFilters.search })}
                   </span>
                 )}
                 {aiFilters.clusterNumber && (
@@ -537,6 +538,16 @@ const Careers = () => {
                   {aiT("ai_search.clear")}
                 </button>
               </div>
+            )}
+
+            {/* Шарҳи роҳ: вақте касб ихтисоси алоҳидаи ММТ нест — «Урология
+                алоҳида нест, аввал „Кори табобатӣ“». Бе он корбар намефаҳмид, ки
+                чаро ба ҷои урология «Кори табобатӣ» баромад. */}
+            {aiFilters?.note && !aiError && (
+              <p className="mt-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-[14px] leading-relaxed text-foreground">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                {aiFilters.note}
+              </p>
             )}
 
             {/* Саволи аниқкунанда. Ҳар вариант шумораи воқеии худро нишон

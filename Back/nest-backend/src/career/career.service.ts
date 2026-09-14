@@ -180,6 +180,13 @@ export class CareerService {
             }));
         }
 
+        /* Номҳои дақиқи расмӣ — роҳ ба касбе, ки ихтисоси алоҳида нест.
+           Муқоисаи айнан: номҳо аз худи база гирифта шудаанд. */
+        const exactNames = (query.names || []).map((name) => String(name).trim()).filter(Boolean);
+        if (exactNames.length) {
+            qb.andWhere('career.name IN (:...exactNames)', { exactNames });
+        }
+
         if (clusterId) {
             qb.andWhere('career.clusterId = :clusterId', { clusterId });
         }
@@ -302,6 +309,7 @@ export class CareerService {
             limit: l,
             ...(filters.search ? { search: filters.search } : {}),
             ...(filters.searchAny?.length ? { searchAny: filters.searchAny } : {}),
+            ...(filters.names?.length ? { names: filters.names } : {}),
             ...(filters.clusterId ? { clusterId: filters.clusterId } : {}),
             ...(filters.maxPrice ? { maxPrice: filters.maxPrice } : {}),
             ...(filters.city ? { city: filters.city } : {}),
@@ -373,16 +381,19 @@ export class CareerService {
             '- "lang" забонест, ки корбар САВОЛРО бо он навиштааст: "tj", "ru" ё "en".',
             '  Диққат: тоҷикӣ метавонад бе ҳарфҳои ӣ, ӯ, ҳ, ҷ навишта шавад —',
             '  «Духтур мехохам шавам» тоҷикӣ аст, на русӣ.',
-            '- "keywords": 1–3 реша, ки дар НОМИ ихтисоси расмӣ вомехӯранд,',
-            '  аз МУШАХХАСТАРИН ба умумитарин. Реша кӯтоҳ бошад, то шаклҳои',
-            '  гуногунро ёбад: «стоматолог», на «стоматологӣ».',
-            '- Агар корбар КАСБИ МУШАХХАС гӯяд, решаҳои ҳамон касбро гузор —',
-            '  соҳаи умумиро НАГУЗОР. Намунаҳо:',
+            '- "keywords": 1–3 реша, ки ТАНҲО ҲАМОН КАСБРО ифода мекунанд.',
+            '  Соҳаи умумиро ИЛОВА НАКУН. Реша кӯтоҳ бошад, то шаклҳои гуногунро',
+            '  ёбад: «стоматолог», на «стоматологӣ». Намунаҳо:',
             '  «духтури дандон», «стоматолог», «дантист» → ["стоматолог", "дандон"]',
-            '  «барномасоз», «программист» → ["барномасоз", "информатика"]',
+            '  «барномасоз», «программист» → ["барномасоз", "барномав", "информатика"]',
             '  «юрист», «ҳуқуқшинос» → ["ҳуқуқ"]',
             '  «муҳандис», «инженер» → ["муҳандис"]',
-            '  «духтур», «врач» (бе касби мушаххас) → ["тиб", "табобат"]',
+            '  «духтур», «врач» (бе касби мушаххас) → ["табобат", "педиатр", "стоматолог"]',
+            '- Барои духтури ОДАМ калимаи «тиб»-ро НАГУЗОР: вай «Тибби байторӣ»',
+            '  (ветеринария)-ро низ меёбад.',
+            '- Агар касб тахассуси танг бошад — уролог, кардиолог, ҷарроҳ, невролог,',
+            '  окулист — калимаи худи ҳамон касбро гузор: ["уролог"]. Сервер роҳи',
+            '  воқеиро худаш меёбад.',
             '- Саволро аз ҳар забон бифаҳм, вале решаҳо ҲАМЕША тоҷикӣ бошанд:',
             '  номи ихтисосҳо дар база тоҷикӣ аст.',
             '  Номи касби ғайрирасмиро (масалан «Дизайнери UX/UI») нанавис.',
@@ -419,7 +430,12 @@ export class CareerService {
                 .filter((k): k is string => typeof k === 'string')
                 .map((k) => k.trim().slice(0, 40))
                 .filter((k) => k.length >= 3),
-        )].slice(0, 3);
+        )]
+            /* Калимаи соҳаи умумӣ, ки ПАС аз калимаи мушаххас омадааст, касбро
+               «об» мекунад: ["уролог", "тиб"] ветеринарияро меовард. Агар
+               калимаи умумӣ худаш аввал бошад (корбар касбро нагуфтааст), мемонад. */
+            .filter((k, index) => index === 0 || !CareerService.BROAD_STEMS.has(foldTajik(k)))
+            .slice(0, 3);
 
         const clusterNumber = Number(parsed?.clusterNumber);
         if (clusterNumber >= 1 && clusterNumber <= 5) {
@@ -472,7 +488,13 @@ export class CareerService {
                 filters.searchAny = keywords;
                 filters.keywords = keywords;
             } else {
-                filters.search = keywords[keywords.length - 1];
+                const path = await this.findCareerPath(question, keywords, filters.clusterId, answerLang, readJson);
+                if (path) {
+                    filters.names = path.names;
+                    filters.note = path.note;
+                } else {
+                    filters.search = keywords[keywords.length - 1];
+                }
             }
         }
 
@@ -558,6 +580,7 @@ export class CareerService {
                ҳоле ки худи натиҷа 19 буд. */
             const optionFilters: any = { ...filters, search: keyword };
             delete optionFilters.keywords;
+            delete optionFilters.note;
             const check = await this.findAll(toDto(optionFilters, 1, 1));
             /* Варианти бенатиҷа ва вариантеки ҳамаи натиҷаро мегирад — ҳарду
                чизеро интихоб намекунанд: «Ҳифзи ҳуқуқ (35)» аз 35 савол набуд. */
@@ -574,6 +597,99 @@ export class CareerService {
 
         return finish(true, filters, ask ? options : [], ask);
     }
+
+    /**
+     * Роҳи воқеӣ ба касбе, ки дар рӯйхати ММТ бо номи худ нест.
+     *
+     * Номзадҳо фақат номҳои ҳақиқии база мебошанд: ихтисосҳои кластери
+     * тахминӣ ва онҳое, ки калимаҳо дар ном ё тавсифашон вомехӯранд. Модел
+     * аз ҳамин рӯйхат интихоб мекунад; номе, ки дар он нест, рад мешавад.
+     * Бе ин модел «Урология» ё «Кардиология» менавишт — ихтисосҳое, ки
+     * довталаб ба онҳо ҳуҷҷат супорида наметавонад.
+     */
+    private async findCareerPath(
+        question: string,
+        keywords: string[],
+        clusterId: string | undefined,
+        answerLang: string,
+        readJson: (raw: string) => any,
+    ): Promise<{ names: string[]; note: string } | null> {
+        const candidates = new Set<string>();
+
+        if (clusterId) {
+            const rows: Array<{ name: string }> = await this.careerRepository.manager.query(
+                'SELECT DISTINCT name FROM career WHERE "clusterId" = $1 ORDER BY name',
+                [clusterId],
+            );
+            rows.forEach((row) => row.name && candidates.add(row.name));
+        }
+
+        const patterns = keywords.map((k) => `%${foldTajik(k)}%`);
+        if (patterns.length) {
+            const rows: Array<{ name: string }> = await this.careerRepository.manager.query(
+                `SELECT DISTINCT name FROM career
+                 WHERE ${TAJIK_FOLD('name')} LIKE ANY($1) OR ${TAJIK_FOLD('coalesce(description, \'\')')} LIKE ANY($1)
+                 LIMIT 60`,
+                [patterns],
+            );
+            rows.forEach((row) => row.name && candidates.add(row.name));
+        }
+
+        const list = [...candidates].slice(0, 120);
+        if (!list.length) return null;
+
+        const langName = answerLang === 'ru' ? 'русӣ' : answerLang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+        const prompt = [
+            'Корбар чунин навишт:',
+            question,
+            '',
+            'Ин касб дар рӯйхати ихтисосҳои Маркази миллии тестӣ бо номи худ нест.',
+            'Аз рӯйхати зер ихтисосҳоеро интихоб кун, ки барои расидан ба ҳамин касб',
+            'дар донишгоҳ ё коллеҷ хонда мешаванд.',
+            '',
+            'РӮЙХАТИ ИХТИСОСҲОИ РАСМӢ:',
+            ...list.map((name) => '- ' + name),
+            '',
+            'ФОРМАТИ ҶАВОБ — танҳо JSON:',
+            '{"names": ["номи айнан аз рӯйхат"], "note": "шарҳи кӯтоҳ"}',
+            '',
+            'ҚОИДАҲО:',
+            '- "names": 1–3 ном, ҲАРФ БА ҲАРФ аз рӯйхати боло. Номи нав НАСОЗ.',
+            '- Агар дар рӯйхат роҳи мувофиқ набошад, "names": [] гузор.',
+            `- "note" бо забони ${langName}, ЯК ҷумла то 25 калима: чаро ин касб алоҳида`,
+            '  нест ва роҳ ба он чӣ гуна аст. Масалан: «Урология ихтисоси алоҳидаи ММТ',
+            '  нест — аввал „Кори табобатӣ“ мехонед, баъд дар ординатура урологияро',
+            '  интихоб мекунед.»',
+            '- Рақам, маош ё номи донишгоҳ НАСОЗ.',
+        ].join('\n');
+
+        let parsed: any;
+        try {
+            parsed = readJson(await this.aiService.generateContent(prompt));
+        } catch {
+            return null;
+        }
+
+        /* Номи модел бо номи база ҳамвор муқоиса мешавад, вале ба дархост худи
+           номи база меравад — то баробарии айнан кор кунад. */
+        const byFolded = new Map(list.map((name) => [foldTajik(name.trim()), name]));
+        const names: string[] = (Array.isArray(parsed?.names) ? parsed.names : [])
+            .filter((name: unknown): name is string => typeof name === 'string')
+            .map((name) => byFolded.get(foldTajik(name.trim())))
+            .filter((name): name is string => Boolean(name))
+            .slice(0, 3);
+
+        if (!names.length) return null;
+
+        const note = typeof parsed?.note === 'string' ? parsed.note.trim().slice(0, 240) : '';
+        return { names: Array.from(new Set<string>(names)), note };
+    }
+
+    /** Калимаҳои соҳаи умумӣ: пас аз калимаи мушаххас онро «об» мекунанд. */
+    private static readonly BROAD_STEMS = new Set(
+        ['тиб', 'табобат', 'муҳандис', 'иқтисод', 'омӯзгор', 'педагог', 'техник', 'технолог', 'биолог', 'санъат', 'илм']
+            .map((word) => foldTajik(word)),
+    );
 
     findOne(id: string): Promise<Career | null> {
         return this.careerRepository.findOne({ where: { id }, relations: ['cluster', 'universities'] });

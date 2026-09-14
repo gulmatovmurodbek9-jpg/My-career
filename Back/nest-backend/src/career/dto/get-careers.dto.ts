@@ -14,6 +14,12 @@ export class GetCareersDto {
     @IsArray()
     @IsString({ each: true })
     searchAny?: string[];
+    @ApiPropertyOptional({ description: 'Exact official specialty names (used by AI search)', type: [String] })
+    @IsOptional()
+    @Transform(({ value }) => (value === undefined ? undefined : Array.isArray(value) ? value : [value]))
+    @IsArray()
+    @IsString({ each: true })
+    names?: string[];
 
     @ApiPropertyOptional({ description: 'Cluster ID to filter by' })
     @IsOptional()

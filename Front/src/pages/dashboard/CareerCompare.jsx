@@ -9,6 +9,8 @@ import {
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { clusterLabel } from "../../lib/clusterLabel";
+import { careerName, careerDescription } from "../../lib/careerText";
+import { withLang, currentApiLang } from "../../lib/apiLang";
 import axios from "axios";
 import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
@@ -88,6 +90,17 @@ const labels = {
         customAnalysis: "Таҳлили иловагӣ",
         noCareers: "Ихтисоси захирашуда ё пешниҳодшуда ҳоло нест.",
         emptyData: "Маълумоти муқоиса холӣ аст. Лутфан ихтисосҳои дигарро интихоб кунед.",
+        factsTitle: "Далелҳо аз базаи мо",
+        factCareer: "Ихтисос",
+        factCode: "Коди ММТ",
+        factDuration: "Муддат",
+        factTuition: "Нарх (сомонӣ/сол)",
+        factFree: "Ҷойи ройгон",
+        factUniversities: "Донишгоҳҳо",
+        factYears: "сол",
+        factFreeYes: "Ҳаст",
+        factFreeNo: "Нест",
+        factsNote: "Ин рақамҳо аз базаи мо гирифта шудаанд, на аз AI.",
         noComparisonData: "Маълумоти муқоисавӣ барои ин касбҳо ҳанӯз дастрас нест.",
     },
     ru: {
@@ -142,6 +155,17 @@ const labels = {
         customAnalysis: "Дополнительный анализ",
         noCareers: "Нет сохраненных или рекомендуемых профессий.",
         emptyData: "Данные сравнения пусты. Пожалуйста, попробуйте другие профессии.",
+        factsTitle: "Данные из нашей базы",
+        factCareer: "Специальность",
+        factCode: "Код НЦТ",
+        factDuration: "Срок",
+        factTuition: "Цена (сомони/год)",
+        factFree: "Бюджет",
+        factUniversities: "Вузы",
+        factYears: "лет",
+        factFreeYes: "Есть",
+        factFreeNo: "Нет",
+        factsNote: "Эти цифры взяты из нашей базы, а не от AI.",
         noComparisonData: "Данные для сравнения этих профессий пока недоступны.",
     },
     en: {
@@ -196,6 +220,17 @@ const labels = {
         customAnalysis: "Custom Analysis",
         noCareers: "No saved or suggested careers yet.",
         emptyData: "Comparison data is empty. Please try different careers.",
+        factsTitle: "Facts from our database",
+        factCareer: "Specialty",
+        factCode: "NTC code",
+        factDuration: "Duration",
+        factTuition: "Tuition (TJS/year)",
+        factFree: "State-funded",
+        factUniversities: "Universities",
+        factYears: "yrs",
+        factFreeYes: "Yes",
+        factFreeNo: "No",
+        factsNote: "These figures come from our database, not from the AI.",
         noComparisonData: "Comparison data is not available for these careers yet.",
     },
 };
@@ -408,6 +443,26 @@ const CareerCompare = () => {
     const [careers, setCareers] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [compareQuestion, setCompareQuestion] = useState("");
+    /* Забон барои тарҷумаи номҳо: сервер барои пешниҳодҳо `nameTranslated`
+       медиҳад, вале захираҳо бо сутуни `translations` меоянд. */
+    const apiLang = currentApiLang();
+
+    /* Сабтҳои пурраи ихтисосҳои интихобшуда — барои ҷадвали далелҳо.
+       Тартиб ҳамон аст, ки корбар интихоб кард. */
+    const selectedFacts = useMemo(
+        () => careers.map((name) => displayCareers.find((c) => c.name === name)).filter(Boolean),
+        [careers, displayCareers],
+    );
+
+    /* Нарх аз ҳадди поён то боло: як ихтисос дар донишгоҳҳои гуногун
+       нархи гуногун дорад. */
+    const tuitionText = (career) => {
+        const min = career.minTuitionFee ?? career.tuitionFee;
+        const max = career.maxTuitionFee ?? career.tuitionFee;
+        if (!min && !max) return "—";
+        const fmt = (value) => Number(value).toLocaleString("ru-RU");
+        return !max || min === max ? fmt(min) : `${fmt(min)} – ${fmt(max)}`;
+    };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isRateLimit, setIsRateLimit] = useState(false);
@@ -485,7 +540,7 @@ const CareerCompare = () => {
         const clusterId = quizData?.topCluster?.id;
         if (!clusterId) return;
         setLoadingSuggestions(true);
-        axios.get(`${API}/careers`, { params: { clusterId, limit: 8, page: 1 } })
+        axios.get(`${API}/careers`, { params: withLang({ clusterId, limit: 8, page: 1 }) })
             .then(res => {
                 const careers = (res.data?.data || []).map(c => ({
                     ...c,
@@ -746,13 +801,13 @@ const CareerCompare = () => {
 
                                         {/* Career name */}
                                         <h4 className="text-sm font-black text-foreground uppercase tracking-normal leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors">
-                                            {career.name}
+                                            {careerName(career, apiLang)}
                                         </h4>
 
                                         {/* Description */}
                                         {career.description && (
                                             <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 mt-2 opacity-70">
-                                                {career.description}
+                                                {careerDescription(career, apiLang)}
                                             </p>
                                         )}
                                     </motion.button>
@@ -1030,6 +1085,56 @@ const CareerCompare = () => {
                                             {comparisonData.customAnalysis}
                                         </p>
                                     </div>
+                                </motion.div>
+                            )}
+
+                            {/* ── Далелҳо аз база: рақами санҷидашуда пеш аз матни AI ── */}
+                            {selectedFacts.length > 0 && (
+                                <motion.div variants={itemVariants}>
+                                    <SectionHeader icon={Scale} title={t.factsTitle} color="from-emerald-500 to-teal-500" />
+                                    <div className="glass-card mt-3 overflow-x-auto">
+                                        <table className="w-full min-w-[600px] text-sm">
+                                            <thead>
+                                                <tr className="text-left text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                                                    <th className="px-4 py-3">{t.factCareer}</th>
+                                                    <th className="px-4 py-3">{t.factCode}</th>
+                                                    <th className="px-4 py-3">{t.factDuration}</th>
+                                                    <th className="px-4 py-3">{t.factTuition}</th>
+                                                    <th className="px-4 py-3">{t.factFree}</th>
+                                                    <th className="px-4 py-3">{t.factUniversities}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {selectedFacts.map((career) => (
+                                                    <tr key={career.id || career.name} className="border-t border-border/60">
+                                                        <td className="px-4 py-3 font-bold text-foreground">
+                                                            {careerName(career, apiLang)}
+                                                        </td>
+                                                        <td className="px-4 py-3 font-mono text-muted-foreground">
+                                                            {career.code || "—"}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                                                            {career.durationYears ? `${career.durationYears} ${t.factYears}` : "—"}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                                                            {tuitionText(career)}
+                                                        </td>
+                                                        <td className="px-4 py-3 whitespace-nowrap">
+                                                            {career.hasFreeSeats ? (
+                                                                <span className="font-bold text-emerald-500">{t.factFreeYes}</span>
+                                                            ) : (
+                                                                <span className="text-muted-foreground">{t.factFreeNo}</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-muted-foreground">
+                                                            {career.universities?.length ?? "—"}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p className="mt-2 text-xs text-muted-foreground">{t.factsNote}</p>
                                 </motion.div>
                             )}
 

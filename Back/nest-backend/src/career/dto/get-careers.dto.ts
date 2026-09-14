@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsInt, Min, IsArray } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GetCareersDto {
@@ -9,6 +9,8 @@ export class GetCareersDto {
     search?: string;
     @ApiPropertyOptional({ description: 'Any of these words in the specialty name (used by AI search)', type: [String] })
     @IsOptional()
+    /* Дар GET як калима ҳамчун сатр меояд, якчанд — ҳамчун массив. */
+    @Transform(({ value }) => (value === undefined ? undefined : Array.isArray(value) ? value : [value]))
     @IsArray()
     @IsString({ each: true })
     searchAny?: string[];

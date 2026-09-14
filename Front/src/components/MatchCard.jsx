@@ -5,11 +5,16 @@ import { Link } from "react-router";
 import axios from "axios";
 import { API } from "../lib/config";
 import { useTranslation } from "react-i18next";
+import { careerName, careerDescription, universityName } from "../lib/careerText";
+import { currentApiLang } from "../lib/apiLang";
 import { useAuthStore } from "../store/authStore";
 import { useToast } from "./toast/ToastProvider";
 
 const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: initialSaved, rank = 0, onExplain }) => {
     const { t } = useTranslation();
+    /* Сервер номи тарҷумашударо дар майдони алоҳида медиҳад ва номи расмии
+       тоҷикиро бетағйир мемонад — корт бояд тарҷумашударо нишон диҳад. */
+    const lang = currentApiLang();
     const [isLiked, setIsLiked] = useState(initialLiked || false);
     const [isSaved, setIsSaved] = useState(initialSaved || false);
     const [showHeart, setShowHeart] = useState(false);
@@ -131,7 +136,7 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                             to={`/info/${career.id}`}
                             className="line-clamp-2 transition-colors hover:text-primary"
                         >
-                            {career.name}
+                            {careerName(career, lang)}
                         </Link>
                     </h3>
                     {/* Коди расмӣ — маҳз ҳамин рақам ҳангоми супоридани
@@ -148,7 +153,7 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                     )}
 
                     <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-                        {career.description || career.purpose}
+                        {careerDescription(career, lang) || career.purpose}
                     </p>
                 </div>
 
@@ -163,10 +168,10 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                             {universities.map((uni) => (
                                 <span
                                     key={uni.id}
-                                    title={uni.city ? `${uni.name} — ${uni.city}` : uni.name}
+                                    title={uni.city ? `${universityName(uni, lang)} — ${uni.city}` : universityName(uni, lang)}
                                     className="max-w-full truncate rounded-lg bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground"
                                 >
-                                    {uni.name}
+                                    {universityName(uni, lang)}
                                 </span>
                             ))}
                             {extraCount > 0 && (

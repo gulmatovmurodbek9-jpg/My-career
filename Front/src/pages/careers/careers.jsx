@@ -191,6 +191,17 @@ const Careers = () => {
   const [aiQuestion, setAiQuestion] = useState(null);
   const [aiOptions, setAiOptions] = useState([]);
   const [aiChoice, setAiChoice] = useState(null);
+  /* Забоне, ки корбар саволро бо он навишт — сервер онро муайян мекунад. */
+  const [aiLang, setAiLang] = useState(null);
+
+  /*
+   * Тарҷума барои блоки AI.
+   *
+   * Дар саҳифаи русӣ корбар метавонад тоҷикӣ нависад — он гоҳ савол,
+   * вариантҳо ва шарҳҳо бояд тоҷикӣ бошанд, вагарна ҷавоб ба забони дигар
+   * мебарояд. `lng` холӣ бошад, i18next забони ҷориро мегирад.
+   */
+  const aiT = (key, options) => t(key, { ...(options || {}), lng: aiLang || undefined });
   const aiActive = Boolean(aiQuery);
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 350);
@@ -301,6 +312,7 @@ const Careers = () => {
         setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
         setAiFilters({ ...(data.filters || {}), understood: data.understood });
         setAiQuestion(data.question || null);
+        setAiLang(data.answerLang || null);
         setAiOptions(Array.isArray(data.options) ? data.options : []);
         setAiLoading(false);
         setLoading(false);
@@ -341,6 +353,7 @@ const Careers = () => {
     setAiQuestion(null);
     setAiOptions([]);
     setAiChoice(null);
+    setAiLang(null);
   };
 
   // Fetch clusters and cities once
@@ -470,43 +483,43 @@ const Careers = () => {
 
             {aiActive && !aiError && !aiLoading && meta.total === 0 && (
               <p className="mt-3 text-[14px] font-semibold text-muted-foreground">
-                {t("ai_search.empty")}
+                {aiT("ai_search.empty")}
               </p>
             )}
 
             {aiError && (
-              <p className="mt-3 text-[14px] font-semibold text-destructive">{t("ai_search.error")}</p>
+              <p className="mt-3 text-[14px] font-semibold text-destructive">{aiT("ai_search.error")}</p>
             )}
 
             {aiFilters && !aiError && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="text-[13px] font-bold text-muted-foreground">
-                  {aiFilters.understood ? t("ai_search.understood") : t("ai_search.not_understood")}
+                  {aiFilters.understood ? aiT("ai_search.understood") : aiT("ai_search.not_understood")}
                 </span>
 
                 {aiFilters.search && (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                    {t("ai_search.word", { word: aiFilters.search })}
+                    {aiT("ai_search.word", { word: aiFilters.search })}
                   </span>
                 )}
                 {aiFilters.clusterNumber && (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                    {clusterLabel(t, { clusterId: aiFilters.clusterNumber })}
+                    {clusterLabel(aiT, { clusterId: aiFilters.clusterNumber })}
                   </span>
                 )}
                 {aiFilters.maxPrice && (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                    {t("ai_search.price", { price: aiFilters.maxPrice.toLocaleString("ru-RU") })}
+                    {aiT("ai_search.price", { price: aiFilters.maxPrice.toLocaleString("ru-RU") })}
                   </span>
                 )}
                 {aiFilters.city && (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                    {t("ai_search.city", { city: aiFilters.city })}
+                    {aiT("ai_search.city", { city: aiFilters.city })}
                   </span>
                 )}
                 {aiFilters.onlyFree && (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                    {t("ai_search.free")}
+                    {aiT("ai_search.free")}
                   </span>
                 )}
 
@@ -516,7 +529,7 @@ const Careers = () => {
                   className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[13px] font-bold text-muted-foreground transition-colors hover:text-foreground focus-ring"
                 >
                   <X className="h-3.5 w-3.5" />
-                  {t("ai_search.clear")}
+                  {aiT("ai_search.clear")}
                 </button>
               </div>
             )}
@@ -527,19 +540,19 @@ const Careers = () => {
               <div className="mt-5 rounded-2xl border-2 border-primary/20 bg-primary/5 p-5">
                 <p className="flex items-start gap-2 text-[15px] font-bold text-foreground">
                   <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  {aiQuestion || t("ai_search.pick_field")}
+                  {aiQuestion || aiT("ai_search.pick_field")}
                 </p>
                 {/* Корт, на чип: бе шарҳ хонанда намедонад, ки «Энергетика ва
                     бинокорӣ» дар амал чӣ кор аст. */}
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {aiOptions.map((option, index) => {
                     const label = option.clusterNumber
-                      ? clusterLabel(t, { clusterId: option.clusterNumber })
+                      ? clusterLabel(aiT, { clusterId: option.clusterNumber })
                       : option.label;
                     /* Кластерҳо тавсифи тайёри тарҷумашуда доранд; гурӯҳҳои
                        AI шарҳи худро бо ҳамон забон меоранд. */
                     const hint = option.clusterNumber
-                      ? t(`career_page.cl_${option.clusterNumber}_desc`)
+                      ? aiT(`career_page.cl_${option.clusterNumber}_desc`)
                       : option.hint;
 
                     return (
@@ -573,7 +586,7 @@ const Careers = () => {
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
                   {aiChoice.clusterNumber
-                    ? clusterLabel(t, { clusterId: aiChoice.clusterNumber })
+                    ? clusterLabel(aiT, { clusterId: aiChoice.clusterNumber })
                     : aiChoice.label}
                 </span>
                 <button
@@ -585,7 +598,7 @@ const Careers = () => {
                   className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[13px] font-bold text-muted-foreground transition-colors hover:text-foreground focus-ring"
                 >
                   <X className="h-3.5 w-3.5" />
-                  {t("ai_search.other_options")}
+                  {aiT("ai_search.other_options")}
                 </button>
               </div>
             )}

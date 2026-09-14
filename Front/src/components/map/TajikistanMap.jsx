@@ -546,22 +546,28 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           ) : (
             <TileLayer
               key={isDark ? "dark" : "light"}
-              url={`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${
-                isDark ? "Dark" : "Light"
-              }_Gray_Base/MapServer/tile/{z}/{y}/{x}`}
-              attribution='Плиткаҳо &copy; <a href="https://www.esri.com/">Esri</a>'
-              maxZoom={16}
+              url={`https://basemaps.cartocdn.com/${isDark ? "dark_all" : "light_all"}/{z}/{x}/{y}.png`}
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/">CARTO</a>'
+              maxNativeZoom={19}
+              maxZoom={20}
             />
           )}
 
-          {/* Дар тасвири моҳвораӣ номи кӯчаву шаҳр нест — қабати шаффофи
-              номҳо болои он гузошта мешавад, вагарна мавқеъро фаҳмидан
-              душвор аст. */}
+          {/* Дар тасвири моҳвораӣ ному кӯча нест — қабати шаффофи номҳо
+              болои он меафтад, ҳамон тавре ки дар «гибрид»-и Google: худи
+              роҳро тасвир нишон медиҳад, номро ин қабат.
+
+              Пештар ин ҷо қабати Esri буд — вай барои Душанбе аз z16 боло
+              плиткаи холӣ бармегардонд, бинобар ин маҳз ҳангоми наздик
+              шудан ном нест мешуд. */}
           {satellite && (
             <TileLayer
-              key="labels"
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-              maxNativeZoom={16}
+              key={isDark ? "labels-dark" : "labels-light"}
+              url={`https://basemaps.cartocdn.com/${
+                isDark ? "dark_only_labels" : "light_only_labels"
+              }/{z}/{x}/{y}.png`}
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/">CARTO</a>'
+              maxNativeZoom={18}
               maxZoom={20}
             />
           )}

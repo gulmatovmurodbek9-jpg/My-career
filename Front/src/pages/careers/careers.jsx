@@ -468,6 +468,12 @@ const Careers = () => {
 
             <p className="mt-2 text-[13px] text-muted-foreground">{t("ai_search.example")}</p>
 
+            {aiActive && !aiError && !aiLoading && meta.total === 0 && (
+              <p className="mt-3 text-[14px] font-semibold text-muted-foreground">
+                {t("ai_search.empty")}
+              </p>
+            )}
+
             {aiError && (
               <p className="mt-3 text-[14px] font-semibold text-destructive">{t("ai_search.error")}</p>
             )}
@@ -517,11 +523,11 @@ const Careers = () => {
 
             {/* Саволи аниқкунанда. Ҳар вариант шумораи воқеии худро нишон
                 медиҳад — он дар сервер аз база ҳисоб шудааст, на аз модел. */}
-            {aiQuestion && aiOptions.length > 0 && !aiChoice && !aiError && (
+            {aiOptions.length > 0 && !aiChoice && !aiError && (
               <div className="mt-5 rounded-2xl border-2 border-primary/20 bg-primary/5 p-5">
                 <p className="flex items-start gap-2 text-[15px] font-bold text-foreground">
                   <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  {aiQuestion}
+                  {aiQuestion || t("ai_search.pick_field")}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {aiOptions.map((option, index) => (
@@ -531,7 +537,9 @@ const Careers = () => {
                       onClick={() => chooseAiOption(option)}
                       className="inline-flex items-center gap-2 rounded-xl border-2 border-border bg-card px-4 py-2.5 text-[14px] font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary focus-ring"
                     >
-                      {option.label}
+                      {option.clusterNumber
+                        ? clusterLabel(t, { clusterId: option.clusterNumber })
+                        : option.label}
                       <span className="rounded-full bg-muted px-2 py-0.5 text-[12px] font-black text-muted-foreground">
                         {option.count}
                       </span>
@@ -544,7 +552,9 @@ const Careers = () => {
             {aiChoice && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                  {aiChoice.label}
+                  {aiChoice.clusterNumber
+                    ? clusterLabel(t, { clusterId: aiChoice.clusterNumber })
+                    : aiChoice.label}
                 </span>
                 <button
                   type="button"

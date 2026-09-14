@@ -497,9 +497,9 @@ const Careers = () => {
                   {aiFilters.understood ? aiT("ai_search.understood") : aiT("ai_search.not_understood")}
                 </span>
 
-                {aiFilters.search && (
+                {(aiFilters.search || aiFilters.keywords?.length > 0) && (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
-                    {aiT("ai_search.word", { word: aiFilters.search })}
+                    {aiT("ai_search.word", { word: aiFilters.keywords?.length ? aiFilters.keywords.join(", ") : aiFilters.search })}
                   </span>
                 )}
                 {aiFilters.clusterNumber && (

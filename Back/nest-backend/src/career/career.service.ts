@@ -160,6 +160,26 @@ export class CareerService {
             );
         }
 
+        /*
+         * Ҷустуҷӯи AI: ҳар яке аз решаҳо дар НОМИ ихтисос («ё»).
+         *
+         * Танҳо дар ном, на дар тавсиф: дар матни дароз «дандон» ба ихтисосҳои
+         * бегона низ мерасид. Касби мушаххас бо номаш ёфт мешавад.
+         */
+        const anyTerms = (query.searchAny || [])
+            .map((term) => foldTajik(String(term).trim()))
+            .filter((term) => term.length >= 3);
+        if (anyTerms.length) {
+            qb.andWhere(new Brackets((where) => {
+                anyTerms.forEach((term, index) => {
+                    const condition = `${TAJIK_FOLD('career.name')} LIKE :anyTerm${index}`;
+                    const params = { [`anyTerm${index}`]: `%${term}%` };
+                    if (index === 0) where.where(condition, params);
+                    else where.orWhere(condition, params);
+                });
+            }));
+        }
+
         if (clusterId) {
             qb.andWhere('career.clusterId = :clusterId', { clusterId });
         }
@@ -281,6 +301,7 @@ export class CareerService {
             page: p,
             limit: l,
             ...(filters.search ? { search: filters.search } : {}),
+            ...(filters.searchAny?.length ? { searchAny: filters.searchAny } : {}),
             ...(filters.clusterId ? { clusterId: filters.clusterId } : {}),
             ...(filters.maxPrice ? { maxPrice: filters.maxPrice } : {}),
             ...(filters.city ? { city: filters.city } : {}),
@@ -346,16 +367,24 @@ export class CareerService {
             cityNames.join(', '),
             '',
             'ФОРМАТИ ҶАВОБ — танҳо JSON, бе матни дигар:',
-            '{"lang": "tj ё ru ё en", "search": "калима ё null", "clusterNumber": 1-5 ё null, "maxPrice": рақам ё null, "city": "ном ё null", "onlyFree": true ё false}',
+            '{"lang": "tj ё ru ё en", "keywords": ["решаи мушаххас", "решаи умумитар"], "clusterNumber": 1-5 ё null, "maxPrice": рақам ё null, "city": "ном ё null", "onlyFree": true ё false}',
             '',
             'ҚОИДАҲО:',
             '- "lang" забонест, ки корбар САВОЛРО бо он навиштааст: "tj", "ru" ё "en".',
             '  Диққат: тоҷикӣ метавонад бе ҳарфҳои ӣ, ӯ, ҳ, ҷ навишта шавад —',
             '  «Духтур мехохам шавам» тоҷикӣ аст, на русӣ.',
-            '- "search" бояд калимае бошад, ки дар НОМИ ихтисоси расмӣ вомехӯрад:',
-            '  «барномасоз», «ҳуқуқ», «тиб», «муҳандис», «иқтисод», «омӯзгор».',
-            '  Саволро аз ҳар забон бифаҳм: «программист», «юрист», «врач» низ',
-            '  ба ҳамон калимаи тоҷикӣ табдил меёбанд.',
+            '- "keywords": 1–3 реша, ки дар НОМИ ихтисоси расмӣ вомехӯранд,',
+            '  аз МУШАХХАСТАРИН ба умумитарин. Реша кӯтоҳ бошад, то шаклҳои',
+            '  гуногунро ёбад: «стоматолог», на «стоматологӣ».',
+            '- Агар корбар КАСБИ МУШАХХАС гӯяд, решаҳои ҳамон касбро гузор —',
+            '  соҳаи умумиро НАГУЗОР. Намунаҳо:',
+            '  «духтури дандон», «стоматолог», «дантист» → ["стоматолог", "дандон"]',
+            '  «барномасоз», «программист» → ["барномасоз", "информатика"]',
+            '  «юрист», «ҳуқуқшинос» → ["ҳуқуқ"]',
+            '  «муҳандис», «инженер» → ["муҳандис"]',
+            '  «духтур», «врач» (бе касби мушаххас) → ["тиб", "табобат"]',
+            '- Саволро аз ҳар забон бифаҳм, вале решаҳо ҲАМЕША тоҷикӣ бошанд:',
+            '  номи ихтисосҳо дар база тоҷикӣ аст.',
             '  Номи касби ғайрирасмиро (масалан «Дизайнери UX/UI») нанавис.',
             '- Агар корбар нархро гӯяд («то 4000 сомонӣ»), онро ба "maxPrice" гузор.',
             '- Агар «ройгон», «бюджет» ё «бепул» гӯяд, "onlyFree" = true.',
@@ -381,9 +410,16 @@ export class CareerService {
 
         const filters: any = {};
 
-        if (typeof parsed?.search === 'string' && parsed.search.trim()) {
-            filters.search = parsed.search.trim().slice(0, 40);
-        }
+        /* Решаҳо: массив аз модели нав, сатри ягона аз шакли пештара. */
+        const rawKeywords: unknown[] = Array.isArray(parsed?.keywords)
+            ? parsed.keywords
+            : typeof parsed?.search === 'string' ? [parsed.search] : [];
+        const keywords = [...new Set(
+            rawKeywords
+                .filter((k): k is string => typeof k === 'string')
+                .map((k) => k.trim().slice(0, 40))
+                .filter((k) => k.length >= 3),
+        )].slice(0, 3);
 
         const clusterNumber = Number(parsed?.clusterNumber);
         if (clusterNumber >= 1 && clusterNumber <= 5) {
@@ -406,6 +442,39 @@ export class CareerService {
         }
 
         if (parsed?.onlyFree === true) filters.onlyFree = true;
+
+        /*
+         * Решаҳо аввал дар НОМ ҷуста мешаванд, ҳамаашон якҷо.
+         *
+         * Кластери модел танҳо тахмин аст. Агар бо он решаҳо ҳеҷ чиз наёбанд,
+         * вале бе он меёбанд — кластер партофта мешавад: номи касб аз тахмини
+         * соҳа боэътимодтар аст.
+         *
+         * Агар дар ном ҳеҷ чиз набошад, решаи умумитарин бо ҷустуҷӯи пештара
+         * (ном ва тавсиф) санҷида мешавад.
+         */
+        if (keywords.length) {
+            let byName = await this.findAll(toDto({ ...filters, searchAny: keywords }, 1, 1));
+
+            if (!byName.meta.total && filters.clusterId) {
+                const retry = await this.findAll(
+                    toDto({ ...filters, clusterId: undefined, searchAny: keywords }, 1, 1),
+                );
+                if (retry.meta.total) {
+                    delete filters.clusterId;
+                    delete filters.clusterNumber;
+                    delete filters.clusterName;
+                    byName = retry;
+                }
+            }
+
+            if (byName.meta.total) {
+                filters.searchAny = keywords;
+                filters.keywords = keywords;
+            } else {
+                filters.search = keywords[keywords.length - 1];
+            }
+        }
 
         if (!Object.keys(filters).length) return finish(false, { search: question });
 
@@ -481,7 +550,12 @@ export class CareerService {
             if (seen.has(key)) continue;
             seen.add(key);
 
-            const optionFilters = { ...filters, search: keyword };
+            const optionFilters: any = { ...filters, search: keyword };
+            /* Frontend ҳангоми пахш танҳо search, кластер, нарх, шаҳр ва ройгонро
+               мефиристад. Агар searchAny ин ҷо монад, шумораи вариант аз рӯйхати
+               пахшшуда фарқ мекард. */
+            delete optionFilters.searchAny;
+            delete optionFilters.keywords;
             const check = await this.findAll(toDto(optionFilters, 1, 1));
             if (!check.meta.total) continue;
 

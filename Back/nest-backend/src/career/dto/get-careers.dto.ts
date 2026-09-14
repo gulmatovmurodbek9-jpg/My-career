@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -7,6 +7,11 @@ export class GetCareersDto {
     @IsOptional()
     @IsString()
     search?: string;
+    @ApiPropertyOptional({ description: 'Any of these words in the specialty name (used by AI search)', type: [String] })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    searchAny?: string[];
 
     @ApiPropertyOptional({ description: 'Cluster ID to filter by' })
     @IsOptional()

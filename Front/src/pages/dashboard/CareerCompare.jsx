@@ -101,6 +101,8 @@ const labels = {
         factFreeYes: "Ҳаст",
         factFreeNo: "Нест",
         factsNote: "Ин рақамҳо аз базаи мо гирифта шудаанд, на аз AI.",
+        savedTitle: "Захирашуда",
+        suggestedGroupTitle: "Аз рӯи натиҷаи санҷиш",
         noComparisonData: "Маълумоти муқоисавӣ барои ин касбҳо ҳанӯз дастрас нест.",
     },
     ru: {
@@ -166,6 +168,8 @@ const labels = {
         factFreeYes: "Есть",
         factFreeNo: "Нет",
         factsNote: "Эти цифры взяты из нашей базы, а не от AI.",
+        savedTitle: "Сохранённые",
+        suggestedGroupTitle: "По результатам теста",
         noComparisonData: "Данные для сравнения этих профессий пока недоступны.",
     },
     en: {
@@ -231,6 +235,8 @@ const labels = {
         factFreeYes: "Yes",
         factFreeNo: "No",
         factsNote: "These figures come from our database, not from the AI.",
+        savedTitle: "Saved",
+        suggestedGroupTitle: "From your quiz result",
         noComparisonData: "Comparison data is not available for these careers yet.",
     },
 };
@@ -552,6 +558,19 @@ const CareerCompare = () => {
         return Array.from(unique.values());
     }, [savedCareers, suggestedCareers]);
 
+    /* Захирашуда аввал, баъд пешниҳодҳои санҷиш. Сарлавҳаҳо ҳамчун сатри
+       ҷадвал мераванд, то худи кортҳо бетағйир монанд. */
+    const groupedCareers = useMemo(() => {
+        const saved = displayCareers.filter((career) => career.isSaved);
+        const suggested = displayCareers.filter((career) => !career.isSaved);
+        return [
+            ...(saved.length ? [{ __header: t.savedTitle }] : []),
+            ...saved,
+            ...(suggested.length ? [{ __header: t.suggestedGroupTitle }] : []),
+            ...suggested,
+        ];
+    }, [displayCareers, t]);
+
     /* Сабтҳои пурраи ихтисосҳои интихобшуда — барои ҷадвали далелҳо.
        Тартиб ҳамон аст, ки корбар интихоб кард. */
     const selectedFacts = useMemo(
@@ -749,7 +768,18 @@ const CareerCompare = () => {
                         </div>
                     ) : displayCareers.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                            {displayCareers.map((career, idx) => {
+                            {groupedCareers.map((career, idx) => {
+                                if (career.__header) {
+                                    return (
+                                        <p
+                                            key={`header-${idx}`}
+                                            className="col-span-full mt-1 text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground"
+                                        >
+                                            {career.__header}
+                                        </p>
+                                    );
+                                }
+
                                 const isSelected = careers.includes(career.name);
                                 return (
                                     <motion.button

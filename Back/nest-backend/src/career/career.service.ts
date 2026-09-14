@@ -250,6 +250,125 @@ export class CareerService {
         return out as T;
     }
 
+
+    /**
+     * Ҷустуҷӯи озод: саволи бо забони одӣ навишташуда → филтрҳои ҷустуҷӯ.
+     *
+     * AI дар ин ҷо ҷавоб намесозад — вай танҳо саволро мефаҳмад. «Мехоҳам
+     * барномасоз шавам, донишгоҳ то 4000 сомонӣ» ба
+     * `{ search: "барномасоз", maxPrice: 4000 }` табдил меёбад, ва баъд
+     * ҳамон `findAll`-и муқаррарӣ кор мекунад. Яъне рӯйхат ҳамеша аз база
+     * меояд ва ҳар филтрро дар экран нишон додан мумкин аст — модел на
+     * ихтисос месозад, на нарх.
+     *
+     * Агар AI дастрас набошад ё JSON вайрон бошад, худи матни савол ҳамчун
+     * калимаи ҷустуҷӯ меравад: корбар бе натиҷа намемонад.
+     */
+    async aiSearch(
+        rawQuery: string,
+        lang = 'tj',
+        page = 1,
+        limit = 12,
+    ): Promise<{ data: Career[]; meta: any; filters: any; understood: boolean }> {
+        const question = (rawQuery || '').trim().slice(0, 300);
+        const plain = async (understood: boolean, filters: any = {}) => {
+            const result = await this.findAll({
+                page,
+                limit,
+                ...(filters.search ? { search: filters.search } : {}),
+                ...(filters.clusterId ? { clusterId: filters.clusterId } : {}),
+                ...(filters.maxPrice ? { maxPrice: filters.maxPrice } : {}),
+                ...(filters.city ? { city: filters.city } : {}),
+                ...(filters.onlyFree ? { freeSeatsOnly: 'true' } : {}),
+            } as GetCareersDto);
+            return { ...result, filters, understood };
+        };
+
+        if (!question) return plain(false);
+
+        /* Шаҳр танҳо аз рӯйхати воқеӣ қабул мешавад — вагарна модел шаҳри
+           набударо менависад ва ҷустуҷӯ холӣ бармегардад. */
+        const rows: Array<{ city: string }> = await this.careerRepository.manager.query(
+            'SELECT DISTINCT city FROM universities WHERE city IS NOT NULL',
+        );
+        const cityNames = rows.map((r) => r.city).filter(Boolean);
+
+        const prompt = [
+            'Ту ёрирасони ҷустуҷӯи ихтисосҳои Маркази миллии тестии Тоҷикистон ҳастӣ.',
+            'Саволи корбарро ба филтрҳои ҷустуҷӯ табдил деҳ.',
+            '',
+            'САВОЛИ КОРБАР:',
+            question,
+            '',
+            'ШАҲРҲОИ МАВҶУД:',
+            cityNames.join(', '),
+            '',
+            'ФОРМАТИ ҶАВОБ — танҳо JSON, бе матни дигар:',
+            '{"search": "калима ё null", "clusterNumber": 1-5 ё null, "maxPrice": рақам ё null, "city": "ном ё null", "onlyFree": true ё false}',
+            '',
+            'ҚОИДАҲО:',
+            '- "search" бояд калимае бошад, ки дар НОМИ ихтисоси расмӣ вомехӯрад:',
+            '  «барномасоз», «ҳуқуқ», «тиб», «муҳандис», «иқтисод», «омӯзгор».',
+            '  Номи касби ғайрирасмиро (масалан «Дизайнери UX/UI») нанавис.',
+            '- Агар корбар нархро гӯяд («то 4000 сомонӣ»), онро ба "maxPrice" гузор.',
+            '- Агар «ройгон», «бюджет» ё «бепул» гӯяд, "onlyFree" = true.',
+            '- Кластерҳо: 1 — табиӣ ва техникӣ, 2 — иқтисод ва география,',
+            '  3 — филология, педагогика ва санъат, 4 — ҷомеашиносӣ ва ҳуқуқ,',
+            '  5 — тиб, биология ва варзиш.',
+            '- Агар чизе маълум набошад, null гузор. Тахмин назан.',
+        ].join('\n');
+
+        let parsed: any = null;
+        try {
+            let raw = (await this.aiService.generateContent(prompt)).trim();
+            if (raw.startsWith('```json')) raw = raw.slice(7);
+            else if (raw.startsWith('```')) raw = raw.slice(3);
+            if (raw.endsWith('```')) raw = raw.slice(0, -3);
+            parsed = JSON.parse(raw.trim());
+        } catch (error) {
+            /* Модел ё афтод, ё JSON-и вайрон дод — саволро ҳамчун калима мегирем. */
+            return plain(false, { search: question });
+        }
+
+        /* Ҳеҷ қимати модел бе санҷиш ба дархост намеравад. */
+        const filters: any = {};
+
+        if (typeof parsed?.search === 'string' && parsed.search.trim()) {
+            filters.search = parsed.search.trim().slice(0, 40);
+        }
+
+        const clusterNumber = Number(parsed?.clusterNumber);
+        if (clusterNumber >= 1 && clusterNumber <= 5) {
+            const cluster = await this.clusterRepository.findOne({
+                where: { clusterId: clusterNumber },
+            });
+            if (cluster) {
+                filters.clusterId = cluster.id;
+                filters.clusterNumber = clusterNumber;
+                filters.clusterName = cluster.clusterName;
+            }
+        }
+
+        const maxPrice = Number(parsed?.maxPrice);
+        if (Number.isFinite(maxPrice) && maxPrice > 0 && maxPrice <= 100000) {
+            filters.maxPrice = Math.round(maxPrice);
+        }
+
+        if (typeof parsed?.city === 'string') {
+            const match = cityNames.find(
+                (name) => name.toLowerCase() === parsed.city.trim().toLowerCase(),
+            );
+            if (match) filters.city = match;
+        }
+
+        if (parsed?.onlyFree === true) filters.onlyFree = true;
+
+        /* Агар модел ҳеҷ филтр надода бошад, ҳадди ақал матни саволро ҷӯем. */
+        if (!Object.keys(filters).length) return plain(false, { search: question });
+
+        return plain(true, filters);
+    }
+
     findOne(id: string): Promise<Career | null> {
         return this.careerRepository.findOne({ where: { id }, relations: ['cluster', 'universities'] });
     }

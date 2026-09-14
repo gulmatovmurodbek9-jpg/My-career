@@ -134,6 +134,23 @@ export class CareerController {
         return { message: 'Likes recalculated successfully' };
     }
 
+    @Post('ai-search')
+    @ApiOperation({ summary: 'Free-text search: AI turns the question into filters' })
+    async aiSearch(
+        @Body() body: { query: string; lang?: string; page?: number; limit?: number },
+    ) {
+        const result = await this.careerService.aiSearch(
+            body?.query,
+            body?.lang,
+            body?.page,
+            body?.limit,
+        );
+        return {
+            ...result,
+            data: result.data.map((c) => this.careerService.localize(c, body?.lang)),
+        };
+    }
+
     @Post('match')
     @ApiOperation({ summary: 'Match careers based on user quiz results' })
     async match(@Body() body: { scores: any; lang?: string }) {

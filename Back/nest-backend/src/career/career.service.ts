@@ -377,7 +377,7 @@ export class CareerService {
         if (!Object.keys(filters).length) return finish(false, { search: question });
 
         /* ── Қадами 2: агар натиҷа зиёд бошад, аниқ мекунем ─────────────── */
-        const broad = await this.findAll(toDto(filters, 1, 40));
+        const broad = await this.findAll(toDto(filters, 1, 24));
 
         /*
          * Савол танҳо вақте дода мешавад, ки воқеан интихоб лозим бошад.
@@ -388,7 +388,7 @@ export class CareerService {
             return finish(true, filters);
         }
 
-        const names = broad.data.map((c) => c.name).filter(Boolean).slice(0, 40);
+        const names = broad.data.map((c) => c.name).filter(Boolean).slice(0, 24);
 
         const groupPrompt = [
             'Ту мушовири касбӣ ҳастӣ ва бо хонандаи мактаб сӯҳбат мекунӣ.',
@@ -398,7 +398,7 @@ export class CareerService {
             'Дар базаи мо ин ихтисосҳо ба ӯ мувофиқанд:',
             ...names.map((n) => '- ' + n),
             '',
-            'ВАЗИФА: ин рӯйхатро ба 3–5 гурӯҳи фаҳмо тақсим кун ва як саволи кӯтоҳ',
+            'ВАЗИФА: ин рӯйхатро ба 3–4 гурӯҳи фаҳмо тақсим кун ва як саволи кӯтоҳ',
             'нависед, ки хонанда яке аз гурӯҳҳоро интихоб кунад.',
             '',
             'ФОРМАТИ ҶАВОБ — танҳо JSON:',

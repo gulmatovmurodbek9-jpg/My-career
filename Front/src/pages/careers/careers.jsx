@@ -12,8 +12,9 @@ import LucideIconRenderer from "../../components/admin/LucideIconRenderer";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
 import { clusterLabel } from "../../lib/clusterLabel";
+import { Sparkles, X } from "lucide-react";
 import { usePageMeta } from "../../lib/usePageMeta";
-import { withLang } from "../../lib/apiLang";
+import { withLang, currentApiLang } from "../../lib/apiLang";
 
 const LIMIT = 12; // items per page
 
@@ -177,6 +178,15 @@ const Careers = () => {
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  /* Ҷустуҷӯи AI: матни супоридашуда, филтрҳое, ки модел фаҳмид, ва ҳолат.
+     Он бо ҷустуҷӯи оддӣ дар як вақт кор намекунад — вагарна ду дархост
+     рӯйхатро аз ҳам мегирифтанд. */
+  const [aiQuery, setAiQuery] = useState("");
+  const [aiFilters, setAiFilters] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(false);
+  const aiActive = Boolean(aiQuery);
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 350);
     return () => clearTimeout(t);
@@ -200,6 +210,9 @@ const Careers = () => {
    * дар development қариб ҳамеша рух медод.
    */
   useEffect(() => {
+    /* Натиҷаи AI аз эффекти худаш меояд. */
+    if (aiActive) return;
+
     const controller = new AbortController();
     setLoading(true);
 
@@ -230,7 +243,55 @@ const Careers = () => {
     return () => controller.abort();
     /* Забон дар вобастагиҳост: бе он рӯйхат ҳангоми иваз шудани забон
        бо матни кӯҳна мемонад. */
-  }, [currentPage, debouncedSearch, selectedCluster, priceFilter, cityFilter, i18n.language]);
+  }, [currentPage, debouncedSearch, selectedCluster, priceFilter, cityFilter, i18n.language, aiActive]);
+
+  /* Ҷустуҷӯи AI. Танҳо бо пахши тугма ё Enter — на бо ҳар ҳарф: ҳар даъват
+     як дархост ба модел аст. */
+  useEffect(() => {
+    if (!aiQuery) return;
+
+    const controller = new AbortController();
+    setAiLoading(true);
+    setAiError(false);
+    setLoading(true);
+
+    axios
+      .post(
+        `${API}/careers/ai-search`,
+        { query: aiQuery, lang: currentApiLang() || "tj", page: currentPage, limit: LIMIT },
+        { signal: controller.signal },
+      )
+      .then(({ data }) => {
+        setCareers(data.data || []);
+        setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
+        setAiFilters({ ...(data.filters || {}), understood: data.understood });
+        setAiLoading(false);
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (axios.isCancel(error)) return;
+        console.error("AI search error:", error);
+        setAiError(true);
+        setAiFilters(null);
+        setAiLoading(false);
+        setLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [aiQuery, currentPage, i18n.language]);
+
+  const runAiSearch = () => {
+    const text = searchQuery.trim();
+    if (!text) return;
+    setCurrentPage(1);
+    setAiQuery(text);
+  };
+
+  const clearAiSearch = () => {
+    setAiQuery("");
+    setAiFilters(null);
+    setAiError(false);
+  };
 
   // Fetch clusters and cities once
   useEffect(() => {
@@ -324,13 +385,85 @@ const Careers = () => {
               />
               <input
                 type="search"
-                placeholder={t("careers_page.search_placeholder", "Ҷустуҷӯи ихтисос...")}
+                placeholder={t("ai_search.placeholder")}
                 aria-label={t("careers_page.search_placeholder", "Ҷустуҷӯи ихтисос...")}
-                className="min-h-[3.5rem] w-full rounded-xl border-2 border-border bg-card pl-14 pr-5 text-[17px] text-foreground transition-colors placeholder:text-muted-foreground focus-ring"
+                className="min-h-[3.5rem] w-full rounded-xl border-2 border-border bg-card pl-14 pr-28 sm:pr-44 text-[17px] text-foreground transition-colors placeholder:text-muted-foreground focus-ring"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (aiActive) clearAiSearch();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    runAiSearch();
+                  }
+                }}
               />
+
+              {/* Тугмаи AI дар дохили қуттӣ: савол ҳамон ҷое супорида мешавад,
+                  ки навишта шуд. */}
+              <button
+                type="button"
+                onClick={runAiSearch}
+                disabled={!searchQuery.trim() || aiLoading}
+                className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40 focus-ring"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {aiLoading ? t("ai_search.searching") : t("ai_search.button")}
+                </span>
+              </button>
             </div>
+
+            <p className="mt-2 text-[13px] text-muted-foreground">{t("ai_search.example")}</p>
+
+            {aiError && (
+              <p className="mt-3 text-[14px] font-semibold text-destructive">{t("ai_search.error")}</p>
+            )}
+
+            {aiFilters && !aiError && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="text-[13px] font-bold text-muted-foreground">
+                  {aiFilters.understood ? t("ai_search.understood") : t("ai_search.not_understood")}
+                </span>
+
+                {aiFilters.search && (
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                    {t("ai_search.word", { word: aiFilters.search })}
+                  </span>
+                )}
+                {aiFilters.clusterNumber && (
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                    {clusterLabel(t, { clusterId: aiFilters.clusterNumber })}
+                  </span>
+                )}
+                {aiFilters.maxPrice && (
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                    {t("ai_search.price", { price: aiFilters.maxPrice.toLocaleString("ru-RU") })}
+                  </span>
+                )}
+                {aiFilters.city && (
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                    {t("ai_search.city", { city: aiFilters.city })}
+                  </span>
+                )}
+                {aiFilters.onlyFree && (
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                    {t("ai_search.free")}
+                  </span>
+                )}
+
+                <button
+                  type="button"
+                  onClick={clearAiSearch}
+                  className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[13px] font-bold text-muted-foreground transition-colors hover:text-foreground focus-ring"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  {t("ai_search.clear")}
+                </button>
+              </div>
+            )}
 
             <div className="mt-6 flex items-center justify-between gap-4">
               <p className="text-[15px] text-muted-foreground">

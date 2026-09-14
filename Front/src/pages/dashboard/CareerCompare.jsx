@@ -446,23 +446,6 @@ const CareerCompare = () => {
     /* Забон барои тарҷумаи номҳо: сервер барои пешниҳодҳо `nameTranslated`
        медиҳад, вале захираҳо бо сутуни `translations` меоянд. */
     const apiLang = currentApiLang();
-
-    /* Сабтҳои пурраи ихтисосҳои интихобшуда — барои ҷадвали далелҳо.
-       Тартиб ҳамон аст, ки корбар интихоб кард. */
-    const selectedFacts = useMemo(
-        () => careers.map((name) => displayCareers.find((c) => c.name === name)).filter(Boolean),
-        [careers, displayCareers],
-    );
-
-    /* Нарх аз ҳадди поён то боло: як ихтисос дар донишгоҳҳои гуногун
-       нархи гуногун дорад. */
-    const tuitionText = (career) => {
-        const min = career.minTuitionFee ?? career.tuitionFee;
-        const max = career.maxTuitionFee ?? career.tuitionFee;
-        if (!min && !max) return "—";
-        const fmt = (value) => Number(value).toLocaleString("ru-RU");
-        return !max || min === max ? fmt(min) : `${fmt(min)} – ${fmt(max)}`;
-    };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isRateLimit, setIsRateLimit] = useState(false);
@@ -568,6 +551,23 @@ const CareerCompare = () => {
 
         return Array.from(unique.values());
     }, [savedCareers, suggestedCareers]);
+
+    /* Сабтҳои пурраи ихтисосҳои интихобшуда — барои ҷадвали далелҳо.
+       Тартиб ҳамон аст, ки корбар интихоб кард. */
+    const selectedFacts = useMemo(
+        () => careers.map((name) => displayCareers.find((c) => c.name === name)).filter(Boolean),
+        [careers, displayCareers],
+    );
+
+    /* Нарх аз ҳадди поён то боло: як ихтисос дар донишгоҳҳои гуногун
+       нархи гуногун дорад. */
+    const tuitionText = (career) => {
+        const min = career.minTuitionFee ?? career.tuitionFee;
+        const max = career.maxTuitionFee ?? career.tuitionFee;
+        if (!min && !max) return "—";
+        const fmt = (value) => Number(value).toLocaleString("ru-RU");
+        return !max || min === max ? fmt(min) : `${fmt(min)} – ${fmt(max)}`;
+    };
 
     useEffect(() => {
         if (careers.length > 0 || displayCareers.length < 2) return;

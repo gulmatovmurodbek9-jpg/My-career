@@ -559,7 +559,9 @@ export class CareerService {
             const optionFilters: any = { ...filters, search: keyword };
             delete optionFilters.keywords;
             const check = await this.findAll(toDto(optionFilters, 1, 1));
-            if (!check.meta.total) continue;
+            /* Варианти бенатиҷа ва вариантеки ҳамаи натиҷаро мегирад — ҳарду
+               чизеро интихоб намекунанд: «Ҳифзи ҳуқуқ (35)» аз 35 савол набуд. */
+            if (!check.meta.total || check.meta.total >= broad.meta.total) continue;
 
             options.push({ label, hint, count: check.meta.total, filters: optionFilters });
             if (options.length >= 5) break;

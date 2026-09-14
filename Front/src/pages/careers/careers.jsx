@@ -283,6 +283,10 @@ const Careers = () => {
             ...(aiChoice.filters?.city && { city: aiChoice.filters.city }),
             ...(aiChoice.filters?.onlyFree && { freeSeatsOnly: "true" }),
           }),
+          /* Массив бе қавс: searchAny=a&searchAny=b. Axios бо пешфарз
+             searchAny[]=a мефиристад, сервер ин калидро намешиносад ва
+             ҳамаи 884 ихтисосро бармегардонд. */
+          paramsSerializer: { indexes: null },
           signal: controller.signal,
         })
         .then(({ data }) => {

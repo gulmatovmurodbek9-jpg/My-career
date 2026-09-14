@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { LazyPsychologicalProfile } from "../../components/PsychologicalProfile";
 import { MMT_MAX, topCluster } from "../../lib/mmtClusters";
 import MatchCard from "../../components/MatchCard";
+import SpecialtyCard from "../../components/jobCard";
 import MatchExplainModal from "../../components/MatchExplainModal";
 import { currentApiLang } from "../../lib/apiLang";
 import { useAuthStore } from "../../store/authStore";
@@ -40,6 +41,9 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [likedIds, setLikedIds] = useState(new Set());
     const [savedIds, setSavedIds] = useState(new Set());
+    /* Худи сабтҳо, на танҳо шиносаҳо: рӯйхат дар поёни саҳифа нишон
+       дода мешавад. */
+    const [savedCareers, setSavedCareers] = useState([]);
 
     /*
      * Ҳисоби бо қайд сабтшуда `name` надорад, ва корт `user.name` -ро рост
@@ -84,6 +88,7 @@ const Dashboard = () => {
         if (user) {
             setLikedIds(new Set((user.likedCareers || []).map(c => c.id)));
             setSavedIds(new Set((user.savedCareers || []).map(c => c.id)));
+            if (Array.isArray(user.savedCareers)) setSavedCareers(user.savedCareers);
         }
     }, [user?.likedCareers, user?.savedCareers]);
 
@@ -96,6 +101,7 @@ const Dashboard = () => {
         ]).then(([likedRes, savedRes]) => {
             setLikedIds(new Set((likedRes.data || []).map(c => c.id)));
             setSavedIds(new Set((savedRes.data || []).map(c => c.id)));
+            if (Array.isArray(savedRes.data)) setSavedCareers(savedRes.data);
         }).catch(() => { });
     }, [token]);
 
@@ -387,6 +393,47 @@ const Dashboard = () => {
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </Link>
+                    </motion.div>
+                )}
+                {/* Ихтисосҳои захирашуда.
+                    Берун аз шарти тавсияҳост: корбаре, ки ҳанӯз санҷиш
+                    насупоридааст, метавонад аллакай чанд ихтисосро захира
+                    карда бошад. */}
+                {savedCareers.length > 0 && (
+                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="col-span-12 grid grid-cols-12 gap-5">
+                        <motion.div variants={itemVariants} className="col-span-12 pt-8">
+                            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+                                <div className="flex items-center gap-3">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                                        <Bookmark className="h-5 w-5 text-primary" />
+                                    </span>
+                                    <div>
+                                        <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter">
+                                            {t('common.saved', 'Захираҳо')}
+                                        </h3>
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            {savedCareers.length} {t('common.specialty', 'Ихтисос').toLowerCase()}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Link
+                                    to="/favorites"
+                                    className="rounded-full border border-border px-4 py-2 text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors hover:text-primary"
+                                >
+                                    {t('common.details', 'Маълумот')}
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {savedCareers.map((career) => (
+                            <motion.div
+                                key={career.id}
+                                variants={itemVariants}
+                                className="col-span-12 md:col-span-6 lg:col-span-4"
+                            >
+                                <SpecialtyCard specialty={career} />
+                            </motion.div>
+                        ))}
                     </motion.div>
                 )}
             </div>

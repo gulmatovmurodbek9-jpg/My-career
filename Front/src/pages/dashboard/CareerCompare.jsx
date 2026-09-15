@@ -4,7 +4,7 @@ import {
     ArrowLeft, Search, Scale, Sparkles, Trophy, ThumbsUp, ThumbsDown,
     Target, TrendingUp, GraduationCap, DollarSign, BarChart3,
     Loader2, AlertCircle, CheckCircle, XCircle, Zap, Crown,
-    BrainCircuit, ChevronRight, Plus, X, Star, ArrowUpRight, Bookmark
+    BrainCircuit, ChevronRight, Plus, X, Star, ArrowUpRight, Bookmark, Lightbulb
 } from "lucide-react";
 import { Link } from "react-router";
 import AiBotIcon from "../../components/AiBotIcon";
@@ -102,6 +102,11 @@ const labels = {
         factFreeYes: "Ҳаст",
         factFreeNo: "Нест",
         factsNote: "Ин рақамҳо аз базаи мо гирифта шудаанд, на аз AI.",
+        alternativesTitle: "Вариантҳои беҳтар",
+        alternativesDesc: "AI инҳоро аз базаи ихтисосҳои ММТ интихоб кард: шояд ба саволи шумо аз ихтисосҳои интихобшуда беҳтар мувофиқ бошанд. Ҳамаашон воқеӣ ҳастанд ва ба онҳо ҳуҷҷат супоридан мумкин аст.",
+        viewSpecialty: "Дидани ихтисос",
+        addToCompare: "Ба муқоиса илова кардан",
+        addedToCompare: "Илова шуд",
         factsPurpose: "Ин ҷадвал ҷавоби AI-ро месанҷад. Коди ММТ, муддат, нарх, ҷойи ройгон ва шумораи донишгоҳҳо рост аз базаи расмии мо гирифта шудаанд, на аз AI. Агар AI дар боло чизи дигар гӯяд, ба ин ҷадвал бовар кунед.",
         savedTitle: "Захирашуда",
         savedDesc: "Ихтисосҳое, ки шумо захира кардаед",
@@ -171,6 +176,11 @@ const labels = {
         factFreeYes: "Есть",
         factFreeNo: "Нет",
         factsNote: "Эти цифры взяты из нашей базы, а не от AI.",
+        alternativesTitle: "Варианты получше",
+        alternativesDesc: "AI выбрал их из базы специальностей НЦТ: возможно, они лучше подходят под ваш вопрос, чем выбранные. Все они реальные, и на них можно подать документы.",
+        viewSpecialty: "Открыть специальность",
+        addToCompare: "Добавить к сравнению",
+        addedToCompare: "Добавлено",
         factsPurpose: "Эта таблица проверяет ответ AI. Код НЦТ, срок обучения, цена, бюджетные места и число университетов взяты прямо из нашей официальной базы, а не от AI. Если выше AI говорит иначе — верьте таблице.",
         savedTitle: "Сохранённые",
         savedDesc: "Специальности, которые вы сохранили",
@@ -240,6 +250,11 @@ const labels = {
         factFreeYes: "Yes",
         factFreeNo: "No",
         factsNote: "These figures come from our database, not from the AI.",
+        alternativesTitle: "Better options",
+        alternativesDesc: "The AI picked these from the NTC specialty database as possibly a better fit for your question than the ones you selected. All of them are real and open for applications.",
+        viewSpecialty: "View specialty",
+        addToCompare: "Add to comparison",
+        addedToCompare: "Added",
         factsPurpose: "This table checks the AI's answer. The NTC code, duration, price, free places and number of universities come straight from our official database, not from the AI. If the AI says something different above, trust this table.",
         savedTitle: "Saved",
         savedDesc: "The specialties you saved",
@@ -437,6 +452,9 @@ const normalizeCompareResponse = (payload, requestedCareers = []) => {
             rootData.customAnalysis ||
             rootData.detailedAnswer ||
             "",
+        /* Вариантҳои беҳтар: сервер онҳоро бо база санҷида, id ва рамз илова кардааст. */
+        alternatives: toArray(comparisonRoot.alternatives ?? rootData.alternatives ?? [])
+            .filter((item) => item && typeof item.name === "string" && item.name.trim()),
         raw: root,
     };
 };
@@ -1305,6 +1323,51 @@ const CareerCompare = () => {
                                     </div>
                                 )}
                             </motion.div>
+
+                            {/* ── Вариантҳои беҳтар аз база ──
+                                Танҳо ихтисосҳои воқеии ММТ: сервер ҳар номро бо база санҷидааст. */}
+                            {comparisonData.alternatives?.length > 0 && (
+                                <motion.div variants={itemVariants}>
+                                    <SectionHeader icon={Lightbulb} title={t.alternativesTitle} subtitle={t.alternativesDesc} />
+                                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                                        {comparisonData.alternatives.map((alt) => {
+                                            const alreadyAdded = careers.includes(alt.name);
+                                            return (
+                                                <div key={alt.id || alt.name} className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-4">
+                                                    <div className="space-y-1">
+                                                        {alt.code && <span className="font-mono text-xs text-muted-foreground">{alt.code}</span>}
+                                                        <h4 className="text-base font-bold leading-snug text-foreground">{alt.name}</h4>
+                                                        {alt.cluster && <p className="text-[13px] text-muted-foreground">{alt.cluster}</p>}
+                                                    </div>
+                                                    {alt.reason && (
+                                                        <p className="flex-1 text-[15px] leading-relaxed text-foreground/80">{alt.reason}</p>
+                                                    )}
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {alt.id && (
+                                                            <Link
+                                                                to={`/info/${alt.id}`}
+                                                                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-[13px] font-semibold text-foreground hover:border-primary/40"
+                                                            >
+                                                                {t.viewSpecialty}
+                                                                <ArrowUpRight className="h-3.5 w-3.5" />
+                                                            </Link>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => toggleCareer(alt.name)}
+                                                            disabled={alreadyAdded || careers.length >= 5}
+                                                            className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-[13px] font-semibold text-primary disabled:opacity-50"
+                                                        >
+                                                            {alreadyAdded ? <CheckCircle className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                                                            {alreadyAdded ? t.addedToCompare : t.addToCompare}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </motion.div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

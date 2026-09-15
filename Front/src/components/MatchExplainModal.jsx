@@ -147,26 +147,32 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                             аз синфҳои utility қавитар: overflow-hidden-и он overflow-y-auto-ро
                             бекор мекард ва равзана скрол намешуд; заминаи ниммушаффофи
                             bg-card/60 аз болои пардаи сиёҳ хокистарӣ менамуд. */}
-                        <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-3xl border border-border bg-card shadow-2xl">
+                        {/* Қуттӣ кунҷҳоро мебурад, скрол танҳо дар бадан аст. Вақте скрол дар
+                            худи қуттии мудаввар буд, scrollbar ба кунҷҳо итоат намекард ва
+                            ҳамчун рахи сафед берун аз канори рост менамуд. */}
+                        <div className="relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
                             {/* ── Header ── */}
-                            <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
-                                <div className="space-y-1">
+                            <div className="shrink-0 bg-card border-b border-border px-6 py-4 flex items-start justify-between gap-4">
+                                <div className="min-w-0 space-y-1">
                                     <p className="text-xs font-bold uppercase tracking-wide text-primary">
                                         {txt("modalTitle", lang)}
                                     </p>
-                                    <h2 className="text-lg font-black text-foreground truncate max-w-[400px]">
+                                    {/* Бе truncate: номи ихтисос дароз аст ва «…» маҳз қисми
+                                        муҳимашро мебурид. */}
+                                    <h2 className="text-lg font-black leading-snug text-foreground">
                                         {name}
                                     </h2>
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="w-9 h-9 rounded-xl border border-border bg-background flex items-center justify-center hover:bg-muted"
+                                    aria-label="Close"
+                                    className="w-9 h-9 shrink-0 rounded-xl border border-border bg-background flex items-center justify-center hover:bg-muted"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
 
-                            <div className="p-6 space-y-8">
+                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-8">
                                 {/* ── Score badges row ── */}
                                 <div className="grid grid-cols-3 gap-3">
                                     {/* Match % */}

@@ -886,6 +886,11 @@ i18n
                             pagination: "Саҳифаҳо",
                             prev_page: "Саҳифаи пешина",
                             next_page: "Саҳифаи навбатӣ",
+                            quiz: "Санҷиш",
+                            quiz_done: "Супорида",
+                            quiz_none: "Не",
+                            last_seen: "Охирин фаъолият",
+                            role_user: "Корбар",
                             make_user: "Ба user иваз кун"
                         },
                         form: {
@@ -1796,6 +1801,11 @@ i18n
                             pagination: "Страницы",
                             prev_page: "Предыдущая страница",
                             next_page: "Следующая страница",
+                            quiz: "Тест",
+                            quiz_done: "Пройден",
+                            quiz_none: "Нет",
+                            last_seen: "Последняя активность",
+                            role_user: "Пользователь",
                             make_user: "Сделать пользователем"
                         },
                         form: {
@@ -2706,6 +2716,11 @@ i18n
                             pagination: "Pages",
                             prev_page: "Previous page",
                             next_page: "Next page",
+                            quiz: "Quiz",
+                            quiz_done: "Taken",
+                            quiz_none: "No",
+                            last_seen: "Last active",
+                            role_user: "User",
                             make_user: "Make User"
                         },
                         form: {

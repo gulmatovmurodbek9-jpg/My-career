@@ -151,20 +151,20 @@ const AdminCareers = () => {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">{t("admin.careers.title")}</h1>
-          <p className="text-[15px] text-white/45 mt-1">{t("admin.careers.count", { count: meta.total })}</p>
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">{t("admin.careers.title")}</h1>
+          <p className="text-[15px] text-muted-foreground mt-1">{t("admin.careers.count", { count: meta.total })}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setEditingCareer(null); setFormOpen(true); }}
-            className="px-4 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 text-[15px] font-bold border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-primary/15 hover:bg-primary/20 text-primary text-[15px] font-bold border border-primary/20 transition-all cursor-pointer flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             {t("admin.careers.create")}
           </button>
           <button
             onClick={() => { setDeleteAllOpen(true); setDeleteAllConfirm(false); }}
-            className="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400/70 text-[15px] font-semibold border border-red-500/10 transition-all cursor-pointer flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600/70 dark:text-red-400/70 text-[15px] font-semibold border border-red-500/10 transition-all cursor-pointer flex items-center gap-2"
           >
             <Trash className="w-4 h-4" />
             {t("admin.careers.delete_all")}
@@ -175,13 +175,13 @@ const AdminCareers = () => {
       {/* Filters */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/80" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("admin.careers.search")}
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-[15px] text-white placeholder:text-white/35 outline-none focus:border-indigo-500/50 transition-all"
+            className="w-full bg-muted/60 border border-border rounded-xl pl-10 pr-4 py-2.5 text-[15px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/60 transition-all"
           />
         </div>
         <CustomSelect
@@ -199,13 +199,13 @@ const AdminCareers = () => {
       </motion.div>
 
       {/* Table */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-[#0f172a]/60 border border-white/[0.06] rounded-2xl overflow-hidden">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card border border-border rounded-2xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
         ) : careers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-white/45">
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <AlertCircle className="w-8 h-8 mb-3" />
             <p className="text-[15px]">{t("admin.careers.not_found")}</p>
           </div>
@@ -214,7 +214,7 @@ const AdminCareers = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[15px]">
                 <thead>
-                  <tr className="border-b border-white/[0.04] text-white/45 text-[13px] uppercase tracking-wider">
+                  <tr className="border-b border-border text-muted-foreground text-[13px] uppercase tracking-wider">
                     <th className="px-6 py-3 w-12">#</th>
                     <th className="px-6 py-3">{t("admin.careers.name")}</th>
                     <th className="px-6 py-3">{t("admin.careers.cluster")}</th>
@@ -222,7 +222,7 @@ const AdminCareers = () => {
                     <th className="px-6 py-3 text-right">{t("admin.careers.actions")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.03]">
+                <tbody className="divide-y divide-border">
                   <AnimatePresence>
                     {careers.map((career, i) => (
                       <motion.tr
@@ -230,29 +230,29 @@ const AdminCareers = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.02 }}
-                        className="hover:bg-white/[0.02] transition-colors group"
+                        className="hover:bg-muted/50 transition-colors group"
                       >
-                        <td className="px-6 py-3.5 text-white/35 font-mono text-[13px]">
+                        <td className="px-6 py-3.5 text-muted-foreground/80 font-mono text-[13px]">
                           {(meta.page - 1) * meta.limit + i + 1}
                         </td>
                         <td className="px-6 py-3.5">
-                          <div className="font-semibold text-white text-[15px]">{career.name}</div>
+                          <div className="font-semibold text-foreground text-[15px]">{career.name}</div>
                           {career.description && (
-                            <div className="text-[13px] text-white/45 mt-0.5 truncate max-w-[300px]">{career.description}</div>
+                            <div className="text-[13px] text-muted-foreground mt-0.5 truncate max-w-[300px]">{career.description}</div>
                           )}
                         </td>
                         <td className="px-6 py-3.5">
                           {career.cluster ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 text-[13px] font-semibold">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-[13px] font-semibold">
                               {career.cluster.clusterIcon && <LucideIconRenderer name={career.cluster.clusterIcon} className="w-3.5 h-3.5" />}
                               {clusterLabel(t, career.cluster)}
                             </span>
                           ) : (
-                            <span className="text-white/35 text-[13px]">—</span>
+                            <span className="text-muted-foreground/80 text-[13px]">—</span>
                           )}
                         </td>
                         <td className="px-6 py-3.5 text-center">
-                          <span className="inline-flex items-center gap-1 text-rose-400/70 text-[13px] font-bold">
+                          <span className="inline-flex items-center gap-1 text-rose-600/70 dark:text-rose-400/70 text-[13px] font-bold">
                             <Heart className="w-3 h-3" /> {career.likesCount || 0}
                           </span>
                         </td>
@@ -262,13 +262,13 @@ const AdminCareers = () => {
                           <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                             <button
                               onClick={() => { setEditingCareer(career); setFormOpen(true); }}
-                              className="p-2 rounded-lg hover:bg-indigo-500/10 text-indigo-400/60 hover:text-indigo-400 transition-all cursor-pointer"
+                              className="p-2 rounded-lg hover:bg-primary/10 text-primary/70 hover:text-primary transition-all cursor-pointer"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setDeleteTarget(career)}
-                              className="p-2 rounded-lg hover:bg-red-500/10 text-red-400/60 hover:text-red-400 transition-all cursor-pointer"
+                              className="p-2 rounded-lg hover:bg-red-500/10 text-red-600/60 dark:text-red-400/60 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -282,15 +282,15 @@ const AdminCareers = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.04]">
-              <p className="text-[13px] text-white/45">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+              <p className="text-[13px] text-muted-foreground">
                 {t("admin.careers.page_info", { page: meta.page, lastPage: meta.lastPage, total: meta.total })}
               </p>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="p-2 rounded-lg hover:bg-white/5 text-white/45 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -306,8 +306,8 @@ const AdminCareers = () => {
                       onClick={() => setPage(pageNum)}
                       className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${
                         page === pageNum
-                          ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/20"
-                          : "text-white/45 hover:text-white/60 hover:bg-white/5"
+                          ? "bg-primary/15 text-primary border border-primary/20"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
                     >
                       {pageNum}
@@ -317,7 +317,7 @@ const AdminCareers = () => {
                 <button
                   onClick={() => setPage((p) => Math.min(meta.lastPage, p + 1))}
                   disabled={page >= meta.lastPage}
-                  className="p-2 rounded-lg hover:bg-white/5 text-white/45 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

@@ -137,12 +137,12 @@ export default function AdminSpecialists() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-white">{t("admin.specialists.title")}</h1>
-          <p className="mt-1 text-[15px] text-white/45">{t("admin.specialists.subtitle")}</p>
+          <h1 className="text-3xl font-extrabold text-foreground">{t("admin.specialists.title")}</h1>
+          <p className="mt-1 text-[15px] text-muted-foreground">{t("admin.specialists.subtitle")}</p>
         </div>
         <button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/20 bg-indigo-500/20 px-4 py-2.5 text-[15px] font-bold text-indigo-300 hover:bg-indigo-500/30"
+          className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/15 px-4 py-2.5 text-[15px] font-bold text-primary hover:bg-primary/20"
         >
           <Plus className="h-4 w-4" />
           {t("admin.specialists.add")}
@@ -154,11 +154,11 @@ export default function AdminSpecialists() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           onSubmit={submit}
-          className="rounded-2xl border border-white/10 bg-[#0f172a]/80 p-5"
+          className="rounded-2xl border border-border bg-card p-5"
         >
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-bold text-white">{editing ? t("admin.specialists.edit_title") : t("admin.specialists.create_title")}</h2>
-            <button type="button" onClick={() => setFormOpen(false)} className="rounded-lg p-2 text-white/55 hover:bg-white/5 hover:text-white">
+            <h2 className="font-bold text-foreground">{editing ? t("admin.specialists.edit_title") : t("admin.specialists.create_title")}</h2>
+            <button type="button" onClick={() => setFormOpen(false)} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -171,7 +171,7 @@ export default function AdminSpecialists() {
             <Field label={t("admin.specialists.field")} value={form.specialization} onChange={(value) => updateForm("specialization", value)} />
             <Field label={t("admin.specialists.meeting_place")} value={form.meetingLocation} onChange={(value) => updateForm("meetingLocation", value)} />
             <Field label="Avatar URL" value={form.avatarUrl} onChange={(value) => updateForm("avatarUrl", value)} />
-            <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] font-bold text-white">
+            <label className="flex items-center gap-3 rounded-xl border border-border bg-muted/60 px-4 py-3 text-[15px] font-bold text-foreground">
               <input type="checkbox" checked={form.isActive} onChange={(event) => updateForm("isActive", event.target.checked)} />
               {t("admin.specialists.is_active")}
             </label>
@@ -179,16 +179,16 @@ export default function AdminSpecialists() {
 
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div>
-              <label className="mb-2 block text-[13px] font-bold uppercase tracking-wider text-white/55">{t("admin.specialists.bio")}</label>
+              <label className="mb-2 block text-[13px] font-bold uppercase tracking-wider text-muted-foreground">{t("admin.specialists.bio")}</label>
               <textarea
                 value={form.bio}
                 onChange={(event) => updateForm("bio", event.target.value)}
                 rows={8}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] text-white outline-none focus:border-indigo-500/50"
+                className="w-full rounded-xl border border-border bg-muted/60 px-4 py-3 text-[15px] text-foreground outline-none focus:border-primary/60"
               />
             </div>
             <div>
-              <label className="mb-2 flex items-center gap-2 text-[13px] font-bold uppercase tracking-wider text-white/55">
+              <label className="mb-2 flex items-center gap-2 text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                 <CalendarClock className="h-4 w-4" />
                 {t("admin.specialists.availability")}
               </label>
@@ -196,14 +196,14 @@ export default function AdminSpecialists() {
                 value={form.weeklyAvailabilityText}
                 onChange={(event) => updateForm("weeklyAvailabilityText", event.target.value)}
                 rows={8}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-[13px] text-white outline-none focus:border-indigo-500/50"
+                className="w-full rounded-xl border border-border bg-muted/60 px-4 py-3 font-mono text-[13px] text-foreground outline-none focus:border-primary/60"
               />
             </div>
           </div>
 
           <button
             disabled={saving}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-[15px] font-bold text-white hover:bg-indigo-400 disabled:opacity-50"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-[15px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {t("admin.specialists.save")}
@@ -211,35 +211,35 @@ export default function AdminSpecialists() {
         </motion.form>
       )}
 
-      <div className="rounded-2xl border border-white/[0.06] bg-[#0f172a]/60">
+      <div className="rounded-2xl border border-border bg-card">
         {loading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="h-7 w-7 animate-spin text-indigo-400" />
+            <Loader2 className="h-7 w-7 animate-spin text-primary" />
           </div>
         ) : specialists.length === 0 ? (
-          <div className="py-20 text-center text-white/55">{t("admin.specialists.empty")}</div>
+          <div className="py-20 text-center text-muted-foreground">{t("admin.specialists.empty")}</div>
         ) : (
           <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-2">
             {specialists.map((specialist) => (
-              <article key={specialist.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <article key={specialist.id} className="rounded-2xl border border-border bg-muted/50 p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-300">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <UserRoundCheck className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white">{specialist.name || specialist.email}</h3>
-                      <p className="text-[15px] text-white/55">{specialist.specialization || t("admin.specialists.no_field")}</p>
-                      <p className="mt-1 text-[13px] text-white/45">{specialist.email}</p>
+                      <h3 className="font-bold text-foreground">{specialist.name || specialist.email}</h3>
+                      <p className="text-[15px] text-muted-foreground">{specialist.specialization || t("admin.specialists.no_field")}</p>
+                      <p className="mt-1 text-[13px] text-muted-foreground">{specialist.email}</p>
                     </div>
                   </div>
-                  <button onClick={() => openEdit(specialist)} className="rounded-lg p-2 text-indigo-300 hover:bg-indigo-500/10">
+                  <button onClick={() => openEdit(specialist)} className="rounded-lg p-2 text-primary hover:bg-primary/10">
                     <Edit className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="mt-4 line-clamp-3 text-[15px] leading-6 text-white/50">{specialist.bio || t("admin.specialists.no_bio")}</p>
+                <p className="mt-4 line-clamp-3 text-[15px] leading-6 text-muted-foreground">{specialist.bio || t("admin.specialists.no_bio")}</p>
                 <div className="mt-4 flex flex-wrap gap-2 text-[13px]">
-                  <span className="rounded-full bg-white/5 px-3 py-1 text-white/50">{specialist.phoneNumber || t("admin.specialists.no_phone")}</span>
+                  <span className="rounded-full bg-muted/60 px-3 py-1 text-muted-foreground">{specialist.phoneNumber || t("admin.specialists.no_phone")}</span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-3 py-1 text-amber-300">
                     <Star className="h-3 w-3 fill-current" />
                     {Number(specialist.ratingAverage || 0).toFixed(1)} ({specialist.ratingCount || 0})
@@ -260,13 +260,13 @@ export default function AdminSpecialists() {
 function Field({ label, value, onChange, type = "text", required = false }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[13px] font-bold uppercase tracking-wider text-white/55">{label}</span>
+      <span className="mb-2 block text-[13px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] text-white outline-none focus:border-indigo-500/50"
+        className="w-full rounded-xl border border-border bg-muted/60 px-4 py-3 text-[15px] text-foreground outline-none focus:border-primary/60"
       />
     </label>
   );

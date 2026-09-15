@@ -14,6 +14,15 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 const AI_PROVIDER_TIMEOUT_MS = 20000;
 
+/*
+ * Провайдере, ки афтод, чанд муддат аз занҷир мегузарад.
+ *
+ * Бе ин ҳар дархост аз нав аз Vertex оғоз мешуд. Дар сервер Vertex ҳар дафъа
+ * 20 сония интизор мешуд ва баъд меафтод, яъне ба ҳар ҷавоби AI 20 сонияи
+ * беҳуда илова мешуд: ҳисоботи касбӣ 34.9 сония давом мекард.
+ */
+const AI_PROVIDER_COOLDOWN_MS = 5 * 60 * 1000;
+
 type AiProvider = 'vertex' | 'gemini' | 'groq';
 
 @Injectable()
@@ -24,6 +33,8 @@ export class AiService implements OnModuleInit {
     private vertexModel = 'gemini-2.5-flash';
     private groqKey: string | null = null;
     private groqModel = 'openai/gpt-oss-120b';
+    /** Провайдер → вақте ки дубора кӯшиш кардан мумкин аст (ms). */
+    private providerDownUntil = new Map<AiProvider, number>();
 
     constructor(private configService: ConfigService) { }
 
@@ -118,13 +129,26 @@ export class AiService implements OnModuleInit {
             return true;
         });
 
+        /* Провайдерҳои дар cooldown буда гузаронида мешаванд. Агар ҳамаашон дар
+           cooldown бошанд, ҳамаашон аз нав кӯшиш карда мешаванд — беҳтар аст
+           кӯшиш кунем, аз он ки бе кӯшиш хато диҳем. */
+        const now = Date.now();
+        const healthy = usable.filter((which) => (this.providerDownUntil.get(which) ?? 0) <= now);
+        const order = healthy.length ? healthy : usable;
+
         let last: any = null;
-        for (const which of usable) {
+        for (const which of order) {
             try {
-                return await this.withTimeout(run(which), which);
+                const result = await this.withTimeout(run(which), which);
+                this.providerDownUntil.delete(which);
+                return result;
             } catch (error) {
                 last = error;
-                console.error(`AI: провайдери ${which} афтод:`, error?.message || error);
+                this.providerDownUntil.set(which, Date.now() + AI_PROVIDER_COOLDOWN_MS);
+                console.error(
+                    `AI: провайдери ${which} афтод (${AI_PROVIDER_COOLDOWN_MS / 60000} дақ. гузаронида мешавад):`,
+                    error?.message || error,
+                );
             }
         }
         /*

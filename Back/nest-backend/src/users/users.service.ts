@@ -345,6 +345,7 @@ export class UsersService {
                 universityName: offering.university?.name,
                 universityShortName: offering.university?.shortName,
                 city: offering.university?.city,
+                address: offering.university?.address,
                 studyForm: offering.studyForm,
                 paymentType: offering.paymentType,
                 isFree: isFree(offering),

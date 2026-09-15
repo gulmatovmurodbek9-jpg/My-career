@@ -1136,6 +1136,12 @@ export class CareerService {
             'ман_ро', 'худро', 'шумо', 'вай', 'онҳо', 'ҳамин', 'инро', 'онро',
             'хочу', 'нужно', 'какой', 'какая', 'выбрать', 'посоветуйте', 'помогите',
             'want', 'need', 'which', 'choose', 'advise', 'help', 'should',
+            // Шаклҳои «шудан» ва калимаҳои умумии савол: «Юрист шуданиям кадом
+            // ихтисосҳо мешаванд» — «мешаванд» қариб дар ҳар тавсиф ҳаст.
+            'мешавад', 'мешаванд', 'мешавам', 'мешавем', 'мешавед', 'шуданиям', 'шуданӣ', 'шудани',
+            'метавонам', 'метавонад', 'лозим', 'бояд', 'кадомаш', 'ихтисосҳо', 'ихтисосҳоро',
+            'касб', 'касби', 'касбҳо', 'стать', 'специальность', 'специальности',
+            'become', 'specialty', 'specialties', 'career',
         ]);
 
         const words = text
@@ -1166,62 +1172,78 @@ export class CareerService {
 
     private async findRelevantCareers(question: string, careerName?: string): Promise<Career[]> {
         const terms = this.extractSearchTerms(question, careerName);
-        const qb = this.careerRepository
-            .createQueryBuilder('career')
-            .leftJoinAndSelect('career.cluster', 'cluster')
-            .leftJoinAndSelect('career.universities', 'universities');
-
-        if (terms.length > 0) {
-            qb.where(new Brackets((where) => {
-                terms.forEach((term, index) => {
-                    const param = `term${index}`;
-                    /* ILIKE хом набуд: истилоҳот аллакай folded аст (ҳ→х),
-                       пас сутунҳо низ бояд folded шаванд, вагарна «хукук»
-                       ба «Ҳуқуқшиносӣ» ҳеҷ гоҳ намерасад. */
-                    const condition = `
-                        ${TAJIK_FOLD('career.name')} LIKE :${param}
-                        OR ${TAJIK_FOLD('career.description')} LIKE :${param}
-                        OR ${TAJIK_FOLD('career.purpose')} LIKE :${param}
-                        OR ${TAJIK_FOLD('cluster.clusterName')} LIKE :${param}
-                        OR ${TAJIK_FOLD('universities.name')} LIKE :${param}
-                        OR ${TAJIK_FOLD('universities.city')} LIKE :${param}
-                    `;
-                    if (index === 0) where.where(condition, { [param]: `%${term}%` });
-                    else where.orWhere(condition, { [param]: `%${term}%` });
-                });
-            }));
-        }
 
         /**
-         * Тартиб аз рӯи мувофиқат, на аз рӯи лайкҳо.
+         * Баҳо дар SQL, пеш аз LIMIT — на дар JS пас аз он.
          *
-         * Дархост бо OR кор мекунад: як калимаи умумӣ кифоя буд, то ихтисос ба
-         * рӯйхат афтад. Баъд тартиби `likesCount` беҳтарин ихтисосҳои мувофиқро
-         * ба поён мепартофт ва машҳуртаринҳои бемавзӯъро ба боло мебаровард.
+         * Пештар дархост бо OR ҳамаи мувофиқатҳоро мегирифт ва `take(60)` 60-тоашро
+         * бармегардонд. Бо leftJoinAndSelect TypeORM он 60-ро бо
+         * `DISTINCT id ORDER BY id` интихоб мекунад — аз рӯи UUID, яъне тасодуфан.
+         * Калимаи умумии савол («мешаванд») қариб ба ҳар тавсиф мувофиқ аст, пас
+         * ҳавз аз ихтисосҳои бемавзӯъ пур мешуд ва баҳои JS танҳо аз ҳамон 60
+         * интихоб мекард. Ба «Юрист шуданиям кадом ихтисосҳо мешаванд» чат
+         * «Таърих»-ро пешниҳод кард, дар ҳоле ки дар база 38 ихтисоси ҳуқуқӣ ҳаст.
          *
-         * Ҳисоб дар JS меравад: мувофиқат дар НОМ вазни се, дар кластер ду, дар
-         * тавсиф як. Лайкҳо танҳо ҳангоми баробарӣ ҳал мекунанд.
+         * Акнун ҳамаи ихтисосҳо баҳо мегиранд (≈120 мс) ва танҳо 10-и беҳтарин бо
+         * донишгоҳҳояшон бор карда мешаванд.
+         *
+         * Вазн барои ҳар калима: ном бо он оғоз шавад 4 («Ҳуқуқи байналмилалӣ»
+         * аз «Равоншиносии ҳуқуқӣ» болотар), дар ном 3, дар номи кластер 2,
+         * дар тавсиф ё донишгоҳ/шаҳр 1. Лайкҳо танҳо ҳангоми баробарӣ.
          */
-        const pool = await qb.take(60).getMany();
+        let matched: Career[] = [];
+        if (terms.length > 0) {
+            const ranked: Array<{ id: string }> = await this.careerRepository.manager.query(
+                `WITH base AS MATERIALIZED (
+                    /* Fold як бор барои ҳар ихтисос, на барои ҳар ихтисос × калима.
+                       Бе MATERIALIZED Postgres translate()-ро дар ҳар сатри CROSS JOIN
+                       такрор мекард: 466 мс → 118 мс. Ному шаҳри донишгоҳҳо низ як
+                       бор ба як сатр ҷамъ мешаванд — EXISTS барои ҳар калима 729 мс буд. */
+                    SELECT c.id, c."likesCount",
+                        ${TAJIK_FOLD('c.name')} AS n,
+                        ${TAJIK_FOLD(`coalesce(cl."clusterName", '')`)} AS cl,
+                        ${TAJIK_FOLD(`coalesce(c.description, '') || ' ' || coalesce(c.purpose, '')`)} AS body,
+                        ${TAJIK_FOLD(`coalesce(ux.unis, '')`)} AS unis
+                    FROM career c
+                    LEFT JOIN cluster cl ON cl.id = c."clusterId"
+                    LEFT JOIN (
+                        SELECT cu."careerId", string_agg(coalesce(u.name, '') || ' ' || coalesce(u.city, ''), ' ') AS unis
+                        FROM career_universities cu
+                        JOIN universities u ON u.id = cu."universitiesId"
+                        GROUP BY cu."careerId"
+                    ) ux ON ux."careerId" = c.id
+                )
+                SELECT id FROM (
+                    SELECT b.id, b."likesCount", SUM(CASE
+                        WHEN b.n LIKE t || '%' THEN 4
+                        WHEN b.n LIKE '%' || t || '%' THEN 3
+                        WHEN b.cl LIKE '%' || t || '%' THEN 2
+                        WHEN b.body LIKE '%' || t || '%' THEN 1
+                        WHEN b.unis LIKE '%' || t || '%' THEN 1
+                        ELSE 0 END) AS rank
+                    FROM base b
+                    CROSS JOIN unnest($1::text[]) AS t
+                    GROUP BY b.id, b."likesCount"
+                ) scored
+                WHERE rank > 0
+                ORDER BY rank DESC, "likesCount" DESC
+                LIMIT 10`,
+                [terms],
+            );
 
-        const score = (career: Career) => {
-            const name = foldTajik(this.normalizeText(career.name || ''));
-            const cluster = foldTajik(this.normalizeText(career.cluster?.clusterName || ''));
-            const body = foldTajik(this.normalizeText(`${career.description || ''} ${career.purpose || ''}`));
-            return terms.reduce((total, term) => {
-                if (name.includes(term)) return total + 3;
-                if (cluster.includes(term)) return total + 2;
-                if (body.includes(term)) return total + 1;
-                return total;
-            }, 0);
-        };
-
-        const matched = pool
-            .map((career) => ({ career, rank: score(career) }))
-            .filter((entry) => entry.rank > 0)
-            .sort((a, b) => b.rank - a.rank || (b.career.likesCount ?? 0) - (a.career.likesCount ?? 0))
-            .slice(0, 10)
-            .map((entry) => entry.career);
+            if (ranked.length) {
+                const ids = ranked.map((row) => row.id);
+                const rows = await this.careerRepository.find({
+                    where: { id: In(ids) },
+                    relations: ['cluster', 'universities'],
+                });
+                /* find() тартибро нигоҳ намедорад — аз рӯи баҳои SQL бармегардонем. */
+                const byId = new Map(rows.map((career) => [career.id, career]));
+                matched = ids
+                    .map((id) => byId.get(id))
+                    .filter((career): career is Career => Boolean(career));
+            }
+        }
 
         if (matched.length >= 4) return matched;
 

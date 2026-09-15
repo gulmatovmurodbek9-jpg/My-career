@@ -27,6 +27,9 @@ const Layout = () => {
   const [scrolled, setScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, logout, user } = useAuthStore();
+  /* Ҳисоби бо Google ё сабти кӯҳна метавонад ном надошта бошад. Бе ин
+     тугмаи профил як қуттии холии кабуд мемонд — танҳо иконка, бе ном. */
+  const userLabel = user?.name?.trim() || user?.email?.split("@")[0] || "";
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
@@ -262,7 +265,7 @@ const Layout = () => {
                       className="hidden xl:flex max-w-[170px] items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-xs uppercase tracking-normal transition-colors hover:bg-primary/20"
                     >
                       <UserIcon className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">{user?.name}</span>
+                      <span className="truncate">{userLabel}</span>
                     </Link>
                     <button
                       onClick={() => {
@@ -343,7 +346,7 @@ const Layout = () => {
                   {isAuthenticated ? (
                     <div className="mt-4 space-y-2 border-t border-border/50 pt-4">
                       <div className="rounded-xl bg-primary/10 px-4 py-3 text-xs font-bold text-primary border border-primary/20">
-                        {user?.name}
+                        {userLabel}
                       </div>
                       <button
                         onClick={() => {

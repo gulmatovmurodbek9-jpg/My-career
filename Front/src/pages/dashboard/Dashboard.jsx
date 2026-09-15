@@ -143,7 +143,7 @@ const Dashboard = () => {
                             {t('dashboard.profile')}
                         </motion.div>
                         <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase">
-                            {t('dashboard.welcome')}, <span className="text-gradient-primary">{user?.name}</span>
+                            {t('dashboard.welcome')}, <span className="text-gradient-primary">{displayName}</span>
                         </h1>
                     </div>
 

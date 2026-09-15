@@ -5,6 +5,7 @@ import {
   Globe,
   GraduationCap,
   Heart,
+  Layers,
   Lightbulb,
   Rocket,
   Star,
@@ -68,7 +69,7 @@ const About = () => {
   const impactStats = [
     { value: show(counts.careers), label: t('about_page.stat_careers', "Ихтисосҳо"), icon: BookOpen },
     { value: show(counts.universities), label: t('about_page.stat_universities'), icon: GraduationCap },
-    { value: show(counts.clusters), label: t('about_page.stat_clusters', "Кластерҳо"), icon: Globe },
+    { value: show(counts.clusters), label: t('about_page.stat_clusters', "Кластерҳо"), icon: Layers },
     { value: "3", label: t('about_page.stat_languages'), icon: Globe },
   ];
 
@@ -87,7 +88,7 @@ const About = () => {
   return (
     <div>
       {/* ═══ HERO ═══ */}
-      <section className="pt-28 pb-14 hero-gradient">
+      <section className="pt-12 pb-10 sm:pt-16 hero-gradient">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-5">
             <div className="pill-tag mx-auto w-fit">
@@ -105,7 +106,7 @@ const About = () => {
       </section>
 
       {/* ═══ STATS ═══ */}
-      <section className="py-14">
+      <section className="pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {impactStats.map((stat, i) => (
@@ -124,7 +125,7 @@ const About = () => {
       </section>
 
       {/* ═══ VALUES ═══ */}
-      <section className="py-24 section-wash">
+      <section className="py-16 section-wash">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 tracking-tight">{t('about_page.values_section_title', "Арзишҳо ва мақсадҳо")}</h2>
@@ -137,8 +138,8 @@ const About = () => {
               return (
                 <motion.div key={index} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.08 }}>
                   <div className="glass-card p-6 flex items-start gap-5 h-full">
-                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${value.gradient} flex items-center justify-center flex-shrink-0 shadow-lg`} style={{ boxShadow: "0 6px 20px rgba(91, 108, 240, 0.2)" }}>
-                      <Icon className="h-5 w-5 text-white" />
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-5 w-5" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-1.5 text-lg">{value.title}</h3>
@@ -153,7 +154,7 @@ const About = () => {
       </section>
 
       {/* ═══ TIMELINE ═══ */}
-      <section className="py-24">
+      <section className="py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 tracking-tight">{t('about_page.story_title', "Ҳикояи мо")}</h2>
@@ -188,7 +189,7 @@ const About = () => {
       </section>
 
       {/* ═══ TEAM ═══ */}
-      <section className="py-24 section-wash">
+      <section className="py-16 section-wash">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 tracking-tight">{t('about_page.team_title', "Ҷамоаи мо")}</h2>
@@ -213,7 +214,7 @@ const About = () => {
       </section>
 
       {/* ═══ CTA ═══ */}
-      <section className="py-24 hero-gradient">
+      <section className="py-16 hero-gradient">
         <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="glass-card p-10">
@@ -223,7 +224,7 @@ const About = () => {
               />
               <p className="text-muted-foreground max-w-xl mx-auto mb-6 text-lg">{t('about_page.cta_desc', "Ба ҳазорҳо донишҷӯе ҳамроҳ шавед, ки роҳи касбиро ёфтаанд.")}</p>
               <Link to="/careers">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                <motion.button whileTap={{ scale: 0.98 }}
                   className="inline-flex items-center gap-2 btn-primary px-8 py-3.5 text-sm cursor-pointer">
                   {t('about_page.cta_btn', "Ихтисосҳоро кашф кунед")} <TrendingUp className="h-4 w-4" />
                 </motion.button>

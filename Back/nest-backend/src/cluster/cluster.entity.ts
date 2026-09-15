@@ -23,4 +23,7 @@ export class Cluster {
 
     @OneToMany(() => Career, (career) => career.cluster)
     careers: Career[];
+
+    /** Танҳо дар GET /clusters: шумораи ихтисосҳо, сутун дар база нест. */
+    careerCount?: number;
 }

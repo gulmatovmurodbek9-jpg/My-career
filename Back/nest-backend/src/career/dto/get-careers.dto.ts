@@ -26,6 +26,12 @@ export class GetCareersDto {
     @IsString()
     clusterId?: string;
 
+    @ApiPropertyOptional({ description: 'Minimum tuition fee' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    minPrice?: number;
+
     @ApiPropertyOptional({ description: 'Maximum tuition fee' })
     @IsOptional()
     @Type(() => Number)

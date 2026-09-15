@@ -12,9 +12,12 @@ import {
   ChevronRight,
   Shield,
   Globe,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../hooks/useTheme";
 
 const AdminLayout = () => {
   const { t } = useTranslation();
@@ -22,6 +25,7 @@ const AdminLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
 
   const navItems = [
     { path: "/admin", label: t("admin.nav.dashboard"), icon: LayoutDashboard, end: true },
@@ -42,18 +46,20 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#060a14]">
+    <div className="flex min-h-screen bg-background">
       {/* ═══ SIDEBAR ═══ */}
       <motion.aside
         animate={{ width: collapsed ? 72 : 260 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 left-0 h-screen z-40 flex flex-col bg-[#0a0f1e]/90 backdrop-blur-2xl border-r border-white/[0.04]"
+        className="fixed top-0 left-0 h-screen z-40 flex flex-col bg-card backdrop-blur-2xl border-r border-border"
       >
         {/* Logo area */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-white/[0.04]">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/20">
-            <Shield className="w-4.5 h-4.5 text-white" />
-          </div>
+        <div className="flex items-center gap-3 px-4 h-16 border-b border-border">
+          {/* Ҳамон логотипи «Ихтисоси ман», ки дар сайт аст — на иконкаи сипар.
+              Логотип шаффоф аст ва дар ҳарду мавзӯъ хонда мешавад. */}
+          <Link to="/" className="flex-shrink-0" aria-label="Ихтисоси ман">
+            <img src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
+          </Link>
           <AnimatePresence>
             {!collapsed && (
               <motion.div
@@ -62,7 +68,7 @@ const AdminLayout = () => {
                 exit={{ opacity: 0, x: -10 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                <span className="text-[15px] font-extrabold text-white tracking-tight">
+                <span className="text-[15px] font-extrabold text-foreground tracking-tight">
                   {t("admin.panel_title")}
                 </span>
               </motion.div>
@@ -80,14 +86,14 @@ const AdminLayout = () => {
                 to={item.path}
                 className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold transition-all duration-200 ${
                   active
-                    ? "bg-indigo-500/15 text-indigo-400"
-                    : "text-white/55 hover:text-white/70 hover:bg-white/[0.03]"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {active && (
                   <motion.div
                     layoutId="admin-nav-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-indigo-500"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-primary"
                     transition={{ type: "spring", damping: 25, stiffness: 400 }}
                   />
                 )}
@@ -109,12 +115,12 @@ const AdminLayout = () => {
           })}
 
           {/* Divider */}
-          <div className="my-3 border-t border-white/[0.04]" />
+          <div className="my-3 border-t border-border" />
 
           {/* Back to site link */}
           <Link
             to="/"
-            className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-emerald-400/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
+            className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-emerald-600/50 dark:text-emerald-400/50 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
           >
             <Globe className="w-[18px] h-[18px] flex-shrink-0" />
             <AnimatePresence>
@@ -133,10 +139,10 @@ const AdminLayout = () => {
         </nav>
 
         {/* User info & collapse */}
-        <div className="p-3 border-t border-white/[0.04] space-y-2">
-          <div className={`flex items-center gap-3 px-3 py-2 rounded-xl bg-white/[0.02] ${collapsed ? 'justify-center' : ''}`}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500/30 to-purple-600/30 flex items-center justify-center flex-shrink-0 border border-indigo-500/20">
-              <span className="text-[13px] font-bold text-indigo-400">
+        <div className="p-3 border-t border-border space-y-2">
+          <div className={`flex items-center gap-3 px-3 py-2 rounded-xl bg-muted/40 ${collapsed ? 'justify-center' : ''}`}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/25 to-accent-blue/20 flex items-center justify-center flex-shrink-0 border border-primary/20">
+              <span className="text-[13px] font-bold text-primary">
                 {user?.name?.charAt(0)?.toUpperCase() || "A"}
               </span>
             </div>
@@ -148,16 +154,26 @@ const AdminLayout = () => {
                   exit={{ opacity: 0 }}
                   className="flex-1 min-w-0"
                 >
-                  <div className="text-[13px] font-semibold text-white truncate">{user?.name || "Admin"}</div>
-                  <div className="text-[11px] text-white/45 truncate">{user?.email}</div>
+                  <div className="text-[13px] font-semibold text-foreground truncate">{user?.name || "Admin"}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">{user?.email}</div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
+          {/* Ҳамон интихоби мавзӯъ, ки дар сайт аст: пештар админ ҳамеша торик буд. */}
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? t("admin.theme_light", "Мавзӯи равшан") : t("admin.theme_dark", "Мавзӯи торик")}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer ${collapsed ? 'justify-center' : ''}`}
+          >
+            {theme === "dark" ? <Sun className="w-[18px] h-[18px] flex-shrink-0" /> : <Moon className="w-[18px] h-[18px] flex-shrink-0" />}
+            {!collapsed && <span className="whitespace-nowrap">{theme === "dark" ? t("admin.theme_light", "Мавзӯи равшан") : t("admin.theme_dark", "Мавзӯи торик")}</span>}
+          </button>
+
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer ${collapsed ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-red-600/60 dark:text-red-400/60 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer ${collapsed ? 'justify-center' : ''}`}
           >
             <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
             <AnimatePresence>
@@ -171,7 +187,7 @@ const AdminLayout = () => {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-white/[0.03] text-white/35 hover:text-white/55 transition-all cursor-pointer"
+            className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-muted text-muted-foreground/80 hover:text-foreground transition-all cursor-pointer"
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>

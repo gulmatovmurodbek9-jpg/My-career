@@ -70,15 +70,15 @@ const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center gap-2.5 bg-white/[0.04] border rounded-xl px-3.5 py-2.5 text-[15px] transition-all duration-200 cursor-pointer
+        className={`w-full flex items-center gap-2.5 bg-muted/60 border rounded-xl px-3.5 py-2.5 text-[15px] transition-all duration-200 cursor-pointer
           ${isOpen
-            ? "border-indigo-500/50 ring-1 ring-indigo-500/20 bg-white/[0.06]"
-            : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06]"
+            ? "border-primary/50 ring-1 ring-primary/20 bg-muted/70"
+            : "border-border hover:border-primary/30 hover:bg-muted"
           }`}
       >
-        {Icon && <Icon className="w-4 h-4 text-white/35 flex-shrink-0" />}
+        {Icon && <Icon className="w-4 h-4 text-muted-foreground/80 flex-shrink-0" />}
 
-        <span className={`flex-1 text-left truncate ${selectedOption ? "text-white" : "text-white/45"}`}>
+        <span className={`flex-1 text-left truncate ${selectedOption ? "text-foreground" : "text-muted-foreground"}`}>
           {selectedOption ? (
             <span className="flex items-center gap-2">
               {selectedOption.icon && <span className="text-[13px]">{selectedOption.icon}</span>}
@@ -92,14 +92,14 @@ const CustomSelect = ({
         {clearable && value && (
           <span
             onClick={handleClear}
-            className="p-0.5 rounded-md hover:bg-white/10 text-white/45 hover:text-white/60 transition-all"
+            className="p-0.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
           >
             <X className="w-3.5 h-3.5" />
           </span>
         )}
 
         <ChevronDown
-          className={`w-4 h-4 text-white/45 flex-shrink-0 transition-transform duration-200 ${
+          className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -113,24 +113,24 @@ const CustomSelect = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute z-[60] top-[calc(100%+6px)] left-0 w-full bg-[#0f172a] border border-white/[0.1] rounded-xl shadow-2xl shadow-black/40 overflow-hidden"
+            className="absolute z-[60] top-[calc(100%+6px)] left-0 w-full bg-card border border-border rounded-xl shadow-2xl shadow-black/20 overflow-hidden"
           >
             {/* Search input */}
             {searchable && (
-              <div className="p-2 border-b border-white/[0.06]">
+              <div className="p-2 border-b border-border">
                 <input
                   ref={searchRef}
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("admin.form.search", "Ҷустуҷӯ...")}
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-[13px] text-white placeholder:text-white/35 outline-none focus:border-indigo-500/40 transition-all"
+                  className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/60 transition-all"
                 />
               </div>
             )}
 
             {/* Options list */}
-            <div className="max-h-[240px] overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="max-h-[240px] overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
               {/* Empty placeholder option */}
               {placeholder && (
                 <button
@@ -138,17 +138,17 @@ const CustomSelect = ({
                   onClick={() => handleSelect("")}
                   className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[15px] transition-all duration-150 cursor-pointer
                     ${!value
-                      ? "bg-indigo-500/10 text-indigo-400"
-                      : "text-white/45 hover:bg-white/[0.04] hover:text-white/50"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                 >
                   <span className="flex-1 text-left text-[13px]">{placeholder}</span>
-                  {!value && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                  {!value && <Check className="w-3.5 h-3.5 text-primary" />}
                 </button>
               )}
 
               {filteredOptions.length === 0 ? (
-                <div className="px-4 py-6 text-center text-[13px] text-white/35">
+                <div className="px-4 py-6 text-center text-[13px] text-muted-foreground/80">
                   {t("common.not_found")}
                 </div>
               ) : (
@@ -161,15 +161,15 @@ const CustomSelect = ({
                       onClick={() => handleSelect(opt.value)}
                       className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[15px] transition-all duration-150 cursor-pointer
                         ${isSelected
-                          ? "bg-indigo-500/10 text-indigo-400"
-                          : "text-white/60 hover:bg-white/[0.04] hover:text-white"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
                     >
                       {opt.icon && (
                         <span className="w-5 flex-shrink-0 text-center">{opt.icon}</span>
                       )}
                       <span className="flex-1 text-left truncate">{opt.label}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
                     </button>
                   );
                 })

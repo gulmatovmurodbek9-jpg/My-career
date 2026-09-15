@@ -751,6 +751,8 @@ i18n
                     },
                     admin: {
                         panel_title: "Панели Администратор",
+                        theme_light: "Мавзӯи равшан",
+                        theme_dark: "Мавзӯи торик",
                         back_to_site: "Ба сайт баргаштан",
                         logout: "Баромадан",
                         collapse: "Пинҳон кардан",
@@ -880,6 +882,10 @@ i18n
                             role_changed: "Нақши \"{{name}}\" ба \"{{role}}\" иваз шуд",
                             deleted_ok: "Корбари \"{{name}}\" нест карда шуд",
                             make_admin: "Ба admin иваз кун",
+                            page_range: "{{from}}–{{to}} аз {{total}}",
+                            pagination: "Саҳифаҳо",
+                            prev_page: "Саҳифаи пешина",
+                            next_page: "Саҳифаи навбатӣ",
                             make_user: "Ба user иваз кун"
                         },
                         form: {
@@ -1655,6 +1661,8 @@ i18n
                     },
                     admin: {
                         panel_title: "Панель Администратора",
+                        theme_light: "Светлая тема",
+                        theme_dark: "Тёмная тема",
                         back_to_site: "Вернуться на сайт",
                         logout: "Выйти",
                         collapse: "Свернуть",
@@ -1784,6 +1792,10 @@ i18n
                             role_changed: "Роль \"{{name}}\" изменена на \"{{role}}\"",
                             deleted_ok: "Пользователь \"{{name}}\" удалён",
                             make_admin: "Сделать админом",
+                            page_range: "{{from}}–{{to}} из {{total}}",
+                            pagination: "Страницы",
+                            prev_page: "Предыдущая страница",
+                            next_page: "Следующая страница",
                             make_user: "Сделать пользователем"
                         },
                         form: {
@@ -2559,6 +2571,8 @@ i18n
                     },
                     admin: {
                         panel_title: "Admin Panel",
+                        theme_light: "Light theme",
+                        theme_dark: "Dark theme",
                         back_to_site: "Back to Site",
                         logout: "Log out",
                         collapse: "Collapse",
@@ -2688,6 +2702,10 @@ i18n
                             role_changed: "Role of \"{{name}}\" changed to \"{{role}}\"",
                             deleted_ok: "User \"{{name}}\" deleted",
                             make_admin: "Make Admin",
+                            page_range: "{{from}}–{{to}} of {{total}}",
+                            pagination: "Pages",
+                            prev_page: "Previous page",
+                            next_page: "Next page",
                             make_user: "Make User"
                         },
                         form: {

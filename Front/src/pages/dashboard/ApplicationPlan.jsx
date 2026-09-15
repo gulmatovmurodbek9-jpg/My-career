@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
+import { MapPin,
     ArrowLeft,
     Printer,
     Download,
@@ -162,7 +162,7 @@ const ApplicationPlan = () => {
                     item.order,
                     item.code,
                     item.careerName,
-                    [item.universityName, item.city].filter(Boolean).join("\n"),
+                    [item.universityName, item.address || item.city].filter(Boolean).join("\n"),
                     item.studyForm,
                     [item.paymentType, item.seats > 0 ? `${item.seats} ҷой` : null]
                         .filter(Boolean)
@@ -376,11 +376,17 @@ const ApplicationPlan = () => {
                                     <td className="py-3 pr-3 font-mono text-xs tabular-nums">{item.code}</td>
                                     <td className="py-3 pr-3 font-semibold text-foreground">{item.careerName}</td>
                                     <td className="py-3 pr-3">
+                                        {/* Номи пурра ва суроға: довталаб бояд донад, ки ҳуҷҷатро
+                                            ба куҷо барад. Суроға ҳоло танҳо барои қисми донишгоҳҳо
+                                            дар база ҳаст — дар боқӣ шаҳр мемонад. */}
                                         <div className="text-foreground">
-                                            {item.universityShortName || item.universityName}
+                                            {item.universityName || item.universityShortName}
                                         </div>
-                                        {item.city && (
-                                            <div className="text-xs text-muted-foreground">{item.city}</div>
+                                        {(item.address || item.city) && (
+                                            <div className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
+                                                <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+                                                <span>{item.address || item.city}</span>
+                                            </div>
                                         )}
                                     </td>
                                     <td className="py-3 pr-3 text-muted-foreground">{item.studyForm}</td>

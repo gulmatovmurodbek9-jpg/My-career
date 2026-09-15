@@ -307,7 +307,10 @@ const Layout = () => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="md:hidden absolute top-full left-3 right-3 mt-2 overflow-hidden glass-card shadow-2xl z-50 p-4 max-h-[calc(100vh-88px)] overflow-y-auto"
+                /* На glass-card: overflow-hidden-и он (бе @layer, пас қавитар аз
+                   utility) overflow-y-auto-ро бекор мекард — дар телефони паст
+                   меню аз экран мебаромад ва скрол намешуд. */
+                className="md:hidden absolute top-full left-3 right-3 mt-2 rounded-3xl border border-border bg-card shadow-2xl z-50 p-4 max-h-[calc(100vh-88px)] overflow-y-auto overscroll-contain"
               >
                 <div className="space-y-1">
                   {[...navLinks, ...accountLinks].map((link) => (

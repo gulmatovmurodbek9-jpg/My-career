@@ -143,11 +143,15 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
                         onClick={(e) => e.target === e.currentTarget && onClose()}
                     >
-                        <div className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-0 relative">
+                        {/* На glass-card. .glass-card дар index.css бе @layer аст, пас дар Tailwind 4
+                            аз синфҳои utility қавитар: overflow-hidden-и он overflow-y-auto-ро
+                            бекор мекард ва равзана скрол намешуд; заминаи ниммушаффофи
+                            bg-card/60 аз болои пардаи сиёҳ хокистарӣ менамуд. */}
+                        <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-3xl border border-border bg-card shadow-2xl">
                             {/* ── Header ── */}
-                            <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
+                            <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-primary">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-primary">
                                         {txt("modalTitle", lang)}
                                     </p>
                                     <h2 className="text-lg font-black text-foreground truncate max-w-[400px]">
@@ -156,7 +160,7 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+                                    className="w-9 h-9 rounded-xl border border-border bg-background flex items-center justify-center hover:bg-muted"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
@@ -166,15 +170,15 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                 {/* ── Score badges row ── */}
                                 <div className="grid grid-cols-3 gap-3">
                                     {/* Match % */}
-                                    <div className="glass-card-sm !rounded-xl p-4 text-center">
+                                    <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
                                         <div className="text-3xl font-black text-primary">{matchPercentage}%</div>
-                                        <div className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                                        <div className="text-xs font-semibold text-muted-foreground mt-1">
                                             {txt("match", lang)}
                                         </div>
                                     </div>
 
                                     {/* Similarity scores */}
-                                    <div className="glass-card-sm !rounded-xl p-4 text-center">
+                                    <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
                                         <div className="text-xl font-black text-foreground">
                                             {Math.round(cosineSimilarity * 100)}%
                                             <span className="text-xs font-bold text-muted-foreground ml-1.5">
@@ -195,7 +199,7 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                         <div className={`text-sm font-black ${confidence.color}`}>
                                             {txt(confidence.key, lang)}
                                         </div>
-                                        <div className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-0.5">
+                                        <div className="text-xs font-semibold text-muted-foreground mt-0.5">
                                             {txt("confidence", lang)}
                                         </div>
                                     </div>
@@ -203,11 +207,11 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
 
                                 {/* ── 1. Dual Radar Chart ── */}
                                 <div>
-                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
+                                    <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-primary" />
                                         {txt("profileCompare", lang)}
                                     </h3>
-                                    <div className="glass-card-sm !rounded-xl p-4">
+                                    <div className="rounded-2xl border border-border bg-muted/40 p-4">
                                         <div className="h-[280px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
@@ -255,20 +259,20 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
 
                                 {/* ── 2. Dimension Breakdown Table ── */}
                                 <div>
-                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
+                                    <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                                         <TrendingUp className="w-4 h-4 text-primary" />
                                         {txt("dimBreakdown", lang)}
                                     </h3>
-                                    <div className="glass-card-sm !rounded-xl overflow-hidden">
+                                    <div className="rounded-2xl border border-border bg-muted/40 overflow-hidden">
                                         {/* Table header */}
-                                        <div className="grid grid-cols-[1fr_100px_140px] gap-2 px-4 py-2.5 bg-white/[0.02] border-b border-white/5">
-                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                                        <div className="grid grid-cols-[1fr_100px_140px] gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">
+                                            <span className="text-xs font-semibold text-muted-foreground">
                                                 {txt("dimension", lang)}
                                             </span>
-                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">
+                                            <span className="text-xs font-semibold text-muted-foreground text-center">
                                                 {txt("alignment", lang)}
                                             </span>
-                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground text-right">
+                                            <span className="text-xs font-semibold text-muted-foreground text-right">
                                                 {txt("strength", lang)}
                                             </span>
                                         </div>
@@ -285,14 +289,14 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: idx * 0.05 }}
-                                                    className="grid grid-cols-[1fr_100px_140px] gap-2 items-center px-4 py-3 border-b border-white/[0.03] last:border-b-0 hover:bg-white/[0.02] transition-colors"
+                                                    className="grid grid-cols-[1fr_100px_140px] gap-2 items-center px-4 py-3 border-b border-border/60 last:border-b-0"
                                                 >
                                                     {/* Dimension name — translated */}
                                                     <span className="text-sm font-bold text-foreground">{dimName(dim, lang)}</span>
 
                                                     {/* Alignment bar + percentage */}
                                                     <div className="flex items-center gap-2">
-                                                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                                                             <motion.div
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${pct}%` }}
@@ -305,7 +309,7 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
 
                                                     {/* Strength badge — translated */}
                                                     <div className="flex justify-end">
-                                                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${str.bg} ${str.border} ${str.color}`}>
+                                                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${str.bg} ${str.border} ${str.color}`}>
                                                             {txt(str.key, lang)}
                                                         </span>
                                                     </div>

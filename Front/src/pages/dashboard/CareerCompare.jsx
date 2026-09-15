@@ -4,7 +4,7 @@ import {
     ArrowLeft, Search, Scale, Sparkles, Trophy, ThumbsUp, ThumbsDown,
     Target, TrendingUp, GraduationCap, DollarSign, BarChart3,
     Loader2, AlertCircle, CheckCircle, XCircle, Zap, Crown,
-    BrainCircuit, ChevronRight, Plus, X, Star, ArrowUpRight, Bookmark, Lightbulb
+    ChevronRight, Plus, X, Star, ArrowUpRight, Bookmark, Lightbulb
 } from "lucide-react";
 import { Link } from "react-router";
 import AiBotIcon from "../../components/AiBotIcon";

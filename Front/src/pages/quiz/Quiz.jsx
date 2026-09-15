@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Award,
-    BrainCircuit,
     ArrowRight,
     Target,
     Zap,
@@ -38,6 +37,18 @@ const QUIZ_STORAGE_KEY = "quiz_results_v1";
 const SPEC_WINDOW = 8;
 /* Ҳамон шумора, ки ҷадвали ихтисосҳои кластер нишон медиҳад. */
 const CLUSTER_PAGE_SIZE = 12;
+
+/*
+ * Логотипи «Ихтисоси ман» ба ҷои иконкаи мағз.
+ *
+ * Иконкаи мағз дар корти савол ва нишонҳо ҳамчун «AI» хонда мешуд ва
+ * ба тарҳи сайт мувофиқ набуд. Логотип шаффоф аст ва дар ҳарду мавзӯъ кор
+ * мекунад. Бо ҳамон props-и иконкаи lucide (className) даъват мешавад, то
+ * getIcon онро мисли иконкаи оддӣ баргардонад.
+ */
+const LogoMark = ({ className = "" }) => (
+    <img src="/logo.png" alt="" aria-hidden="true" className={`object-contain ${className}`} />
+);
 
 const Quiz = () => {
     const { t, i18n } = useTranslation();
@@ -341,7 +352,7 @@ const Quiz = () => {
             case "Social": return Users;
             case "Enterprising": return Target;
             case "Conventional": return FileText;
-            default: return BrainCircuit;
+            default: return LogoMark;
         }
     };
 
@@ -592,7 +603,7 @@ const Quiz = () => {
                                 <Users size={80} className="text-secondary" />
                             </div>
                             <div className="inline-flex items-center gap-2 text-secondary text-[9px] font-black uppercase tracking-widest">
-                                <BrainCircuit className="w-4 h-4" />
+                                <LogoMark className="w-4 h-4" />
                                 {t('quiz.personality_type', "Навъи Шаксият")}: {results.topType}
                             </div>
                             <p className="text-sm leading-relaxed font-medium">
@@ -789,7 +800,7 @@ const Quiz = () => {
                 <div className="flex items-center justify-between gap-4">
                     <div className="space-y-2">
                         <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                            <BrainCircuit className="w-3.5 h-3.5" />
+                            <LogoMark className="w-4 h-4" />
                             {stageLabel}
                         </div>
                         <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
@@ -853,7 +864,7 @@ const Quiz = () => {
                         <div className="space-y-5 w-full max-w-lg mx-auto">
                             <div className="flex flex-col items-center gap-3 text-center">
                                 <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                                    <CurrentIcon className="w-5 h-5 text-primary" />
+                                    <CurrentIcon className="w-7 h-7 text-primary" />
                                 </div>
                                 <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight leading-snug">
                                     {questionText}

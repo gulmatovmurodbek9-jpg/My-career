@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    BrainCircuit,
     Bot,
     Sparkles,
     Target,

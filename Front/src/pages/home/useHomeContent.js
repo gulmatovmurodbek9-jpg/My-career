@@ -65,7 +65,7 @@ export function useClusterChapters() {
           ...chapter,
           ...ACCENTS[chapter.clusterId],
           id: match?.id,
-          careerCount: Array.isArray(match?.careers) ? match.careers.length : undefined,
+          careerCount: match?.careerCount ?? (Array.isArray(match?.careers) ? match.careers.length : undefined),
         };
       }),
     [content, live]

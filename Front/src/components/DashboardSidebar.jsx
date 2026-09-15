@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router';
 import {
     LayoutDashboard,
-    BrainCircuit,
+    ClipboardCheck,
     MessageCircle,
     Settings,
     User,
@@ -25,7 +25,7 @@ const DashboardSidebar = () => {
      */
     const menuItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), to: '/dashboard' },
-        { icon: BrainCircuit, label: t('nav.quiz'), to: '/quiz' },
+        { icon: ClipboardCheck, label: t('nav.quiz'), to: '/quiz' },
         { icon: MessageCircle, label: t('nav.ai_advisor'), to: '/dashboard/ai-chat' },
         ...(user?.role === 'admin'
             ? [{ icon: ShieldCheck, label: t('nav.admin', 'Панели админ'), to: '/admin' }]
@@ -33,7 +33,7 @@ const DashboardSidebar = () => {
     ];
 
     return (
-        <aside className="w-full md:w-20 lg:w-64 xl:w-72 md:h-[calc(100vh-136px)] md:sticky md:top-[112px] mb-2 md:mb-0 flex md:flex-col sidebar-glass rounded-[1.5rem] lg:rounded-[2rem] p-2 md:p-4 lg:p-5 xl:p-6 overflow-x-auto md:overflow-hidden shrink-0">
+        <aside className="w-full md:w-20 lg:w-64 xl:w-72 md:h-[calc(100vh-136px)] md:sticky md:top-[112px] mb-2 md:mb-0 flex md:flex-col sidebar-glass rounded-[1.5rem] p-2 md:p-4 lg:p-5 xl:p-6 overflow-x-auto md:overflow-hidden shrink-0">
             <div className="flex md:flex-col flex-1 gap-2 md:gap-2">
                 {menuItems.map((item, idx) => {
                     const isActive = location.pathname === item.to;
@@ -46,7 +46,7 @@ const DashboardSidebar = () => {
                                 : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                                 }`}
                         >
-                            <item.icon className={`w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 group-hover:scale-110 ${isActive ? 'text-primary' : ''}`} />
+                            <item.icon className={`w-5 h-5 md:w-6 md:h-6 ${isActive ? 'text-primary' : ''}`} />
                             <span className="font-bold text-xs md:hidden lg:block tracking-tight whitespace-nowrap">{item.label}</span>
                             {isActive && (
                                 <motion.div

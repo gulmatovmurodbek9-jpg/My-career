@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     BrainCircuit,
+    Bot,
     Sparkles,
     Target,
     TrendingUp,
@@ -22,6 +23,7 @@ import {
     CalendarDays,
 } from "lucide-react";
 import { Link } from "react-router";
+import AiBotIcon from "../../components/AiBotIcon";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
@@ -342,9 +344,7 @@ const CareerAdvisorReport = () => {
                     className="glass-card p-14 text-center flex flex-col items-center gap-6 max-w-md relative overflow-hidden"
                 >
                     <div className="absolute inset-0 tajik-pattern opacity-10 pointer-events-none" />
-                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center relative">
-                        <BrainCircuit className="w-8 h-8 text-primary animate-pulse" />
-                    </div>
+                    <AiBotIcon size="lg" />
                     <div className="space-y-2">
                         <h2 className="text-2xl font-black uppercase tracking-tighter">{t.noQuiz}</h2>
                         <p className="text-muted-foreground text-sm font-medium">{t.noQuizDesc}</p>
@@ -369,37 +369,15 @@ const CareerAdvisorReport = () => {
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center gap-6"
                 >
-                    {/* Animated brain */}
-                    <div className="relative">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-blue/20 flex items-center justify-center">
-                            <BrainCircuit className="w-10 h-10 text-primary" />
-                        </div>
-                        {/* Orbiting dots */}
-                        {[0, 1, 2].map((i) => (
-                            <motion.div
-                                key={i}
-                                className="absolute w-3 h-3 rounded-full bg-gradient-to-r from-primary to-accent-blue"
-                                animate={{
-                                    rotate: 360,
-                                    x: [0, 30 * Math.cos((i * 2 * Math.PI) / 3), 0],
-                                    y: [0, 30 * Math.sin((i * 2 * Math.PI) / 3), 0],
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    delay: i * 0.3,
-                                    ease: "easeInOut",
-                                }}
-                                style={{ top: "50%", left: "50%", marginTop: -6, marginLeft: -6 }}
-                            />
-                        ))}
-                    </div>
+                    {/* Ҳамон нишони AI, ки дар панел аст. Се нуқтаи давразананда
+                        ба ҳар тараф мепариданд ва беқарор менамуданд. */}
+                    <AiBotIcon size="lg" />
                     <div className="text-center space-y-1.5">
-                        <p className="text-foreground font-black text-sm uppercase tracking-[0.15em] flex items-center gap-2">
+                        <p className="text-foreground font-bold text-base flex items-center justify-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin" />
                             {t.generating}
                         </p>
-                        <p className="text-muted-foreground text-xs font-medium opacity-60">{t.generatingDesc}</p>
+                        <p className="text-muted-foreground text-sm">{t.generatingDesc}</p>
                     </div>
                 </motion.div>
             </div>
@@ -441,13 +419,14 @@ const CareerAdvisorReport = () => {
 
                 {/* ── Header ── */}
                 <motion.header variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-4">
-                    <div className="space-y-2">
-                        <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition text-xs font-bold mb-2">
+                    {/* Сутун: «Бозгашт» ва нишони AI ҳарду inline буданд ва дар як сатр ба ҳам мечаспиданд. */}
+                    <div className="flex flex-col items-start gap-3">
+                        <Link to="/dashboard" className="inline-flex items-center gap-1.5 py-1 text-sm font-semibold text-muted-foreground hover:text-foreground">
                             <ArrowLeft className="w-3.5 h-3.5" />
                             {t.back}
                         </Link>
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-accent-blue/10 border border-primary/20 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                            <Sparkles className="w-3.5 h-3.5" />
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-bold uppercase tracking-wide text-primary">
+                            <Bot className="w-3.5 h-3.5" />
                             {t.badge}
                         </div>
                         <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter uppercase">
@@ -474,12 +453,9 @@ const CareerAdvisorReport = () => {
 
                 {/* ═══ SECTION 1: Personality Analysis ═══ */}
                 <motion.section variants={itemVariants}>
-                    <SectionHeader icon={BrainCircuit} title={t.section1} color="from-violet-500 to-purple-500" />
+                    <SectionHeader icon={Bot} title={t.section1} />
                     <div className="glass-card p-6 md:p-8 mt-3">
                         <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
-                                <BrainCircuit className="w-5 h-5 text-violet-400" />
-                            </div>
                             <p className="text-foreground text-base leading-relaxed font-medium">
                                 {report.personalityAnalysis}
                             </p>
@@ -517,7 +493,7 @@ const CareerAdvisorReport = () => {
                             <motion.div
                                 key={idx}
                                 variants={scaleIn}
-                                className={`glass-card p-6 relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 ${idx === 0 ? "ring-1 ring-primary/30" : ""
+                                className={`glass-card p-6 relative overflow-hidden ${idx === 0 ? "ring-1 ring-primary/30" : ""
                                     }`}
                             >
                                 {idx === 0 && (
@@ -565,7 +541,7 @@ const CareerAdvisorReport = () => {
                             <motion.div
                                 key={idx}
                                 variants={itemVariants}
-                                className="glass-card p-5 flex items-start gap-4 group hover:border-amber-500/20 transition-colors duration-300"
+                                className="glass-card p-5 flex items-start gap-4"
                             >
                                 <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <span className="text-sm font-black text-amber-400">{idx + 1}</span>
@@ -684,22 +660,25 @@ const CareerAdvisorReport = () => {
                                     </div>
 
                                     {/* Content */}
-                                    <div className="pb-6 flex-1">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <h5 className="text-base font-black text-foreground">
+                                    {/* Сарлавҳа ва тавсиф дар як сутун, нишони муддат дар сутуни
+                                        худ. Пештар нишон танҳо дар сатри сарлавҳа ҷой дошт ва
+                                        тавсифи дароз дар зери он то канори рост мерафт. */}
+                                    <div className="pb-6 flex-1 flex items-start gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <h5 className="text-base font-bold text-foreground">
                                                 {step.title}
                                             </h5>
-                                            {step.duration && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-500/10 text-rose-400 text-xs font-bold flex-shrink-0">
-                                                    <Clock className="w-3 h-3" />
-                                                    {step.duration}
-                                                </span>
+                                            {step.description && (
+                                                <p className="text-muted-foreground text-[15px] leading-relaxed mt-1.5">
+                                                    {step.description}
+                                                </p>
                                             )}
                                         </div>
-                                        {step.description && (
-                                            <p className="text-muted-foreground text-sm leading-relaxed mt-1.5">
-                                                {step.description}
-                                            </p>
+                                        {step.duration && (
+                                            <span className="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded-md bg-primary/10 text-primary text-[13px] font-semibold flex-shrink-0">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                {step.duration}
+                                            </span>
                                         )}
                                     </div>
                                 </motion.div>
@@ -787,13 +766,12 @@ const CareerAdvisorReport = () => {
 };
 
 /* ─── Section Header Sub-component ─── */
-const SectionHeader = ({ icon: Icon, title, color }) => (
+/* Ҳамон нишони AI-и чат (AiBotIcon) бо иконаи бахш. Ҳошияи
+   градиентии ҳар бахш ранги худро дошт ва ноҳамвор менамуд; `color` дигар
+   истифода намешавад. */
+const SectionHeader = ({ icon: Icon, title }) => (
     <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${color} p-0.5`}>
-            <div className="w-full h-full rounded-[0.5rem] bg-card flex items-center justify-center">
-                <Icon className="w-5 h-5 text-foreground" />
-            </div>
-        </div>
+        <AiBotIcon icon={Icon} size="sm" />
         <h3 className="text-xl font-black text-foreground uppercase tracking-tight">{title}</h3>
     </div>
 );
@@ -885,17 +863,25 @@ const SalaryOutlookCard = ({ data, t }) => {
     );
 };
 
+/* Модел дараҷаро бо англисӣ медиҳад («high»), ва он хом дар саҳифаи тоҷикӣ
+   мебаромад. Луғати demandLevels аллакай буд — танҳо истифода намешуд. */
+const demandText = (value, t) => {
+    if (!value) return "...";
+    const key = String(value).trim().toLowerCase();
+    return t.demandLevels?.[key] || value;
+};
+
 const DemandOutlookCard = ({ data, t }) => (
     <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 space-y-4">
         <h4 className="text-xs font-black uppercase tracking-[0.18em] text-primary">{t.demandOutlook}</h4>
         <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-black/10 p-3">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t.now}</div>
-                <div className="text-lg font-black text-foreground">{data.currentDemand || "..."}</div>
+            <div className="rounded-[0.75rem] border border-border bg-muted/50 p-3">
+                <div className="text-xs font-semibold text-muted-foreground">{t.now}</div>
+                <div className="mt-0.5 text-lg font-bold text-foreground">{demandText(data.currentDemand, t)}</div>
             </div>
-            <div className="rounded-lg bg-primary/10 border border-primary/15 p-3">
-                <div className="text-[10px] uppercase tracking-widest text-primary">{t.in10Years}</div>
-                <div className="text-lg font-black text-primary">{data.in10YearsDemand || "..."}</div>
+            <div className="rounded-[0.75rem] border border-primary/20 bg-primary/10 p-3">
+                <div className="text-xs font-semibold text-primary">{t.in10Years}</div>
+                <div className="mt-0.5 text-lg font-bold text-primary">{demandText(data.in10YearsDemand, t)}</div>
             </div>
         </div>
         {data.neededSpecialists && <p className="text-sm text-muted-foreground leading-relaxed">{data.neededSpecialists}</p>}

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
-import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { degreeLabel } from "../lib/offeringLabels";
 import { clusterLabelNumbered } from "../lib/clusterLabel";
@@ -154,11 +153,9 @@ export default function SpecialtyCard({ specialty }) {
 
   return (
     <Link to={`/info/${specialty.id}`} className="block h-full">
-      <motion.div
-        whileHover={{ y: -8, scale: 1.02 }}
-        className="glass-card glass-card-glow group h-full flex flex-col p-8 transition-all duration-500 cursor-pointer relative overflow-hidden"
-      >
-        <div className="absolute -right-16 -top-16 w-48 h-48 bg-primary/5 blur-[80px] group-hover:bg-primary/20 transition-all duration-700" />
+      {/* Бе hover: корт боло намеравад ва калон намешавад. glass-card низ не —
+          backdrop-blur дар 12 корт ҳар кадри скроллро гарон мекард. */}
+      <div className="relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[1.5rem] border border-border bg-card p-6 sm:p-7">
 
         <div className="flex justify-between items-start mb-6">
           <div className="flex flex-col gap-2">
@@ -182,7 +179,7 @@ export default function SpecialtyCard({ specialty }) {
         </div>
 
         <div className="flex items-center justify-between mb-8">
-          <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 border border-border shadow-xl shadow-primary/5">
+          <div className="w-14 h-14 rounded-[1rem] bg-primary/10 flex items-center justify-center text-primary">
             <Briefcase className="h-8 w-8" />
           </div>
 
@@ -190,7 +187,7 @@ export default function SpecialtyCard({ specialty }) {
             {roadmap.length > 0 && (
               <div className="flex flex-col">
                 <div className="text-xl font-black text-foreground leading-none">{roadmap.length}</div>
-                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t('common.career_steps', 'Қадамҳои')}</div>
+                <div className="text-[11px] font-semibold text-muted-foreground">{t('common.career_steps', 'Қадамҳои')}</div>
               </div>
             )}
             <button
@@ -205,7 +202,7 @@ export default function SpecialtyCard({ specialty }) {
 
         <div className="space-y-4 flex-1">
           <div>
-            <h3 className="font-extrabold text-2xl text-foreground group-hover:text-primary transition-colors leading-tight">
+            <h3 className="font-extrabold text-xl sm:text-2xl text-foreground leading-tight">
               {specialty.nameTranslated || specialty.name}
             </h3>
             {/* Номи расмии тоҷикӣ дар зер мемонад: маҳз бо ҳамин ном
@@ -219,20 +216,13 @@ export default function SpecialtyCard({ specialty }) {
           </p>
         </div>
 
-        <div className="mt-10 flex items-center justify-between pt-6 border-t border-white/5">
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-card bg-muted flex items-center justify-center text-[8px] font-bold">
-                {i === 3 ? '+' : ''}
-              </div>
-            ))}
-          </div>
-
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-foreground group-hover:bg-primary group-hover:text-white group-hover:translate-x-1 transition-all duration-500 shadow-lg">
+        {/* Се доираи «аватар» ҳеҷ маълумот надоштанд — танҳо ороиш. */}
+        <div className="mt-8 flex items-center justify-end pt-5 border-t border-border">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <ArrowRight className="h-4 w-4" />
           </div>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }
@@ -304,16 +294,13 @@ export function SpecialtyCardList({ specialty }) {
 
   return (
     <Link to={`/info/${specialty.id}`} className="block h-full">
-      <motion.div
-        whileHover={{ x: 5 }}
-        className="glass-card glass-card-glow group h-full flex flex-col p-6 transition-all duration-300 border-l-4 border-l-transparent hover:border-l-primary relative overflow-hidden"
-      >
+      <div className="relative flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-border bg-card p-5 sm:p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
-            <span className="text-[9px] font-black uppercase tracking-widest text-primary/70">{specialty.cluster?.clusterName
+            <span className="text-[11px] font-bold uppercase tracking-wide text-primary">{specialty.cluster?.clusterName
               ? clusterLabelNumbered(t, specialty.cluster)
               : t('common.course', "Курси таълимӣ")}</span>
-            <h3 className="font-black text-lg text-foreground group-hover:text-primary transition-colors leading-tight">
+            <h3 className="font-black text-lg text-foreground leading-tight">
               {specialty.nameTranslated || specialty.name}
               {specialty.nameTranslated && (
                 <span className="mt-1 block text-sm font-medium text-muted-foreground">
@@ -351,9 +338,9 @@ export function SpecialtyCardList({ specialty }) {
               <span className={`text-[10px] font-black ${isLiked ? "text-rose-500" : ""}`}>{likesCount}</span>
             </button>
           </div>
-          <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="w-4 h-4 text-primary" />
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }

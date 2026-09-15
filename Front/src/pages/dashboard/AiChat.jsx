@@ -115,7 +115,15 @@ const renderMarkdown = (text) => {
     // wrap consecutive li groups
     html = html.replace(/((?:<li class="ai-ul-item">.*?<\/li>\s*)+)/g, '<ul class="ai-ul">$1</ul>');
     html = html.replace(/((?:<li class="ai-ol-item">.*?<\/li>\s*)+)/g, '<ol class="ai-ol">$1</ol>');
-    html = html.replace(/\n/g, "<br/>");
+    /* Модел байни бандҳои рӯйхат ва атрофи онҳо сатрҳои холӣ мегузорад. Ҳар
+       \n пештар <br/> мешуд, ва дар дохили <ul> холигиҳои калон пайдо мешуданд. */
+    html = html
+        .replace(/\s*(<\/?(?:ul|ol|h2|h3|h4|pre)(?:\s[^>]*)?>)\s*/g, "$1")
+        .replace(/(<\/li>)\s+/g, "$1")
+        .replace(/^\s+|\s+$/g, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .replace(/\n\n/g, '<span class="ai-gap"></span>')
+        .replace(/\n/g, "<br/>");
     return html;
 };
 

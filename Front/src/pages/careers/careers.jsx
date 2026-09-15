@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight, ChevronLeft, ChevronRight,
   ChevronDown, Grid3X3, LayoutList, Search, SlidersHorizontal,
@@ -14,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { clusterLabel } from "../../lib/clusterLabel";
 import { Sparkles, X } from "lucide-react";
 import { usePageMeta } from "../../lib/usePageMeta";
+import FilterSelect from "../../components/FilterSelect";
 import { withLang, currentApiLang } from "../../lib/apiLang";
 
 const LIMIT = 12; // items per page
@@ -49,18 +49,14 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
   const pages = getPages();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-center gap-2 mt-16 flex-wrap"
-    >
+    <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
       {/* Prev */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className="w-11 h-11 rounded-2xl glass-card border border-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed group"
       >
-        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        <ChevronLeft className="w-4 h-4" />
       </button>
 
       {/* Pages */}
@@ -74,7 +70,7 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
             key={page}
             onClick={() => onPageChange(page)}
             className={`w-11 h-11 rounded-2xl text-sm font-black transition-all ${currentPage === page
-              ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
+              ? "bg-primary text-white shadow-lg shadow-primary/30"
               : "glass-card border border-white/10 text-muted-foreground hover:text-foreground hover:border-primary/40"
               }`}
           >
@@ -89,9 +85,9 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
         disabled={currentPage === lastPage}
         className="w-11 h-11 rounded-2xl glass-card border border-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed group"
       >
-        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+        <ChevronRight className="w-4 h-4" />
       </button>
-    </motion.div>
+    </div>
   );
 };
 
@@ -163,7 +159,11 @@ const Careers = () => {
     },
     [setSearchParams]
   );
-  const [priceFilter, setPriceFilter] = useState("all");
+  /* Нарх: корбар «аз» ва «то»-ро худаш менависад. Қиматҳои тайёр (то 2000,
+     то 5000…) ба нархҳои воқеии 1500–30000 мувофиқ набуданд. */
+  const [minPriceInput, setMinPriceInput] = useState("");
+  const [maxPriceInput, setMaxPriceInput] = useState("");
+  const [priceRange, setPriceRange] = useState({ min: null, max: null });
   const [cityFilter, setCityFilter] = useState("all");
   const [cities, setCities] = useState([]);
   const [viewMode, setViewMode] = useState("list");
@@ -208,10 +208,26 @@ const Careers = () => {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
+  /* Дархост на бо ҳар рақам: 450мс пас аз охирин тугма. «Аз» калонтар аз
+     «то» бошад, ҷояшонро иваз мекунем — вагарна натиҷа ҳамеша холӣ буд. */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const toNumber = (text) => {
+        const number = parseInt(String(text).replace(/\D/g, ""), 10);
+        return Number.isFinite(number) && number > 0 ? number : null;
+      };
+      let min = toNumber(minPriceInput);
+      let max = toNumber(maxPriceInput);
+      if (min !== null && max !== null && min > max) [min, max] = [max, min];
+      setPriceRange((prev) => (prev.min === min && prev.max === max ? prev : { min, max }));
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [minPriceInput, maxPriceInput]);
+
   // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, selectedCluster, priceFilter, cityFilter]);
+  }, [debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter]);
 
   // Fetch careers (server-side pagination)
   /**
@@ -237,7 +253,8 @@ const Careers = () => {
       limit: LIMIT,
       ...(debouncedSearch && { search: debouncedSearch }),
       ...(selectedCluster !== "all" && { clusterId: selectedCluster }),
-      ...(priceFilter !== "all" && { maxPrice: parseInt(priceFilter) }),
+      ...(priceRange.min !== null && { minPrice: priceRange.min }),
+      ...(priceRange.max !== null && { maxPrice: priceRange.max }),
       ...(cityFilter !== "all" && { city: cityFilter }),
     };
 
@@ -259,7 +276,7 @@ const Careers = () => {
     return () => controller.abort();
     /* Забон дар вобастагиҳост: бе он рӯйхат ҳангоми иваз шудани забон
        бо матни кӯҳна мемонад. */
-  }, [currentPage, debouncedSearch, selectedCluster, priceFilter, cityFilter, i18n.language, aiActive]);
+  }, [currentPage, debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter, i18n.language, aiActive]);
 
   /* Ҷустуҷӯи AI. Танҳо бо пахши тугма ё Enter — на бо ҳар ҳарф: ҳар даъват
      як дархост ба модел аст. */
@@ -377,15 +394,6 @@ const Careers = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.06 } }
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
-  };
-
   // Шумораи ихтисоси ҳар кластер аллакай дар худи ҷавоби API ҳаст
   // (relations: ['careers']), барои ҳамин дархости иловагӣ лозим нест.
   /* Рақами кластер (1–5) ҳатмист, на ороиш: ариза ба ММТ маҳз ба ЯК
@@ -397,23 +405,24 @@ const Careers = () => {
       number: cluster.clusterId,
       name: clusterLabel(t, cluster),
       icon: cluster.clusterIcon,
-      count: Array.isArray(cluster.careers) ? cluster.careers.length : 0,
+      count: cluster.careerCount ?? (Array.isArray(cluster.careers) ? cluster.careers.length : 0),
     }))
     .sort((a, b) => (a.number ?? 99) - (b.number ?? 99));
   const totalCount = clusterCounts.reduce((sum, c) => sum + c.count, 0);
 
   const hasFilters =
-    selectedCluster !== "all" || searchQuery || priceFilter !== "all" || cityFilter !== "all";
+    selectedCluster !== "all" || searchQuery || minPriceInput || maxPriceInput || cityFilter !== "all";
 
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedCluster("all");
-    setPriceFilter("all");
+    setMinPriceInput("");
+    setMaxPriceInput("");
     setCityFilter("all");
   };
 
-  const selectClass =
-    "w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-[15px] font-medium text-foreground transition-colors focus-ring";
+  const priceInputClass =
+    "w-full rounded-[0.75rem] border border-border bg-background px-3 py-2.5 text-[15px] font-medium tabular-nums text-foreground placeholder:text-muted-foreground focus-ring";
 
   usePageMeta({
     title: t("misc2.meta_careers_title"),
@@ -422,7 +431,7 @@ const Careers = () => {
   });
 
   return (
-    <div className="pb-24">
+    <div>
       {/* ═══ САРЛАВҲА ═══ */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
@@ -553,14 +562,14 @@ const Careers = () => {
             {/* Саволи аниқкунанда. Ҳар вариант шумораи воқеии худро нишон
                 медиҳад — он дар сервер аз база ҳисоб шудааст, на аз модел. */}
             {aiOptions.length > 0 && !aiChoice && !aiError && (
-              <div className="mt-5 rounded-2xl border-2 border-primary/20 bg-primary/5 p-5">
-                <p className="flex items-start gap-2 text-[15px] font-bold text-foreground">
+              <div className="mt-5 rounded-[1.5rem] border border-primary/20 bg-primary/5 p-3 sm:rounded-[1.75rem] sm:p-4">
+                <p className="flex items-start gap-2 px-1 pt-1 text-[15px] font-bold text-foreground">
                   <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   {aiQuestion || aiT("ai_search.pick_field")}
                 </p>
                 {/* Корт, на чип: бе шарҳ хонанда намедонад, ки «Энергетика ва
                     бинокорӣ» дар амал чӣ кор аст. */}
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {aiOptions.map((option, index) => {
                     const label = option.clusterNumber
                       ? clusterLabel(aiT, { clusterId: option.clusterNumber })
@@ -576,13 +585,13 @@ const Careers = () => {
                         key={index}
                         type="button"
                         onClick={() => chooseAiOption(option)}
-                        className="group flex h-full flex-col items-start gap-1.5 rounded-xl border-2 border-border bg-card p-4 text-left transition-colors hover:border-primary/40 focus-ring"
+                        className="flex h-full flex-col items-start gap-1.5 rounded-[0.75rem] border border-border bg-card p-4 text-left hover:border-primary/50 focus-ring"
                       >
                         <span className="flex w-full items-start justify-between gap-3">
-                          <span className="text-[15px] font-bold leading-snug text-foreground group-hover:text-primary">
+                          <span className="text-[15px] font-bold leading-snug text-foreground">
                             {label}
                           </span>
-                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[12px] font-black text-muted-foreground">
+                          <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-[12px] font-bold tabular-nums text-muted-foreground">
                             {option.count}
                           </span>
                         </span>
@@ -683,26 +692,20 @@ const Careers = () => {
                 </button>
               </div>
             ) : (
-              <AnimatePresence mode="wait">
-                <motion.ul
-                  key={`${currentPage}-${selectedCluster}-${debouncedSearch}-${viewMode}`}
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="show"
-                  exit={{ opacity: 0 }}
-                  className={viewMode === "grid" ? "mt-8 grid gap-5 sm:grid-cols-2" : "mt-8 grid gap-4"}
-                >
+              /* Бе stagger: 12 корт бо фосилаи 0.06с ва аниматсияи 0.5с рӯйхатро
+                 қариб як сония пинҳон медошт, ва mode="wait" онро боз ба интизори
+                 пӯшидани рӯйхати кӯҳна мегузошт. */
+              <ul className={viewMode === "grid" ? "mt-8 grid gap-5 sm:grid-cols-2" : "mt-8 grid gap-4"}>
                   {careers.map((career) => (
-                    <motion.li key={career.id} variants={itemVariants}>
+                    <li key={career.id}>
                       {viewMode === "grid" ? (
                         <SpecialtyCard specialty={career} />
                       ) : (
                         <SpecialtyCardList specialty={career} />
                       )}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
-              </AnimatePresence>
+              </ul>
             )}
 
             {!loading && careers.length > 0 && (
@@ -712,9 +715,12 @@ const Careers = () => {
                   lastPage={meta.lastPage}
                   onPageChange={handlePageChange}
                 />
-                <p className="mt-6 text-center text-[15px] text-muted-foreground">
-                  {(currentPage - 1) * LIMIT + 1}–{Math.min(currentPage * LIMIT, meta.total)} аз{" "}
-                  {meta.total}
+                <p className="mt-4 text-center text-[15px] text-muted-foreground">
+                  {t("careers_page.range", {
+                    from: (currentPage - 1) * LIMIT + 1,
+                    to: Math.min(currentPage * LIMIT, meta.total),
+                    total: meta.total,
+                  })}
                 </p>
               </>
             )}
@@ -773,43 +779,63 @@ const Careers = () => {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-2xl border-2 border-border bg-card p-5">
+            <div className="space-y-5 rounded-2xl border-2 border-border bg-card p-5">
               {cities.length > 0 && (
-                <label className="block">
+                <div>
                   <span className="mb-2 block text-[15px] font-semibold text-foreground">
                     {t("careers_page.city_label", "Шаҳр")}
                   </span>
-                  <select
+                  <FilterSelect
                     value={cityFilter}
-                    onChange={(e) => setCityFilter(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="all">{t("careers_page.all_cities", "Ҳамаи шаҳрҳо")}</option>
-                    {cities.map((entry) => (
-                      <option key={entry.city} value={entry.city}>
-                        {entry.city} ({entry.count})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    onChange={setCityFilter}
+                    searchable
+                    ariaLabel={t("careers_page.city_label", "Шаҳр")}
+                    searchPlaceholder={t("careers_page.city_search", "Ҷустуҷӯи шаҳр...")}
+                    emptyText={t("careers_page.city_empty", "Шаҳр ёфт нашуд")}
+                    options={[
+                      { value: "all", label: t("careers_page.all_cities", "Ҳамаи шаҳрҳо") },
+                      ...cities.map((entry) => ({ value: entry.city, label: entry.city, count: entry.count })),
+                    ]}
+                  />
+                </div>
               )}
 
-              <label className="block">
-                <span className="mb-2 block text-[15px] font-semibold text-foreground">
+              <fieldset>
+                <legend className="mb-2 block text-[15px] font-semibold text-foreground">
                   {t("careers_page.price_label", "Нархи таҳсил")}
-                </span>
-                <select
-                  value={priceFilter}
-                  onChange={(e) => setPriceFilter(e.target.value)}
-                  className={selectClass}
-                >
-                  <option value="all">{t("careers_page.all_prices", "Ҳамаи нархҳо")}</option>
-                  <option value="2000">{t("careers_page.under_2k", "То 2,000 сомонӣ")}</option>
-                  <option value="5000">{t("careers_page.under_5k", "То 5,000 сомонӣ")}</option>
-                  <option value="10000">{t("careers_page.under_10k", "То 10,000 сомонӣ")}</option>
-                  <option value="15000">{t("careers_page.under_15k", "То 15,000 сомонӣ")}</option>
-                </select>
-              </label>
+                </legend>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block">
+                    <span className="mb-1 block text-[13px] font-medium text-muted-foreground">
+                      {t("careers_page.price_min", "Аз")}
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={minPriceInput}
+                      onChange={(e) => setMinPriceInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="0"
+                      className={priceInputClass}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-[13px] font-medium text-muted-foreground">
+                      {t("careers_page.price_max", "То")}
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={maxPriceInput}
+                      onChange={(e) => setMaxPriceInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder={t("careers_page.price_no_limit", "бе ҳад")}
+                      className={priceInputClass}
+                    />
+                  </label>
+                </div>
+                <p className="mt-2 text-[12px] leading-snug text-muted-foreground">
+                  {t("careers_page.price_hint", "Сомонӣ дар як сол")}
+                </p>
+              </fieldset>
 
               {hasFilters && (
                 <button

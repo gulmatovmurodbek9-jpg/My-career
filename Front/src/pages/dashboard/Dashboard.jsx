@@ -1,7 +1,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
-    BrainCircuit,
+    ClipboardCheck,
     Heart,
     Bookmark,
     Award,
@@ -25,6 +25,7 @@ import { useToast } from "../../components/toast/ToastProvider";
 import axios from "axios";
 import { API } from "../../lib/config";
 import { Link } from "react-router";
+import AiBotIcon from "../../components/AiBotIcon";
 
 const Dashboard = () => {
     const { t } = useTranslation();
@@ -161,7 +162,7 @@ const Dashboard = () => {
                         {!matches.length && (
                             <Link to="/quiz">
                                 <button className="btn-primary !px-6 !py-3 !text-xs !rounded-xl group cursor-pointer">
-                                    <BrainCircuit className="w-4 h-4" />
+                                    <ClipboardCheck className="w-4 h-4" />
                                     {t('dashboard.start_quiz_btn')}
                                 </button>
                             </Link>
@@ -232,15 +233,13 @@ const Dashboard = () => {
                             </Suspense>
                         </motion.div>
 
+                        {/* Кортҳои CTA бе hover: на заминаи дурахшон, на тирчаи ҳаракаткунанда. */}
                         {/* 2.5 AI Career Advisor CTA */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/ai-advisor">
-                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
-                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
-                                            <BrainCircuit className="h-6 w-6" />
-                                        </span>
+                                        <AiBotIcon size="md" online />
                                         <div>
                                             <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
                                                 {t('dashboard.ai_advisor_title')}
@@ -250,7 +249,7 @@ const Dashboard = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all relative" />
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground relative" />
                                 </div>
                             </Link>
                         </motion.div>
@@ -258,10 +257,9 @@ const Dashboard = () => {
                         {/* 2.55 AI Chat CTA */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/ai-chat">
-                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-emerald-600/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
-                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 transition-colors duration-300 group-hover:bg-emerald-600 group-hover:text-white dark:bg-emerald-400/10 dark:text-emerald-400 dark:group-hover:bg-emerald-400 dark:group-hover:text-emerald-950">
+                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
                                             <MessageSquare className="h-6 w-6" />
                                         </span>
                                         <div>
@@ -273,7 +271,7 @@ const Dashboard = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all relative" />
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground relative" />
                                 </div>
                             </Link>
                         </motion.div>
@@ -281,10 +279,9 @@ const Dashboard = () => {
                         {/* 2.6 Career Compare CTA */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/compare">
-                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-secondary/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
-                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-colors duration-300 group-hover:bg-secondary group-hover:text-secondary-foreground">
+                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
                                             <Scale className="h-6 w-6" />
                                         </span>
                                         <div>
@@ -296,7 +293,7 @@ const Dashboard = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all relative" />
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground relative" />
                                 </div>
                             </Link>
                         </motion.div>
@@ -304,10 +301,9 @@ const Dashboard = () => {
                         {/* 2.65 Рӯйхати ҳуҷҷатсупорӣ */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/plan">
-                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 group cursor-pointer hover:border-emerald-600/30 transition-all duration-300 relative overflow-hidden">
-                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
-                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 transition-colors duration-300 group-hover:bg-emerald-600 group-hover:text-white dark:bg-emerald-400/10 dark:text-emerald-400 dark:group-hover:bg-emerald-400 dark:group-hover:text-emerald-950">
+                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
                                             <FileText className="h-6 w-6" />
                                         </span>
                                         <div>
@@ -319,7 +315,7 @@ const Dashboard = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-600 group-hover:translate-x-1 transition-all relative" />
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground relative" />
                                 </div>
                             </Link>
                         </motion.div>
@@ -379,7 +375,7 @@ const Dashboard = () => {
                             клик ба он мерасид, на ба тугма. */}
                         <div className="absolute inset-0 tajik-pattern opacity-10 pointer-events-none" />
                         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center relative">
-                            <BrainCircuit className="w-8 h-8 text-primary animate-pulse" />
+                            <ClipboardCheck className="w-8 h-8 text-primary" />
                         </div>
                         <div className="max-w-md space-y-2">
                             <h2 className="text-3xl font-black uppercase tracking-tighter">{t('dashboard.empty_title')}</h2>

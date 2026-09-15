@@ -318,12 +318,12 @@ const normalizeCareerItem = (item, fallbackName = "") => {
 
     if (typeof item !== "object") return null;
 
-    const careerName = item.career || item.name || item.title || fallbackName;
-    if (!careerName) return null;
+    const itemName = item.career || item.name || item.title || fallbackName;
+    if (!itemName) return null;
 
     return {
         ...item,
-        career: careerName,
+        career: itemName,
         matchPercentage: Number(
             item.matchPercentage ??
             item.match ??

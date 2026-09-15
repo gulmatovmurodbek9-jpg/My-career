@@ -407,7 +407,10 @@ const Quiz = () => {
      * намегӯяд. Номҳо аз ҳамон манбаи умумии панел гирифта мешаванд, то ду
      * саҳифа якхела бошанд ва дар ҳар се забон тарҷума шаванд.
      */
-    const clusterLabel = (key) => {
+    /* Номи дигар ҳатмист: clusterLabel аз lib/clusterLabel импорт шудааст.
+       Бо ҳамон ном ин const импортро пинҳон мекард, ва сатри болоӣ онро пеш аз
+       эълон даъват мекард — ReferenceError ва тамоми саҳифа меафтод. */
+    const mmtClusterLabel = (key) => {
         const cluster = MMT_CLUSTERS.find((c) => c.key === key);
         return cluster ? t(cluster.i18nKey, cluster.fallback) : key.toUpperCase();
     };
@@ -419,7 +422,7 @@ const Quiz = () => {
         const rankedClusters = Object.entries(results.scores?.mmtClusters || {})
             .map(([key, score]) => ({
                 key,
-                label: clusterLabel(key),
+                label: mmtClusterLabel(key),
                 raw: Number(score) || 0,
                 percent: Math.min(100, Math.round(((Number(score) || 0) / 40) * 100)),
             }))

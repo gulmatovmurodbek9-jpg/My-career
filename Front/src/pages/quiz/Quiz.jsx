@@ -8,6 +8,8 @@ import {
     Zap,
     Users,
     ChevronLeft,
+    ChevronRight,
+    Check,
     Trophy,
     Sparkles,
     Search,
@@ -719,42 +721,50 @@ const Quiz = () => {
     const questionText = typeof currentQuestion.question === "string"
         ? currentQuestion.question
         : currentQuestion.question?.[activeLang] || currentQuestion.question?.tj || "";
+    /* Навъи савол аз сервер ('scenario', 'Realistic', …) — танҳо агар тарҷума дошта бошад
+       нишон дода мешавад, то калимаи хоми англисӣ дар саҳифаи тоҷикӣ набарояд. */
+    const typeKey = String(currentQuestion.type || "").toLowerCase();
+    const typeLabel = !typeKey ? ""
+        : i18n.exists(`quiz.type_${typeKey}`) ? t(`quiz.type_${typeKey}`)
+        : i18n.exists(`quiz.category.${typeKey}`) ? t(`quiz.category.${typeKey}`)
+        : "";
 
     /* px-4 ҳатмист: <main> барои саҳифаҳои ғайрипанелӣ padding-и уфуқӣ надорад,
        ва бе ин сарлавҳа дар телефон ба ҳарду канор мечаспид ва бурида мешуд. */
     return (
         <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 relative">
             <div className="space-y-4 relative">
-                {/* Header Section */}
+                {/* Сарлавҳа. Навиштаҳои 6–7px дар телефон хонда намешуданд,
+                    ва "Progress" / "answered" бо англисӣ сахт навишта шуда буданд. */}
                 <div className="flex items-center justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="inline-flex items-center gap-2 text-[7px] font-black uppercase tracking-[0.2em] text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                            <BrainCircuit className="w-2.5 h-2.5" />
+                    <div className="space-y-2">
+                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                            <BrainCircuit className="w-3.5 h-3.5" />
                             {stageLabel}
                         </div>
-                        <h1 className="text-xl font-black text-foreground tracking-tighter uppercase leading-none">
+                        <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
                             {t('quiz.title')}
                         </h1>
                     </div>
 
-                    <div className="glass-card !p-2.5 flex items-center gap-3">
+                    <div className="shrink-0 rounded-2xl border border-border bg-card px-4 py-2.5 flex items-center gap-4">
                         <div className="text-center">
-                            <div className="text-base font-black text-primary">{Math.round(progress)}%</div>
-                            <div className="text-[6px] font-black uppercase tracking-widest opacity-40">Progress</div>
+                            <div className="text-lg font-black text-primary leading-none">{Math.round(progress)}%</div>
+                            <div className="mt-1 text-[11px] font-semibold text-muted-foreground">{t('quiz.progress')}</div>
                         </div>
-                        <div className="w-px h-5 bg-border/50" />
+                        <div className="w-px h-8 bg-border" />
                         <div className="text-center">
-                            <div className="text-base font-black text-foreground">
-                                {currentStep + 1}<span className="opacity-20 text-xs">/{questions.length}</span>
+                            <div className="text-lg font-black text-foreground leading-none">
+                                {currentStep + 1}<span className="text-sm font-bold text-muted-foreground">/{questions.length}</span>
                             </div>
-                            <div className="text-[6px] font-black uppercase tracking-widest opacity-40">{t('quiz.question')}</div>
+                            <div className="mt-1 text-[11px] font-semibold text-muted-foreground">{t('quiz.question')}</div>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    <span>{answeredCount} / {questions.length} answered</span>
-                    <span>{currentQuestion?.type || "quiz"}</span>
+                <div className="flex items-center justify-between gap-3 text-sm font-semibold text-muted-foreground">
+                    <span>{t('quiz.answered_of', { done: answeredCount, total: questions.length })}</span>
+                    {typeLabel && <span>{typeLabel}</span>}
                 </div>
 
                 {/* Progress Bar */}
@@ -777,78 +787,96 @@ const Quiz = () => {
                                 >
                                     <div className="w-12 h-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin mb-4"></div>
                                     <h3 className="text-xl font-black uppercase tracking-widest text-primary">{t("misc2.cluster_analysis")}</h3>
-                                    <p className="text-sm text-muted-foreground mt-2">Омодасозии саволҳои махсус</p>
+                                    <p className="text-sm text-muted-foreground mt-2">{t("quiz.preparing")}</p>
                                 </motion.div>
                             )}
+                    {/* На glass-card: он ҳангоми hover тамоми кортро боло мебардошт ва
+                        ҳошияашро медурахшонд. Саволи тест бояд ором истад. */}
                     <motion.div
                         key={currentQuestion.id}
-                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 1.02, y: -10 }}
-                        className="glass-card glass-card-glow p-8 md:p-12 min-h-[400px] flex flex-col items-center justify-center text-center"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                        className="rounded-[1.75rem] border border-border bg-card shadow-sm p-5 sm:p-8"
                     >
-                        <div className="space-y-6 w-full max-w-md">
-                            <div className="space-y-3">
-                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto transition-transform duration-500 hover:rotate-12">
+                        <div className="space-y-5 w-full max-w-lg mx-auto">
+                            <div className="flex flex-col items-center gap-3 text-center">
+                                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
                                     <CurrentIcon className="w-5 h-5 text-primary" />
                                 </div>
-                                <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight leading-tight">
+                                <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight leading-snug">
                                     {questionText}
                                 </h2>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-2">
-                                {currentQuestion.options.map((option, idx) => (
-                                    <motion.button
-                                        key={idx}
-                                        whileHover={{ x: 4 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleAnswer(idx)}
-                                        className={`p-4 rounded-2xl border text-[10px] font-black tracking-[0.2em] transition-all flex items-center justify-between group cursor-pointer ${
-                                            currentAnswer === idx
-                                                ? "border-primary/40 bg-primary/15 text-primary"
-                                                : "border-white/5 bg-white/5 hover:bg-primary/20 hover:text-primary hover:border-primary/30"
-                                        }`}
-                                    >
-                                        <span className="uppercase">
-                                            {typeof option.text === "string"
-                                                ? option.text
-                                                : option.text?.[activeLang] || option.text?.tj || ""}
-                                        </span>
-                                        <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                                            <ArrowRight className="w-3 h-3" />
-                                        </div>
-                                    </motion.button>
-                                ))}
+                            {/* Ҷавобҳо бо ҳарфи хурди муқаррарӣ ва бе фосилаи калони ҳарфҳо —
+                                UPPERCASE + tracking-[0.2em] матни дароз дар 10px хонда намешуд.
+                                Ба ҷои тирча ҳарфи A/B/C; ҷавоби интихобшуда аломати ✓ мегирад. */}
+                            <div className="grid grid-cols-1 gap-2.5">
+                                {currentQuestion.options.map((option, idx) => {
+                                    const selected = currentAnswer === idx;
+                                    const optionText = typeof option.text === "string"
+                                        ? option.text
+                                        : option.text?.[activeLang] || option.text?.tj || "";
+                                    return (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => handleAnswer(idx)}
+                                            aria-pressed={selected}
+                                            className={`w-full flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border text-left text-[15px] sm:text-base font-semibold leading-snug text-foreground cursor-pointer ${
+                                                selected
+                                                    ? "border-primary bg-primary/10"
+                                                    : "border-border bg-muted/40 hover:border-primary/50"
+                                            }`}
+                                        >
+                                            <span
+                                                className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-sm font-black ${
+                                                    selected
+                                                        ? "bg-primary text-white"
+                                                        : "bg-background border border-border text-muted-foreground"
+                                                }`}
+                                            >
+                                                {selected ? <Check className="w-4 h-4" /> : String.fromCharCode(65 + idx)}
+                                            </span>
+                                            <span className="flex-1">{optionText}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Back Button */}
-                {currentStep > 0 && (
-                    <button
-                        onClick={() => setCurrentStep(currentStep - 1)}
-                        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-[8px] font-black tracking-widest uppercase cursor-pointer"
-                    >
-                        <ChevronLeft className="w-3 h-3" />
-                        {t('quiz.back')}
-                    </button>
-                )}
-                {currentStep < questions.length - 1 && (
-                    <button
-                        onClick={() => canGoNext && setCurrentStep(currentStep + 1)}
-                        disabled={!canGoNext}
-                        className={`ml-auto flex items-center gap-1.5 text-[8px] font-black tracking-widest uppercase transition-colors ${
-                            canGoNext
-                                ? "text-primary hover:text-primary/80 cursor-pointer"
-                                : "text-muted-foreground/40 cursor-not-allowed"
-                        }`}
-                    >
-                        {t('common.next', "Next")}
-                        <ArrowRight className="w-3 h-3" />
-                    </button>
-                )}
+                {/* Тугмаҳои поён дар як сатр. Пештар 8px буданд ва "Оянда" базӯр намоён буд. */}
+                <div className="flex items-center gap-3 pt-1">
+                    {currentStep > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setCurrentStep(currentStep - 1)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-bold text-foreground cursor-pointer"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            {t('quiz.back')}
+                        </button>
+                    )}
+                    {currentStep < questions.length - 1 && (
+                        <button
+                            type="button"
+                            onClick={() => canGoNext && setCurrentStep(currentStep + 1)}
+                            disabled={!canGoNext}
+                            className={`ml-auto inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold ${
+                                canGoNext
+                                    ? "bg-primary text-white cursor-pointer"
+                                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                            }`}
+                        >
+                            {t('common.next', "Next")}
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

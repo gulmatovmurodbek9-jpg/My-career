@@ -9,6 +9,7 @@ import {
   ShieldOff,
   User as UserIcon,
   BadgeCheck,
+  ClipboardCheck,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -21,6 +22,27 @@ import ConfirmDialog from "../../components/admin/ConfirmDialog";
 
 /* 20 сатр: ҷадвал дар экрани ноутбук бе скролли дароз ҷой мегирад. */
 const PAGE_SIZE = 20;
+
+/* Ранги аватар аз email: ҳар корбар ранги худро дорад ва он ҳамеша ҳамон
+   мемонад. Ранг ҳам дар мавзӯи равшан ва ҳам дар торик хонда мешавад. */
+const AVATAR_TONES = [
+  "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+  "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  "bg-rose-500/15 text-rose-700 dark:text-rose-300",
+  "bg-violet-500/15 text-violet-700 dark:text-violet-300",
+  "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300",
+  "bg-orange-500/15 text-orange-700 dark:text-orange-300",
+  "bg-teal-500/15 text-teal-700 dark:text-teal-300",
+];
+const avatarTone = (seed = "") => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return AVATAR_TONES[hash % AVATAR_TONES.length];
+};
+
+/* Ҳамон равзана, ки дошборд барои «Ҳозир дар сайт» истифода мебарад. */
+const ONLINE_MINUTES = 5;
 
 const AdminUsers = () => {
   const { token, user: currentUser } = useAuthStore();
@@ -100,6 +122,16 @@ const AdminUsers = () => {
     else if (pageNumbers[pageNumbers.length - 1] !== "…") pageNumbers.push("…");
   }
 
+  const lastSeen = (iso) => {
+    if (!iso) return { online: false, label: t("admin.activity.never") };
+    const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (minutes < ONLINE_MINUTES) return { online: true, label: t("admin.activity.just_now") };
+    if (minutes < 60) return { online: false, label: t("admin.activity.minutes_ago", { count: minutes }) };
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return { online: false, label: t("admin.activity.hours_ago", { count: hours }) };
+    return { online: false, label: t("admin.activity.days_ago", { count: Math.floor(hours / 24) }) };
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -147,9 +179,10 @@ const AdminUsers = () => {
                 <tr className="border-b border-border text-muted-foreground text-[13px] uppercase tracking-wider">
                   <th className="px-6 py-3 w-12">#</th>
                   <th className="px-6 py-3">{t("admin.users.user")}</th>
-                  <th className="px-6 py-3">{t("admin.users.email")}</th>
                   <th className="px-6 py-3 text-center">{t("admin.users.role")}</th>
+                  <th className="px-6 py-3">{t("admin.users.quiz", "Санҷиш")}</th>
                   <th className="px-6 py-3">{t("admin.users.date")}</th>
+                  <th className="px-6 py-3 text-right">{t("admin.users.last_seen", "Охирин фаъолият")}</th>
                   <th className="px-6 py-3 text-right">{t("admin.users.actions")}</th>
                 </tr>
               </thead>
@@ -175,24 +208,22 @@ const AdminUsers = () => {
                         <td className="px-6 py-3.5 text-muted-foreground/80 font-mono text-[13px]">{pageStart + i + 1}</td>
                         <td className="px-6 py-3.5">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-accent-blue/15 flex items-center justify-center border border-primary/15">
-                              <span className="text-[13px] font-bold text-primary">
-                                {displayName.charAt(0).toUpperCase()}
-                              </span>
+                            <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-[14px] font-bold ${avatarTone(user.email || displayName)}`}>
+                              {displayName.charAt(0).toUpperCase()}
                             </div>
-                            <div>
-                              <div className="font-semibold text-foreground text-[15px]">
-                                {displayName}
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 font-semibold text-foreground text-[15px]">
+                                <span className="truncate">{displayName}</span>
                                 {isSelf && (
-                                  <span className="ml-2 text-[11px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-md font-bold">
+                                  <span className="shrink-0 text-[11px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-md font-bold">
                                     {t("admin.users.you")}
                                   </span>
                                 )}
                               </div>
+                              <div className="truncate text-[13px] text-muted-foreground">{user.email}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-3.5 text-muted-foreground text-[13px]">{user.email}</td>
                         <td className="px-6 py-3.5 text-center">
                           {/* Се нақш ҳаст, на ду. Пештар танҳо `admin` ҷудо
                               мешуд, ва мутахассисон ҳамчун «User» нишон дода
@@ -208,11 +239,31 @@ const AdminUsers = () => {
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/60 text-muted-foreground text-[13px] font-semibold">
-                              <UserIcon className="w-3 h-3" /> User
+                              <UserIcon className="w-3 h-3" /> {t("admin.users.role_user", "Корбар")}
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-3.5 text-muted-foreground text-[13px]">{formatDate(user.createdAt)}</td>
+                        <td className="px-6 py-3.5">
+                          {user.quizResults ? (
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-primary/10 px-2.5 py-1 text-[13px] font-semibold text-primary">
+                              <ClipboardCheck className="w-3 h-3" /> {t("admin.users.quiz_done", "Супорида")}
+                            </span>
+                          ) : (
+                            <span className="text-[13px] text-muted-foreground/70">{t("admin.users.quiz_none", "Не")}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-muted-foreground text-[13px] tabular-nums">{formatDate(user.createdAt)}</td>
+                        <td className="px-6 py-3.5 text-right">
+                          {(() => {
+                            const seen = lastSeen(user.lastSeenAt);
+                            return (
+                              <span className={`inline-flex items-center justify-end gap-1.5 whitespace-nowrap text-[13px] ${seen.online ? "font-semibold text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                                {seen.online && <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />}
+                                {seen.label}
+                              </span>
+                            );
+                          })()}
+                        </td>
                         <td className="px-6 py-3.5 text-right">
                           {/* Пештар `opacity-0 group-hover:opacity-100` буд:
                               сутуни «Амалҳо» холӣ менамуд, ва дар экрани

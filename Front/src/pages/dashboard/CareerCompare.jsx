@@ -7,6 +7,7 @@ import {
     BrainCircuit, ChevronRight, Plus, X, Star, ArrowUpRight, Bookmark
 } from "lucide-react";
 import { Link } from "react-router";
+import AiBotIcon from "../../components/AiBotIcon";
 import { useTranslation } from "react-i18next";
 import { clusterLabel } from "../../lib/clusterLabel";
 import { careerName, careerDescription } from "../../lib/careerText";
@@ -101,6 +102,7 @@ const labels = {
         factFreeYes: "Ҳаст",
         factFreeNo: "Нест",
         factsNote: "Ин рақамҳо аз базаи мо гирифта шудаанд, на аз AI.",
+        factsPurpose: "Ин ҷадвал ҷавоби AI-ро месанҷад. Коди ММТ, муддат, нарх, ҷойи ройгон ва шумораи донишгоҳҳо рост аз базаи расмии мо гирифта шудаанд, на аз AI. Агар AI дар боло чизи дигар гӯяд, ба ин ҷадвал бовар кунед.",
         savedTitle: "Захирашуда",
         savedDesc: "Ихтисосҳое, ки шумо захира кардаед",
         suggestedGroupTitle: "Аз рӯи натиҷаи санҷиш",
@@ -169,6 +171,7 @@ const labels = {
         factFreeYes: "Есть",
         factFreeNo: "Нет",
         factsNote: "Эти цифры взяты из нашей базы, а не от AI.",
+        factsPurpose: "Эта таблица проверяет ответ AI. Код НЦТ, срок обучения, цена, бюджетные места и число университетов взяты прямо из нашей официальной базы, а не от AI. Если выше AI говорит иначе — верьте таблице.",
         savedTitle: "Сохранённые",
         savedDesc: "Специальности, которые вы сохранили",
         suggestedGroupTitle: "По результатам теста",
@@ -237,6 +240,7 @@ const labels = {
         factFreeYes: "Yes",
         factFreeNo: "No",
         factsNote: "These figures come from our database, not from the AI.",
+        factsPurpose: "This table checks the AI's answer. The NTC code, duration, price, free places and number of universities come straight from our official database, not from the AI. If the AI says something different above, trust this table.",
         savedTitle: "Saved",
         savedDesc: "The specialties you saved",
         suggestedGroupTitle: "From your quiz result",
@@ -718,7 +722,7 @@ const CareerCompare = () => {
                             <ArrowLeft className="w-3.5 h-3.5" />
                             {t.back}
                         </Link>
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-accent-blue/10 to-primary/10 border border-secondary/20 text-[10px] font-black uppercase tracking-[0.2em] text-secondary">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-accent-blue/10 to-primary/10 border border-secondary/20 text-xs font-bold uppercase tracking-wide text-secondary">
                             <Scale className="w-3.5 h-3.5" />
                             {t.badge}
                         </div>
@@ -761,7 +765,7 @@ const CareerCompare = () => {
                                     return (
                                         <p
                                             key={`header-${idx}`}
-                                            className="col-span-full mt-1 text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground"
+                                            className="col-span-full mt-1 text-xs font-bold uppercase tracking-wide text-muted-foreground"
                                         >
                                             {career.__header}
                                         </p>
@@ -845,7 +849,7 @@ const CareerCompare = () => {
                 <motion.div variants={itemVariants}>
                     <div className="flex items-center gap-3">
                         <div className="h-px flex-1 bg-border" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-40">{t.orManual}</span>
+                        <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t.orManual}</span>
                         <div className="h-px flex-1 bg-border" />
                     </div>
                 </motion.div>
@@ -863,14 +867,14 @@ const CareerCompare = () => {
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && addCareer()}
-                                className="w-full pl-11 pr-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-secondary/40 focus:bg-white/[0.05] transition-all duration-300"
+                                className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
                                 disabled={careers.length >= 5}
                             />
                         </div>
                         <button
                             onClick={addCareer}
                             disabled={!inputValue.trim() || careers.length >= 5}
-                            className="px-5 py-3 bg-gradient-to-r from-accent-blue to-primary text-white font-black rounded-xl text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider"
+                            className="px-5 py-3 bg-gradient-to-r from-accent-blue to-primary text-white font-bold rounded-xl text-[15px] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             <Plus className="w-4 h-4" />
                             {t.addCareer}
@@ -879,11 +883,11 @@ const CareerCompare = () => {
 
                     {/* Career count & hint */}
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-50">
+                        <span className="text-[13px] font-medium text-muted-foreground">
                             {t.selected}: {careers.length}/5
                         </span>
                         {careers.length < 5 && (
-                            <span className="text-[10px] font-medium text-muted-foreground opacity-40">
+                            <span className="text-[13px] text-muted-foreground">
                                 {t.inputHint}
                             </span>
                         )}
@@ -901,7 +905,7 @@ const CareerCompare = () => {
                                         initial="initial"
                                         animate="animate"
                                         exit="exit"
-                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-white/[0.04] to-white/[0.02] border border-white/10 text-sm font-bold text-foreground group hover:border-secondary/30 transition-all duration-300"
+                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border text-[15px] font-semibold text-foreground"
                                     >
                                         <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent-blue/20 to-primary/20 flex items-center justify-center">
                                             <GraduationCap className="w-3.5 h-3.5 text-secondary" />
@@ -920,9 +924,9 @@ const CareerCompare = () => {
                     </AnimatePresence>
 
                     {/* Custom comparison question */}
-                    <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.025] p-3.5">
+                    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                            <label className="text-[15px] font-semibold text-foreground">
                                 {t.compareQuestion}
                             </label>
                             <div className="flex flex-wrap gap-2 lg:justify-end">
@@ -931,7 +935,7 @@ const CareerCompare = () => {
                                         key={prompt}
                                         type="button"
                                         onClick={() => setCompareQuestion(prompt)}
-                                        className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors"
+                                        className="rounded-[0.625rem] border border-border bg-background px-3 py-2 text-[13px] font-medium text-foreground hover:border-primary/40"
                                     >
                                         {prompt}
                                     </button>
@@ -943,7 +947,7 @@ const CareerCompare = () => {
                             onChange={(e) => setCompareQuestion(e.target.value)}
                             placeholder={t.compareQuestionPlaceholder}
                             rows={2}
-                            className="w-full resize-none rounded-xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/40 focus:bg-white/[0.04] transition-all"
+                            className="w-full resize-none rounded-[0.75rem] border border-border bg-background px-4 py-3 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
                         />
                     </div>
 
@@ -951,14 +955,9 @@ const CareerCompare = () => {
                     <motion.button
                         onClick={handleCompare}
                         disabled={careers.length < 2 || loading || retryCountdown > 0}
-                        whileHover={careers.length >= 2 && !loading ? { scale: 1.01 } : {}}
                         whileTap={careers.length >= 2 && !loading ? { scale: 0.99 } : {}}
-                        className="w-full py-3.5 bg-gradient-to-r from-primary via-accent-blue to-primary bg-[length:200%_100%] text-white font-black rounded-xl text-sm uppercase tracking-[0.12em] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-right transition-all duration-700 flex items-center justify-center gap-3 relative overflow-hidden group"
+                        className="w-full py-3.5 bg-gradient-to-r from-primary via-accent-blue to-primary bg-[length:200%_100%] text-white font-bold rounded-xl text-[15px] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 relative overflow-hidden"
                     >
-                        {/* Shimmer effect */}
-                        {careers.length >= 2 && !loading && (
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                        )}
                         {loading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -1072,21 +1071,16 @@ const CareerCompare = () => {
                             {bestCareer && (
                                 <motion.div variants={scaleIn}>
                                     <SectionHeader icon={Crown} title={t.bestMatch} color="from-amber-500 to-yellow-500" />
-                                    <div className="glass-card p-5 md:p-6 mt-3 border border-primary/20 relative overflow-hidden group">
+                                    <div className="glass-card p-5 md:p-6 mt-3 border border-primary/20 relative overflow-hidden">
                                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
                                         <div className="flex items-start gap-4 relative">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent-blue p-0.5 flex-shrink-0">
-                                                <div className="w-full h-full rounded-[0.85rem] bg-card flex items-center justify-center">
-                                                    <Crown className="w-6 h-6 text-primary" />
-                                                </div>
-                                            </div>
+                                            <AiBotIcon icon={Crown} size="md" />
                                             <div className="space-y-1.5 flex-1 min-w-0">
-                                                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">{t.bestMatch}</span>
                                                 <h2 className="text-lg md:text-xl font-black text-foreground uppercase tracking-normal leading-tight">
                                                     {bestCareer.name}
                                                 </h2>
-                                                <p className="text-muted-foreground text-sm leading-relaxed">
+                                                <p className="text-muted-foreground text-[15px] leading-relaxed">
                                                     {bestCareer.reason}
                                                 </p>
                                             </div>
@@ -1097,7 +1091,7 @@ const CareerCompare = () => {
 
                             {comparisonData.customAnalysis && (
                                 <motion.div variants={itemVariants}>
-                                    <SectionHeader icon={BrainCircuit} title={t.customAnalysis} color="from-violet-500 to-fuchsia-500" />
+                                    <SectionHeader title={t.customAnalysis} color="from-violet-500 to-fuchsia-500" />
                                     <div className="glass-card p-5 mt-3">
                                         <p className="text-sm md:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
                                             {comparisonData.customAnalysis}
@@ -1109,11 +1103,11 @@ const CareerCompare = () => {
                             {/* ── Далелҳо аз база: рақами санҷидашуда пеш аз матни AI ── */}
                             {selectedFacts.length > 0 && (
                                 <motion.div variants={itemVariants}>
-                                    <SectionHeader icon={Scale} title={t.factsTitle} color="from-emerald-500 to-teal-500" />
+                                    <SectionHeader icon={Scale} title={t.factsTitle} subtitle={t.factsPurpose} />
                                     <div className="glass-card mt-3 overflow-x-auto">
-                                        <table className="w-full min-w-[600px] text-sm">
+                                        <table className="w-full min-w-[600px] text-[15px]">
                                             <thead>
-                                                <tr className="text-left text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                                                <tr className="text-left text-xs font-bold uppercase tracking-wide text-muted-foreground">
                                                     <th className="px-4 py-3">{t.factCareer}</th>
                                                     <th className="px-4 py-3">{t.factCode}</th>
                                                     <th className="px-4 py-3">{t.factDuration}</th>
@@ -1152,7 +1146,6 @@ const CareerCompare = () => {
                                             </tbody>
                                         </table>
                                     </div>
-                                    <p className="mt-2 text-xs text-muted-foreground">{t.factsNote}</p>
                                 </motion.div>
                             )}
 
@@ -1170,7 +1163,7 @@ const CareerCompare = () => {
                                             <motion.div
                                                 key={idx}
                                                 variants={scaleIn}
-                                                className={`glass-card p-5 space-y-4 relative overflow-hidden group transition-transform duration-300 ${isBest ? "ring-1 ring-primary/30" : ""
+                                                className={`glass-card p-5 space-y-4 relative overflow-hidden ${isBest ? "ring-1 ring-primary/30" : ""
                                                     }`}
                                             >
                                                 {/* Best badge */}
@@ -1185,14 +1178,14 @@ const CareerCompare = () => {
                                                 {/* Career name + match bar */}
                                                 <div className="space-y-3 pr-10">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isBest ? "bg-gradient-to-br from-primary/20 to-accent-blue/20" : "bg-blue-500/10"}`}>
-                                                            <GraduationCap className={`w-5 h-5 ${isBest ? "text-primary" : "text-blue-400"}`} />
+                                                        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                            <GraduationCap className="w-5 h-5 text-primary" />
                                                         </div>
                                                         <h3 className="text-base md:text-lg font-black text-foreground uppercase tracking-normal leading-snug">{career.career}</h3>
                                                     </div>
 
                                                     <div className="flex items-center gap-3">
-                                                        <div className="h-2.5 flex-1 bg-white/5 rounded-full overflow-hidden">
+                                                        <div className="h-2.5 flex-1 bg-muted rounded-full overflow-hidden">
                                                             <motion.div
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${career.matchPercentage}%` }}
@@ -1205,26 +1198,26 @@ const CareerCompare = () => {
                                                         </div>
                                                         <span className="text-base font-black text-foreground min-w-[40px] text-right">{career.matchPercentage}%</span>
                                                     </div>
-                                                    <span className="text-[9px] font-black uppercase tracking-[0.18em] opacity-35">{t.match}</span>
+                                                    <span className="text-xs font-semibold text-muted-foreground">{t.match}</span>
                                                 </div>
 
                                                 {/* Summary */}
                                                 {career.summary && (
-                                                    <p className="text-muted-foreground text-sm leading-relaxed border-l-2 border-white/10 pl-3">{career.summary}</p>
+                                                    <p className="text-muted-foreground text-[15px] leading-relaxed border-l-2 border-border pl-3">{career.summary}</p>
                                                 )}
 
                                                 {/* Pros */}
                                                 {career.pros?.length > 0 && (
                                                     <div>
-                                                        <h4 className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-2 mb-3">
-                                                            <div className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center">
+                                                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                                            <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                                                                 <ThumbsUp className="w-3 h-3" />
                                                             </div>
                                                             {t.pros}
                                                         </h4>
                                                         <ul className="space-y-2">
                                                             {career.pros.map((pro, i) => (
-                                                                <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/80">
+                                                                <li key={i} className="flex items-start gap-2.5 text-[15px] text-foreground">
                                                                     <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                                                                     {pro}
                                                                 </li>
@@ -1236,15 +1229,15 @@ const CareerCompare = () => {
                                                 {/* Cons */}
                                                 {career.cons?.length > 0 && (
                                                     <div>
-                                                        <h4 className="text-xs font-black text-rose-400 uppercase tracking-wider flex items-center gap-2 mb-3">
-                                                            <div className="w-5 h-5 rounded-md bg-rose-500/10 flex items-center justify-center">
+                                                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                                            <div className="w-6 h-6 rounded-md bg-rose-500/10 text-rose-600 flex items-center justify-center">
                                                                 <ThumbsDown className="w-3 h-3" />
                                                             </div>
                                                             {t.cons}
                                                         </h4>
                                                         <ul className="space-y-2">
                                                             {career.cons.map((con, i) => (
-                                                                <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/60">
+                                                                <li key={i} className="flex items-start gap-2.5 text-[15px] text-foreground/80">
                                                                     <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
                                                                     {con}
                                                                 </li>
@@ -1256,30 +1249,30 @@ const CareerCompare = () => {
                                                 {/* Meta badges */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                     {career.marketDemand && (
-                                                        <div className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border ${dc.bg} ${dc.border} ${dc.text}`}>
-                                                            <BarChart3 className="w-4 h-4" />
-                                                            <span className="text-[8px] font-black uppercase tracking-wider">{t.demand}</span>
+                                                        <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-muted/40 p-3 text-center text-foreground">
+                                                            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                                                            <span className="text-xs font-semibold text-muted-foreground">{t.demand}</span>
                                                             <div className="flex items-center gap-1">
                                                                 <div className={`w-1.5 h-1.5 rounded-full ${dc.dot}`} />
-                                                                <span className="text-xs font-bold">{t[career.marketDemand] || career.marketDemand}</span>
+                                                                <span className="text-sm font-bold">{t[career.marketDemand] || career.marketDemand}</span>
                                                             </div>
                                                         </div>
                                                     )}
                                                     {career.learningDifficulty && (
-                                                        <div className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border ${dfc.bg} ${dfc.border} ${dfc.text}`}>
-                                                            <GraduationCap className="w-4 h-4" />
-                                                            <span className="text-[8px] font-black uppercase tracking-wider">{t.difficulty}</span>
+                                                        <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-muted/40 p-3 text-center text-foreground">
+                                                            <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                                                            <span className="text-xs font-semibold text-muted-foreground">{t.difficulty}</span>
                                                             <div className="flex items-center gap-1">
                                                                 <div className={`w-1.5 h-1.5 rounded-full ${dfc.dot}`} />
-                                                                <span className="text-xs font-bold">{t[career.learningDifficulty] || career.learningDifficulty}</span>
+                                                                <span className="text-sm font-bold">{t[career.learningDifficulty] || career.learningDifficulty}</span>
                                                             </div>
                                                         </div>
                                                     )}
                                                     {career.salaryRange && (
-                                                        <div className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
-                                                            <DollarSign className="w-4 h-4" />
-                                                            <span className="text-[8px] font-black uppercase tracking-wider">{t.salary}</span>
-                                                            <span className="text-[10px] font-bold text-center leading-tight">{career.salaryRange}</span>
+                                                        <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-muted/40 p-3 text-center text-foreground">
+                                                            <DollarSign className="w-4 h-4 text-muted-foreground" />
+                                                            <span className="text-xs font-semibold text-muted-foreground">{t.salary}</span>
+                                                            <span className="text-sm font-bold leading-snug">{career.salaryRange}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1287,15 +1280,15 @@ const CareerCompare = () => {
                                                 {/* Skills */}
                                                 {career.skillsRequired?.length > 0 && (
                                                     <div>
-                                                        <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
-                                                            <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center">
-                                                                <Zap className="w-3 h-3 text-amber-400" />
+                                                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+                                                            <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                                                                <Zap className="w-3.5 h-3.5 text-primary" />
                                                             </div>
                                                             {t.skills}
                                                         </h4>
                                                         <div className="flex flex-wrap gap-1.5">
                                                             {career.skillsRequired.map((skill, i) => (
-                                                                <span key={i} className="px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-foreground/70 hover:bg-white/[0.06] hover:border-white/10 transition-all duration-200">{skill}</span>
+                                                                <span key={i} className="px-2.5 py-1 rounded-lg border border-border bg-muted/40 text-[13px] text-foreground">{skill}</span>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -1322,14 +1315,16 @@ const CareerCompare = () => {
 };
 
 /* ─── Section Header Sub-component ─── */
-const SectionHeader = ({ icon: Icon, title, color }) => (
-    <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${color} p-0.5`}>
-            <div className="w-full h-full rounded-[0.5rem] bg-card flex items-center justify-center">
-                <Icon className="w-[18px] h-[18px] text-foreground" />
-            </div>
+/* Ҳамон нишони AI-и чат (AiBotIcon). Пештар ҳар бахш ҳалқаи ранги дигар
+   дошт — зард, бунафш, сабз, кабуд — ва саҳифа ола менамуд. `color` дигар
+   истифода намешавад; `subtitle` мақсади бахшро мефаҳмонад. */
+const SectionHeader = ({ icon, title, subtitle }) => (
+    <div className="flex items-start gap-3">
+        <AiBotIcon icon={icon} size="sm" />
+        <div className="min-w-0">
+            <h3 className="text-lg md:text-xl font-black leading-10 text-foreground uppercase tracking-tight">{title}</h3>
+            {subtitle && <p className="max-w-3xl text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>}
         </div>
-        <h3 className="text-lg md:text-xl font-black text-foreground uppercase tracking-normal">{title}</h3>
     </div>
 );
 

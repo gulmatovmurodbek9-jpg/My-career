@@ -193,7 +193,7 @@ const AdminClusters = () => {
                     <div className="flex items-center gap-2 pt-3 border-t border-white/[0.04]">
                       <Briefcase className="w-3.5 h-3.5 text-white/35" />
                       <span className="text-[13px] text-white/45">{t("admin.clusters.careers_count")}:</span>
-                      <span className="text-[13px] font-bold text-white/60">{cluster.careers?.length ?? 0}</span>
+                      <span className="text-[13px] font-bold text-white/60">{cluster.careerCount ?? cluster.careers?.length ?? 0}</span>
                     </div>
                   </div>
                 </motion.div>

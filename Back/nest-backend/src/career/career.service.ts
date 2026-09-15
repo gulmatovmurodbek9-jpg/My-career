@@ -1984,7 +1984,10 @@ ${instr.format}
                 fallbackBestCareerReason: 'Муқоиса дар асоси параметрҳои техникӣ.',
                 fallbackSummary: 'Маълумоти муфассал ёфт нашуд.',
                 fallbackUnavail: 'Таҳлили AI муваққатан дастнорас аст.',
-                fallbackSalary: 'Маълум нест'
+                fallbackSalary: 'Маълум нест',
+                notFound: 'Ихтисосҳои интихобшуда дар база ёфт нашуданд. Онҳоро аз рӯйхат интихоб кунед.',
+                parseError: 'AI ҷавоби нодуруст баргардонд. Лутфан дубора кӯшиш кунед.',
+                altReason: 'Як ҷумла бо забони тоҷикӣ: чаро ин ихтисос ба саволи корбар беҳтар мувофиқ аст'
             },
             Russian: {
                 role: 'Вы опытный карьерный консультант и аналитик рынка труда.',
@@ -2004,7 +2007,10 @@ ${instr.format}
                 fallbackBestCareerReason: 'Сравнение на основе технических параметров.',
                 fallbackSummary: 'Детальная информация не найдена.',
                 fallbackUnavail: 'Анализ AI временно недоступен.',
-                fallbackSalary: 'Неизвестно'
+                fallbackSalary: 'Неизвестно',
+                notFound: 'Выбранные специальности не найдены в базе. Выберите их из списка.',
+                parseError: 'AI вернул некорректный ответ. Пожалуйста, попробуйте ещё раз.',
+                altReason: 'Одно предложение на русском: почему эта специальность лучше подходит под вопрос пользователя'
             },
             English: {
                 role: 'You are an experienced career advisor and labor market analyst.',
@@ -2024,28 +2030,49 @@ ${instr.format}
                 fallbackBestCareerReason: 'Comparison based on technical parameters.',
                 fallbackSummary: 'Detailed information not found.',
                 fallbackUnavail: 'AI analysis is temporarily unavailable.',
-                fallbackSalary: 'Unknown'
+                fallbackSalary: 'Unknown',
+                notFound: 'The selected specialties were not found in the database. Please pick them from the list.',
+                parseError: 'The AI returned an invalid answer. Please try again.',
+                altReason: 'One sentence in English: why this specialty fits the user\'s question better'
             }
         };
 
         const instr = languageName === 'Russian' ? languageInstructions.Russian : languageName === 'English' ? languageInstructions.English : languageInstructions.Tajik;
 
+        /*
+         * Натиҷаи сохта намебошад.
+         *
+         * Пештар ин ҷо ва дар ду catch-и поён «муқоиса» бе AI бармегашт: 50%, 70%
+         * ё 75% барои ҳар ихтисос, бе афзалият, бо «medium». Саҳифа онро ҳамчун
+         * таҳлили воқеӣ нишон медод — довталаб рақами бофтаро медид. Акнун хатои
+         * рост меравад; frontend паёми сервер, 429 ва timeout-ро аллакай нишон медиҳад.
+         */
         if (careers.length === 0) {
-            return {
-                bestCareer: { name: careerNames[0], reason: instr.fallbackBestCareerReason },
-                careerComparison: careerNames.map(name => ({
-                    career: name,
-                    matchPercentage: 50,
-                    summary: instr.fallbackSummary,
-                    pros: [],
-                    cons: [],
-                    skillsRequired: [],
-                    marketDemand: 'medium',
-                    learningDifficulty: 'medium',
-                    salaryRange: instr.fallbackSalary
-                }))
-            };
+            throw new NotFoundException(instr.notFound);
         }
+
+        /*
+         * Номзадҳо барои «вариантҳои беҳтар» — танҳо аз база.
+         *
+         * Ҳамон ҷустуҷӯи чат: саволи корбар ва номи ихтисосҳои интихобшуда.
+         * Интихобшудаҳо (ва номҳои якхелаи онҳо бо рамзи дигар) бароварда
+         * мешаванд. Агар ҷустуҷӯ ҳеҷ чиз наёфт ва танҳо машҳуртаринҳоро дод,
+         * вариант пешниҳод намешавад — онҳо ба савол рабт надоранд.
+         */
+        const selectedNames = new Set(careers.map((c) => c.name));
+        const candidatePool = await this.findRelevantCareers(
+            `${compareQuestion?.trim() || ''} ${careers.map((c) => c.name).join(' ')}`,
+        );
+        const candidateNames = new Set<string>();
+        const candidates = (candidatePool as any).isFallback
+            ? []
+            : candidatePool
+                .filter((c) => {
+                    if (selectedNames.has(c.name) || candidateNames.has(c.name)) return false;
+                    candidateNames.add(c.name);
+                    return true;
+                })
+                .slice(0, 10);
 
         let careersContext = careers.map(c => `
 ID: ${c.id}
@@ -2064,6 +2091,15 @@ If the user asks about money, compare tuition and estimated salary clearly.
 If the user asks about 10 years, compare future demand, automation risk, salary growth, and skill changes.
 If the user asks for differences, give direct differences plus plus/minus for each career.
 `;
+        if (candidates.length) {
+            careersContext += `
+BETTER OPTIONS (optional, the "alternatives" field of the JSON):
+The student may not have picked the best specialty for their goal. From ONLY the list below,
+choose 0-3 specialties that clearly fit the student's question${hasQuizScores ? ' and MMT profile' : ''} better than the selected ones.
+Copy each name exactly as written. If none is clearly better, return "alternatives": [].
+${candidates.map((c) => `- ${c.name} (${c.cluster?.clusterName || ''})`).join('\n')}
+`;
+        }
 
         const prompt = `${instr.role}
 ${hasQuizScores
@@ -2093,6 +2129,9 @@ ${instr.format}
       "learningDifficulty": "${instr.learningDifficulty}",
       "salaryRange": "${instr.salaryRange}"
     }
+  ],
+  "alternatives": [
+    { "name": "exact name from the BETTER OPTIONS list", "reason": "${instr.altReason}" }
   ]
 }
 `;
@@ -2101,46 +2140,43 @@ ${instr.format}
         try {
             rawResponse = await this.aiService.generateContent(prompt, { timeoutMs: 55_000 });
         } catch (error) {
-            return {
-                bestCareer: { name: careers[0].name, reason: instr.fallbackBestCareerReason },
-                careerComparison: careers.map(c => ({
-                    career: c.name,
-                    matchPercentage: 70,
-                    summary: c.description?.slice(0, 100) + '...',
-                    pros: [],
-                    cons: [],
-                    skillsRequired: [],
-                    marketDemand: 'medium',
-                    learningDifficulty: 'medium',
-                    salaryRange: instr.fallbackSalary
-                }))
-            };
+            if (error instanceof HttpException) throw error;
+            throw new InternalServerErrorException(instr.fallbackUnavail);
         }
 
+        let report: any;
         try {
             let cleaned = rawResponse.trim();
             if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
             else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
             if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
-            
-            const report = JSON.parse(cleaned.trim());
-            return report;
+            report = JSON.parse(cleaned.trim());
         } catch (e) {
             console.error('Failed to parse comparison AI response:', e);
-            return {
-                bestCareer: { name: careers[0].name, reason: instr.fallbackBestCareerReason },
-                careerComparison: careers.map(c => ({
-                    career: c.name,
-                    matchPercentage: 75,
-                    summary: instr.fallbackUnavail,
-                    pros: [],
-                    cons: [],
-                    skillsRequired: [],
-                    marketDemand: 'medium',
-                    learningDifficulty: 'medium',
-                    salaryRange: instr.fallbackSalary
-                }))
-            };
+            throw new InternalServerErrorException(instr.parseError);
         }
+
+        /* Ҳар вариант бо рӯйхати номзадҳо санҷида мешавад. Номе, ки дар он нест —
+           бофта ё аз интихобшудаҳо — бароварда мешавад. id, рамз ва кластер аз
+           база меоянд, на аз модел, то саҳифа ба ихтисоси воқеӣ истинод гузорад. */
+        const byName = new Map(candidates.map((c) => [foldTajik(c.name.trim()), c]));
+        const seenIds = new Set<string>();
+        report.alternatives = (Array.isArray(report?.alternatives) ? report.alternatives : [])
+            .map((item: any) => {
+                const match = typeof item?.name === 'string' ? byName.get(foldTajik(item.name.trim())) : undefined;
+                if (!match || seenIds.has(match.id)) return null;
+                seenIds.add(match.id);
+                return {
+                    id: match.id,
+                    code: match.code,
+                    name: match.name,
+                    cluster: match.cluster?.clusterName || null,
+                    reason: typeof item.reason === 'string' ? item.reason.trim().slice(0, 300) : '',
+                };
+            })
+            .filter(Boolean)
+            .slice(0, 3);
+
+        return report;
     }
 }

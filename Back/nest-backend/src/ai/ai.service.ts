@@ -23,6 +23,15 @@ const AI_PROVIDER_TIMEOUT_MS = 20000;
  */
 const AI_PROVIDER_COOLDOWN_MS = 5 * 60 * 1000;
 
+/*
+ * Ҳадди вақт барои провайдере, ки аз оғози сервер ҳанӯз ҷавоб надодааст.
+ * Дархостҳои калон (ҳисобот, муқоиса) ҳадди худро медиҳанд, вале провайдери
+ * номаълум онро пурра намегирад: Vertex дар сервер овезон мемонад, ва бо
+ * 55 сония барои ҳар провайдер браузер (90 с) пеш аз ҷавоб timeout мешуд.
+ * Vertex 30 + Gemini 30 = 60 с дар бадтарин ҳолат.
+ */
+const AI_UNPROVEN_TIMEOUT_MS = 30000;
+
 type AiProvider = 'vertex' | 'gemini' | 'groq';
 
 @Injectable()
@@ -35,6 +44,10 @@ export class AiService implements OnModuleInit {
     private groqModel = 'openai/gpt-oss-120b';
     /** Провайдер → вақте ки дубора кӯшиш кардан мумкин аст (ms). */
     private providerDownUntil = new Map<AiProvider, number>();
+    /** Шумораи афтишҳои пай дар пай. */
+    private providerFailures = new Map<AiProvider, number>();
+    /** Провайдерҳое, ки аз оғози сервер ақаллан як бор ҷавоб доданд. */
+    private providerProven = new Set<AiProvider>();
 
     constructor(private configService: ConfigService) { }
 
@@ -109,11 +122,11 @@ export class AiService implements OnModuleInit {
      */
     async generateContent(
         prompt: string,
-        options: { provider?: AiProvider } = {},
+        options: { provider?: AiProvider; timeoutMs?: number } = {},
     ): Promise<string> {
-        const run = (which: AiProvider) => {
+        const run = (which: AiProvider, ms: number) => {
             if (which === 'vertex') return this.generateVertexContent(prompt);
-            if (which === 'groq') return this.generateGroqContent(prompt);
+            if (which === 'groq') return this.generateGroqContent(prompt, ms);
             return this.generateGeminiContent(prompt);
         };
 
@@ -134,19 +147,41 @@ export class AiService implements OnModuleInit {
            кӯшиш кунем, аз он ки бе кӯшиш хато диҳем. */
         const now = Date.now();
         const healthy = usable.filter((which) => (this.providerDownUntil.get(which) ?? 0) <= now);
-        const order = healthy.length ? healthy : usable;
+        /* Провайдери Google, ки аллакай ҷавоб додааст, аввал меистад: пас аз
+           аввалин ҷавоби Gemini дархостҳо дигар 20–30 сония ба Vertex-и овезон
+           интизор намешаванд. Groq пешбарӣ намешавад — сифати тоҷикиаш пасттар
+           аст ва он бояд захира монад. Sort устувор аст, тартиби занҷир мемонад. */
+        const promoted = (which: AiProvider) => which !== 'groq' && this.providerProven.has(which);
+        const order = [...(healthy.length ? healthy : usable)]
+            .sort((a, b) => Number(promoted(b)) - Number(promoted(a)));
 
         let last: any = null;
         for (const which of order) {
+            const proven = this.providerProven.has(which);
+            const requested = Math.max(options.timeoutMs ?? AI_PROVIDER_TIMEOUT_MS, AI_PROVIDER_TIMEOUT_MS);
+            const ms = proven ? requested : Math.min(requested, AI_UNPROVEN_TIMEOUT_MS);
             try {
-                const result = await this.withTimeout(run(which), which);
+                const result = await this.withTimeout(run(which, ms), which, ms);
+                this.providerProven.add(which);
+                this.providerFailures.delete(which);
                 this.providerDownUntil.delete(which);
                 return result;
             } catch (error) {
                 last = error;
-                this.providerDownUntil.set(which, Date.now() + AI_PROVIDER_COOLDOWN_MS);
+                const failures = (this.providerFailures.get(which) ?? 0) + 1;
+                this.providerFailures.set(which, failures);
+                /*
+                 * Провайдери исботшуда аз як дер мондан ҷудо намешавад: Gemini ба
+                 * ҳисоботи ~8 ҳазор токен баъзан 20+ сония сарф мекунад, ва агар
+                 * он 5 дақиқа ҷудо мешуд, дархости навбатӣ бе Google мемонд ва
+                 * Groq (лимити 8000 TPM) промптро рад мекард — 500 ба корбар.
+                 * Провайдере, ки ҳеҷ гоҳ ҷавоб надодааст, дар ҳоле ки дигаре
+                 * ҷавоб медиҳад, фавран ҷудо мешавад.
+                 */
+                const coolDown = failures >= 2 || (!proven && this.providerProven.size > 0);
+                if (coolDown) this.providerDownUntil.set(which, Date.now() + AI_PROVIDER_COOLDOWN_MS);
                 console.error(
-                    `AI: провайдери ${which} афтод (${AI_PROVIDER_COOLDOWN_MS / 60000} дақ. гузаронида мешавад):`,
+                    `AI: провайдери ${which} афтод${coolDown ? ` (${AI_PROVIDER_COOLDOWN_MS / 60000} дақ. гузаронида мешавад)` : ''}:`,
                     error?.message || error,
                 );
             }
@@ -180,11 +215,11 @@ export class AiService implements OnModuleInit {
      * маҳдудият овезон мондан ҳамчун афтиш ҳисоб мешавад ва занҷир давом
      * мекунад.
      */
-    private withTimeout<T>(work: Promise<T>, which: string): Promise<T> {
+    private withTimeout<T>(work: Promise<T>, which: string, ms: number = AI_PROVIDER_TIMEOUT_MS): Promise<T> {
         return new Promise<T>((resolve, reject) => {
             const timer = setTimeout(
-                () => reject(new Error(`провайдери ${which} дар ${AI_PROVIDER_TIMEOUT_MS} мс ҷавоб надод`)),
-                AI_PROVIDER_TIMEOUT_MS,
+                () => reject(new Error(`провайдери ${which} дар ${ms} мс ҷавоб надод`)),
+                ms,
             );
 
             work.then(resolve, reject).finally(() => clearTimeout(timer));
@@ -326,13 +361,13 @@ export class AiService implements OnModuleInit {
      * Ҳадди вақт аз худи `withTimeout` меояд, вале `AbortController` низ
      * лозим аст: бе он сокети кушода пас аз timeout дар замина мемонад.
      */
-    private async generateGroqContent(prompt: string): Promise<string> {
+    private async generateGroqContent(prompt: string, timeoutMs: number = AI_PROVIDER_TIMEOUT_MS): Promise<string> {
         if (!this.groqKey) {
             throw new InternalServerErrorException('Groq танзим нашудааст (GROQ_API_KEY)');
         }
 
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), AI_PROVIDER_TIMEOUT_MS);
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
 
         try {
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {

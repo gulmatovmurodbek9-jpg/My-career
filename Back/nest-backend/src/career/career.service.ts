@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, In } from 'typeorm';
 import { Career } from './career.entity';
@@ -1790,8 +1790,13 @@ ${instr.format}
 
         let rawResponse: string;
         try {
-            rawResponse = await this.aiService.generateContent(prompt);
+            /* Промпти ҳисобот ~8 ҳазор токен аст: Gemini ба он 16–25 сония сарф
+               мекунад, ва ҳадди умумии 20 сония дархостро мебурид. */
+            rawResponse = await this.aiService.generateContent(prompt, { timeoutMs: 55_000 });
         } catch (error) {
+            /* 503/429-и AiService паёми фаҳмо дорад («Хидмати AI ҳоло дастрас
+               нест…»). Пештар он ба 500-и умумӣ табдил меёфт. */
+            if (error instanceof HttpException) throw error;
             throw new InternalServerErrorException('Хатогӣ ҳангоми тавлиди тавсияи AI');
         }
 
@@ -2094,7 +2099,7 @@ ${instr.format}
 
         let rawResponse: string;
         try {
-            rawResponse = await this.aiService.generateContent(prompt);
+            rawResponse = await this.aiService.generateContent(prompt, { timeoutMs: 55_000 });
         } catch (error) {
             return {
                 bestCareer: { name: careers[0].name, reason: instr.fallbackBestCareerReason },

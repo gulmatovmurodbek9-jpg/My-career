@@ -2,6 +2,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
     ClipboardCheck,
+    Bot,
     Heart,
     Bookmark,
     Award,
@@ -339,9 +340,11 @@ const Dashboard = () => {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="rounded-full bg-muted px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                                    AI Powered
-                                </div>
+                                {/* Пештар: «AI Powered» — англисӣ дар саҳифаи тоҷикӣ, 9px ва бо фосилаи 0.2em. */}
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-semibold text-primary">
+                                    <Bot className="h-3.5 w-3.5" aria-hidden />
+                                    {t('dashboard.ai_powered', 'Интихоб бо ёрии AI')}
+                                </span>
                             </div>
                         </motion.div>
 

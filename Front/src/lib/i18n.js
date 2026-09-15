@@ -459,6 +459,7 @@ i18n
                         plan_title: "Рӯйхати ҳуҷҷатсупорӣ",
                         plan_desc: "Ихтисос ва донишгоҳро интихоб кунед ва рӯйхатро чоп намоед",
                         ai_advisor_title: "Тавсияи AI барои касб",
+                        ai_powered: "Интихоб бо ёрии AI",
                         ai_advisor_desc: "Таҳлили мушаххаси касбӣ бо зеҳни сунъӣ дар асоси натиҷаи санҷиши шумо",
                         compare_title: "Муқоисаи ихтисосҳо",
                         compare_desc: "Ихтисосҳоро бо AI муқоиса кунед ва беҳтаринро ёбед"
@@ -1298,6 +1299,7 @@ i18n
                         plan_title: "Список для подачи документов",
                         plan_desc: "Выберите специальность и вуз, затем распечатайте список",
                         ai_advisor_title: "AI Карьерный Отчёт",
+                        ai_powered: "Подбор с помощью AI",
                         ai_advisor_desc: "Подробный анализ карьеры с помощью ИИ на основе результата вашего теста",
                         compare_title: "Сравнение профессий",
                         compare_desc: "Сравните профессии с помощью AI и найдите лучшую"
@@ -2201,6 +2203,7 @@ i18n
                         plan_title: "Application list",
                         plan_desc: "Pick a specialty and a university, then print the list",
                         ai_advisor_title: "AI Career Report",
+                        ai_powered: "Picked with AI",
                         ai_advisor_desc: "Get a detailed AI-powered career analysis based on your quiz result",
                         compare_title: "Career Comparison",
                         compare_desc: "Compare careers with AI and find the best match"

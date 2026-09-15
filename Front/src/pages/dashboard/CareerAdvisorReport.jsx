@@ -70,6 +70,7 @@ const labels = {
         startQuiz: "Оғоз кардани тест",
         error: "Хатогӣ рӯй дод",
         errorTimeout: "Ҷавоб дер монд. Шабакаро санҷед ва дубора кӯшиш кунед.",
+        errorNetwork: "Пайваст бо сервер канда шуд. Интернетро санҷед ва дубора кӯшиш кунед.",
         retry: "Дубора кӯшиш кунед",
         targetCareer: "Ихтисоси мақсад",
         successChance: "Шонси муваффақият",
@@ -133,6 +134,7 @@ const labels = {
         startQuiz: "Начать тест",
         error: "Произошла ошибка",
         errorTimeout: "Ответ занял слишком много времени. Проверьте сеть и попробуйте снова.",
+        errorNetwork: "Соединение с сервером прервалось. Проверьте интернет и попробуйте снова.",
         retry: "Попробовать снова",
         targetCareer: "Целевая профессия",
         successChance: "Шанс на успех",
@@ -196,6 +198,7 @@ const labels = {
         startQuiz: "Start Quiz",
         error: "An error occurred",
         errorTimeout: "The response took too long. Check your connection and try again.",
+        errorNetwork: "The connection to the server was lost. Check your internet and try again.",
         retry: "Try again",
         targetCareer: "Target Career",
         successChance: "Success Chance",
@@ -321,7 +324,13 @@ const CareerAdvisorReport = () => {
             setData(res.data);
         } catch (err) {
             console.error("AI Advisor error:", err);
-            setError(isTimeout(err) ? t.errorTimeout : err?.response?.data?.message || t.error);
+            /* Бе err.response сервер тамоман ҷавоб надод (пайваст канда шуд, сервер
+               аз нав оғоз мешуд). Пештар ин ҳолат «Хатогӣ рӯй дод»-ро ду бор менавишт. */
+            setError(
+                isTimeout(err) ? t.errorTimeout
+                    : !err?.response ? t.errorNetwork
+                    : err.response.data?.message || t.error,
+            );
         } finally {
             setLoading(false);
             fetchingRef.current = false;

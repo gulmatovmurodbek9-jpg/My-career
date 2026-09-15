@@ -435,7 +435,7 @@ const Info = () => {
       {/* ═══════════════════════════════════════════════
           HERO — Premium header
          ═══════════════════════════════════════════════ */}
-      <section className="pt-28 pb-16 hero-gradient relative overflow-hidden">
+      <section className="pt-8 pb-6 sm:pt-10 hero-gradient relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #5B6CF0 1px, transparent 1px), radial-gradient(circle at 80% 30%, #8B5CF6 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
@@ -564,7 +564,7 @@ const Info = () => {
       {/* ═══════════════════════════════════════════════
           CONTENT — Info sections
          ═══════════════════════════════════════════════ */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
         <div className="space-y-5">
 
           {/* --- Мақсади ихтисос --- */}

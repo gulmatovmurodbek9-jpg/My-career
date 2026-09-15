@@ -195,6 +195,10 @@ export class CareerService {
             qb.andWhere('career.code = :code', { code: query.code });
         }
 
+        if (query.minPrice) {
+            qb.andWhere('career.tuitionFee >= :minPrice', { minPrice: query.minPrice });
+        }
+
         if (query.maxPrice) {
             qb.andWhere('career.tuitionFee <= :maxPrice', { maxPrice: query.maxPrice });
         }
@@ -1377,6 +1381,8 @@ TASK:
 - If official university website or current tuition is missing from context, clearly say it is not in the database yet and recommend checking the official admissions page. Do not invent links or prices.
 
 STYLE - FOLLOW EXACTLY:
+- Never copy the technical field labels of the database context (cluster:, degree:, tuitionFee:) into the answer, and never write "(Cluster: ...)". Name the cluster in plain words in the answer language, for example «кластери 4 — Ҷомеашиносӣ ва ҳуқуқ».
+- Keep lists compact: one line per item and no empty lines between items.
 - Address the student with the polite "шумо" (Russian "вы", English "you"). Never use the informal "ту".
 - Answer the question that was actually asked. Do not open with a long welcome or a
   summary of the student's profile unless they asked about their profile.

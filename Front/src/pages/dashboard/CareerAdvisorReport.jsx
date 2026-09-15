@@ -300,11 +300,49 @@ const CareerAdvisorReport = () => {
 
     const fetchingRef = useRef(false);
 
-    const fetchReport = async () => {
-        if (!hasQuizProfile || !quizScores || fetchingRef.current) return;
+    /*
+     * Ҳисоботи охирин дар браузер нигоҳ дошта мешавад.
+     *
+     * Тавлиди ҳисобот 11–45 сония мегирад. Агар дар ҳамон лаҳза пайваст канда
+     * шавад ё backend аз нав оғоз шавад, корбар ба ҷои ҳисобот хато медид —
+     * маҳз ҳамин дар санҷиши пеш аз ҳакамон рух дод. Ҳоло ҳисоботи қаблӣ фавран
+     * кушода мешавад ва навсозӣ дар замина меравад; агар навсозӣ афтад,
+     * ҳисоботи кӯҳна дар экран мемонад. Калид аз забон ва холҳо: санҷиши нав
+     * ҳисоботи навро талаб мекунад.
+     */
+    const cacheKey = quizScores ? `ai_advisor_report_v1:${lang}:${JSON.stringify(quizScores)}` : null;
+    const readCachedReport = () => {
+        if (!cacheKey) return null;
+        try {
+            const raw = localStorage.getItem(cacheKey);
+            const parsed = raw ? JSON.parse(raw) : null;
+            return parsed?.data?.report ? parsed.data : null;
+        } catch (_) {
+            return null;
+        }
+    };
+    const writeCachedReport = (report) => {
+        if (!cacheKey) return;
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify({ data: report, savedAt: new Date().toISOString() }));
+        } catch (_) {
+            /* storage пур ё баста аст — ҳисобот бе кеш ҳам кор мекунад */
+        }
+    };
+
+    /* options: { silent } — навсозии заминавӣ бе экрани боргирӣ ва бе хато;
+       { attempt } — такрори худкор. Тугмаи «Дубора кӯшиш кунед» ин функсияро
+       бо event даъват мекунад, барои ҳамин майдонҳо бодиққат хонда мешаванд. */
+    const fetchReport = async (options = {}) => {
+        const silent = options?.silent === true;
+        const attempt = Number.isInteger(options?.attempt) ? options.attempt : 0;
+        if (!hasQuizProfile || !quizScores || (fetchingRef.current && attempt === 0)) return;
         fetchingRef.current = true;
-        setLoading(true);
-        setError(null);
+        if (!silent) {
+            setLoading(true);
+            setError(null);
+        }
+        let retrying = false;
         try {
             const res = await axios.post(
                 `${API}/careers/ai-advisor`,
@@ -322,8 +360,19 @@ const CareerAdvisorReport = () => {
                 { headers: { Authorization: `Bearer ${token}` }, timeout: AI_TIMEOUT_MS }
             );
             setData(res.data);
+            writeCachedReport(res.data);
         } catch (err) {
             console.error("AI Advisor error:", err);
+            /* Пайваст канда шуд (ҷавоб нест ва timeout нест) — як бор худкор такрор,
+               пеш аз он ки хато нишон дода шавад. */
+            if (!err?.response && !isTimeout(err) && attempt === 0) {
+                retrying = true;
+                await new Promise((resolve) => setTimeout(resolve, 1500));
+                fetchingRef.current = false;
+                return fetchReport({ silent, attempt: 1 });
+            }
+            /* Навсозии заминавӣ: ҳисоботи кӯҳна дар экран мемонад, хато намебарояд. */
+            if (silent) return;
             /* Бе err.response сервер тамоман ҷавоб надод (пайваст канда шуд, сервер
                аз нав оғоз мешуд). Пештар ин ҳолат «Хатогӣ рӯй дод»-ро ду бор менавишт. */
             setError(
@@ -332,15 +381,24 @@ const CareerAdvisorReport = () => {
                     : err.response.data?.message || t.error,
             );
         } finally {
-            setLoading(false);
-            fetchingRef.current = false;
+            if (!retrying) {
+                if (!silent) setLoading(false);
+                fetchingRef.current = false;
+            }
         }
     };
 
     useEffect(() => {
-        if (hasQuizProfile && token) {
+        if (!hasQuizProfile || !token) return;
+        const cached = readCachedReport();
+        if (cached) {
+            setData(cached);
+            setError(null);
+            fetchReport({ silent: true });
+        } else {
             fetchReport();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasQuizProfile, token, lang]);
 
     /* ── No quiz results ── */

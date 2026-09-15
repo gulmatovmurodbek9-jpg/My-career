@@ -21,6 +21,7 @@ import {
     Bookmark,
     CheckCircle,
     Briefcase,
+    Loader2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -32,6 +33,11 @@ import { useToast } from "../../components/toast/ToastProvider";
 import { MMT_CLUSTERS } from "../../lib/mmtClusters";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
+
+/* Чанд чипи «Ихтисосҳои пешниҳодшуда» якбора нишон дода мешавад. */
+const SPEC_WINDOW = 8;
+/* Ҳамон шумора, ки ҷадвали ихтисосҳои кластер нишон медиҳад. */
+const CLUSTER_PAGE_SIZE = 12;
 
 const Quiz = () => {
     const { t, i18n } = useTranslation();
@@ -53,6 +59,12 @@ const Quiz = () => {
     const [savedIds, setSavedIds] = useState(new Set());
     const [savingId, setSavingId] = useState(null);
     const [stageLoading, setStageLoading] = useState(false);
+    /* Саҳифаи ҳозираи ихтисосҳои кластер ва шумораи саҳифаҳо — тугмаи ⚡
+       саҳифаи тасодуфии дигарро мегирад. */
+    const [clusterPage, setClusterPage] = useState(1);
+    const [clusterLastPage, setClusterLastPage] = useState(1);
+    const [refreshingCareers, setRefreshingCareers] = useState(false);
+    const [specOffset, setSpecOffset] = useState(0);
 
     // Sync savedIds with user.savedCareers
     useEffect(() => {
@@ -92,17 +104,38 @@ const Quiz = () => {
         fetchQuestions();
     }, []);
 
+    /*
+     * Ихтисосҳои кластер.
+     *
+     * Пештар ҳамеша саҳифаи 1 (24 ихтисоси аввал) гирифта мешуд ва ⚡ танҳо
+     * тартиби онҳоро омехта мекард: дар кластере бо 172 ихтисос корбар
+     * ҳамон 12-торо медид ва фикр мекард, ки тугма кор намекунад. Акнун ⚡
+     * саҳифаи тасодуфии дигарро аз тамоми кластер мегирад.
+     */
     const fetchClusterCareers = async (shuffle = false) => {
-        if (!results?.topCluster?.id) return;
+        if (!results?.topCluster?.id || refreshingCareers) return;
+        setRefreshingCareers(shuffle);
         try {
+            let page = 1;
+            if (shuffle && clusterLastPage > 1) {
+                do {
+                    page = 1 + Math.floor(Math.random() * clusterLastPage);
+                } while (page === clusterPage);
+            }
             const { data } = await axios.get(`${API}/careers`, {
-                params: { clusterId: results.topCluster.id, limit: 24, page: 1 },
+                params: { clusterId: results.topCluster.id, limit: CLUSTER_PAGE_SIZE, page },
             });
             let careers = data.data || [];
-            if (shuffle) careers = careers.sort(() => Math.random() - 0.5);
+            if (shuffle) careers = [...careers].sort(() => Math.random() - 0.5);
             setClusterCareers(careers);
+            setClusterPage(page);
+            setClusterLastPage(data.meta?.lastPage || 1);
+            /* Чипҳои болоӣ низ ба 8-тои навбатӣ мегузаранд. */
+            if (shuffle) setSpecOffset((offset) => offset + SPEC_WINDOW);
         } catch (err) {
             console.error("Cluster careers fetch error:", err);
+        } finally {
+            setRefreshingCareers(false);
         }
     };
 
@@ -280,6 +313,9 @@ const Quiz = () => {
         setResults(null);
         setAskRetake(false);
         setClusterCareers([]);
+        setClusterPage(1);
+        setClusterLastPage(1);
+        setSpecOffset(0);
         setQuizStage(1);
         setSavedIds(new Set(user?.savedCareers?.map(c => c.id) || []));
         setAnswers([]);
@@ -419,6 +455,14 @@ const Quiz = () => {
 
     if (showResults && results) {
         const topCluster = results.topCluster;
+        /* Натиҷаи санҷиш як ихтисосро бо рамзҳои гуногун чанд бор меовард
+           («Иқтисодиёт ва ташкил дар соҳаи сайёҳӣ» × 3). Аз рӯи ном як бор. */
+        const uniqueSpecs = (topCluster?.specializations || []).filter(
+            (spec, index, list) => list.findIndex((other) => other.name === spec.name) === index,
+        );
+        const visibleSpecs = uniqueSpecs.length > SPEC_WINDOW
+            ? Array.from({ length: SPEC_WINDOW }, (_, k) => uniqueSpecs[(specOffset + k) % uniqueSpecs.length])
+            : uniqueSpecs;
         const personalityDesc = results.personality || "";
         const aiAdvice = results.aiAdvice || "";
         const rankedClusters = Object.entries(results.scores?.mmtClusters || {})
@@ -528,9 +572,9 @@ const Quiz = () => {
                                             {t('quiz.suggested_specializations', "Ихтисосҳои Пешниҳодшуда:")}
                                         </div>
                                         <div className="flex flex-wrap gap-2">
-                                            {topCluster.specializations.map((spec, i) => (
-                                                <Link key={i} to={spec.id ? `/info/${spec.id}` : '#'}>
-                                                    <span className="px-3 py-1 rounded-full bg-primary text-white text-[10px] font-black uppercase tracking-tighter hover:scale-105 transition-transform cursor-pointer block">
+                                            {visibleSpecs.map((spec) => (
+                                                <Link key={spec.id || spec.name} to={spec.id ? `/info/${spec.id}` : '#'}>
+                                                    <span className="block cursor-pointer rounded-full bg-primary px-3 py-1.5 text-[13px] font-semibold leading-snug text-white">
                                                         {spec.name}
                                                     </span>
                                                 </Link>
@@ -600,11 +644,17 @@ const Quiz = () => {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <button
+                                            type="button"
                                             onClick={() => fetchClusterCareers(true)}
-                                            className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group"
+                                            disabled={refreshingCareers}
+                                            aria-busy={refreshingCareers}
+                                            className="w-10 h-10 rounded-xl border border-border bg-card flex items-center justify-center hover:bg-muted disabled:cursor-wait cursor-pointer"
                                             title={t("misc.quiz_refresh")}
+                                            aria-label={t("misc.quiz_refresh")}
                                         >
-                                            <Zap className="w-5 h-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
+                                            {refreshingCareers
+                                                ? <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                                                : <Zap className="w-5 h-5 text-primary" />}
                                         </button>
                                         {savedIds.size > 0 && (
                                             <motion.button

@@ -21,7 +21,7 @@ async function fetchPage(page, retries = 3) {
         } catch (err) {
             if (i === retries) throw err;
             console.log(`⚠️ Retrying page ${page} (${i + 1}/${retries})...`);
-            await new Promise(r => setTimeout(r, 2000 * (i + 1))); // Exponential backoff
+            await new Promise(r => setTimeout(r, 2000 * (i + 1)));
         }
     }
 }

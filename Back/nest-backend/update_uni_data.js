@@ -24,17 +24,14 @@ async function main() {
         await client.connect();
         console.log('Connected to DB');
 
-        // Update coordinates
         for (const up of updates) {
             const query = `UPDATE universities SET latitude = $1, longitude = $2 WHERE name ILIKE $3`;
             const res = await client.query(query, [up.lat, up.lng, `%${up.name}%`]);
             console.log(`Updated ${up.name}: ${res.rowCount} rows`);
         }
 
-        // Set remaining to a default in Dushanbe if null
         await client.query(`UPDATE universities SET latitude = 38.56, longitude = 68.78 WHERE latitude IS NULL`);
 
-        // Set career default durations if null/default
         await client.query(`UPDATE career SET "durationYears" = 4 WHERE "durationYears" IS NULL OR "durationYears" = 0`);
         await client.query(`UPDATE career SET "degreeType" = 'Бакалавр' WHERE "degreeType" IS NULL`);
 

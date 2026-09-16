@@ -39,7 +39,6 @@ async function fixSpecific() {
         const clusterMap = {};
         clusterSpecs.rows.forEach(c => { clusterMap[c.clusterId] = c.id; });
 
-        // Get 10 placeholders
         const target = (await client.query(`
             SELECT id, name FROM career 
             WHERE description LIKE 'Ихтисоси амалӣ ва ояндадор%'

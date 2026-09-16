@@ -1,16 +1,3 @@
-/**
- * Шрифтҳоро аз Google ба лоиҳа мекӯчонад ва фарогирии тоҷикиро тафтиш мекунад.
- *
- * Ду сабаб барои худмизбонӣ: пайвасти production ба хости бегона пеш аз кашидани
- * ягон ҳарф як DNS+TLS илова мекунад, ва кеш дар дасти мо намемонад.
- *
- * Тафтиши глифҳо ҳатмист. Google барои ҳар зермаҷмӯа `unicode-range`-и васеъ
- * эълон мекунад, вале файл метавонад глифҳоро НАДОШТА бошад: Unbounded, Onest,
- * Manrope ва Wix Madefor ҳамагӣ cyrillic-ext эълон мекунанд, аммо ҳарфҳои
- * тоҷикӣ надоранд. Rubik ҳатто «Ҳ» надорад. Бе ин тафтиш шрифт бесадо мешиканад.
- *
- * Иҷро:  node scripts/fetch-fonts.mjs
- */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,13 +10,12 @@ const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 const FAMILIES = [
-  { family: "Geologica", axis: "wght@300..800", slug: "geologica" }, // сарлавҳаҳо
-  { family: "Golos Text", axis: "wght@400..700", slug: "golos" },    // матни асосӣ
+  { family: "Geologica", axis: "wght@300..800", slug: "geologica" },
+  { family: "Golos Text", axis: "wght@400..700", slug: "golos" },
 ];
 
 const WANTED = new Set(["latin", "latin-ext", "cyrillic", "cyrillic-ext"]);
 
-/** Ҳарфҳое, ки дар тоҷикӣ ҳастанд, вале дар русӣ не. */
 const TAJIK = [
   ["Ғ", 0x0492], ["ғ", 0x0493], ["Ҳ", 0x04b2], ["ҳ", 0x04b3],
   ["Қ", 0x049a], ["қ", 0x049b], ["Ҷ", 0x04b6], ["ҷ", 0x04b7],
@@ -45,7 +31,6 @@ for (const { family, axis, slug } of FAMILIES) {
   const url = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, "+")}:${axis}&display=swap`;
   const sheet = await fetch(url, { headers: { "User-Agent": UA } }).then((r) => r.text());
 
-  // Google CSS-ро ҳамчун блокҳои "/* subset */ @font-face {...}" бармегардонад.
   const blocks = sheet.split("/*").slice(1);
 
   for (const block of blocks) {

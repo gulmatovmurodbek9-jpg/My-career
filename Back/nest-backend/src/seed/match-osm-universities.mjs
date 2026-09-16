@@ -1,22 +1,3 @@
-/**
- * Донишгоҳҳои базаро бо муассисаҳои таълимии OpenStreetMap мувофиқ мекунад.
- *
- * Чаро на ҷустуҷӯи яктаяк: Nominatim барои ҳар ном алоҳида дархост мехоҳад,
- * як дархост дар як сония, ва танҳо 14% ёфт. Overpass якбора ҳамаи
- * муассисаҳои таълимии кишварро медиҳад, ва мувофиқкунӣ дар маҳал мешавад —
- * тезтар ва назарраси бештар.
- *
- * Photon санҷида шуд ва рад карда шуд: он ба ҳар дархост ҷавоб медиҳад, вале
- * бе нишони эътимод. «Донишгоҳи давлатии Данғара» → «тиббии Тоҷикистон»,
- * «Коллеҷи Турсунзода» → «Кӯлоб». Ҷои боэътимоди нодуруст аз набудани ҷой
- * хеле бадтар аст.
- *
- * Натиҷа ба JSON меравад, на ба база: ҳар мувофиқат бояд аз ҷониби одам
- * тафтиш шавад.
- *
- * Иҷро:
- *   node src/seed/match-osm-universities.mjs <osm.json>
- */
 import { readFileSync, writeFileSync } from "node:fs";
 
 const API = process.env.API_URL ?? "http://localhost:3005/api";
@@ -27,13 +8,6 @@ if (!OSM_FILE) {
   process.exit(1);
 }
 
-/**
- * Имлоро ба як шакл меорад.
- *
- * OSM аксаран бо ҳарфҳои русӣ навишта шудааст («Донишгохи техникии
- * Точикистон»), база бошад бо тоҷикии дуруст («Донишгоҳи техникии
- * Тоҷикистон»). Бе ин мутобиқсозӣ ҳатто номҳои айнан якхела мувофиқ намешаванд.
- */
 const FOLD = { ҳ: "х", ҷ: "ч", ӣ: "и", қ: "к", ӯ: "у", ғ: "г", ё: "е", й: "и" };
 
 function normalize(text) {
@@ -44,7 +18,6 @@ function normalize(text) {
     .trim();
 }
 
-/** Калимаҳое, ки қариб дар ҳар ном ҳастанд ва мувофиқатро маънидор намекунанд. */
 const NOISE = new Set([
   "донишгохи", "донишгох", "донишкадаи", "донишкада", "коллечи", "коллеч",
   "техникуми", "омузишгохи", "литсеи", "лицей", "филиали", "бинои", "корпуси",
@@ -57,12 +30,6 @@ const NOISE = new Set([
 const tokens = (text) =>
   normalize(text).split(" ").filter((w) => w.length >= 3 && !NOISE.has(w));
 
-/**
- * Баҳои мувофиқат: ҳиссаи калимаҳои маънодори муштарак.
- *
- * Ҳарду тараф ҳисоб мешаванд, то номи хеле кӯтоҳи OSM («ТГМУ») ба ҳар чиз
- * мувофиқ наояд.
- */
 function score(dbName, osmName) {
   const a = new Set(tokens(dbName));
   const b = new Set(tokens(osmName));
@@ -73,7 +40,6 @@ function score(dbName, osmName) {
 }
 
 
-/** Координатаи шаҳрҳо аз university-cities.ts — манбаи ягона. */
 const CITY_COORDS = Object.fromEntries(
   [...readFileSync(new URL("./university-cities.ts", import.meta.url), "utf8")
     .matchAll(/'([^']+)':\s*\{[^}]*latitude:\s*([\d.]+)[^}]*longitude:\s*([\d.]+)/g)]
@@ -106,29 +72,16 @@ for (const uni of universities) {
 
   for (const candidate of candidates) {
     if (!candidate.lat || !candidate.lng) continue;
-    // Беҳтарин баҳо аз ҳамаи забонҳои номи OSM.
     const rank = Math.max(...candidate.names.map((name) => score(uni.name, name)));
     if (!best || rank > best.rank) best = { candidate, rank };
   }
 
-  // Шаҳр бояд мувофиқ бошад, агар OSM онро дошта бошад.
   const cityOk =
     !best?.candidate.city ||
     !uni.city ||
     normalize(best.candidate.city).includes(normalize(uni.city).slice(0, 4)) ||
     normalize(uni.city).includes(normalize(best.candidate.city).slice(0, 4));
 
-  /**
-   * Санҷиши масофа — ҳимояи асосӣ.
-   *
-   * Санҷиши ном танҳо кифоя нест: «Донишкадаи политехникии Донишгоҳи техникии
-   * Тоҷикистон дар шаҳри Хуҷанд» бо номи донишгоҳи модарӣ дар Душанбе 0.75 баҳо
-   * мегирад, ва OSM барои он `addr:city` надорад, аз ин рӯ санҷиши шаҳр
-   * намегузарад. Натиҷа — филиали Хуҷанд дар харитаи Душанбе.
-   *
-   * Координата дурӯғ намегӯяд: агар нуқтаи OSM аз шаҳри худи муассиса дуртар
-   * аз 30 км бошад, ин муассисаи дигар аст.
-   */
   const anchor = CITY_COORDS[uni.city];
   let distanceKm = null;
   if (best && anchor) {

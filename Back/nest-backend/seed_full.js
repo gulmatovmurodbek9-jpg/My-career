@@ -14,13 +14,11 @@ async function seed() {
         await client.connect();
         console.log("Connected to database for FULL REBUILD...");
 
-        // Load data
         console.log("Loading files...");
         const rawData = JSON.parse(fs.readFileSync('ntc_raw_data.json', 'utf8'));
         const backupData = fs.existsSync('ai_backup.json') ? JSON.parse(fs.readFileSync('ai_backup.json', 'utf8')) : {};
         console.log(`Loaded ${rawData.length} raw rows and ${Object.keys(backupData).length} backup careers.`);
 
-        // Schema updates
         console.log("Ensuring schema...");
         await client.query('ALTER TABLE cluster ADD COLUMN IF NOT EXISTS "clusterId" integer;');
         await client.query('ALTER TABLE cluster ADD COLUMN IF NOT EXISTS "purpose" text;');
@@ -28,14 +26,12 @@ async function seed() {
         await client.query('ALTER TABLE career ADD COLUMN IF NOT EXISTS "likesCount" integer DEFAULT 0;');
         await client.query('ALTER TABLE career ADD COLUMN IF NOT EXISTS "tuitionFee" integer;');
 
-        // Truncate
         console.log("Truncating tables...");
         await client.query('TRUNCATE TABLE career_universities CASCADE');
         await client.query('TRUNCATE TABLE career CASCADE');
         await client.query('TRUNCATE TABLE universities CASCADE');
         await client.query('TRUNCATE TABLE cluster CASCADE');
 
-        // Insert Clusters
         console.log("Inserting Clusters...");
         const clusters = [
             { clusterId: 1, name: 'Табиӣ ва техникӣ', icon: 'Cpu', desc: 'Самти табиӣ ва техникӣ барои онҳое, ки ба муҳандисӣ, математика ва технология таваҷҷӯҳ доранд.', purpose: 'Омодасозии муҳандисону технологҳои пешсаф.' },
@@ -54,10 +50,9 @@ async function seed() {
             clusterUuids[cl.clusterId] = res.rows[0].id;
         }
 
-        // Process Raw Data
         console.log("Processing raw data for unique entities...");
         const uniSet = new Set();
-        const specialtyMap = new Map(); // name -> {cluster, code, fee, unis: Set}
+        const specialtyMap = new Map();
 
         for (const row of rawData) {
             if (row.length < 5) continue;
@@ -87,11 +82,10 @@ async function seed() {
             const spec = specialtyMap.get(name);
             spec.unis.add(uniName);
             if (fee > 0 && (spec.fee === 0 || fee < spec.fee)) {
-                spec.fee = fee; // Keep the minimum fee
+                spec.fee = fee;
             }
         }
 
-        // Insert Universities
         console.log(`Inserting ${uniSet.size} universities...`);
         const uniNameToId = {};
         for (const uniName of uniSet) {
@@ -102,7 +96,6 @@ async function seed() {
             uniNameToId[uniName] = res.rows[0].id;
         }
 
-        // Insert Careers
         console.log(`Inserting ${specialtyMap.size} careers...`);
         let careersInserted = 0;
         for (const [name, data] of specialtyMap.entries()) {
@@ -123,7 +116,6 @@ async function seed() {
             const salaryAndMarket = backup.salaryAndMarket || { junior: '1500 - 2500 TJS', mid: '3000 - 5000 TJS', senior: '6000+ TJS' };
             const careerOpportunities = backup.careerOpportunities || ['Мутахассис', 'Роҳбари шӯъба', 'Коршиноси байналмилалӣ'];
 
-            // Robust backup data restoration
             function getBackupArray(val) {
                 if (!val) return null;
                 if (Array.isArray(val)) return val;
@@ -178,7 +170,6 @@ async function seed() {
 
             const careerId = resCareer.rows[0].id;
 
-            // Link Unis
             for (const uniName of data.unis) {
                 const uniId = uniNameToId[uniName];
                 if (uniId) {

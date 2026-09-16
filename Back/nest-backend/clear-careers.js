@@ -13,18 +13,15 @@ async function clearCareers() {
     console.log('Connected to DB');
 
     try {
-        // First remove junction tables (liked/saved relations)
         await client.query(`DELETE FROM career_liked_by_users_user`);
         await client.query(`DELETE FROM career_saved_by_users_user`);
         console.log('Cleared user-career relations');
 
-        // Now delete all careers
         const result = await client.query(`DELETE FROM career`);
         console.log(`Deleted ${result.rowCount} careers`);
 
     } catch (err) {
         console.error('Error:', err.message);
-        // Try alternative table names if above fail
         try {
             await client.query(`DELETE FROM "career_liked_by_users_user" CASCADE`);
         } catch (_) { }

@@ -39,7 +39,6 @@ function acquireLock() {
                 process.exit(1);
             }
         } catch (_) {
-            // Ignore broken stale lock and replace it below.
         }
 
         try {
@@ -65,7 +64,6 @@ function releaseLock() {
             fs.unlinkSync(LOCK_PATH);
         }
     } catch (_) {
-        // Best-effort cleanup.
     }
 }
 

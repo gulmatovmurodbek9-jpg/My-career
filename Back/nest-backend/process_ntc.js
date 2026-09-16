@@ -13,7 +13,6 @@ for (const row of data) {
     
     if (!name || name.trim() === '') continue;
     
-    // Extract cluster number 1-5
     let clusterMatch = clusterStr.match(/^(\d)-/);
     let clusterId = clusterMatch ? parseInt(clusterMatch[1]) : null;
     

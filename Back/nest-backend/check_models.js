@@ -8,7 +8,6 @@ async function check() {
         return;
     }
 
-    // Try to list models via a direct fetch since the SDK might hide details
     const https = require('https');
     const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
     

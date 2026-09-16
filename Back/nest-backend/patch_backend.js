@@ -4,7 +4,6 @@ const path = require('path');
 const careerSvcPath = path.join(__dirname, 'src/career/career.service.ts');
 let careerSvc = fs.readFileSync(careerSvcPath, 'utf8');
 
-// 1. Replace the entire matchCareers and related private methods with MMT version
 const newMatchRegex = /\/\/ ═══════════════════════════════════════════════════════════════\s*\n\/\/  MATCHING ENGINE — Core Algorithm\s*\n\/\/ ═══════════════════════════════════════════════════════════════[\s\S]*?async getStats\(\)/;
 
 const newMatchLogic = `// ═══════════════════════════════════════════════════════════════
@@ -49,16 +48,14 @@ const newMatchLogic = `// ══════════════════
 
 careerSvc = careerSvc.replace(newMatchRegex, newMatchLogic);
 
-// 2. Replace RIASEC references in AI prompts in askAi
 careerSvc = careerSvc.replace(/user\?\.quizResults\?\.riasec/g, 'user?.quizResults?.mmtClusters');
 careerSvc = careerSvc.replace(/user\.quizResults\.riasec\.[a-zA-Z]+/g, (match) => {
-    return '0'; // Stub out specific RIASEC references in the prompt string temp
+    return '0';
 });
 careerSvc = careerSvc.replace(/Результаты RIASEC/g, 'Результаты MMT');
 careerSvc = careerSvc.replace(/RIASEC test results/g, 'MMT test results');
 careerSvc = careerSvc.replace(/Натиҷаҳои тести RIASEC/g, 'Натиҷаҳои тести ММТ');
 
-// 3. Update generateCareerAdvisorReport
 const genReportRegex = /async generateCareerAdvisorReport[\s\S]*?async compareCarers/;
 
 const newGenReportLogic = `async generateCareerAdvisorReport(scores: any, lang: string = 'tj'): Promise<any> {
@@ -168,7 +165,6 @@ const newCompare = `async compareCarers(scores: any, careerNames: string[], lang
 }`;
 careerSvc = careerSvc.replace(compareRegex, newCompare);
 
-// Remove RIASEC types at top
 careerSvc = careerSvc.replace(/const RIASEC_KEYS[\s\S]*?const RIASEC_QUESTIONS_SERVED = 12;/g, '');
 
 fs.writeFileSync(careerSvcPath, careerSvc, 'utf8');

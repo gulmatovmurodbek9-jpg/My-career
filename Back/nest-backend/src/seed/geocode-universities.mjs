@@ -1,21 +1,3 @@
-/**
- * Координата ва суроғаи донишгоҳҳоро аз OpenStreetMap меҷӯяд.
- *
- * Чаро лозим аст: ҷадвали ММТ на суроға дорад, на координата. Файли
- * university-cities.ts танҳо маркази шаҳрҳоро медонад, аз ин рӯ 32 донишгоҳи
- * Душанбе як нуқтаро мегиранд ва дар харита рӯи ҳам меафтанд, ва 47 муассиса
- * умуман координата надоранд.
- *
- * Натиҷа ба ҷои база ба файли JSON навишта мешавад: ҳар як мувофиқат бояд
- * пеш аз истифода аз ҷониби одам тафтиш шавад. Ҷустуҷӯи худкор метавонад
- * донишгоҳро бо мактаби ҳамном омехта кунад, ва координатаи нодуруст аз
- * набудани координата бадтар аст.
- *
- * Қоидаҳои Nominatim риоя мешаванд: як дархост дар як сония ва User-Agent-и
- * воқеӣ бо роҳи тамос.
- *
- * Иҷро:  node src/seed/geocode-universities.mjs [шумораи донишгоҳҳо]
- */
 import { writeFileSync } from "node:fs";
 
 const API = process.env.API_URL ?? "http://localhost:3005/api";
@@ -24,7 +6,6 @@ const LIMIT = Number(process.argv[2]) || Infinity;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Танҳо ҷойҳое, ки OSM ҳамчун ҷои таълим шинохтааст. */
 const EDUCATIONAL = new Set(["college", "university", "school", "educational_institution"]);
 
 async function search(query) {
@@ -46,13 +27,6 @@ console.log(`донишгоҳҳо: ${universities.length}, коркард меш
 const results = [];
 let found = 0;
 
-/**
- * Вариантҳои ҷустуҷӯ, аз дақиқтарин то васеътарин.
- *
- * Иловаи «ба номи ...» аксаран монеъ мешавад: дар OSM муассиса бо номи кӯтоҳ
- * сабт шудааст ё шакли дигари номи шахс истифода мешавад. Бурида партофтани он
- * якчанд донишгоҳи калонро ёфт — аз ҷумла аграрӣ ва Хоруғ.
- */
 function queryVariants(uni) {
   const short = uni.name.replace(/\s+ба номи.*$/i, "").trim();
   const variants = [uni.name];
@@ -61,19 +35,9 @@ function queryVariants(uni) {
   return variants;
 }
 
-/**
- * Ҷавоб бояд дар ҳамон шаҳре бошад, ки база мегӯяд.
- *
- * Бе ин санҷиш дархости кӯтоҳшуда хатарнок мешавад: «Коллеҷи омӯзгории ба номи
- * М. Турсунзодаи шаҳри Конибодом» баъди буридани «ба номи…» ба «Коллеҷи
- * омӯзгорӣ» табдил меёбад, ва OSM аввалин ҳамномро — коллеҷи Кӯлоб, 269 км
- * дуртар — бармегардонад. Ду мувофиқати нодуруст маҳз чунин пайдо шуданд.
- */
 function matchesCity(hit, city) {
   if (!city) return true;
   const haystack = (hit.display_name ?? "").toLowerCase();
-  // Номи шаҳр метавонад бо пасванд ояд («Хуҷанд» ↔ «Шаҳри Хуҷанд»), аз ин рӯ
-  // танҳо решаи он муқоиса мешавад.
   const stem = city.toLowerCase().slice(0, Math.max(4, city.length - 2));
   return haystack.includes(stem);
 }

@@ -38,7 +38,7 @@ async function backupAI() {
 
         const backupMap = {};
         for (const row of result.rows) {
-            backupMap[row.name.trim()] = row; // Map by exact career name
+            backupMap[row.name.trim()] = row;
         }
 
         fs.writeFileSync('ai_backup.json', JSON.stringify(backupMap, null, 2));

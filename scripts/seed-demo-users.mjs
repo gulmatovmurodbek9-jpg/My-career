@@ -1,23 +1,3 @@
-/**
- * Корбарони намоишӣ бо номҳои тоҷикӣ.
- *
- * Панели админ бо ҳафт сатр холӣ менамуд: диаграммаҳо сифр, «ҳозир дар сайт»
- * холӣ, тақсимоти лайкҳо бе маълумот. Ин скрипт ҳисобҳои воқеъбинона месозад
- * — бо натиҷаи санҷиш, ихтисосҳои захирашуда ва вақти охирин фаъолият — то
- * он чи дар экран аст, ба сайти кории ҳақиқӣ монанд бошад.
- *
- * Ҳамаи ҳисобҳо як пароли маълум доранд ва рӯйхати имейлҳояшон ба
- * `scripts/demo-users-remove.sql` навишта мешавад, то пас аз намоиш бо як
- * фармон тоза кардан мумкин бошад.
- *
- * ОГОҲӢ: суроғаҳо дар домени `gmail.com` сохта мешаванд ва метавонанд бо
- * ҳисоби воқеии касе рост оянд. Барои намоиш зарар надорад, вале дар кори
- * ҳақиқӣ чунин маълумот набояд монад.
- *
- * Истифода:
- *   node scripts/seed-demo-users.mjs            # 100 корбар
- *   node scripts/seed-demo-users.mjs --count 50
- */
 import fs from "fs";
 import path from "path";
 import { createRequire } from "module";
@@ -57,7 +37,6 @@ const FEMALE = [
     "Шаҳноза", "Ҷамила",
 ];
 
-/** Фамилияҳо дар шакли мардона; барои занҳо «а» илова мешавад. */
 const SURNAMES = [
     "Раҳимов", "Каримов", "Назаров", "Сафаров", "Шарипов", "Юсупов", "Холов",
     "Давлатов", "Мирзоев", "Саидов", "Бобоев", "Ғаффоров", "Қосимов",
@@ -67,8 +46,6 @@ const SURNAMES = [
     "Эргашев", "Абдуллоев", "Аминов", "Бердиев",
 ];
 
-/* Кириллии тоҷикӣ → лотинӣ барои имейл. Ҳарфҳои хос (ғ ӣ қ ӯ ҳ ҷ) бояд
-   пеш аз ҳарфҳои оддӣ биёянд, вагарна «ҳ» ҳамчун «х» хонда мешавад. */
 const TRANSLIT = {
     "ғ": "gh", "ӣ": "i", "қ": "q", "ӯ": "u", "ҳ": "h", "ҷ": "j",
     "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "yo",
@@ -92,7 +69,6 @@ const pool = new pg.Pool({
     database: env.DB_NAME,
 });
 
-/** Холҳои ММТ: як кластер пеш меистад, боқӣ пасттар — мисли санҷиши воқеӣ. */
 function quizResults(clusterIds) {
     const top = pick(clusterIds);
     const mmtClusters = {};
@@ -120,17 +96,12 @@ async function main() {
         const surname = pick(SURNAMES) + (female ? "а" : "");
         const name = `${first} ${surname}`;
 
-        /* Рақам барои ягонагӣ: бе он «Алишер Каримов» ду бор рост меояд ва
-           дуюмаш ба маҳдудияти ягонагии имейл мехӯрад. */
         let email;
         do {
             email = `${translit(first)}.${translit(surname)}${Math.floor(between(10, 999))}@gmail.com`;
         } while (used.has(email));
         used.add(email);
 
-        /* Санаи сабт дар шаш моҳи охир, ва «охирин фаъолият» пас аз он.
-           Чоряки корбарон дар як рӯзи охир фаъол буданд — то панел зинда
-           намояд, вале на ҳама якбора. */
         const createdAt = new Date(now - between(1, 180) * 86400000);
         const recent = Math.random() < 0.25;
         const lastSeenAt = new Date(
@@ -148,7 +119,6 @@ async function main() {
         );
         if (!user) continue;
 
-        /* Лайк ва захира: бе онҳо диаграммаҳои панел холӣ мемонанд. */
         const liked = new Set();
         for (let k = 0; k < Math.floor(between(0, 5)); k++) liked.add(pick(careers).id);
         const saved = new Set();
@@ -171,8 +141,6 @@ async function main() {
         process.stdout.write(`\r${created.length}/${COUNT} корбар   `);
     }
 
-    /* Шумораи лайкҳо дар худи ихтисос нигоҳ дошта мешавад — панел маҳз онро
-       мехонад, на ҷадвали пайвандро. */
     await pool.query(`
         UPDATE career c SET "likesCount" = sub.n
           FROM (SELECT "careerId", count(*)::int n FROM user_liked_careers GROUP BY "careerId") sub

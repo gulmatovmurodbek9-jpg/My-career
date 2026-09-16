@@ -1,20 +1,3 @@
-/**
- * Тарҷумаи мазмуни ихтисосҳо ба русӣ ва англисӣ.
- *
- * Натиҷа ба сутуни `career.translations` навишта мешавад:
- *   { "ru": { name, description, ... }, "en": { ... } }
- *
- * Скрипт такроршаванда аст: сатрҳое, ки аллакай тарҷумаи ҳарду забонро
- * доранд, гузаронда мешаванд. Аз ин рӯ пас аз қатъ шудан (лимити API,
- * интернет) онро бе тарс дубора сар кардан мумкин аст.
- *
- * `code` ҳеҷ гоҳ тарҷума намешавад — шиносаи расмии ММТ аст.
- *
- * Истифода:
- *   node scripts/translate-careers.mjs            # ҳама
- *   node scripts/translate-careers.mjs --limit 20 # санҷиш
- *   node scripts/translate-careers.mjs --lang ru  # танҳо як забон
- */
 import fs from "fs";
 import path from "path";
 import { createRequire } from "module";
@@ -22,8 +5,6 @@ import { createRequire } from "module";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const ENV = path.join(ROOT, "Back/nest-backend/.env");
 
-/* Драйвери pg дар node_modules-и backend аст, на дар реша — скрипт аз он ҷо
-   мегирад, то ки насби такрорӣ лозим нашавад. */
 const require = createRequire(path.join(ROOT, "Back/nest-backend/package.json"));
 const pg = require("pg");
 
@@ -45,11 +26,8 @@ const argValue = (flag, fallback) => {
 
 const LIMIT = Number(argValue("--limit", 0)) || null;
 
-/* Вақте маҷмӯи майдонҳо худаш тағйир меёбад, сатрҳои аллакай коркардшуда
-   бояд аз нав гузаранд — нишонаи _fields дар бораи ин чизе намедонад. */
 const REDO = args.includes("--redo");
 
-/** `--shard 1/4` — ҳиссаи 1 аз 4. Барои кори параллели чанд ҷараён. */
 const SHARD = (() => {
     const raw = argValue("--shard", null);
     if (!raw) return null;
@@ -66,14 +44,6 @@ const BATCH = Number(argValue("--batch", 4));
 const LANGS = ONLY_LANG ? [ONLY_LANG] : ["ru", "en"];
 const LANG_NAME = { ru: "Russian", en: "English" };
 
-/*
- * Майдонҳои тарҷумашаванда. `code` дида намешавад — қасдан.
- *
- * Ду маҷмӯа: «core» он чизест, ки корбар дар корт ва сарлавҳаи саҳифа
- * мехонад; «all» боқимондаро низ мегирад. Ҷудо кардан барои лимит лозим
- * аст: рӯйхати қадамҳо, малакаҳо ва манбаъҳо се чоряки ҳаҷмро мегиранд, ва
- * бо онҳо як баста ба лимити 8 000 токени Groq намеғунҷад.
- */
 const FIELD_SETS = {
     core: {
         text: ["name", "description", "purpose"],
@@ -87,13 +57,6 @@ const FIELD_SETS = {
     },
 };
 
-/*
- * Ду ҷадвал тарҷума мешавад. Донишгоҳҳо маҷмӯи майдонҳо надоранд — онҳо
- * ҳамагӣ панҷ сатри кӯтоҳанд ва як гузариш кифоя аст.
- *
- * `name` тарҷума мешавад, вале сутуни аслӣ ҳеҷ гоҳ иваз намегардад: ҳуҷҷат
- * бо номи расмии тоҷикӣ супорида мешавад.
- */
 const TABLES = {
     career: {
         table: "career",
@@ -140,13 +103,6 @@ if (!GROQ_KEY && !GEMINI_KEY) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/*
- * Панҷ сутун дар TypeORM `simple-array` ҳастанд — дар Postgres онҳо матни
- * оддии бо вергул ҷудошуда мемонанд, на массив. Скрипт бо `pg` рост мехонад,
- * аз ин рӯ сатр мегирад; санҷиши `Array.isArray` онҳоро бесадо мепартофт ва
- * технологияҳо, имкониятҳои касбӣ, лоиҳаҳо, сертификатҳо ва ихтисосҳои
- * вобаста ҳеҷ гоҳ тарҷума намешуданд.
- */
 const SIMPLE_ARRAY_FIELDS = new Set([
     "technologies",
     "projectsExamples",
@@ -163,7 +119,6 @@ const asList = (value) => {
     return [];
 };
 
-/** Танҳо майдонҳои холинабуда мефиристем — ҳар аломат вақт ва лимит аст. */
 function payloadOf(career) {
     const out = {};
     for (const f of TEXT_FIELDS) if (career[f]) out[f] = career[f];
@@ -181,14 +136,6 @@ function payloadOf(career) {
     return out;
 }
 
-/*
- * Ҳарду забон дар ЯК дархост.
- *
- * Пештар ҳар забон дархости худро дошт, ва матни тоҷикӣ ду маротиба
- * фиристода мешуд. Азбаски лимити Groq токенист, на дархост, ин тақрибан
- * чоряки ҳаҷмро беҳуда месӯзонд. Ҳоло сарчашма як бор меравад ва модел
- * ҳарду тарҷумаро якҷо бармегардонад.
- */
 function buildPrompt(items, langs) {
     const names = langs.map((l) => `"${l}" (${LANG_NAME[l]})`).join(" and ");
     return `You translate ${TABLE.subject} into ${names}.
@@ -207,13 +154,6 @@ Return a JSON object shaped {"items": [...]} with the same length and the same i
 Each entry must be {"id": <id>, ${langs.map((l) => `"${l}": { ...translated fields... }`).join(", ")}}.`;
 }
 
-/*
- * Gemini провайдери асосист, Groq — захира.
- *
- * Лимити ройгони Groq 8 000 токен дар як дақиқа ва 1 000 дархост дар рӯз
- * аст. Барои 884 ихтисос × 2 забон ин тақрибан 22 соат мешуд ва лимити
- * рӯзона аз миёна қатъ мекард. Gemini бо ҳамон кор дар нисфи соат мебарояд.
- */
 async function callGemini(prompt, attempt = 1) {
     const url =
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
@@ -225,8 +165,6 @@ async function callGemini(prompt, attempt = 1) {
             generationConfig: {
                 responseMimeType: "application/json",
                 temperature: 0.2,
-                /* Фикркунӣ хомӯш: тарҷума мулоҳиза намехоҳад ва ҳар токени
-                   он аз лимити дақиқа мехӯрад. */
                 thinkingConfig: { thinkingBudget: 0 },
             },
         }),
@@ -245,26 +183,8 @@ async function callGemini(prompt, attempt = 1) {
     return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 }
 
-/*
- * Groq аввал меистад, Gemini захира.
- *
- * Gemini зудтар аст, вале дар амал 503 «серталабӣ» бармегардонд ва даҳ
- * дақиқа барои чор ихтисос сарф шуд. Groq лимити сахт дорад (8 000 токен
- * дар як дақиқа), вале устувор ҷавоб медиҳад — ва бо маҷмӯи «core» баста
- * ба ҳамон лимит меғунҷад.
- */
 let geminiPausedUntil = 0;
 
-/*
- * Vertex — провайдери аввал, вақте танзим шуда бошад.
- *
- * Vertex ба лоиҳаи воқеии Google Cloud мебандад, на ба лимити ройгон:
- * маҳдудияти 8 000 токен дар дақиқаи Groq ва квотаи рӯзонаи Gemini дар ин
- * ҷо нест. Барои 884 ихтисос фарқ байни тақрибан ду соат ва бист дақиқа аст.
- *
- * Эътимоднома аз `GOOGLE_APPLICATION_CREDENTIALS` (файли service account)
- * гирифта мешавад — ҳамон тавре, ки худи барнома мегирад.
- */
 let vertexClient = null;
 if (env.VERTEX_PROJECT_ID && env.GOOGLE_APPLICATION_CREDENTIALS) {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -288,7 +208,6 @@ async function callVertex(prompt) {
         config: {
             responseMimeType: "application/json",
             temperature: 0.2,
-            /* Тарҷума мулоҳиза намехоҳад, ва ҳар токени «фикр» вақт аст. */
             thinkingConfig: { thinkingBudget: 0 },
         },
     });
@@ -304,8 +223,6 @@ async function translate(prompt) {
         try {
             return await callVertex(prompt);
         } catch (err) {
-            /* Як афтиш тамоми гузаришро суст накунад: Vertex як дақиқа
-               даст нахӯрад, ва кор дар ин муддат тавассути Groq меравад. */
             vertexPausedUntil = Date.now() + 60 * 1000;
             process.stdout.write(`\n   Vertex афтод (${String(err.message).slice(0, 70)}) — Groq`);
         }
@@ -314,8 +231,6 @@ async function translate(prompt) {
     try {
         return await callGroq(prompt);
     } catch (groqError) {
-        /* Пас аз афтиши Gemini онро панҷ дақиқа даст намезанем — вагарна
-           ҳар дархост чор кӯшиши беҳудаи интизорӣ мекунад. */
         if (GEMINI_KEY && Date.now() > geminiPausedUntil) {
             try {
                 return await callGemini(prompt, 4);
@@ -327,18 +242,6 @@ async function translate(prompt) {
     }
 }
 
-/*
- * Танзими суръат аз рӯи худи Groq.
- *
- * Лимит 8 000 токен дар як дақиқа аст — тақрибан ду дархост. Скрипт бе
- * танзим онҳоро пай дар пай мепартофт, аз лимит мегузашт ва 429 мегирифт;
- * интизории 2-4-6 сония кӯтоҳ буд, кӯшишҳо тамом мешуданд ва тамоми баста
- * партофта мешуд. Дар як гузариш ин 136 хато дод.
- *
- * Ҳоло сарлавҳаҳои ҷавоб хонда мешаванд: агар токен ба охир расида бошад,
- * скрипт то пур шудани равзана мехобад ва танҳо баъд дархости навбатӣ
- * мефиристад. Интизории огоҳона аз 429-и такрорӣ хеле арзонтар аст.
- */
 const secondsFrom = (value) => {
     if (!value) return 0;
     const m = String(value).match(/(?:([\d.]+)m)?([\d.]+)s/);
@@ -350,7 +253,6 @@ async function respectGroqBudget(headers) {
     const left = Number(headers.get("x-ratelimit-remaining-tokens"));
     if (!Number.isFinite(left)) return;
 
-    /* Як дархост тақрибан 4 500 токен мегирад — бо камтар аз ин пеш нарафтан. */
     if (left > 5000) return;
 
     const wait = Math.min(secondsFrom(headers.get("x-ratelimit-reset-tokens")) + 1, 65);
@@ -374,7 +276,6 @@ async function callGroq(prompt, attempt = 1) {
 
     if (res.status === 429 || res.status >= 500) {
         if (attempt > 6) throw new Error(`Groq ${res.status} пас аз 6 кӯшиш`);
-        /* Худи Groq мегӯяд, чӣ қадар интизор шудан лозим — тахмин накунем. */
         const wait = Math.min(
             (secondsFrom(res.headers.get("retry-after")) ||
                 secondsFrom(res.headers.get("x-ratelimit-reset-tokens")) ||
@@ -393,7 +294,6 @@ async function callGroq(prompt, attempt = 1) {
     return text;
 }
 
-/** Модел баъзан массивро дар калиди дилхоҳ мепечонад. */
 function extractArray(raw) {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
@@ -401,22 +301,6 @@ function extractArray(raw) {
     throw new Error("массив дар ҷавоб нест");
 }
 
-/**
- * Тарҷумаро бо сатри аслӣ месанҷад.
- *
- * Бе ин модел метавонад як элементи массивро партояд ва рӯйхати қадамҳо
- * кӯтоҳ шавад — дар база ин бесадо мемонад ва баъд дар экран пайдо мешавад.
- */
-/*
- * Рӯйхатро ба дарозии аслӣ меорад.
- *
- * Пештар ҳангоми нобаробарии дарозӣ майдон ТАМОМАН партофта мешавад, ва
- * модел баъзан як элементро мепартояд ё дуто якҷо мекунад. Натиҷа: рӯйхати
- * технологияҳо ё имкониятҳо дар даҳҳо ихтисос тарҷума намешуд ва бо забони
- * тоҷикӣ мемонд. Ҳоло он чи омадааст нигоҳ дошта мешавад, ҷойҳои холӣ аз
- * матни аслӣ пур мегарданд, ва зиёдатӣ бурида мешавад — дарозӣ ҳамеша ба
- * сарчашма баробар мемонад.
- */
 const alignList = (source, value) =>
     source.map((fallback, i) => {
         const item = value[i];
@@ -445,14 +329,6 @@ function validate(original, translated) {
     return clean;
 }
 
-/**
- * Оё ин сатр барои ин забон кор мехоҳад?
- *
- * Ҳамон шарте, ки дар дархости SQL аст — ва бояд ҳамон бошад. Пештар
- * филтри ҳалқа танҳо «забон ҳаст?» мепурсид: пас аз гузариши «core» ҳарду
- * забон мавҷуд буданд, гузариши «all» ҳар сатрро бесадо мегузаронд ва
- * «240/240 · хато 0» менавишт, дар ҳоле ки ба база ҳеҷ чиз наменавишт.
- */
 function needsWork(row, lang) {
     if (REDO) return true;
     const existing = row.translations?.[lang];
@@ -469,21 +345,11 @@ const pool = new pg.Pool({
 });
 
 async function main() {
-    /* Сатре, ки бо маҷмӯи «core» тарҷума шудааст, барои гузариши «all»
-       ҳанӯз нотамом аст — вагарна кӯшиши дуюм ҳамаашро мегузарад. */
     const need = REDO ? "TRUE" : LANGS.map((l) =>
         FIELD_SET_NAME === "all"
             ? `(NOT (translations ? '${l}') OR translations->'${l}'->>'_fields' IS DISTINCT FROM 'all')`
             : `NOT (translations ? '${l}')`,
     ).join(" OR ");
-    /*
-     * Тақсим байни якчанд ҷараён: `--shard 0/4`, `--shard 1/4` ва ғайра.
-     *
-     * Як ҷараён тақрибан 34 ихтисос дар дақиқа медиҳад, ва маҳдудият дар
-     * шабака аст, на дар Vertex. Тақсим аз рӯи hash-и `id` меравад, на аз
-     * рӯи OFFSET: сатрҳо ҳангоми кор аз рӯйхат мебароянд ва OFFSET қисми
-     * онҳоро мегузаронд, ва ду ҷараён як сатрро ду бор тарҷума мекарданд.
-     */
     const shardFilter = SHARD
         ? `AND abs(hashtext(id::text)) % ${SHARD.total} = ${SHARD.index}`
         : "";
@@ -506,7 +372,6 @@ async function main() {
     for (let i = 0; i < rows.length; i += BATCH) {
         const slice = rows.slice(i, i + BATCH);
 
-        /* Як дархост барои ҳамаи забонҳои нарасида. */
         const pending = slice.filter((r) => LANGS.some((l) => needsWork(r, l)));
         if (pending.length) {
             const items = pending.map((r) => ({ id: r.id, ...payloadOf(r) }));
@@ -524,8 +389,6 @@ async function main() {
 
                         const clean = validate(payloadOf(row), got[lang]);
                         if (!Object.keys(clean).length) { failed++; continue; }
-                        /* Нишонаи маҷмӯа — то гузариши баъдӣ бидонад, ки ин
-                           сатр танҳо майдонҳои асосиро дорад. */
                         clean._fields = FIELD_SET_NAME;
 
                         await pool.query(

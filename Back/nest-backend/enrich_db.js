@@ -40,7 +40,6 @@ async function main() {
         await client.connect();
         console.log("🚀 Starting HIGH-QUALITY Enrichment...");
 
-        // 1. Clear out bad data from previous attempts
         await client.query("UPDATE career SET description = NULL WHERE description LIKE 'Таджик 40%' OR description LIKE 'Tajik 40%'");
 
         const clusterSpecs = await client.query('SELECT id, "clusterId" FROM cluster');

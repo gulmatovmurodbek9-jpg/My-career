@@ -1,13 +1,3 @@
-/**
- * Херо-расмҳо ҳамчун PNG-и 2752x1536 (~8 МБ ҳар яке) нигоҳ дошта мешуданд, ки
- * дар маҷмӯъ ~32 МБ мешавад — сабаби асосии сустии сафҳаи асосӣ.
- *
- * Ин скрипт ҳар як расмро ба ду андоза (1600px ва 900px) дар WebP табдил медиҳад.
- * Аслҳо дар src/images/ бетағйир мемонанд (дигар ба bundle намераванд); натиҷа
- * ба src/images/optimized/ навишта мешавад.
- *
- * Иҷро:  node scripts/optimize-images.mjs
- */
 import sharp from "sharp";
 import { mkdir, readdir, stat } from "node:fs/promises";
 import path from "node:path";
@@ -17,8 +7,6 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = path.join(root, "..", "src", "images");
 const outDir = path.join(srcDir, "optimized");
 
-// Ном → ном дар код. Номҳои аслӣ ноустувор (ImageHero2 vs imageHero3) буданд,
-// барои ҳамин дар ин ҷо ба як тартиб оварда мешаванд.
 const RENAME = {
   "ImageHero2.png": "hero-1",
   "imageHero3.png": "hero-2",
@@ -27,8 +15,6 @@ const RENAME = {
   "Flux_Dev_create_a_beautiful_image_of_Tajik_boys_and_girls_with_1.jpg": "hero-group",
   "imagAi.png": "ai-avatar",
 
-  // Расмҳои панҷ кластер (ChatGPT / Imagen, 24.08.2026). Тартиб = тартиби
-  // кластерҳои ММТ, ниг. pages/home/content.js.
   "cluster-1.png": "cluster-1",
   "cluster-2.png": "cluster-2",
   "cluster-3.png": "cluster-3",
@@ -63,7 +49,6 @@ for (const file of files) {
 
   for (const { w, suffix } of WIDTHS) {
     const outPath = path.join(outDir, `${name}${suffix}.webp`);
-    // withoutEnlargement: расмҳои хурд (ai-avatar) бемаврид калон карда нашаванд.
     const info = await sharp(inPath)
       .resize({ width: w, withoutEnlargement: true })
       .webp({ quality: 78, effort: 6 })

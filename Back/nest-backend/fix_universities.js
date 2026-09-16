@@ -14,11 +14,9 @@ async function fixUniversities() {
         await client.connect();
         console.log("✅ DB Connected");
 
-        // Load raw data
         const rawData = JSON.parse(fs.readFileSync('ntc_raw_data.json', 'utf8'));
         console.log(`Loaded ${rawData.length} rows from raw data.`);
 
-        // Step 1: Extract unique universities and insert them
         const uniqueUnis = new Set();
         for (const row of rawData) {
             if (row.length < 5) continue;
@@ -32,7 +30,6 @@ async function fixUniversities() {
         const uniNameToId = {};
 
         for (const uniName of uniqueUnis) {
-            // Check if exists
             let res = await client.query('SELECT id FROM universities WHERE name = $1', [uniName]);
             if (res.rows.length === 0) {
                 const description = `Муассисаи олии таълимии касбии Тоҷикистон.`;
@@ -44,7 +41,6 @@ async function fixUniversities() {
             uniNameToId[uniName] = res.rows[0].id;
         }
 
-        // Step 2: Link Universities with Careers
         const careersRes = await client.query("SELECT id, name FROM career");
         const careerNameToId = {};
         for (const row of careersRes.rows) {
@@ -68,9 +64,7 @@ async function fixUniversities() {
             const uniId = uniNameToId[uniName];
             const careerId = careerNameToId[careerName];
 
-            // Some specialty names might differ slightly, but we only have what we have
             if (uniId && careerId) {
-                // Ensure the relation exists in career_universities
                 const checkRes = await client.query(
                     'SELECT 1 FROM career_universities WHERE "careerId" = $1 AND "universitiesId" = $2',
                     [careerId, uniId]

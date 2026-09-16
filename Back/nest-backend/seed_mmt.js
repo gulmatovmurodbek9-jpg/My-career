@@ -87,7 +87,7 @@ async function seed() {
                 { step: 3, title: 'Таҷрибаомӯзӣ', tasks: ['Корҳои амалӣ ва таҷрибаомӯзӣ дар истеҳсолот'] },
                 { step: 4, title: 'Диплом', tasks: ['Муҳофизати кори дипломии ниҳоӣ'] }
             ];
-            const tuitionFee = Math.floor(Math.random() * 15) * 1000 + 3000; // random fee between 3000 and 17000
+            const tuitionFee = Math.floor(Math.random() * 15) * 1000 + 3000;
             const salaryAndMarket = { junior: '1500 - 2500 TJS', mid: '3000 - 5000 TJS', senior: '6000+ TJS' };
             const careerOpportunities = ['Мутахассис', 'Роҳбари шӯъба', 'Коршиноси байналмилалӣ'];
 
@@ -121,7 +121,6 @@ async function seed() {
 
             const careerId = resCareer.rows[0].id;
 
-            // Insert ManyToMany relations
             if (spec.universities) {
                 for (const uni of spec.universities) {
                     if (uni.name && uniIds[uni.name.trim()]) {

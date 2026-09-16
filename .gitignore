@@ -57,10 +57,6 @@ RESET-POSTGRES.bat
 # ва Front/public ҳастанд — инҳо танҳо бойгонӣ.
 /Alll Senaria/
 
-# ── Асбобҳои агентӣ (скилҳо), на қисми барнома ──
-.claude/
-.agents/
-skills-lock.json
 
 # Нусхаи захиравии база: маълумоти корбарон ва калидҳо дорад.
 backups/

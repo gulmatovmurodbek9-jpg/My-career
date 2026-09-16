@@ -11,11 +11,6 @@ import {
     X,
 } from "lucide-react";
 
-/**
- * RoadmapBuilder component allows admins to create and edit
- * a sequence of steps for a career roadmap.
- * roadmap: Array<{ step: number, title: string, tasks: string[] }>
- */
 const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
     const [steps, setSteps] = useState(
         initialRoadmap.length > 0
@@ -24,7 +19,6 @@ const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
     );
 
     const updateSteps = (newSteps) => {
-        // Re-index steps
         const indexed = newSteps.map((s, i) => ({ ...s, step: i + 1 }));
         setSteps(indexed);
         if (onChange) onChange(indexed);

@@ -15,32 +15,7 @@ import StoryScene from "./StoryScene";
 import { CHOICES_POSTER, CHOICES_VIDEO, CLOSING_POSTER, CLOSING_VIDEO } from "../../lib/media";
 import { useHomeContent } from "./useHomeContent";
 
-/**
- * Сафҳаи асосӣ.
- *
- *   Савол  →  Аз куҷо оғоз кунед  →  Панҷ гурӯҳи касбҳо
- *          →  Намунаи ихтисосҳо  →  Даъват ба тест
- *
- * Тарҳ ба осонии истифода тобеъ аст, на ба таассурот. Ҳамаи мазмун дар
- * ҷараёни оддии ҳуҷҷат аст: ҳеҷ pinned scroll, ҳеҷ parallax, ҳеҷ матн рӯи акс.
- * Матн калон, сарҳадҳо ғафс, тугмаҳо на камтар аз 56px.
- *
- * Саҳифа токенҳои мавзӯъро истифода мебарад, аз ин рӯ дар ҳарду тема кор
- * мекунад ва ҳангоми гузаштан ба саҳифаҳои дигар ранг намепарад.
- *
- * Тамоми матн аз ./content.js меояд (ҳар се забон дар як ҷо).
- */
 
-/**
- * Мушкил: дар байни садҳо касб гум шудан.
- *
- * Ин бахш байни савол ва роҳи ҳал меистад ва вазифаи ягона дорад: корбар бояд
- * худро дар он бишиносад. Видео маҳз ҳамин ҳисро нишон медиҳад — одам дар
- * миёни аломатҳои даҳҳо касб.
- *
- * Ҷойгиршавӣ баръакси экрани аввал аст (аввал видео, баъд матн), то ду бахши
- * пай дар пай як шакл надошта бошанд.
- */
 function OverwhelmScene() {
   const { overwhelm, opening } = useHomeContent();
 
@@ -52,20 +27,12 @@ function OverwhelmScene() {
       preload="none"
       title={overwhelm.title}
       lead={overwhelm.lead}
-      /* Ҳамон ду тугма: экран мушкилро мегӯяд, ва тугмаҳо роҳи ҳалро. Корбар
-         ҳеҷ гоҳ ҳарду экранро ҳамзамон намебинад, аз ин рӯ такрор нест. */
       ctaPrimary={opening.ctaPrimary}
       ctaSecondary={opening.ctaSecondary}
     />
   );
 }
 
-/**
- * Се дари вуруд.
- *
- * Ҷойгиршавӣ қасдан нобаробар аст: тест кори асосист, аз ин рӯ дари он васеътар
- * аст. Се корти якхела ҳамаро баробар нишон медоданд ва интихобро душвор.
- */
 function EntryDoors() {
   const { doors } = useHomeContent();
   const [primary, ...rest] = doors.items;
@@ -123,7 +90,6 @@ function EntryDoors() {
   );
 }
 
-/** Намунаи ихтисосҳо. Тӯр, на рафи уфуқӣ: скролли паҳлӯӣ душвор идора мешавад. */
 function TopCareers() {
   const { topCareers } = useHomeContent();
   const [careers, setCareers] = useState([]);
@@ -138,7 +104,6 @@ function TopCareers() {
         setStatus("ready");
       })
       .catch((error) => {
-        // Бекоркунӣ ҳангоми unmount хато нест.
         if (!axios.isCancel(error)) setStatus("error");
       });
     return () => controller.abort();
@@ -186,7 +151,6 @@ function TopCareers() {
   );
 }
 
-/** Даъвати анҷомӣ. Як тугма, ҳеҷ чизи иловагӣ. */
 function ClosingScene() {
   const { closing } = useHomeContent();
 
@@ -242,8 +206,6 @@ export default function Home() {
   });
 
   useEffect(() => {
-    // Агар бо лангар омада бошанд ("/#cluster-groups"), Layout ба ҳамон бахш
-    // скролл мекунад — ба боло бурдан онро вайрон мекард.
     if (!window.location.hash) window.scrollTo(0, 0);
   }, []);
 

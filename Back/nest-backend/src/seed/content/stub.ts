@@ -1,15 +1,6 @@
-/**
- * Builds a career page for specialties that do not yet have a hand-written entry.
- *
- * Content comes from the specialty's professional family (`families.ts`) combined
- * with its own name and level, so a generated page is specific — a page about
- * "Коркарди конҳои канданиҳои фоиданок (корҳои пармакунӣ)" talks about mining,
- * not about "the chosen field". A hand-written batch entry always wins over this.
- */
 import { CareerContent } from './types';
 import { resolveFamily } from './families';
 
-/** NTC codes starting with 1 are higher education; 2 is secondary vocational. */
 function levelOf(code: string): { degreeType: string; durationYears: number; isHigher: boolean } {
     const isHigher = code.startsWith('1');
     return {
@@ -19,7 +10,6 @@ function levelOf(code: string): { degreeType: string; durationYears: number; isH
     };
 }
 
-/** Drops the parenthetical qualifier: "Математика (омӯзгорӣ)" → "Математика". */
 function baseName(name: string): string {
     return name.replace(/\s*\([^)]*\)\s*$/, '').trim();
 }

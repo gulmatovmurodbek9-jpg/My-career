@@ -18,10 +18,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: any) {
-        /* Ҳар дархости воридшуда аз ин ҷо мегузарад — ҷои табиии қайд кардани
-           он, ки корбар зинда аст. Худи навиштан дар хидмат маҳдуд карда
-           шудааст (як бор дар 2 дақиқа), ва мо натиҷаро интизор намешавем:
-           агар навиштан ноком шавад, дархост бояд ҳамон тавр иҷро гардад. */
         void this.usersService.touchLastSeen(payload.sub);
         return { userId: payload.sub, email: payload.email, role: payload.role };
     }

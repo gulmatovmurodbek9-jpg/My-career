@@ -2,21 +2,6 @@ import { Building2, Info, Rocket, Star, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SALARY_SOURCE, sectorFor } from "../lib/salarySectors";
 
-/**
- * Маош: рақами воқеӣ бо манбаъ, на тахмин.
- *
- * Пештар ин ҷо рақамҳои бофта буданд — майдони `salaryAndMarket` барои 477
- * ихтисос ҳамагӣ 12 варианти ягона дошт, аз ин рӯ муаллим ва молиячӣ як маош
- * доштанд.
- *
- * Ҳоло се қабат нишон дода мешавад:
- *   1. Миёнаи СОҲА аз омори расмӣ — барои ҳамаи ихтисосҳо
- *   2. Зинаҳои таҷриба — танҳо барои сабтҳое, ки одам навиштааст
- *   3. Асоси қонунии ташаккули маош — барои ҳама
- *
- * Рақами соҳавӣ ҳамеша бо манбаъ ва сана меояд ва ошкоро ҳамчун миёнаи соҳа
- * ном бурда мешавад, на ҳамчун маоши ин ихтисос.
- */
 
 const TIERS = [
   { key: "junior", icon: Rocket },
@@ -28,7 +13,6 @@ const som = (value) => value.toLocaleString("ru-RU");
 
 function SectorAverage({ sector }) {
   const { t } = useTranslation();
-  // Нисбат ба миёнаи кишвар — рақами танҳо маъное надорад.
   const ratio = Math.round((sector.amount / SALARY_SOURCE.nationalAverage) * 100);
   const diff = ratio - 100;
 

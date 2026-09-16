@@ -1,21 +1,6 @@
-/**
- * Professional families.
- *
- * The NTC list has 884 specialties, but they fall into roughly sixty real
- * professions — "Коркарди конҳои канданиҳои фоиданок (корҳои пармакунӣ)" and
- * "(корҳои маркшейдерӣ)" are the same trade with different emphases. Each family
- * below carries the substance shared by its members: what the work is, which
- * skills it needs, where graduates are employed in Tajikistan and what they earn.
- *
- * `resolveFamily` maps a specialty name onto its family; `stub.ts` then combines
- * the family with the specialty's own name to produce its career page. A
- * hand-written entry in a `clusterN-NN.ts` batch always overrides this.
- */
 
 export interface Family {
-    /** Genitive-friendly field name: "соҳаи {field}". */
     field: string;
-    /** One sentence on what the specialist actually does. */
     summary: string;
     technical: string[];
     soft: string[];
@@ -42,7 +27,6 @@ const SALARY = {
 };
 
 export const FAMILIES: Record<string, Family> = {
-    // ─────────────────────────── IT ───────────────────────────
     programming: {
         field: 'технологияи иттилоотӣ ва барномасозӣ',
         summary: 'барномаҳо ва системаҳои рақамиро таҳия, санҷиш ва нигоҳдорӣ мекунад',
@@ -142,7 +126,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Электроника малакаи дастро талаб мекунад — аз лоиҳаҳои хурд бо Arduino сар кунед. Мутахассиси хуби ташхис ва таъмири электроника дар Тоҷикистон камёб аст ва фармоиши хусусӣ ҳамеша дорад.',
     },
 
-    // ─────────────────────── Энергетика ва автоматика ───────────────────────
     energy: {
         field: 'энергетика',
         summary: 'таҷҳизоти истеҳсол, интиқол ва тақсими нерӯи барқро истифода ва хизматрасонӣ мекунад',
@@ -172,7 +155,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'PLC малакаи асосии автоматчии муосир аст ва дар бозор камёб — онро амиқ омӯзед. Мутахассиси PLC метавонад лоиҳаҳои мустақили автоматикунонӣ гирад, ки даромади хеле хуб медиҳанд.',
     },
 
-    // ─────────────────────── Муҳандисӣ ва саноат ───────────────────────
     mechanical: {
         field: 'мошинсозӣ ва механика',
         summary: 'мошинҳо ва механизмҳоро тарҳрезӣ, истеҳсол ва хизматрасонӣ мекунад',
@@ -356,7 +338,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Об барои Тоҷикистон сарвати асосӣ аст ва идораи оқилонаи он масъалаи миллӣ. Лоиҳаҳои байналмилалӣ (Бонки ҷаҳонӣ, FAO) дар ин соҳа зиёданд ва мутахассиси забондонро хуб қадр мекунанд.',
     },
 
-    // ─────────────────────── Илмҳои табиӣ ───────────────────────
     chemistry: {
         field: 'химия ва технологияи химиявӣ',
         summary: 'моддаҳо ва реаксияҳои химиявиро меомӯзад ва равандҳои технологиро идора мекунад',
@@ -484,7 +465,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Омор касби ором, вале хеле талабгор аст. Power BI ва SQL-ро омӯзед — таҳлилгаре, ки маълумотро зебо ва фаҳмо нишон дода метавонад, дар ҳар ширкат қадрдон аст.',
     },
 
-    // ─────────────────────── Кишоварзӣ ───────────────────────
     agriculture: {
         field: 'кишоварзӣ',
         summary: 'зироат ва чорворо парвариш мекунад ва истеҳсоли маҳсулоти кишоварзиро ташкил менамояд',
@@ -570,7 +550,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Тоҷикистон меваю сабзавоти аъло дорад, вале аксаран хом содир мекунад — коркард арзиши маҳсулотро чанд баробар зиёд мекунад. Ин самт барои соҳибкории худӣ имконияти воқеӣ дорад.',
     },
 
-    // ─────────────────────── Саноати сабук ───────────────────────
     lightIndustry: {
         field: 'саноати сабук ва нассоҷӣ',
         summary: 'матоъ, либос ва маснуоти нассоҷиро тарҳрезӣ ва истеҳсол мекунад',
@@ -628,7 +607,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Мебелсозӣ дар Тоҷикистон талаботи доимӣ дорад ва оғози он сармояи калон намехоҳад. Кандакории миллии тоҷик (дар чӯб) ҳунари нодир аст — устои он ҳам дар дохил, ҳам дар хориҷ фармоиш дорад.',
     },
 
-    // ─────────────────────── Иқтисод ва молия ───────────────────────
     economics: {
         field: 'иқтисодиёт',
         summary: 'равандҳои иқтисодиро таҳлил мекунад ва фаъолияти хоҷагиро банақшагирӣ менамояд',
@@ -756,7 +734,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Сайёҳӣ дар Тоҷикистон самти афзалиятноки давлат аст — Помир ва Фонҳо сайёҳони ҷаҳонро ҷалб мекунанд. Забони англисӣ дар ин касб шарти асосист; роҳбалади забондон дар мавсим даромади хеле хуб дорад.',
     },
 
-    // ─────────────────────── Ҳуқуқ ва ҷомеа ───────────────────────
     law: {
         field: 'ҳуқуқшиносӣ',
         summary: 'қонунро татбиқ мекунад, ҳуҷҷат тартиб медиҳад ва манфиати мизоҷро ҳимоя менамояд',
@@ -884,7 +861,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Донистани забони арабӣ дар ин соҳа шарти асосист ва он дари матншиносӣ ва тарҷумаро низ мекушояд. Фаъолияти динӣ дар Тоҷикистон танзимшуда аст — қонунгузориро хуб донед.',
     },
 
-    // ─────────────────────── Забон ва санъат ───────────────────────
     languages: {
         field: 'забонҳо ва филология',
         summary: 'забонҳоро меомӯзад, таълим медиҳад ва тарҷума мекунад',
@@ -998,7 +974,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Ин касб дари ҳар ташкилотро мекушояд ва аксаран ба вазифаи баландтар — кадр, идора ё котиби роҳбар — мебарад. MS Office ва системаҳои электронии ҳуҷҷатгардиширо аъло омӯзед.',
     },
 
-    // ─────────────────────── Тиб ва варзиш ───────────────────────
     medicine: {
         field: 'тиб',
         summary: 'беморонро ташхис ва табобат мекунад ва саломатии мардумро ҳифз менамояд',
@@ -1070,7 +1045,6 @@ export const FAMILIES: Record<string, Family> = {
         advice: 'Мураббигии хусусӣ ва кор дар толорҳои фитнес аз маоши мактаб чанд баробар зиёд даромад медиҳанд. Ин самт дар шаҳрҳо зуд рушд мекунад — сертификати мураббии фитнес гиред.',
     },
 
-    // ─────────────────────── Хизматрасонӣ ва бехатарӣ ───────────────────────
     service: {
         field: 'хизматрасонӣ',
         summary: 'ба аҳолӣ хизмати маишӣ ва иҷтимоӣ мерасонад ва онро ташкил мекунад',
@@ -1143,17 +1117,10 @@ export const FAMILIES: Record<string, Family> = {
     },
 };
 
-/**
- * Keyword → family. Checked in order, so the more specific probe must come
- * before the general one ("амнияти кибер" before "компютер").
- */
 const PROBES: [string, keyof typeof FAMILIES][] = [
-    // "Таълими касбӣ (мошинсозӣ)" trains a teacher, not a machinist — this must
-    // outrank every subject-matter probe below.
     ['таълими касбӣ', 'teaching'],
     ['таълимоти касбӣ', 'teaching'],
 
-    // IT — specific first
     ['зеҳни сунъӣ', 'artificialIntelligence'],
     ['муҳандисии барномавӣ', 'programming'],
     ['воситаҳои математикӣ ва барномавӣ', 'programming'],
@@ -1190,7 +1157,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['иттилоот', 'itSystems'],
     ['рақамӣ', 'itSystems'],
 
-    // Энергетика ва автоматика
     ['ҳифзи релеӣ', 'automation'],
     ['автомат', 'automation'],
     ['робот', 'automation'],
@@ -1199,7 +1165,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['энергет', 'energy'],
     ['энергия', 'energy'],
 
-    // Муҳандисӣ, саноат
     ['нафт', 'oilAndGas'],
     ['газу нафт', 'oilAndGas'],
     ['авиатсион', 'aviation'],
@@ -1249,7 +1214,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['муҳандис', 'mechanical'],
     ['дастгоҳ', 'mechanical'],
 
-    // Табиатшиносӣ
     ['гидрология', 'geography'],
     ['пирях', 'geography'],
     ['метеоролог', 'geography'],
@@ -1296,7 +1260,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['дехқон', 'agriculture'],
     ['биолог', 'biology'],
 
-    // Саноат
     ['хӯроки умумӣ', 'foodTechnology'],
     ['хӯрокворӣ', 'foodTechnology'],
     ['ғизоӣ', 'foodTechnology'],
@@ -1329,7 +1292,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['бехатарии ҳаёт', 'safety'],
     ['бехатарии ядроӣ', 'safety'],
 
-    // Иқтисод
     ['бонк', 'banking'],
     ['суғурта', 'finance'],
     ['бозори фондӣ', 'finance'],
@@ -1362,7 +1324,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['идоракунӣ', 'management'],
     ['иқтисод', 'economics'],
 
-    // Ҷомеа
     ['судӣ', 'law'],
     ['прокурор', 'law'],
     ['ҳуқуқ', 'law'],
@@ -1389,7 +1350,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['китобхона', 'culture'],
     ['фарҳанг', 'culture'],
 
-    // Забон, санъат, таълим
     ['тарҷум', 'languages'],
     ['лингвист', 'languages'],
     ['филолог', 'languages'],
@@ -1422,7 +1382,6 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['тарбиявӣ', 'teaching'],
     ['технология', 'teaching'],
 
-    // Тиб ва варзиш
     ['дандон', 'dentistry'],
     ['стоматолог', 'dentistry'],
     ['ҳамшира', 'nursing'],
@@ -1436,12 +1395,10 @@ const PROBES: [string, keyof typeof FAMILIES][] = [
     ['варзиш', 'sports'],
     ['ҷисмонӣ', 'sports'],
 
-    // Умумӣ
     ['хизматрасон', 'service'],
     ['сервис', 'service'],
 ];
 
-/** Falls back to the cluster's broadest family when no keyword matches. */
 const CLUSTER_FALLBACK: Record<number, keyof typeof FAMILIES> = {
     1: 'mechanical',
     2: 'economics',
@@ -1450,7 +1407,6 @@ const CLUSTER_FALLBACK: Record<number, keyof typeof FAMILIES> = {
     5: 'medicine',
 };
 
-/** The family key a name matches, or null when no probe fires. */
 export function matchFamilyKey(name: string): keyof typeof FAMILIES | null {
     const lower = name.toLowerCase();
     for (const [probe, key] of PROBES) {

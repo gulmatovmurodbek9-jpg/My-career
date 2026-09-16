@@ -1,15 +1,6 @@
 import React from "react";
 import { Bot } from "lucide-react";
 
-/*
- * Нишони AI — ҳамон аватари саҳифаи чат: ҳалқаи градиентии 2px ва робот.
- *
- * Пештар ҳар ҷо нишони дигар буд (мағзи BrainCircuit, нуқтаҳои давразананда,
- * ҳошияи бунафш), ва AI дар як саҳифа се намуд дошт.
- *
- * Радиуси дохилӣ = радиуси берунӣ − 2px (ғафсии ҳалқа), то ҳалқа дар кунҷҳо
- * якхела ғафс бошад.
- */
 const SIZES = {
     sm: { box: "h-10 w-10 rounded-[0.875rem]", inner: "rounded-[0.75rem]", icon: "h-5 w-5", dot: "h-3 w-3" },
     md: { box: "h-12 w-12 rounded-2xl", inner: "rounded-[0.875rem]", icon: "h-6 w-6", dot: "h-3.5 w-3.5" },

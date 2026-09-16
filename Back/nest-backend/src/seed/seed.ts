@@ -1,11 +1,3 @@
-/**
- * Rebuilds the whole database from the official NTC admission table.
- *
- *   npm run seed            # wipes reference data, keeps user accounts
- *   npm run seed -- --all   # wipes everything, including users
- *
- * Idempotent: running it twice produces the same database.
- */
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -88,8 +80,6 @@ function buildDataSource(): DataSource {
 }
 
 async function wipe(dataSource: DataSource, includeUsers: boolean): Promise<void> {
-    // CASCADE clears the TypeORM-generated join tables (career_universities,
-    // user_saved_careers, user_liked_careers) along with their owners.
     const tables = ['career_offerings', 'career', 'cluster', 'universities'];
     if (includeUsers) tables.push('appointment', '"user"');
 
@@ -117,7 +107,6 @@ async function main(): Promise<void> {
         console.log(`\n3. Тоза кардани база${includeUsers ? ' (ҳамроҳи корбарон)' : ' (корбарон нигоҳ дошта мешаванд)'}...`);
         await wipe(dataSource, includeUsers);
 
-        // ── Clusters ──
         console.log('\n4. Кластерҳо...');
         const clusterRepo = dataSource.getRepository(Cluster);
         const clusterByNumber = new Map<number, Cluster>();
@@ -136,7 +125,6 @@ async function main(): Promise<void> {
             console.log(`   ${parsed.clusterNumber}. ${parsed.clusterName}`);
         }
 
-        // ── Universities ──
         console.log('\n5. Донишгоҳҳо...');
         const universityRepo = dataSource.getRepository(University);
         const universityByName = new Map<string, University>();
@@ -158,7 +146,6 @@ async function main(): Promise<void> {
         }
         console.log(`   ${universityByName.size} муассиса сабт шуд`);
 
-        // ── Careers ──
         console.log('\n6. Ихтисосҳо...');
         const offeringsByCode = new Map<string, typeof data.offerings>();
         for (const offering of data.offerings) {
@@ -167,8 +154,6 @@ async function main(): Promise<void> {
             offeringsByCode.set(offering.code, list);
         }
 
-        // Neighbours within the same professional family, used to fill
-        // "Ихтисосҳои вобаста" for specialties without hand-written content.
         const namesByFamily = new Map<string, string[]>();
         for (const parsed of data.careers) {
             const key = matchFamilyKey(parsed.name);
@@ -234,7 +219,6 @@ async function main(): Promise<void> {
         const withContent = careerRows.filter((c) => c.contentWritten).length;
         console.log(`   ${careerByCode.size} ихтисос сабт шуд (${withContent} бо матни дастнавис)`);
 
-        // ── Offerings ──
         console.log('\n7. Пешниҳодҳо (донишгоҳ × ихтисос)...');
         const offeringRepo = dataSource.getRepository(CareerOffering);
         const offeringRows = data.offerings
@@ -258,7 +242,6 @@ async function main(): Promise<void> {
         await offeringRepo.save(offeringRows, { chunk: 200 });
         console.log(`   ${offeringRows.length} пешниҳод сабт шуд`);
 
-        // ── Admin ──
         if (includeUsers) {
             console.log('\n8. Ҳисоби администратор...');
             const userRepo = dataSource.getRepository(User);
@@ -276,7 +259,6 @@ async function main(): Promise<void> {
             console.log(`   парол: ${password}   ← онро баъд аз воридшавӣ иваз кунед`);
         }
 
-        // ── Report ──
         console.log('\n=== НАТИҶА ===');
         console.log('кластерҳо   :', await clusterRepo.count());
         console.log('донишгоҳҳо  :', await universityRepo.count());

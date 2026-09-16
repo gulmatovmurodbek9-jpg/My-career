@@ -8,11 +8,6 @@ import { useTranslation } from "react-i18next";
 
 const MIN_LENGTH = 6;
 
-/*
- * Барқарорсозӣ дар як саҳифа, ду қадам: имейл → код + пароли нав.
- * Пеш пайванд ба почта мерафт, вале дар телефон гузаштан аз нома ба браузер
- * ва бозгашт нороҳат буд — коди 6-рақамаро оддӣ нусха кардан мумкин аст.
- */
 const ForgotPassword = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();

@@ -1,9 +1,3 @@
-/**
- * Prints every institution with the city it resolves to, so the mapping can be
- * eyeballed. Honorific names ("ба номи X") are the usual source of mistakes.
- *
- *   npx ts-node --transpileOnly src/seed/list-universities.ts
- */
 import { parseNtcData } from './parse-ntc';
 import { resolveCity, SETTLEMENTS } from './university-cities';
 

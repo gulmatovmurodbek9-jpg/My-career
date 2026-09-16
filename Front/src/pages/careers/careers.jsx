@@ -16,9 +16,8 @@ import { usePageMeta } from "../../lib/usePageMeta";
 import FilterSelect from "../../components/FilterSelect";
 import { withLang, currentApiLang } from "../../lib/apiLang";
 
-const LIMIT = 12; // items per page
+const LIMIT = 12;
 
-// ─── Pagination Component ─────────────────────────────────────────────────────
 const Pagination = ({ currentPage, lastPage, onPageChange }) => {
   if (lastPage <= 1) return null;
 
@@ -92,7 +91,6 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
 };
 
 
-/** Як сатри филтр дар панели канорӣ: ном дар чап, шумора дар рост. */
 const FilterRow = ({ active, onClick, icon, label, count }) => (
   <button
     type="button"
@@ -116,30 +114,14 @@ const FilterRow = ({ active, onClick, icon, label, count }) => (
   </button>
 );
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 const Careers = () => {
   const { t, i18n } = useTranslation();
   const [careers, setCareers] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: LIMIT, lastPage: 1 });
-  /*
-   * Ҷустуҷӯ аз URL сар мешавад, то истиноди «ихтисоси вобаста» аз саҳифаи
-   * ихтисос кор кунад: /careers?search=<ном> рӯйхатро аллакай филтршуда
-   * мекушояд. Бе ин истинод мекушод, вале ҳамаи 884 ихтисосро нишон медод.
-   */
   const [searchQuery, setSearchQuery] = useState(
     () => new URLSearchParams(window.location.search).get("search") ?? "",
   );
-  /**
-   * Кластери интихобшуда дар URL нигоҳ дошта мешавад, на дар useState.
-   *
-   * Қаблан ин ҳолати дохилӣ буд ва ҳамеша аз "all" оғоз мешуд, аз ин рӯ
-   * истиноди /careers?clusterId=… аз сафҳаи асосӣ бесадо нодида гирифта мешуд
-   * ва ҳамаи ихтисосҳо нишон дода мешуданд.
-   *
-   * Ҳоло URL сарчашмаи ягона аст: истинод кор мекунад, тугмаи "ба ақиб" кор
-   * мекунад, ва корбар метавонад суроғаро бо филтри интихобшуда фиристад.
-   */
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCluster = searchParams.get("clusterId") ?? "all";
 
@@ -152,15 +134,11 @@ const Careers = () => {
           else next.set("clusterId", id);
           return next;
         },
-        // Филтр иваз кардан набояд таърихи браузерро пур кунад: "ба ақиб"
-        // бояд корбарро ба саҳифаи қаблӣ барад, на ба филтри қаблӣ.
         { replace: true }
       );
     },
     [setSearchParams]
   );
-  /* Нарх: корбар «аз» ва «то»-ро худаш менависад. Қиматҳои тайёр (то 2000,
-     то 5000…) ба нархҳои воқеии 1500–30000 мувофиқ набуданд. */
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
   const [priceRange, setPriceRange] = useState({ min: null, max: null });
@@ -170,37 +148,20 @@ const Careers = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  /* Дар телефон панели филтр зери ҳамаи кортҳо меафтод: то ба он расидан
-     корбар бояд 12 ихтисосро мегузашт. Акнун он дар боло аст, вале
-     ҷамъшуда — вагарна худи он тамоми экранро мегирифт. */
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { refreshProfile } = useAuthStore();
 
-  // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  /* Ҷустуҷӯи AI: матни супоридашуда, филтрҳое, ки модел фаҳмид, ва ҳолат.
-     Он бо ҷустуҷӯи оддӣ дар як вақт кор намекунад — вагарна ду дархост
-     рӯйхатро аз ҳам мегирифтанд. */
   const [aiQuery, setAiQuery] = useState("");
   const [aiFilters, setAiFilters] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
-  /* Саволи аниқкунанда ва вариантҳои он. Вариант филтрҳои тайёри худро
-     дорад — пас пахш кардани он дархости нав ба модел талаб намекунад. */
   const [aiQuestion, setAiQuestion] = useState(null);
   const [aiOptions, setAiOptions] = useState([]);
   const [aiChoice, setAiChoice] = useState(null);
-  /* Забоне, ки корбар саволро бо он навишт — сервер онро муайян мекунад. */
   const [aiLang, setAiLang] = useState(null);
 
-  /*
-   * Тарҷума барои блоки AI.
-   *
-   * Дар саҳифаи русӣ корбар метавонад тоҷикӣ нависад — он гоҳ савол,
-   * вариантҳо ва шарҳҳо бояд тоҷикӣ бошанд, вагарна ҷавоб ба забони дигар
-   * мебарояд. `lng` холӣ бошад, i18next забони ҷориро мегирад.
-   */
   const aiT = (key, options) => t(key, { ...(options || {}), lng: aiLang || undefined });
   const aiActive = Boolean(aiQuery);
   useEffect(() => {
@@ -208,8 +169,6 @@ const Careers = () => {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  /* Дархост на бо ҳар рақам: 450мс пас аз охирин тугма. «Аз» калонтар аз
-     «то» бошад, ҷояшонро иваз мекунем — вагарна натиҷа ҳамеша холӣ буд. */
   useEffect(() => {
     const timer = setTimeout(() => {
       const toNumber = (text) => {
@@ -224,25 +183,11 @@ const Careers = () => {
     return () => clearTimeout(timer);
   }, [minPriceInput, maxPriceInput]);
 
-  // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter]);
 
-  // Fetch careers (server-side pagination)
-  /**
-   * Ихтисосҳо. Ҳар тағйири филтр дархости қаблиро бекор мекунад.
-   *
-   * Бе бекоркунӣ ду дархост ҳамзамон дар парвоз буданд ва ғолиб он мешуд, ки
-   * ДЕРТАР мерасид, на он ки охирин фиристода шуд. Аз ин рӯ ҳангоми зуд гузаштан
-   * аз кластер ба кластер рӯйхат баъзан ба ҳолати қаблӣ бармегашт: URL кластери
-   * навро нишон медод, вале мазмун кӯҳна буд.
-   *
-   * Дар React StrictMode ҳар эффект ду бор иҷро мешавад, аз ин рӯ ин мусобиқа
-   * дар development қариб ҳамеша рух медод.
-   */
   useEffect(() => {
-    /* Натиҷаи AI аз эффекти худаш меояд. */
     if (aiActive) return;
 
     const controller = new AbortController();
@@ -266,8 +211,6 @@ const Careers = () => {
         setLoading(false);
       })
       .catch((error) => {
-        // Бекоркунӣ хато нест: дархости навтар аллакай дар роҳ аст, ва
-        // setLoading(false) кардан ҷои холии кӯтоҳ месохт.
         if (axios.isCancel(error)) return;
         console.error("Fetch careers error:", error);
         setLoading(false);
@@ -278,15 +221,12 @@ const Careers = () => {
        бо матни кӯҳна мемонад. */
   }, [currentPage, debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter, i18n.language, aiActive]);
 
-  /* Ҷустуҷӯи AI. Танҳо бо пахши тугма ё Enter — на бо ҳар ҳарф: ҳар даъват
-     як дархост ба модел аст. */
   useEffect(() => {
     if (!aiQuery) return;
 
     const controller = new AbortController();
     setLoading(true);
 
-    /* Варианти интихобшуда филтрҳои тайёр дорад — рост ба ҷустуҷӯи оддӣ. */
     if (aiChoice) {
       axios
         .get(`${API}/careers`, {
@@ -301,9 +241,6 @@ const Careers = () => {
             ...(aiChoice.filters?.city && { city: aiChoice.filters.city }),
             ...(aiChoice.filters?.onlyFree && { freeSeatsOnly: "true" }),
           }),
-          /* Массив бе қавс: searchAny=a&searchAny=b. Axios бо пешфарз
-             searchAny[]=a мефиристад, сервер ин калидро намешиносад ва
-             ҳамаи 884 ихтисосро бармегардонд. */
           paramsSerializer: { indexes: null },
           signal: controller.signal,
         })
@@ -379,7 +316,6 @@ const Careers = () => {
     setAiLang(null);
   };
 
-  // Fetch clusters and cities once
   useEffect(() => {
     axios.get(`${API}/clusters`).then(r => setClusters(r.data)).catch(console.error);
     axios.get(`${API}/universities/cities`)
@@ -394,11 +330,6 @@ const Careers = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Шумораи ихтисоси ҳар кластер аллакай дар худи ҷавоби API ҳаст
-  // (relations: ['careers']), барои ҳамин дархости иловагӣ лозим нест.
-  /* Рақами кластер (1–5) ҳатмист, на ороиш: ариза ба ММТ маҳз ба ЯК
-     кластер супорида мешавад, ва довталаб бояд бидонад, ки кадомаш.
-     Тартиб низ аз рӯи ҳамон рақам аст — API онҳоро бетартиб бармегардонад. */
   const clusterCounts = clusters
     .map((cluster) => ({
       id: cluster.id,
@@ -574,8 +505,6 @@ const Careers = () => {
                     const label = option.clusterNumber
                       ? clusterLabel(aiT, { clusterId: option.clusterNumber })
                       : option.label;
-                    /* Кластерҳо тавсифи тайёри тарҷумашуда доранд; гурӯҳҳои
-                       AI шарҳи худро бо ҳамон забон меоранд. */
                     const hint = option.clusterNumber
                       ? aiT(`career_page.cl_${option.clusterNumber}_desc`)
                       : option.hint;
@@ -692,9 +621,6 @@ const Careers = () => {
                 </button>
               </div>
             ) : (
-              /* Бе stagger: 12 корт бо фосилаи 0.06с ва аниматсияи 0.5с рӯйхатро
-                 қариб як сония пинҳон медошт, ва mode="wait" онро боз ба интизори
-                 пӯшидани рӯйхати кӯҳна мегузошт. */
               <ul className={viewMode === "grid" ? "mt-8 grid gap-5 sm:grid-cols-2" : "mt-8 grid gap-4"}>
                   {careers.map((career) => (
                     <li key={career.id}>

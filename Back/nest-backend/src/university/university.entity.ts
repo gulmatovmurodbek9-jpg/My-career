@@ -17,25 +17,15 @@ export class University {
     @Index()
     city: string;
 
-    /*
-     * Суроғаи пурра — кӯча ва рақами бино.
-     *
-     * Танҳо барои муассисаҳое пур карда мешавад, ки координатаи воқеӣ доранд.
-     * Барои боқимонда суроға маънои маркази шаҳрро мебуд ва довталабро
-     * гумроҳ мекард.
-     */
     @Column({ nullable: true })
     address: string;
 
-    /** Region/oblast the city belongs to, e.g. "Суғд", "Хатлон". */
     @Column({ nullable: true })
     region: string;
 
-    /** true for давлатӣ, false for ғайридавлатӣ (private). */
     @Column({ default: true })
     isState: boolean;
 
-    /** Донишгоҳ | Донишкада | Коллеҷ | Академия | Филиал */
     @Column({ nullable: true })
     institutionType: string;
 
@@ -54,14 +44,6 @@ export class University {
     @Column('decimal', { precision: 10, scale: 7, nullable: true })
     longitude: number;
 
-    /*
-     * Оё координата суроғаи ВОҚЕИИ муассиса аст?
-     *
-     * `false` маънои маркази шаҳрро дорад. Ин фарқ муҳим аст: барои аксари
-     * коллеҷҳо OpenStreetMap нуқта надорад (аз 128 муассиса танҳо барои 14-то
-     * ёфт шуд), ва ҳамаи боқимонда дар маркази шаҳр ҷамъ мешаванд. Харита
-     * набояд нуқтаи тахминиро ҳамчун суроғаи дақиқ нишон диҳад.
-     */
     @Column({ default: false })
     hasExactLocation: boolean;
 
@@ -71,12 +53,6 @@ export class University {
     @OneToMany(() => CareerOffering, (offering) => offering.university)
     offerings: CareerOffering[];
 
-    /**
-     * Тарҷумаи маълумот: { ru: {...}, en: {...} }.
-     *
-     * Номи тоҷикӣ дар сутуни name мемонад — ҳуҷҷат маҳз бо номи расмӣ супорида
-     * мешавад ва довталаб бояд онро дар рӯйхати ММТ ёфта тавонад.
-     */
     @Column({ type: 'jsonb', default: {} })
     translations: Record<string, Record<string, any>>;
 

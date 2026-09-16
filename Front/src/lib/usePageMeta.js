@@ -1,18 +1,5 @@
 import { useEffect } from "react";
 
-/*
- * Мета-маълумоти ҳар саҳифа барои ҷустуҷӯ ва шабакаҳои иҷтимоӣ.
- *
- * Тамоми сайт як `index.html` дорад, яъне ҳамаи 884 саҳифаи ихтисос ва 128
- * саҳифаи донишгоҳ дар Google бо ЯК сарлавҳа ва ЯК тавсиф менишастанд —
- * «Ихтисоси ман — Роҳнамоии Касбӣ». Довталабе, ки «Ҳуқуқшиносӣ Тоҷикистон»
- * меҷуст, ҳеҷ гоҳ ба саҳифаи мо намерасид, чунки барои Google ҳамаи онҳо як
- * саҳифаи такрорӣ буданд.
- *
- * Googlebot JavaScript-ро иҷро мекунад, аз ин рӯ тағйири мета баъд аз рендер
- * ҳисоб мешавад. Ин роҳи соддатарин аст: бе китобхонаи иловагӣ ва бе
- * пешрендери сервер.
- */
 
 import i18n from "./i18n";
 
@@ -20,13 +7,11 @@ const SITE_NAME = "Ихтисоси ман";
 const ORIGIN = "https://ikhtisosiman.qobus.tj";
 const DEFAULT_IMAGE = `${ORIGIN}/logo.png`;
 
-/** Тавсиф дар натиҷаи ҷустуҷӯ тақрибан дар 160 аломат бурида мешавад. */
 const MAX_DESCRIPTION = 160;
 
 function trim(text, limit = MAX_DESCRIPTION) {
     const clean = String(text || "").replace(/\s+/g, " ").trim();
     if (clean.length <= limit) return clean;
-    /* Дар мобайни калима намебурем — то нуқтаи фосилаи охирин. */
     const cut = clean.slice(0, limit - 1);
     const space = cut.lastIndexOf(" ");
     return `${(space > limit * 0.6 ? cut.slice(0, space) : cut).trimEnd()}…`;
@@ -46,17 +31,6 @@ function setTag(selector, attrs) {
     return el;
 }
 
-/**
- * @param {object} meta
- * @param {string} [meta.title]        Бе номи сайт — он худаш илова мешавад.
- * @param {string} [meta.description]
- * @param {string} [meta.path]         Роҳи каноникӣ, масалан `/info/<id>`.
- * @param {string} [meta.image]
- * @param {object|object[]} [meta.jsonLd] Маълумоти сохтории schema.org.
- * @param {boolean} [meta.noIndex]     Барои саҳифаҳои шахсӣ.
- * @param {boolean} [meta.ready]       Ҳангоми боргирӣ `false` — то маълумот
- *                                     наомадааст, мета иваз намешавад.
- */
 export function usePageMeta({
     title,
     description,
@@ -81,8 +55,6 @@ export function usePageMeta({
         document.title = fullTitle;
         setTag('meta[name="description"]', { name: "description", content: desc });
 
-        /* Каноникӣ: ҳамон ихтисос метавонад бо `?from=...` кушода шавад ва
-           Google онро саҳифаи алоҳидаи такрорӣ ҳисоб мекунад. */
         setTag('link[rel="canonical"]', { tag: "link", rel: "canonical", href: url });
 
         setTag('meta[name="robots"]', {
@@ -103,9 +75,6 @@ export function usePageMeta({
         setTag('meta[name="twitter:description"]', { name: "twitter:description", content: desc });
         setTag('meta[name="twitter:image"]', { name: "twitter:image", content: img });
 
-        /* Маълумоти сохторӣ ҳангоми гузаштан ба саҳифаи дигар бояд бурда
-           шавад, вагарна аз ҳар саҳифа як блок ҷамъ мешавад ва Google
-           ихтисоси кӯҳнаро ҳамроҳи нав мебинад. */
         const existing = document.head.querySelector('script[data-page-jsonld="true"]');
         if (existing) existing.remove();
 

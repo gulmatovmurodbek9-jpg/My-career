@@ -23,14 +23,6 @@ import { useTranslation } from "react-i18next";
 const About = () => {
   const { t } = useTranslation();
 
-  /*
-   * Рақамҳо аз база, на аз код.
-   *
-   * Ҳар рақаме, ки дар ин саҳифа навишта мешавад, бояд дар ҳамон сомона
-   * санҷида шавад: ихтисосҳоро дар саҳифаи ихтисосҳо, донишгоҳҳоро дар
-   * харита. То расидани ҷавоб «—» меистад — рақами тахминӣ нишон додан
-   * ҳамон хатоест, ки ин ҷо ислоҳ мешавад.
-   */
   const [counts, setCounts] = useState({ careers: null, universities: null, clusters: null });
 
   useEffect(() => {

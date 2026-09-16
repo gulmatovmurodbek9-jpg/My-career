@@ -9,7 +9,6 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-// MapLibre ~200 КБ аст — танҳо ҳангоми гузариш ба 3D бор мешавад.
 const University3DMap = lazy(() => import("./University3DMap"));
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router";
@@ -30,26 +29,8 @@ const DEFAULT_CITY = "Душанбе";
 const DEFAULT_ZOOM = 11;
 const CITY_OVERVIEW_ZOOM = 10;
 
-/*
- * То чанд муассиса дар як шаҳр дар назари умумии кишвар нишонаи худро дошта
- * бошад.
- *
- * Пештар дар зуми кишвар ҳама чиз доирачаи хокистарии рақамдор буд ва
- * Хоруғ, Исфара ё Истаравшан аз ҳам фарқ намекарданд — гӯё дар он ҷо чизе
- * набошад. Вале дар Душанбе даҳҳо муассиса ҳаст ва нишонаҳояшон ба як
- * пиксел меафтанд, бинобар ин шаҳрҳои калон ҳамон доирача мемонанд.
- */
 const OVERVIEW_ICON_LIMIT = 4;
 
-// Every city and district that actually appears in the university data — all 42
-// of them. The previous table held only 20, and inferCity() quietly sent every
-// unlisted district to DEFAULT_CITY, so roughly a quarter of the country's
-// institutions were drawn on top of Dushanbe.
-//
-// Coordinates come from OpenStreetMap/Nominatim, taken from the administrative
-// boundary of the district (or the town, where the entry is a town). They are
-// district-level, not campus-level: a marker says "this institution is in this
-// district", which is as precise as the source data gets.
 const CITY_CENTERS = {
   "Душанбе": { lat: 38.5598, lng: 68.787, zoom: 11 },
   "Хуҷанд": { lat: 40.2842, lng: 69.6191, zoom: 11 },
@@ -95,8 +76,6 @@ const CITY_CENTERS = {
   "Мир Сайид Алии Ҳамадонӣ": { lat: 37.7183, lng: 69.5605, zoom: 10 },
 };
 
-// Longest first, so "Мир Сайид Алии Ҳамадонӣ" is tried before a short name that
-// happens to be a substring of it.
 const CITY_KEYWORDS = Object.keys(CITY_CENTERS).sort((a, b) => b.length - a.length);
 
 function createClusterIcon({ count, isActive }) {
@@ -113,35 +92,16 @@ function createClusterIcon({ count, isActive }) {
   });
 }
 
-/*
- * Иконка аз рӯи навъи муассиса.
- *
- * Ҳамаи нишонаҳо рақами «1»-ро мебароварданд — маълумоти сифр ва дар харита
- * як девори якхела. Дар база панҷ навъ ҳаст (77 коллеҷ, 20 донишгоҳ, 17
- * донишкада, 13 филиал, 1 академия), ва довталаб маҳз ҳаминро фарқ кардан
- * мехоҳад: коллеҷ пас аз синфи 9, донишгоҳ пас аз 11.
- *
- * SVG дарунсохт аст, на ҷузъи React: Leaflet DivIcon танҳо сатри HTML
- * мегирад ва компонент дар он рендер намешавад.
-*/
-/** Тартиб аз рӯи шумораи муассиса дар база: 77 коллеҷ, 20 донишгоҳ, 17
-    донишкада, 13 филиал, 1 академия. */
 const LEGEND_KINDS = ["university", "college", "institute", "branch", "academy"];
 
 const INSTITUTION_ICONS = {
-  // Донишгоҳ — кулоҳи хатм
   university: '<path d="M12 3 1 9l11 6 9-4.9V17h2V9L12 3z"/><path d="M5 13.2V17c0 1.7 3.1 3 7 3s7-1.3 7-3v-3.8l-7 3.8-7-3.8z"/>',
-  // Академия — ситора
   academy: '<path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z"/>',
-  // Донишкада — бино бо сутунҳо
   institute: '<path d="M12 2 2 7v2h20V7L12 2zM4 11v7H2v2h20v-2h-2v-7h-2v7h-3v-7h-2v7h-3v-7H6v7H4v-7z"/>',
-  // Коллеҷ — китоби кушода
   college: '<path d="M12 6.2C10.3 5 8 4.3 5.5 4.3c-1.2 0-2.4.2-3.5.5v14c1.1-.3 2.3-.5 3.5-.5 2.5 0 4.8.7 6.5 1.9 1.7-1.2 4-1.9 6.5-1.9 1.2 0 2.4.2 3.5.5v-14c-1.1-.3-2.3-.5-3.5-.5-2.5 0-4.8.7-6.5 1.9z"/>',
-  // Филиал — бино
   branch: '<path d="M4 3h10v18H4V3zm2 2v2h2V5H6zm4 0v2h2V5h-2zM6 9v2h2V9H6zm4 0v2h2V9h-2zm-4 4v2h2v-2H6zm4 0v2h2v-2h-2zM16 8h4v13h-4V8zm1.5 2v2h1v-2h-1zm0 4v2h1v-2h-1z"/>',
 };
 
-/** Навъро аз сатри тоҷикӣ ё тарҷумашуда мешиносад. */
 function institutionKind(uni) {
   const type = (uni?.institutionType || "").toLowerCase();
   if (type.includes("академ") || type.includes("academ")) return "academy";
@@ -168,9 +128,6 @@ function createDotIcon(isActive, uni) {
   });
 }
 
-// Returns null rather than falling back to the capital. Silently relocating an
-// institution to Dushanbe because its district was missing from the table is
-// what put a quarter of the country on one pin.
 function inferCity(uni) {
   if (uni.city && CITY_CENTERS[uni.city]) return uni.city;
 
@@ -187,7 +144,6 @@ function buildDisplayUniversities(universities) {
       const inferredCity = inferCity(uni);
       if (!inferredCity) return null;
 
-      // Prefer the institution's own coordinates; fall back to its district.
       const lat = Number(uni.latitude);
       const lng = Number(uni.longitude);
       const anchor =
@@ -199,19 +155,9 @@ function buildDisplayUniversities(universities) {
     })
     .filter(Boolean);
 
-  /*
-   * Муассисаҳое, ки суроғаи ВОҚЕӢ доранд, ҳеҷ гоҳ ҷобаҷо карда намешаванд.
-   *
-   * Барои 14 донишгоҳи асосӣ координатаи ҳақиқӣ аз OpenStreetMap гирифта
-   * шудааст. Онҳоро ба спирал андохтан маънои аз ҷои дурусташ ба ҷои бофта
-   * кӯчонидан аст — маҳз баръакси он чи лозим аст.
-   */
   const exact = anchored.filter((uni) => uni.hasExactLocation);
   const approximate = anchored.filter((uni) => !uni.hasExactLocation);
 
-  // Боқимонда ҳамагӣ координатаи маркази шаҳрро доранд, аз ин рӯ нишонаҳояшон
-  // ба як пиксел меафтанд ва танҳо болоияш пахш мешавад. Ҳар даста бо спирали
-  // тиллоӣ пароканда мешавад: муайян, баробар ва дар дохили ҳамон шаҳр.
   const stacks = new Map();
   approximate.forEach((uni) => {
     const key = `${uni.anchorLat.toFixed(4)},${uni.anchorLng.toFixed(4)}`;
@@ -236,8 +182,6 @@ function buildDisplayUniversities(universities) {
     group.forEach((uni, index) => {
       const radius = 0.013 * Math.sqrt(index + 1);
       const angle = index * GOLDEN_ANGLE;
-      // A degree of longitude is shorter than a degree of latitude away from
-      // the equator; divide by cos(lat) so the spiral stays round on screen.
       const lngScale = Math.cos((uni.anchorLat * Math.PI) / 180) || 1;
       spread.push({
         ...uni,
@@ -291,26 +235,14 @@ function CityOverviewMap({ activeCity, onViewportChange, preferredCity }) {
   return null;
 }
 
-/**
- * Ҳангоми ҷустуҷӯ харитаро ба натиҷаҳо мебарад.
- *
- * Пештар ҷустуҷӯ танҳо рӯйхати нишонаҳоро кам мекард, вале камера дар ҷои
- * худ мемонд: корбар «милли» менавишт, се натиҷа мегирифт ва харитаро худаш
- * бояд ба Душанбе меовард ва zoom мекард. Дар телефон ин қариб ғайриимкон
- * буд.
- */
 function FitToResults({ points, enabled }) {
   const map = useMap();
 
-  /* Калиди матнӣ: массив ҳар рендер нав аст, ва бе ин эффект бемаврид
-     такрор мешуд ва камераро ҳангоми ҳаракати корбар бармегардонд. */
   const key = enabled ? points.map((p) => p.id).join(",") : "";
 
   useEffect(() => {
     if (!enabled || points.length === 0) return;
 
-    /* Ҷустуҷӯ филтри фаврӣ аст — бе таъхир харита ҳангоми навиштани
-       «милли» панҷ бор парвоз мекард. Пас аз истодани дастҳо як парвоз. */
     const timer = setTimeout(() => {
       if (points.length === 1) {
         const only = points[0];
@@ -339,9 +271,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
   const [selectedUni, setSelectedUni] = useState(null);
   const [panelOpen, setPanelOpen] = useState(true);
 
-  /* Реҷаи харита: нақшаи хокистарӣ, тасвири моҳвораӣ ё 3D.
-     Моҳвора пешфарз аст — 68 донишгоҳ координатаи воқеӣ дорад ва рӯи
-     тасвир бинои аслии онҳо дида мешавад. */
   const [mapMode, setMapMode] = useState("satellite");
   const satellite = mapMode === "satellite";
   const [viewport, setViewport] = useState({
@@ -381,7 +310,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
     }));
   }, [displayUniversities]);
 
-  /* Шаҳрҳои камшумор: нишонаи ҳар муассиса рост дар назари умумӣ. */
   const overviewSingles = useMemo(
     () => cityGroups.filter((group) => group.count <= OVERVIEW_ICON_LIMIT).flatMap((group) => group.items),
     [cityGroups],
@@ -395,13 +323,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
   const visibleUniversities = useMemo(() => {
     if (viewport.zoom <= CITY_OVERVIEW_ZOOM) return [];
 
-    /*
-     * Аз рӯи он чизе ки дар экран аст, на аз рӯи номи шаҳри интихобшуда.
-     *
-     * Пештар филтр `inferredCity === activeCity` буд, ва вақте корбар
-     * харитаро бо даст ба ҷои дигар мебурд, activeCity ҳамон шаҳри пештара
-     * мемонд — харитаи холӣ бе ягон маркер, бе он ки сабабаш маълум бошад.
-     */
     const box = viewport.bounds;
     return displayUniversities
       .filter((uni) =>
@@ -534,12 +455,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               key="satellite"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               attribution='Тасвир &copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics'
-              /*
-               * Барои Душанбе тасвири воқеӣ то z=19 мерасад — дар он сатҳ
-               * бино ва ҳавлӣ дида мешавад; z=20 аллакай холӣ бармегардад.
-               * `maxNativeZoom` ҳамон 19-ро калон карда нишон медиҳад, то
-               * харита дар z=20 сафед нашавад.
-               */
               maxNativeZoom={19}
               maxZoom={20}
             />

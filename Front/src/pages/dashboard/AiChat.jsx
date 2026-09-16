@@ -22,16 +22,12 @@ const LANG_OPTIONS = [
 const VOICE_PREF_KEY = "mycareer_voice_uri";
 const VOICE_FEATURE_ENABLED = true;
 
-// Web Speech API — works in Chrome, Edge, Safari. Not supported in Firefox.
 const SpeechRecognitionAPI =
     typeof window !== "undefined"
         ? window.SpeechRecognition || window.webkitSpeechRecognition
         : null;
 const SPEECH_SUPPORTED = !!SpeechRecognitionAPI;
 
-// BCP-47 codes for SpeechRecognition per UI language.
-// Tajik Cyrillic is not a supported recognition locale, so we use ru-RU
-// which handles Cyrillic script and code-switching common in TJ speech.
 const LANG_TO_BCP47 = { tj: "ru-RU", ru: "ru-RU", en: "en-US" };
 
 const splitSpeechText = (text, maxLength = 220) => {
@@ -76,13 +72,6 @@ const splitSpeechText = (text, maxLength = 220) => {
     return chunks.filter(Boolean);
 };
 
-/* ── markdown → html ── */
-/*
- * Матни ҷавоб рост ба `dangerouslySetInnerHTML` меравад, аз ин рӯ аввал
- * escape карда мешавад. Бе ин ҳар теге, ки дар ҷавоб медаромад — масалан
- * вақте корбар порчаи HTML мефиристад ва мепурсад «ин чист?» — дар браузер
- * иҷро мешуд.
- */
 const escapeHtml = (text) =>
     text
         .replace(/&/g, "&amp;")
@@ -112,11 +101,8 @@ const renderMarkdown = (text) => {
         // Курсив танҳо дар дохили як сатр ва бе фосилаи оғозӣ
         .replace(/\*(?!\s)([^*\n]+?)(?<!\s)\*/g, "<em>$1</em>");
 
-    // wrap consecutive li groups
     html = html.replace(/((?:<li class="ai-ul-item">.*?<\/li>\s*)+)/g, '<ul class="ai-ul">$1</ul>');
     html = html.replace(/((?:<li class="ai-ol-item">.*?<\/li>\s*)+)/g, '<ol class="ai-ol">$1</ol>');
-    /* Модел байни бандҳои рӯйхат ва атрофи онҳо сатрҳои холӣ мегузорад. Ҳар
-       \n пештар <br/> мешуд, ва дар дохили <ul> холигиҳои калон пайдо мешуданд. */
     html = html
         .replace(/\s*(<\/?(?:ul|ol|h2|h3|h4|pre)(?:\s[^>]*)?>)\s*/g, "$1")
         .replace(/(<\/li>)\s+/g, "$1")
@@ -127,7 +113,6 @@ const renderMarkdown = (text) => {
     return html;
 };
 
-/* ── Typewriter hook ── */
 const useTypewriter = (text, isActive, speed = 12) => {
     const [displayed, setDisplayed] = useState(isActive ? "" : text);
     const [done, setDone] = useState(!isActive);
@@ -137,7 +122,7 @@ const useTypewriter = (text, isActive, speed = 12) => {
         if (!isActive) { setDisplayed(text); setDone(true); return; }
         setDisplayed(""); idx.current = 0; setDone(false);
         const id = setInterval(() => {
-            idx.current += 1 + Math.floor(Math.random() * 2); // 1-2 chars at a time for natural feel
+            idx.current += 1 + Math.floor(Math.random() * 2);
             if (idx.current >= text.length) {
                 setDisplayed(text); setDone(true); clearInterval(id);
             } else {
@@ -150,7 +135,6 @@ const useTypewriter = (text, isActive, speed = 12) => {
     return { displayed, done };
 };
 
-/* ── Single message bubble ── */
 const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceEnabled = true }) => {
     const isUser = msg.role === "user";
     const isNew = msg._isNew;
@@ -237,9 +221,6 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
     );
 };
 
-/* ═══════════════════════════════════════
-   MAIN COMPONENT
-   ═══════════════════════════════════════ */
 const AiChat = () => {
     const { t, i18n } = useTranslation();
     const { user, token } = useAuthStore();
@@ -365,7 +346,6 @@ const AiChat = () => {
         };
     }, []);
 
-    /* ── Load history ── */
     useEffect(() => {
         if (user?.chatHistory?.length) {
             const restored = user.chatHistory.flatMap((h, i) => [
@@ -376,12 +356,10 @@ const AiChat = () => {
         }
     }, []);
 
-    /* ── Auto-scroll ── */
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, loading]);
 
-    /* ── Voice Recording (Web Speech API — real-time, no upload) ── */
     const MIC_ERRORS = {
         "not-allowed": { tj: "Дастрасӣ ба микрофон рад шуд. Иҷозатро дар браузер диҳед.", ru: "Доступ к микрофону запрещён. Разрешите в браузере.", en: "Microphone access denied. Allow it in your browser." },
         "no-speech":   { tj: "Овоз ошкор нашуд. Дубора кӯшиш кунед.", ru: "Голос не обнаружен. Попробуйте ещё раз.", en: "No speech detected. Please try again." },
@@ -426,7 +404,6 @@ const AiChat = () => {
         };
 
         recognition.onend = () => {
-            // Only clear recording state if we didn't manually stop (stopRecording does that)
             setIsRecording(false);
             setInterimText("");
             clearInterval(recordingTimerRef.current);
@@ -439,10 +416,8 @@ const AiChat = () => {
         recordingTimerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
     }, [lang]);
 
-    // Stop recording — transcribed text stays in the input box
     const stopRecording = useCallback(() => {
         clearInterval(recordingTimerRef.current);
-        // Commit any interim text before stopping
         if (interimText) {
             setInput(prev => (prev + interimText + " ").trimStart());
             setInterimText("");
@@ -452,7 +427,6 @@ const AiChat = () => {
         setIsRecording(false);
     }, [interimText]);
 
-    // Cancel recording — discard everything
     const cancelRecording = useCallback(() => {
         clearInterval(recordingTimerRef.current);
         recognitionRef.current?.abort();
@@ -463,7 +437,6 @@ const AiChat = () => {
         setMicError("");
     }, []);
 
-    /* ── TTS — intelligent voice selection ── */
     const getBestVoice = useCallback((langCode) => {
         const synth = synthRef.current;
         if (!synth) return null;
@@ -473,20 +446,16 @@ const AiChat = () => {
         const savedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
         if (savedVoice) return savedVoice;
 
-        // Priority keywords for higher-quality voices
         const premiumKeywords = ['Natural', 'Neural', 'Online', 'Google', 'Microsoft', 'Enhanced', 'Premium'];
         const langMap = { tj: ['tg', 'ru'], ru: ['ru'], en: ['en'] };
         const targetLangs = langMap[langCode] || ['ru'];
 
-        // Find voices matching target language
         const matching = voices.filter(v => targetLangs.some(tl => v.lang.toLowerCase().startsWith(tl)));
         if (!matching.length) return null;
 
-        // Prefer premium voices (Google, Microsoft Neural, etc.)
         const premium = matching.find(v => premiumKeywords.some(k => v.name.includes(k)));
         if (premium) return premium;
 
-        // Prefer female voices (generally clearer for TTS)
         const female = matching.find(v => /female|женск/i.test(v.name));
         if (female) return female;
 
@@ -552,7 +521,6 @@ const AiChat = () => {
         stopSpeech();
     };
 
-    /* ── Send ── */
     const sendMessage = async () => {
         const text = input.trim();
         if (!text || loading) return;
@@ -560,7 +528,6 @@ const AiChat = () => {
         setMessages(prev => [...prev, userMsg]);
         setInput("");
         setLoading(true);
-        // reset textarea height
         if (inputRef.current) inputRef.current.style.height = "48px";
 
         try {

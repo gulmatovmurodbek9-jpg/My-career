@@ -27,8 +27,6 @@ const Layout = () => {
   const [scrolled, setScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, logout, user } = useAuthStore();
-  /* Ҳисоби бо Google ё сабти кӯҳна метавонад ном надошта бошад. Бе ин
-     тугмаи профил як қуттии холии кабуд мемонд — танҳо иконка, бе ном. */
   const userLabel = user?.name?.trim() || user?.email?.split("@")[0] || "";
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,17 +34,10 @@ const Layout = () => {
 
   const isDashboard = location.pathname.startsWith("/dashboard");
 
-  /**
-   * Гузариш ба #hash.
-   *
-   * React Router худаш ба лангар скролл намекунад, аз ин рӯ истиноди
-   * "/#cluster-groups" бе ин танҳо ба болои саҳифа мебурд.
-   */
   useEffect(() => {
     if (!location.hash) return;
     const target = document.querySelector(location.hash);
     if (!target) return;
-    // Кадри оянда: бахш метавонад ҳанӯз рендер нашуда бошад.
     const id = requestAnimationFrame(() =>
       target.scrollIntoView({ behavior: "smooth", block: "start" })
     );
@@ -100,19 +91,6 @@ const Layout = () => {
     },
   };
 
-  /*
-   * Қатори боло танҳо саҳифаҳои оммавиро мебарад.
-   *
-   * Пештар «Панел» ва «Машваратҳо» низ ин ҷо буданд — ҳафт истинод. Дар
-   * тоҷикӣ онҳо базӯр меғунҷиданд, дар русӣ («Университеты»,
-   * «Консультации») намеғунҷиданд, ва `overflow-hidden` истиноди охиринро
-   * бесадо мебурид: аз «Консультации» «Консул…» мемонд ва пахш намешуд.
-   *
-   * Фосила ва андозаи ҳарфро боз ҳам кам кардан мумкин буд, вале ҳар забони
-   * нав ҳамон мушкилро бармегардонд. Ин ду истинод ҷои дурусти худро доранд:
-   * ҳарду ба минтақаи шахсӣ тааллуқ доранд ва дар сайдбари панел аллакай
-   * ҳастанд, ва ном акнун пайванд ба панел аст.
-   */
   const navLinks = [
     { to: "/", label: t("nav.home", "Асосӣ") },
     { to: "/#cluster-groups", label: t("nav.clusters", "Кластерҳо") },
@@ -121,7 +99,6 @@ const Layout = () => {
     { to: "/about", label: t("nav.about", "Дар бора") },
   ];
 
-  /* Дар экрани хурд ҷой маҳдуд нест — менюи кушодашаванда ҳардуро нишон медиҳад. */
   const accountLinks = isAuthenticated
     ? [
         { to: "/dashboard", label: t("nav.dashboard", "Панел") },
@@ -182,9 +159,6 @@ const Layout = () => {
               */}
               <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden px-2 lg:gap-2">
                 {navLinks.map((link) => {
-                  // Истиноди лангарӣ ("/#cluster-groups") ба бахши дохили
-                  // саҳифа ишора мекунад, на ба саҳифаи алоҳида, аз ин рӯ
-                  // ҳолати "фаъол" надорад.
                   const isActive = link.to.includes("#")
                     ? false
                     : link.to === "/"
@@ -194,9 +168,6 @@ const Layout = () => {
                     <Link
                       key={link.to}
                       to={link.to}
-                      /* Фосилаи xl аз 3.5 ба 3 кам шуд: ҳафт истинод дар
-                         тоҷикӣ ва русӣ («Донишгоҳҳо», «Университеты») бо
-                         фосилаи пештара дар экрани миёна намеғунҷиданд. */
                       className={`relative whitespace-nowrap rounded-lg px-2.5 lg:px-3 py-2 text-[13px] xl:text-sm font-semibold transition-colors duration-200 focus-ring ${
                         isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -310,9 +281,6 @@ const Layout = () => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                /* На glass-card: overflow-hidden-и он (бе @layer, пас қавитар аз
-                   utility) overflow-y-auto-ро бекор мекард — дар телефони паст
-                   меню аз экран мебаромад ва скрол намешуд. */
                 className="md:hidden absolute top-full left-3 right-3 mt-2 rounded-3xl border border-border bg-card shadow-2xl z-50 p-4 max-h-[calc(100vh-88px)] overflow-y-auto overscroll-contain"
               >
                 <div className="space-y-1">

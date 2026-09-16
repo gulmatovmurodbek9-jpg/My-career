@@ -2,11 +2,6 @@ import { useCallback, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "theme";
 
-// The <html class="dark"> set by the inline script in index.html is the single
-// source of truth. Every useTheme() caller subscribes to the same store, so
-// toggling in the navbar also re-renders the map, the charts and anything else
-// that branches on the theme — previously each caller held its own useState
-// copy and only the one you clicked ever updated.
 const listeners = new Set();
 
 function getSnapshot() {

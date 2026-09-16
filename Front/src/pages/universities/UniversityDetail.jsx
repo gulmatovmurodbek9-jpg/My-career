@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-/* Номи кластер аз i18n меояд, на аз ин ҷадвал: ранг доимист, ном не. */
 const CLUSTER_COLORS = {
   1: { bg: "#FAEEDA", text: "#633806" },
   2: { bg: "#E1F5EE", text: "#085041" },
@@ -53,8 +52,6 @@ export default function UniversityDetail() {
     fetchData();
   }, [id]);
 
-  /* Ҷустуҷӯи «Донишгоҳи миллии Тоҷикистон ихтисосҳо» бояд маҳз ба ин саҳифа
-     барад, на ба саҳифаи асосӣ. */
   usePageMeta({
     ready: !!university,
     title: university ? `${university.name}${university.city ? ` — ${university.city}` : ""}` : undefined,

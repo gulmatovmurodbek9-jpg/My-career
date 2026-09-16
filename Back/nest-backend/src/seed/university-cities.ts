@@ -1,15 +1,3 @@
-/**
- * City and region for every settlement that appears in the NTC admission table.
- *
- * The official table names the institution only, so location is resolved here.
- * Most names carry the place ("дар шаҳри Хуҷанд", "ноҳияи Рашт", "Донишгоҳи
- * давлатии Кӯлоб"); republic-wide institutions sit in Душанбе.
- *
- * Coordinates are given only for the larger cities, where they are reliable
- * enough for the "nearest university" distance in career.service.ts. Smaller
- * districts are left without coordinates rather than guessed — `latitude` and
- * `longitude` are nullable and the distance helper already skips nulls.
- */
 
 export interface Settlement {
     region: string;
@@ -17,12 +5,9 @@ export interface Settlement {
     longitude?: number;
 }
 
-/** Settlement → region (+ coordinates where reliable). */
 export const SETTLEMENTS: Record<string, Settlement> = {
-    // ── Republican cities ──
     'Душанбе': { region: 'Душанбе', latitude: 38.5598, longitude: 68.787 },
 
-    // ── Суғд ──
     'Хуҷанд': { region: 'Суғд', latitude: 40.2833, longitude: 69.6333 },
     'Истаравшан': { region: 'Суғд', latitude: 39.9111, longitude: 69.0089 },
     'Конибодом': { region: 'Суғд', latitude: 40.2833, longitude: 70.4333 },
@@ -35,7 +20,6 @@ export const SETTLEMENTS: Record<string, Settlement> = {
     'Ҷаббор Расулов': { region: 'Суғд', latitude: 40.0843, longitude: 69.4839 },
     'Бобоҷон Ғафуров': { region: 'Суғд', latitude: 40.2216, longitude: 69.7296 },
 
-    // ── Хатлон ──
     'Бохтар': { region: 'Хатлон', latitude: 37.8364, longitude: 68.7808 },
     'Кӯлоб': { region: 'Хатлон', latitude: 37.9144, longitude: 69.7808 },
     'Норак': { region: 'Хатлон', latitude: 38.3861, longitude: 69.3222 },
@@ -56,10 +40,8 @@ export const SETTLEMENTS: Record<string, Settlement> = {
     'Темурмалик': { region: 'Хатлон', latitude: 38.1141, longitude: 69.5242 },
     'Ҷалолиддини Балхӣ': { region: 'Хатлон', latitude: 37.5722, longitude: 69.0113 },
 
-    // ── ВМКБ ──
     'Хоруғ': { region: 'ВМКБ', latitude: 37.4897, longitude: 71.5514 },
 
-    // ── Ноҳияҳои тобеи ҷумҳурӣ ──
     'Турсунзода': { region: 'Ноҳияҳои тобеи ҷумҳурӣ', latitude: 38.5108, longitude: 68.2331 },
     'Ваҳдат': { region: 'Ноҳияҳои тобеи ҷумҳурӣ', latitude: 38.5581, longitude: 69.0186 },
     'Ҳисор': { region: 'Ноҳияҳои тобеи ҷумҳурӣ', latitude: 38.5281, longitude: 68.5533 },
@@ -72,11 +54,6 @@ export const SETTLEMENTS: Record<string, Settlement> = {
     'Рӯдакӣ': { region: 'Ноҳияҳои тобеи ҷумҳурӣ', latitude: 38.2559, longitude: 68.5099 },
 };
 
-/**
- * Institutions whose name does not name their location, or where the name would
- * mislead a text match (a branch is located somewhere other than its parent).
- * Everything else is resolved by `resolveCity` below.
- */
 const EXPLICIT_CITIES: Record<string, string> = {
     'Академияи идоракунии давлатии назди Президенти Ҷумҳурии Точикистон': 'Душанбе',
     'Донишгоҳи (славянии) Россия ва Тоҷикистон': 'Душанбе',
@@ -122,7 +99,6 @@ const EXPLICIT_CITIES: Record<string, string> = {
     'Коллеҷи тиббии хусусии "Даво"-и шаҳри Бохтар': 'Бохтар',
     'Коллеҷи тиббии ноҳияи Мир Сайид Алии Ҳамадонӣ (ғайридавлатӣ)': 'Мир Сайид Алии Ҳамадонӣ',
 
-    // Branches: the location is the trailing "дар ...", not the parent's city.
     'Филиали "Донишгоҳи миллии тадқиқотӣ"-и Донишкадаи энергетикии Москва дар шаҳри Душанбе': 'Душанбе',
     'Филиали Донишгоҳи давлатии Москва ба номи М. В. Ломоносов дар шаҳри Душанбе': 'Душанбе',
     'Филиали Донишгоҳи миллии таҳқиқотии технологӣ "МИСиС" дар шаҳри Душанбе': 'Душанбе',
@@ -138,15 +114,8 @@ const EXPLICIT_CITIES: Record<string, string> = {
     'Филиали Коллеҷи тиббӣ-иҷтимоии шаҳри Левакант (ғайридавлатӣ) дар шаҳри Норак': 'Норак',
 };
 
-/** Longest settlement names first, so "Мир Сайид Алии Ҳамадонӣ" wins over "Ҳамадонӣ". */
 const SETTLEMENT_NAMES = Object.keys(SETTLEMENTS).sort((a, b) => b.length - a.length);
 
-/**
- * Resolves the settlement an institution sits in.
- *
- * A branch ("Филиали X дар Y") is located at Y, so the trailing "дар ..." is
- * checked before the rest of the name.
- */
 export function resolveCity(universityName: string): string | null {
     const explicit = EXPLICIT_CITIES[universityName];
     if (explicit) return explicit;
@@ -158,11 +127,6 @@ export function resolveCity(universityName: string): string | null {
         if (match) return match;
     }
 
-    // Honorific names collide with district names: "Донишгоҳи давлатии Кӯлоб ба
-    // номи Абӯабдуллоҳи Рӯдакӣ" is in Кӯлоб, not in Рӯдакӣ district, and Хуҷанд's
-    // university is named after Бобоҷон Ғафуров. The place always sits in the
-    // part before "ба номи" — unless the name is listed in EXPLICIT_CITIES above,
-    // which is checked first.
     const withoutHonorific = universityName.split(/\s+ба\s+номи\s+/)[0];
 
     const match = SETTLEMENT_NAMES.find((name) => withoutHonorific.includes(name))
@@ -170,7 +134,6 @@ export function resolveCity(universityName: string): string | null {
     return match ?? null;
 }
 
-/** "Донишгоҳ" | "Донишкада" | "Коллеҷ" | "Академия" | "Филиал" */
 export function resolveInstitutionType(universityName: string): string {
     if (universityName.startsWith('Филиали')) return 'Филиал';
     if (universityName.startsWith('Академия')) return 'Академия';
@@ -180,14 +143,6 @@ export function resolveInstitutionType(universityName: string): string {
     return 'Муассисаи таълимӣ';
 }
 
-/**
- * Моликияти муассиса аз номи расмии он муайян мешавад.
- *
- * Ҷадвали ММТ сутуни алоҳидаи моликият надорад, вале ном онро ҳамеша нишон
- * медиҳад. Ду шакл истифода мешавад: «(ғайридавлатӣ)» ва «хусусӣ» — масалан
- * «Коллеҷи тиббии хусусии "Даво"». Танҳо шакли аввалро санҷидан он як
- * коллеҷро ҳамчун давлатӣ нишон медод.
- */
 export function isStateOwned(universityName: string): boolean {
     const name = universityName.toLowerCase();
     return !name.includes('ғайридавлат') && !name.includes('хусус');

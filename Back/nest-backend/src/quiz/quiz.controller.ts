@@ -29,10 +29,8 @@ export class QuizController {
     @Post('submit')
     @ApiOperation({ summary: 'Фиристодани ҷавобҳо ва гирифтани TOP 12 ихтисосҳо' })
     async submitQuiz(@Body() dto: SubmitQuizDto) {
-        // Calculate raw scores from answers
         const scores = this.quizService.calculateScores(dto);
 
-        // Match against all careers
         const result = await this.quizService.matchCareers(scores, dto.lang);
 
         return {

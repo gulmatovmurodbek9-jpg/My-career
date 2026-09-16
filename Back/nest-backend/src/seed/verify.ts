@@ -1,9 +1,3 @@
-/**
- * Offline sanity check of the parsed NTC data and the content layer — runs
- * without a database.
- *
- *   npm run seed:verify
- */
 import { parseNtcData } from './parse-ntc';
 import { resolveCity, resolveInstitutionType, isStateOwned, SETTLEMENTS } from './university-cities';
 import { CAREER_CONTENT } from './content';
@@ -83,8 +77,6 @@ function main(): void {
         orphanCodes.forEach((code) => console.log('   !', code));
     }
 
-    // Every specialty must match a family keyword. One that does not falls back
-    // to the cluster default, which reads generic — those are listed to be fixed.
     console.log('\n=== FAMILIES ===');
     const perFamily = new Map<string, number>();
     const unmatched: string[] = [];

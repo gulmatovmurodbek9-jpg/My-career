@@ -18,7 +18,6 @@ import { useAuthStore } from "../../store/authStore";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
 
-/* ─── Animations ─── */
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
@@ -37,7 +36,6 @@ const chipVariants = {
     exit: { opacity: 0, scale: 0.7, y: -10, transition: { duration: 0.2 } },
 };
 
-/* ─── i18n labels ─── */
 const labels = {
     tj: {
         title: "Муқоисаи Ихтисосҳо",
@@ -263,7 +261,6 @@ const labels = {
     },
 };
 
-/* ─── Demand/Difficulty badge helper ─── */
 const demandConfig = {
     high: { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" },
     medium: { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20", dot: "bg-amber-400" },
@@ -275,7 +272,6 @@ const difficultyConfig = {
     hard: { bg: "bg-rose-500/10", text: "text-rose-400", border: "border-rose-500/20", dot: "bg-rose-400" },
 };
 
-/* ─── Match percentage color ─── */
 const matchGradient = (pct) => {
     if (pct >= 80) return "from-emerald-500 to-green-400";
     if (pct >= 60) return "from-blue-500 to-cyan-400";
@@ -395,9 +391,6 @@ const normalizeCompareResponse = (payload, requestedCareers = []) => {
             .filter(Boolean);
     }
 
-    // Модел баъзан ҳар ихтисосро ду маротиба бармегардонад, ва саҳифа онро
-    // бо худаш муқоиса мекард: ду корти якхела бо ҳамон 70%. Такрорҳо аз рӯи
-    // ном бароварда мешаванд, аввалинаш мемонад.
     const seenCareers = new Set();
     comparisonItems = comparisonItems.filter((item) => {
         const key = String(item.career || "").trim().toLowerCase();
@@ -452,16 +445,12 @@ const normalizeCompareResponse = (payload, requestedCareers = []) => {
             rootData.customAnalysis ||
             rootData.detailedAnswer ||
             "",
-        /* Вариантҳои беҳтар: сервер онҳоро бо база санҷида, id ва рамз илова кардааст. */
         alternatives: toArray(comparisonRoot.alternatives ?? rootData.alternatives ?? [])
             .filter((item) => item && typeof item.name === "string" && item.name.trim()),
         raw: root,
     };
 };
 
-/* ════════════════════════════════════════════════════════ */
-/*  MAIN COMPONENT                                          */
-/* ════════════════════════════════════════════════════════ */
 
 const CareerCompare = () => {
     const { i18n } = useTranslation();
@@ -474,8 +463,6 @@ const CareerCompare = () => {
     const [careers, setCareers] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [compareQuestion, setCompareQuestion] = useState("");
-    /* Забон барои тарҷумаи номҳо: сервер барои пешниҳодҳо `nameTranslated`
-       медиҳад, вале захираҳо бо сутуни `translations` меоянд. */
     const apiLang = currentApiLang();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -493,7 +480,6 @@ const CareerCompare = () => {
         }
     }, [token, user?.quizResults, refreshProfile]);
 
-    /* ─── Check quiz results ─── */
     const extractScorePayload = (source) => {
         if (!source || typeof source !== "object") return null;
         if (source.scores && typeof source.scores === "object") return source.scores;
@@ -501,7 +487,6 @@ const CareerCompare = () => {
         return null;
     };
 
-    /* ─── Get quiz results for cluster-based suggestions ─── */
     const quizData = useMemo(() => {
         try {
             const raw = localStorage.getItem(QUIZ_STORAGE_KEY);
@@ -512,7 +497,6 @@ const CareerCompare = () => {
         return null;
     }, []);
 
-    /* ─── Build full scores for compare API call ─── */
     const fullScores = useMemo(() => {
         return extractScorePayload(user?.quizResults) || extractScorePayload(quizData);
     }, [user?.quizResults, quizData]);
@@ -549,7 +533,6 @@ const CareerCompare = () => {
             .finally(() => setLoadingSavedCareers(false));
     }, [token, user?.savedCareers]);
 
-    /* ─── Fetch suggested careers from the SAME cluster the quiz recommended ─── */
     useEffect(() => {
         const clusterId = quizData?.topCluster?.id;
         if (!clusterId) return;
@@ -583,19 +566,13 @@ const CareerCompare = () => {
         return Array.from(unique.values());
     }, [savedCareers]);
 
-    /* Захирашуда аввал, баъд пешниҳодҳои санҷиш. Сарлавҳаҳо ҳамчун сатри
-       ҷадвал мераванд, то худи кортҳо бетағйир монанд. */
     const groupedCareers = displayCareers;
 
-    /* Сабтҳои пурраи ихтисосҳои интихобшуда — барои ҷадвали далелҳо.
-       Тартиб ҳамон аст, ки корбар интихоб кард. */
     const selectedFacts = useMemo(
         () => careers.map((name) => displayCareers.find((c) => c.name === name)).filter(Boolean),
         [careers, displayCareers],
     );
 
-    /* Нарх аз ҳадди поён то боло: як ихтисос дар донишгоҳҳои гуногун
-       нархи гуногун дорад. */
     const tuitionText = (career) => {
         const min = career.minTuitionFee ?? career.tuitionFee;
         const max = career.maxTuitionFee ?? career.tuitionFee;
@@ -618,7 +595,6 @@ const CareerCompare = () => {
         }
     }, [displayCareers, careers.length]);
 
-    /* ─── Toggle career from suggestions ─── */
     const toggleCareer = (name) => {
         setCareers((prev) => {
             if (prev.includes(name)) return prev.filter(c => c !== name);
@@ -627,7 +603,6 @@ const CareerCompare = () => {
         });
     };
 
-    /* ─── Add career manually ─── */
     const addCareer = () => {
         const name = inputValue.trim();
         if (!name || careers.includes(name)) return;
@@ -640,7 +615,6 @@ const CareerCompare = () => {
         setCareers((prev) => prev.filter((_, i) => i !== idx));
     };
 
-    /* ─── Handle Compare ─── */
     const handleCompare = async () => {
         if (careers.length < 2 || !fullScores || loading || retryCountdown > 0) return;
         setLoading(true);
@@ -673,7 +647,6 @@ const CareerCompare = () => {
                 setError(t.rateLimitError);
                 const retrySecs = err.response?.data?.retryAfterSeconds || 60;
                 setRetryCountdown(retrySecs);
-                // Start countdown
                 const interval = setInterval(() => {
                     setRetryCountdown(prev => {
                         if (prev <= 1) {
@@ -699,9 +672,7 @@ const CareerCompare = () => {
     const comparedCareers = comparisonData.careerComparison || [];
     const bestCareer = comparisonData.bestCareer;
 
-    /* ═══════════════════════ RENDER ═══════════════════════ */
 
-    /* ── No Quiz State ── */
     if (!hasQuizProfile) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -1377,10 +1348,6 @@ const CareerCompare = () => {
     );
 };
 
-/* ─── Section Header Sub-component ─── */
-/* Ҳамон нишони AI-и чат (AiBotIcon). Пештар ҳар бахш ҳалқаи ранги дигар
-   дошт — зард, бунафш, сабз, кабуд — ва саҳифа ола менамуд. `color` дигар
-   истифода намешавад; `subtitle` мақсади бахшро мефаҳмонад. */
 const SectionHeader = ({ icon, title, subtitle }) => (
     <div className="flex items-start gap-3">
         <AiBotIcon icon={icon} size="sm" />

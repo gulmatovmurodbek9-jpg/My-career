@@ -124,7 +124,6 @@ const Favorites = () => {
                 }
             } catch (err) {
                 console.error("Favorites fetch error:", err);
-                // Fall back to user store if API endpoints not ready yet
                 if (!didCancel) {
                     setLikedCareers(user?.likedCareers || []);
                     setSavedCareers(user?.savedCareers || []);

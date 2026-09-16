@@ -1,7 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-// Force Tajik as default language — override any stored browser/localStorage setting
 const SUPPORTED_LANGS = ['tj', 'ru', 'en'];
 const storedLang = localStorage.getItem('app_lang');
 const activeLang = storedLang && SUPPORTED_LANGS.includes(storedLang) ? storedLang : 'tj';

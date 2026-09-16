@@ -9,29 +9,16 @@ export class Career {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    /** Official NTC specialty code, e.g. "131030408". */
     @Column({ unique: true, nullable: true })
     @Index()
     code: string;
 
-    /**
-     * Ҳамон код, вале барои тартиб: танҳо рақамҳо, то 20 аломат бо сифр.
-     * Дар база триггер онро пур мекунад (ниг. scripts/career-code-sort.sql),
-     * барои ҳамин аз ин ҷо навишта намешавад.
-     */
     @Column({ type: 'text', nullable: true, select: false, insert: false, update: false })
     codeSort: string;
 
     @Column()
     name: string;
 
-    /**
-     * Тарҷумаи мазмун: `{ ru: {...}, en: {...} }`.
-     *
-     * `code` ин ҷо нест — он шиносаи расмии ММТ аст ва дар ҳама забон як хел
-     * мемонад. Номи аслии тоҷикӣ низ дар `name` мемонад: довталаб маҳз бо
-     * ҳамон ном ихтисосро дар китобчаи ММТ меёбад ва ариза месупорад.
-     */
     @Column({ type: 'jsonb', default: {} })
     translations: Record<string, Record<string, any>>;
 
@@ -86,9 +73,7 @@ export class Career {
     @JoinTable({ name: 'career_universities' })
     universities: University[];
 
-    // === NEW FIELDS ===
 
-    /** Cheapest paid tuition across all universities. Kept in sync with minTuitionFee. */
     @Column({ type: 'int', nullable: true })
     tuitionFee: number;
 
@@ -98,11 +83,9 @@ export class Career {
     @Column({ type: 'int', nullable: true })
     maxTuitionFee: number;
 
-    /** True when at least one university offers a state-funded (ройгон) seat. */
     @Column({ default: false })
     hasFreeSeats: boolean;
 
-    /** False while the specialty still carries generated placeholder content. */
     @Column({ default: false })
     contentWritten: boolean;
 
@@ -127,7 +110,6 @@ export class Career {
     @ManyToMany(() => User, (user) => user.savedCareers)
     savedByUsers: User[];
 
-    // === RELATIONS ===
 
     @ManyToOne(() => Cluster, (cluster) => cluster.careers, { onDelete: 'SET NULL' })
     @JoinColumn({ name: 'clusterId' })

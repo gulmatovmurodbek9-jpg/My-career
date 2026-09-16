@@ -1,18 +1,4 @@
-/**
- * Нақшаи роҳро аз маълумоти воқеии ихтисос месозад.
- *
- * Нақшаи дар база захирашуда шаблон аст: «Соли 1: фанҳои умумӣ», «Соли 2:
- * малакаи амалии «НОМ»». Барои 477 ихтисос ҳамагӣ 63 варианти ягона буд, аз
- * ин рӯ ду ихтисоси гуногун қариб як хел менамуданд.
- *
- * Дар ҳамон вақт худи сабт маълумоти мушаххас дорад — малакаҳо, технологияҳо,
- * ҷойҳои кор, сертификатҳо, солҳои таҳсил — ва ҳеҷ кадоми он нишон дода
- * намешуд. Ин ҷо ҳамон маълумот ба қадамҳо тақсим мешавад.
- *
- * Ҳеҷ чиз ихтироъ намешавад: агар майдон холӣ бошад, қадам сохта намешавад.
- */
 
-/** Малакаҳоро ба солҳои таҳсил тақсим мекунад. */
 function share(items, buckets) {
   if (!items.length) return Array.from({ length: buckets }, () => []);
   const perBucket = Math.ceil(items.length / buckets);
@@ -21,12 +7,6 @@ function share(items, buckets) {
   );
 }
 
-/*
- *  ҳамчун параметр меояд, на аз i18n рост гирифта мешавад: ин файл
- * ҳуки React нест ва ба контексти забон дастрасӣ надорад. Бе он қадамҳо
- * дар ҳама забон тоҷикӣ мемонданд — дар экран «Соли 1» бо рӯйхати англисӣ
- * дар як ҷо менишаст.
- */
 export function buildRoadmap(career, t = (k, o) => o?.defaultValue ?? k) {
   const technical = career?.skills?.technical ?? [];
   const soft = career?.skills?.soft ?? [];
@@ -34,12 +14,9 @@ export function buildRoadmap(career, t = (k, o) => o?.defaultValue ?? k) {
   const jobs = career?.careerOpportunities ?? [];
   const certs = career?.certification ?? [];
 
-  // Бе малака ва технология қадамҳо холӣ мешаванд — беҳтар аст, ки нақшаи
-  // захирашуда истифода шавад.
   if (technical.length === 0 && tech.length === 0) return null;
 
   const years = Math.min(Math.max(Number(career?.durationYears) || 4, 2), 6);
-  // Соли охир ба кори хатм меравад, бинобар ин малакаҳо ба солҳои пеш аз он.
   const studyYears = Math.max(years - 1, 1);
   const buckets = share(technical, studyYears);
 

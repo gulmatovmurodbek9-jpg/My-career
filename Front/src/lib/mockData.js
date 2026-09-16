@@ -1,7 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-//  MOCK DATA — Used when backend API is unavailable
-//  All data persists in localStorage for demo purposes
-// ═══════════════════════════════════════════════════════════════
 
 const LS_KEYS = {
   careers: "mock_careers",
@@ -11,7 +7,6 @@ const LS_KEYS = {
   appointments: "mock_appointments",
 };
 
-// ── Clusters ──
 const DEFAULT_CLUSTERS = [
   {
     id: "cl1",
@@ -55,7 +50,6 @@ const DEFAULT_CLUSTERS = [
   },
 ];
 
-// ── Careers ──
 const DEFAULT_CAREERS = [
   {
     id: "car1", name: "Барномасози веб (Full-Stack)", description: "Сохтан ва идоракунии сайтҳо ва барномаҳои веб бо истифодаи технологияҳои замонавӣ.",
@@ -195,7 +189,6 @@ const DEFAULT_CAREERS = [
   },
 ];
 
-// ── Universities ──
 const DEFAULT_UNIVERSITIES = [
   {
     id: "uni1", name: "Донишгоҳи миллии Тоҷикистон (ДМТ)", description: "Донишгоҳи бузургтарин ва маъруфтарини Тоҷикистон.",
@@ -224,7 +217,6 @@ const DEFAULT_UNIVERSITIES = [
   },
 ];
 
-// ── Demo users ──
 const DEFAULT_USERS = [
   {
     id: "user1", name: "Фирдавс Раҳимов", email: "demo@mycareer.tj", password: "demo123",
@@ -236,7 +228,6 @@ const DEFAULT_USERS = [
   },
 ];
 
-// ── Helper: get or init from localStorage ──
 function getStore(key, defaults) {
   try {
     const raw = localStorage.getItem(key);
@@ -250,7 +241,6 @@ function setStore(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-// ── Public API ──
 export function getMockClusters() { return getStore(LS_KEYS.clusters, DEFAULT_CLUSTERS); }
 export function getMockCareers() { return getStore(LS_KEYS.careers, DEFAULT_CAREERS); }
 export function getMockUniversities() { return getStore(LS_KEYS.universities, DEFAULT_UNIVERSITIES); }

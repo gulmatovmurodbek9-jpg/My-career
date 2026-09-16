@@ -12,8 +12,6 @@ import { useToast } from "./toast/ToastProvider";
 
 const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: initialSaved, rank = 0, onExplain }) => {
     const { t } = useTranslation();
-    /* Сервер номи тарҷумашударо дар майдони алоҳида медиҳад ва номи расмии
-       тоҷикиро бетағйир мемонад — корт бояд тарҷумашударо нишон диҳад. */
     const lang = currentApiLang();
     const [isLiked, setIsLiked] = useState(initialLiked || false);
     const [isSaved, setIsSaved] = useState(initialSaved || false);
@@ -23,15 +21,12 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
     const { token, user, updateUser } = useAuthStore();
     const { error: showError } = useToast();
 
-    /* «Беҳтарин интихоб» дар ҳар корт маъно надорад — вай танҳо ба мувофиқати
-       якум тааллуқ дорад, боқимондаҳо рақами ҷои худро мегиранд. */
     const isTop = rank === 1;
     const percent = Math.max(0, Math.min(100, Math.round(matchPercentage || 0)));
 
     const universities = career.universities || [];
     const extraCount = Math.max(0, (career.universitiesCount || 0) - universities.length);
 
-    // Sync with parent props & global user state
     useEffect(() => {
         setIsLiked(user?.likedCareers?.some(c => c.id === career.id) || !!initialLiked);
     }, [initialLiked, user?.likedCareers, career.id]);
@@ -56,7 +51,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
             }
             career.likesCount = data.likesCount;
 
-            // Update global store
             const currentLiked = user?.likedCareers || [];
             const updatedLiked = data.liked
                 ? [...currentLiked, career]
@@ -80,7 +74,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
             });
             setIsSaved(data.saved);
 
-            // Update global store
             const currentSaved = user?.savedCareers || [];
             const updatedSaved = data.saved
                 ? [...currentSaved, career]

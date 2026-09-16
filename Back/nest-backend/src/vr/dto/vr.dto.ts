@@ -3,13 +3,6 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { QuizAnswerDto } from '../../quiz/dto/submit-quiz.dto';
 
-/**
- * Холи панҷ кластер, ки барномаи VR ХУДАШ бо код ҳисоб кардааст.
- *
- * Талаби ТЗ: профил бо код ҳисоб мешавад, на бо AI. Барномаи Unity ҳамон
- * формулаи `QuizService.calculateScores()`-ро дар C# такрор мекунад, то дар
- * фестивал бе интернет ҳам кор кунад, ва ба ин ҷо натиҷаи тайёрро мефиристад.
- */
 export class VrScoresDto {
     @ApiProperty({ example: 8 })
     @IsNumber()
@@ -42,7 +35,6 @@ export class VrScoresDto {
     c5: number;
 }
 
-/** `POST /vr/explain` — холҳо аз Unity, шарҳ аз AI. */
 export class VrExplainDto {
     @ApiProperty({ type: VrScoresDto })
     @ValidateNested()
@@ -54,10 +46,6 @@ export class VrExplainDto {
     @IsString()
     lang?: string;
 
-    /**
-     * Калидвожаҳои ҷавобҳои корбар (агар VR саволҳои ихтисосро пурсида бошад).
-     * Бе онҳо низ кор мекунад — интихоб танҳо аз рӯи кластер меравад.
-     */
     @ApiPropertyOptional({ type: [String], example: ['барномасозӣ', 'AI'] })
     @IsOptional()
     @IsArray()
@@ -65,7 +53,6 @@ export class VrExplainDto {
     keywords?: string[];
 }
 
-/** `POST /vr/session` — ҷавобҳои хом аз Unity, ҳамаи натиҷа дар як дархост. */
 export class VrSessionDto {
     @ApiProperty({ type: [QuizAnswerDto] })
     @IsArray()
@@ -79,7 +66,6 @@ export class VrSessionDto {
     lang?: string;
 }
 
-/** `POST /vr/ask` — сӯҳбати озод бо Сино (пардаи 9). */
 export class VrAskDto {
     @ApiProperty({ example: 'Барои дохил шудан чӣ лозим аст?' })
     @IsNotEmpty()
@@ -98,7 +84,6 @@ export class VrAskDto {
     lang?: string;
 }
 
-/** `GET /vr/map` — нуқтаҳои харитаи Тоҷикистон (пардаи 7). */
 export class VrMapQueryDto {
     @ApiPropertyOptional({ description: 'Донишгоҳҳои маҳз ҳамин ихтисос' })
     @IsOptional()

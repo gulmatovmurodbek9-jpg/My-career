@@ -90,7 +90,6 @@ import {
   Wine,
 } from "lucide-react";
 
-// Map of all supported Lucide icon names to their components
 const ICON_MAP = {
   Monitor, Globe, BookOpen, Users, Heart, HeartPulse, Briefcase, Code, Cpu, Database,
   FileText, Hammer, Headphones, Home, Layers, Lightbulb, MapPin, Megaphone,
@@ -105,15 +104,9 @@ const ICON_MAP = {
   Trophy, Tv, UtensilsCrossed, Video, Waves, Wifi, Wine,
 };
 
-/**
- * Renders a Lucide icon by its string name.
- * Falls back to a folder icon if name is not found.
- * If the value looks like an emoji, renders it directly.
- */
 const LucideIconRenderer = ({ name, className = "w-5 h-5", fallback = null }) => {
   if (!name) return fallback || <FolderKanban className={className} />;
 
-  // Check if it's an emoji (starts with non-ASCII)
   if (/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\u{20E3}]/u.test(name)) {
     return <span className="text-xl">{name}</span>;
   }
@@ -123,7 +116,6 @@ const LucideIconRenderer = ({ name, className = "w-5 h-5", fallback = null }) =>
     return <IconComponent className={className} />;
   }
 
-  // Try case-insensitive match
   const lowerName = name.toLowerCase();
   const match = Object.entries(ICON_MAP).find(([key]) => key.toLowerCase() === lowerName);
   if (match) {
@@ -131,9 +123,6 @@ const LucideIconRenderer = ({ name, className = "w-5 h-5", fallback = null }) =>
     return <MatchedIcon className={className} />;
   }
 
-  // Unknown name: fall back to the generic icon. Printing the raw value is how
-  // the literal text "HeartPulse" ended up rendered on the cluster cards — an
-  // icon identifier is never something a visitor should see.
   return fallback || <FolderKanban className={className} />;
 };
 

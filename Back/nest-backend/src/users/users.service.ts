@@ -9,22 +9,17 @@ import { CareerOffering } from '../career/career-offering.entity';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomInt } from 'crypto';
 
-/* Дар база ҷои ройгон маҳз бо ҳамин калима нишон дода мешавад. */
 const FREE_PAYMENT_TYPE = 'ройгон';
 
-/* Тартиби шаклҳои таҳсил дар рӯйхати чоп. */
 const STUDY_FORM_ORDER = ['рӯзона', 'шабона', 'ғоибона', 'фосилавӣ'];
 
-/* Ҳадди интихобҳо дар як рӯйхати ҳуҷҷатсупорӣ. */
 const MAX_APPLICATION_CHOICES = 12;
 const LAST_SEEN_WRITE_INTERVAL_MS = 2 * 60 * 1000;
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/* Коди барқарорсозӣ 15 дақиқа эътибор дорад. */
 const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000;
 
-/* Баъди 5 кӯшиши нодуруст код бекор мешавад. */
 const MAX_RESET_ATTEMPTS = 5;
 
 export type PasswordResetResult = 'ok' | 'invalid' | 'expired' | 'too_many_attempts';
@@ -236,21 +231,10 @@ export class UsersService {
         }
     }
 
-    /**
-     * Сохтани токени барқарорсозии парол.
-     *
-     * Худи токен бармегардад (вай ба нома меравад), вале дар база танҳо
-     * sha256-и он нигоҳ дошта мешавад: агар база дуздида шавад, аз hash
-     * пайванди кордиҳанда сохтан мумкин нест.
-     */
     async createPasswordResetCode(email: string): Promise<{ user: User; code: string } | null> {
         const user = await this.findOne(email);
-        // Корбари бо Google воридшуда парол надорад, вале гузоштани парол
-        // тавассути ҳамин раванд ба ӯ иҷозат дода мешавад.
         if (!user) return null;
 
-        // randomInt аз Math.random фарқ мекунад: он аз манбаи криптографӣ
-        // мегирад, яъне коди навбатиро пешгӯӣ кардан мумкин нест.
         const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
 
         await this.usersRepository.update(user.id, {
@@ -262,7 +246,6 @@ export class UsersService {
         return { user, code };
     }
 
-    /** Гузоштани пароли нав аз рӯи коди аз почта омада. */
     async resetPasswordWithCode(
         email: string,
         code: string,
@@ -277,7 +260,6 @@ export class UsersService {
         if (user.resetTokenExpiresAt.getTime() < Date.now()) return 'expired';
 
         if (user.resetAttempts >= MAX_RESET_ATTEMPTS) {
-            // Коди дуздидашуда набояд беохир озмуда шавад.
             await this.usersRepository.update(user.id, {
                 resetTokenHash: null,
                 resetTokenExpiresAt: null,
@@ -292,7 +274,6 @@ export class UsersService {
 
         await this.usersRepository.update(user.id, {
             password: await bcrypt.hash(newPassword, 10),
-            // Код якдафъаина аст — баъди истифода тоза мешавад.
             resetTokenHash: null,
             resetTokenExpiresAt: null,
             resetAttempts: 0,
@@ -301,13 +282,6 @@ export class UsersService {
         return 'ok';
     }
 
-    /**
-     * Рӯйхати ҳуҷҷатсупорӣ бо тартиби омодаи чоп.
-     *
-     * Тартиб: аввал ҷойҳои РОЙГОН, баъд пулакӣ; дар дохили ҳар гурӯҳ аз рӯи
-     * шакли таҳсил ва нархи камтар. Довталаб маҳз бо ҳамин тартиб ҳуҷҷат
-     * месупорад — аввал ҷои буҷавиро мегирад, баъд шартномаро ҳамчун захира.
-     */
     async getApplicationPlan(userId: string): Promise<{
         cluster: { id: string; name: string; number: number } | null;
         items: any[];
@@ -356,13 +330,6 @@ export class UsersService {
         };
     }
 
-    /**
-     * Илова кардани як интихоб.
-     *
-     * Ҳамаи интихобҳо бояд аз ЯК кластер бошанд: дар ММТ довталаб имтиҳони
-     * як кластерро месупорад, аз ин рӯ омехтани кластери 1 ва 2 дар
-     * ҳуҷҷатсупории воқеӣ имконнопазир аст.
-     */
     async addApplicationChoice(userId: string, offeringId: string): Promise<{ added: boolean }> {
         const user = await this.usersRepository.findOne({ where: { id: userId } });
         if (!user) throw new NotFoundException('Корбар ёфт нашуд');
@@ -376,10 +343,6 @@ export class UsersService {
         const current = user.applicationChoices || [];
         if (current.includes(offeringId)) return { added: false };
 
-        /* Ҳар ду ҳолат 409 медиҳанд, аммо роҳи баромадашон тамоман фарқ
-           мекунад: «кластери дигар» бо тоза кардани рӯйхат ҳал мешавад,
-           «рӯйхат пур» бо тоза кардан ҳамаи 12 интихобро нобуд мекунад.
-            ба фронт мегӯяд, кадомаш рӯй додааст. */
         if (current.length >= MAX_APPLICATION_CHOICES) {
             throw new ConflictException({
                 code: 'PLAN_FULL',
@@ -519,7 +482,6 @@ export class UsersService {
 
         const today = new Date().toISOString().slice(0, 10);
         const usage = user.aiDailyUsage || { date: null, count: 0 };
-        // 0 = бе лимит; ба career.service.ts мувофиқ.
         const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 0);
 
         const usedToday = usage.date === today ? usage.count : 0;
@@ -530,11 +492,6 @@ export class UsersService {
             isAdmin: false,
         };
     }
-    /* ── Фаъолияти корбарон ────────────────────────────────────────────────
-       lastSeenAt-ро дар ҳар дархости воридшуда навиштан гарон аст: як UPDATE
-       ба ҳар клик. Дар хотира вақти охирин навиштани ҳар корбарро нигоҳ
-       медорем ва на зиёдтар аз як бор дар 2 дақиқа менависем. Дар демо ин
-       кофист: «ҳозир дар сайт» бо равзанаи 5-дақиқагӣ ҳисоб мешавад. */
     private readonly lastSeenWrites = new Map<string, number>();
 
     async touchLastSeen(userId: string): Promise<void> {
@@ -544,8 +501,6 @@ export class UsersService {
         if (now - previous < LAST_SEEN_WRITE_INTERVAL_MS) return;
         this.lastSeenWrites.set(userId, now);
 
-        /* Агар корбар нест карда шуда бошад, update танҳо 0 сатр мегардонад —
-           хато намедиҳад, ва дархости ҷорӣ набояд аз ин шикаст хӯрад. */
         try {
             await this.usersRepository.update(userId, { lastSeenAt: new Date() });
         } catch {
@@ -572,8 +527,6 @@ export class UsersService {
                 .getRawMany<{ role: string; count: string }>(),
         ]);
 
-        /* Рӯйхати онҳое, ки ҳозир дар сайтанд — админ мехоҳад номҳоро бинад,
-           на танҳо рақамро. Ҳадди 20 нафар, то ҷадвал дароз нашавад. */
         const onlineUsers = await this.usersRepository.find({
             where: { lastSeenAt: MoreThan(since(ONLINE_WINDOW_MS)) },
             select: ['id', 'name', 'email', 'role', 'lastSeenAt'],

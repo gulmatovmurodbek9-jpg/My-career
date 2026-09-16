@@ -3,10 +3,6 @@ import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check, X } from "lucide-react";
 
-/**
- * Custom dark-themed select dropdown for admin panel.
- * Replaces native <select> with a styled, accessible dropdown.
- */
 const CustomSelect = ({
   value,
   onChange,
@@ -23,17 +19,14 @@ const CustomSelect = ({
   const containerRef = useRef(null);
   const searchRef = useRef(null);
 
-  // Find selected option label
   const selectedOption = options.find((opt) => opt.value === value);
 
-  // Filter options when searchable
   const filteredOptions = searchable
     ? options.filter((opt) =>
         opt.label.toLowerCase().includes(search.toLowerCase())
       )
     : options;
 
-  // Close on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -45,7 +38,6 @@ const CustomSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Focus search when opened
   useEffect(() => {
     if (isOpen && searchable && searchRef.current) {
       searchRef.current.focus();

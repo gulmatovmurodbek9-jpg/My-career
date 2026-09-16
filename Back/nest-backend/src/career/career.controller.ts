@@ -13,7 +13,6 @@ import { diskStorage } from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
 
-// Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads', 'voice');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -179,7 +178,7 @@ export class CareerController {
         }
         const userId = req.user?.userId;
         const result = await this.careerService.askAi(body.question, userId, body.careerName, body.lang, body.userLocation);
-        return result; // { answer, remainingToday }
+        return result;
     }
 
     @Post(':id/ask')
@@ -216,10 +215,6 @@ export class CareerController {
         @Body() body: { scores: any; careers: string[]; lang?: string; compareQuestion?: string },
         @Request() req,
     ) {
-        /* Санҷиш ҳатмӣ набуд ва набояд бошад: муқоисаи ду ихтисос дар бораи
-           худи ҳамон ду ихтисос ва саволи корбар аст. Холҳои ММТ танҳо
-           ҷавобро шахсӣ мекунанд. Пештар корбаре, ки санҷиш насупорида буд,
-           ба ҷои муқоиса «Хатогӣ рӯй дод» мегирифт. */
         if (!body.careers || body.careers.length < 2) {
             throw new BadRequestException('Ҳадди ақал 2 ихтисосро интихоб кунед');
         }

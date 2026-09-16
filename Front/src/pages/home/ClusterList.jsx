@@ -6,25 +6,7 @@ import Reveal from "../../components/Reveal";
 import { CLUSTER_IMAGES } from "../../lib/media";
 import { useClusterChapters, useHomeContent } from "./useHomeContent";
 
-/**
- * Панҷ гурӯҳи касбҳо ҳамчун рӯйхати оддии амудӣ.
- *
- * Ин ҷои ҳикояи скролли pinned-ро гирифт. Он ҳикоя зебо буд, вале барои
- * дастрасӣ бадтарин намуна: скролл бобҳоро худаш иваз мекард, аз ин рӯ корбар
- * назорати саҳифаро гум мекард, ва мазмун танҳо як боб дар як вақт дида мешуд.
- * Дар ин ҷо ҳар панҷ гурӯҳ дар ҷараёни оддии ҳуҷҷат меистанд: скролл кардан
- * мумкин, ҷустуҷӯи браузер кор мекунад, чоп кардан мумкин, ва хондан бо
- * screen reader тартиби дуруст дорад.
- *
- * Ҳар сатр ду қабат дорад: муаррифӣ (расм ва тавсиф) ва тафсилот (се сутун).
- * Нусхаи қаблӣ ҳама чизро дар як сутуни рости баланд ҷо мекард, ва зери расм
- * тақрибан 460px фазои мурда мемонд.
- *
- * Ранг маънои иловагӣ дорад, на ягона: рақам, иконка ва номи матнӣ низ ҳастанд,
- * то корбари рангнобино чизе гум накунад.
- */
 
-/** Як блоки маълумот дар қатори тафсилот. */
 function Detail({ label, children }) {
   return (
     <div>
@@ -36,10 +18,7 @@ function Detail({ label, children }) {
   );
 }
 
-/** Ҳар як гурӯҳ. Тамоми блок дар ҷараёни оддӣ, бе position: absolute. */
 function ClusterRow({ chapter, index, labels }) {
-  // Захира: агар API ҳанӯз ҷавоб надода бошад, ҳамаи ихтисосҳо нишон дода
-  // мешаванд. Ин аз саҳифаи хато беҳтар аст.
   const href = chapter.id ? "/careers?clusterId=" + chapter.id : "/careers";
   const number = String(index + 1).padStart(2, "0");
   const image = CLUSTER_IMAGES[chapter.clusterId];
@@ -145,7 +124,6 @@ export default function ClusterList() {
   const chapters = useClusterChapters();
 
   return (
-    // scroll-mt: навбари фиксшуда ~76px аст, бе он сарлавҳа зери он мемонад.
     <section id="cluster-groups" className="scroll-mt-24 border-b border-border bg-background">
       <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32 lg:px-8">
         <Reveal

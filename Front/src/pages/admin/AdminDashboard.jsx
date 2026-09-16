@@ -35,10 +35,6 @@ import StatsCard from "../../components/admin/StatsCard";
 
 const CHART_COLORS = ["#1d4ed8", "#3b82f6", "#60a5fa", "#f59e0b", "#10b981", "#f43f5e", "#0ea5e9"];
 
-/* Номи ихтисосҳои тоҷикӣ дароз аст — «Автоматикунонии раванди технологӣ ва
-   истеҳсоли саноати химиявӣ». Дар диаграммаи амудӣ ҷой намешуд, барои ҳамин
-   `tick={false}` гузошта шуда буд ва сутунҳо бе ном мемонданд. Ҳоло диаграмма
-   уфуқӣ аст: ном дар тарафи чап пурра ҷой мегирад. */
 const LABEL_WIDTH = 260;
 const MAX_LABEL_CHARS = 34;
 
@@ -71,8 +67,6 @@ const ActivityStat = ({ icon: Icon, label, value, tone, bg, live = false }) => (
   </div>
 );
 
-/* «5 дақиқа пеш» аз санаи хом хеле хонотар аст — админ мехоҳад зуд бифаҳмад,
-   кӣ ҳозир ҳаст, на санаро ҳисоб кунад. */
 const timeAgo = (iso, t) => {
   if (!iso) return t("admin.activity.never");
   const diff = Date.now() - new Date(iso).getTime();
@@ -126,9 +120,6 @@ const AdminDashboard = () => {
     };
     fetchStats();
 
-    /* Фаъолият алоҳида бор мешавад: агар ин дархост ноком шавад (масалан
-       сутуни lastSeenAt ҳанӯз дар база нест), диаграммаҳо бояд ҳамон тавр
-       нишон дода шаванд. */
     axios
       .get(`${API}/users/admin/activity`, { headers: { Authorization: `Bearer ${token}` } })
       .then(({ data }) => setActivity(data))
@@ -154,8 +145,6 @@ const AdminDashboard = () => {
     );
   }
 
-  /* Ихтисосе, ки 0 лайк дорад, дар диаграмма сутуни нонамоён месозад ва дар
-     легенда сатри «0» — фақат шавшув. Танҳо онҳое, ки воқеан хол доранд. */
   const likedData = (stats?.topLiked || [])
     .filter((c) => (c.likesCount || 0) > 0)
     .map((c, i) => ({
@@ -187,8 +176,6 @@ const AdminDashboard = () => {
     );
   };
 
-  /* Меҳвари рақамӣ: холҳо ҳамеша бутунанд, вале recharts бо қимати 1
-     «0.25 / 0.5 / 0.75» мекашид ва диаграмма вайрон менамуд. */
   const numberAxis = {
     type: "number",
     allowDecimals: false,

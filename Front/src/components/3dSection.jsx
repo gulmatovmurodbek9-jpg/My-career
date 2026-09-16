@@ -200,7 +200,6 @@ export default function Interactive3DSection() {
   );
 }
 
-// Lazy loading wrapper
 export const LazyInteractive3DSection = (props) => (
     <React.Suspense fallback={
         <div className="py-28 section-wash relative">

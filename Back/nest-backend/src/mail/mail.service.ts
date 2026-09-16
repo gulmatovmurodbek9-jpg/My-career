@@ -2,14 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
-/**
- * Фиристодани почта тавассути SMTP.
- *
- * Танзимот аз `.env` меояд, то ҳар провайдер кор кунад (Gmail, Mailtrap,
- * Resend SMTP ва ғ.). Агар SMTP танзим нашуда бошад, хидмат хато намедиҳад —
- * ҳаво номаро ба консол менависад, то раванди барқарорсозии парол дар
- * компютери таҳиягар бе ҳисоби почта ҳам санҷида шавад.
- */
 @Injectable()
 export class MailService {
     private readonly logger = new Logger(MailService.name);
@@ -33,7 +25,6 @@ export class MailService {
         this.transporter = nodemailer.createTransport({
             host,
             port,
-            // 465 ягона порти пурра TLS аст; 587 бо STARTTLS боло мебарояд.
             secure: port === 465,
             auth: { user, pass },
         });
@@ -60,7 +51,6 @@ export class MailService {
         this.logger.log(`Нома ба ${options.to} фиристода шуд: ${options.subject}`);
     }
 
-    /** Номаи барқарорсозии парол бо коди 6-рақама. */
     async sendPasswordResetCode(to: string, code: string, name?: string): Promise<void> {
         const greeting = name ? `Салом, ${name}!` : 'Салом!';
 

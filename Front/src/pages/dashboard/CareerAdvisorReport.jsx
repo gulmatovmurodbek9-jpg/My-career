@@ -29,7 +29,6 @@ import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { MMT_CLUSTERS, MMT_MAX } from "../../lib/mmtClusters";
 
-/* ─── Animation Variants ─── */
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.1 } },
@@ -43,7 +42,6 @@ const scaleIn = {
     visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
-/* ─── i18n labels ─── */
 const labels = {
     tj: {
         title: "AI Маслиҳатгари Касбӣ",
@@ -209,13 +207,11 @@ const labels = {
     },
 };
 
-/* Номи кластери ММТ аз манбаи умумӣ — то панел ва ин саҳифа якхела бошанд. */
 const clusterName = (key, t) => {
     const cluster = MMT_CLUSTERS.find((c) => c.key === key);
     return cluster ? t(cluster.i18nKey, cluster.fallback) : key.toUpperCase();
 };
 
-/* ─── Probability Color ─── */
 const probColor = (p) => {
     if (p >= 85) return "from-emerald-500 to-green-400";
     if (p >= 70) return "from-blue-500 to-cyan-400";
@@ -230,9 +226,6 @@ const probBg = (p) => {
     return "bg-rose-500/10 border-rose-500/20 text-rose-400";
 };
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*  MAIN COMPONENT                                                */
-/* ═══════════════════════════════════════════════════════════════ */
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
 
@@ -261,7 +254,6 @@ const CareerAdvisorReport = () => {
         }
     };
 
-    // Get quiz scores from multiple sources
     const getQuizScores = () => {
         if (user?.quizResults) {
             if (user.quizResults.scores && typeof user.quizResults.scores === "object") {
@@ -299,16 +291,6 @@ const CareerAdvisorReport = () => {
 
     const fetchingRef = useRef(false);
 
-    /*
-     * Ҳисоботи охирин дар браузер нигоҳ дошта мешавад.
-     *
-     * Тавлиди ҳисобот 11–45 сония мегирад. Агар дар ҳамон лаҳза пайваст канда
-     * шавад ё backend аз нав оғоз шавад, корбар ба ҷои ҳисобот хато медид —
-     * маҳз ҳамин дар санҷиши пеш аз ҳакамон рух дод. Ҳоло ҳисоботи қаблӣ фавран
-     * кушода мешавад ва навсозӣ дар замина меравад; агар навсозӣ афтад,
-     * ҳисоботи кӯҳна дар экран мемонад. Калид аз забон ва холҳо: санҷиши нав
-     * ҳисоботи навро талаб мекунад.
-     */
     const cacheKey = quizScores ? `ai_advisor_report_v1:${lang}:${JSON.stringify(quizScores)}` : null;
     const readCachedReport = () => {
         if (!cacheKey) return null;
@@ -329,9 +311,6 @@ const CareerAdvisorReport = () => {
         }
     };
 
-    /* options: { silent } — навсозии заминавӣ бе экрани боргирӣ ва бе хато;
-       { attempt } — такрори худкор. Тугмаи «Дубора кӯшиш кунед» ин функсияро
-       бо event даъват мекунад, барои ҳамин майдонҳо бодиққат хонда мешаванд. */
     const fetchReport = async (options = {}) => {
         const silent = options?.silent === true;
         const attempt = Number.isInteger(options?.attempt) ? options.attempt : 0;
@@ -362,18 +341,13 @@ const CareerAdvisorReport = () => {
             writeCachedReport(res.data);
         } catch (err) {
             console.error("AI Advisor error:", err);
-            /* Пайваст канда шуд (ҷавоб нест ва timeout нест) — як бор худкор такрор,
-               пеш аз он ки хато нишон дода шавад. */
             if (!err?.response && !isTimeout(err) && attempt === 0) {
                 retrying = true;
                 await new Promise((resolve) => setTimeout(resolve, 1500));
                 fetchingRef.current = false;
                 return fetchReport({ silent, attempt: 1 });
             }
-            /* Навсозии заминавӣ: ҳисоботи кӯҳна дар экран мемонад, хато намебарояд. */
             if (silent) return;
-            /* Бе err.response сервер тамоман ҷавоб надод (пайваст канда шуд, сервер
-               аз нав оғоз мешуд). Пештар ин ҳолат «Хатогӣ рӯй дод»-ро ду бор менавишт. */
             setError(
                 isTimeout(err) ? t.errorTimeout
                     : !err?.response ? t.errorNetwork
@@ -400,7 +374,6 @@ const CareerAdvisorReport = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasQuizProfile, token, lang]);
 
-    /* ── No quiz results ── */
     if (!hasQuizProfile) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -426,7 +399,6 @@ const CareerAdvisorReport = () => {
         );
     }
 
-    /* ── Loading state ── */
     if (loading) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -450,7 +422,6 @@ const CareerAdvisorReport = () => {
         );
     }
 
-    /* ── Error state ── */
     if (error) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -478,7 +449,6 @@ const CareerAdvisorReport = () => {
 
     const { report, mmtScores, dominantTypes } = data;
 
-    /* ═══ RENDER REPORT ═══ */
     return (
         <div className="pb-20">
             <motion.div key="report" variants={containerVariants} initial="hidden" animate="visible" className="space-y-8">
@@ -831,10 +801,6 @@ const CareerAdvisorReport = () => {
     );
 };
 
-/* ─── Section Header Sub-component ─── */
-/* Ҳамон нишони AI-и чат (AiBotIcon) бо иконаи бахш. Ҳошияи
-   градиентии ҳар бахш ранги худро дошт ва ноҳамвор менамуд; `color` дигар
-   истифода намешавад. */
 const SectionHeader = ({ icon: Icon, title }) => (
     <div className="flex items-center gap-3">
         <AiBotIcon icon={Icon} size="sm" />
@@ -929,8 +895,6 @@ const SalaryOutlookCard = ({ data, t }) => {
     );
 };
 
-/* Модел дараҷаро бо англисӣ медиҳад («high»), ва он хом дар саҳифаи тоҷикӣ
-   мебаромад. Луғати demandLevels аллакай буд — танҳо истифода намешуд. */
 const demandText = (value, t) => {
     if (!value) return "...";
     const key = String(value).trim().toLowerCase();

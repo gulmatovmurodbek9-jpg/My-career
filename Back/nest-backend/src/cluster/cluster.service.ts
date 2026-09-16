@@ -11,13 +11,6 @@ export class ClusterService {
         private clusterRepository: Repository<Cluster>,
     ) { }
 
-    /**
-     * Кластерҳо бо ШУМОРАИ ихтисосҳо, на бо худи ихтисосҳо.
-     *
-     * Пештар relations: ['careers'] ҳамаи 884 ихтисосро бо тавсиф, роҳнамо ва
-     * тарҷумаҳо мефиристод — 10 МБ (1.4 МБ gzip, ~2.6 сония). Саҳифаи асосӣ,
-     * ихтисосҳо ва админ аз он танҳо `careers.length`-ро мегирифтанд.
-     */
     findAll(): Promise<Cluster[]> {
         return this.clusterRepository
             .createQueryBuilder('cluster')

@@ -5,10 +5,6 @@ import Layout from "./pages/layout/Layout";
 import Home from "./pages/home/home";
 import { ProtectedRoute, PublicRoute, AdminRoute } from "./components/RouteGuards";
 
-// Layout ва Home якбора бор мешаванд — онҳо ҳамеша дар қадами аввал лозиманд.
-// Бақияи саҳифаҳо ҳангоми гузариш бор мешаванд: пеш аз ин ҳама чиз (Leaflet,
-// Recharts, three.js, тамоми панели админ) дар як bundle-и 2.4 МБ ҷамъ мешуд,
-// ки корбари сафҳаи асосӣ 90%-и онро ҳеҷ гоҳ истифода намебарад.
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/about/about"));
 const Careers = lazy(() => import("./pages/careers/careers"));
@@ -27,7 +23,6 @@ const AppointmentPanel = lazy(() => import("./pages/dashboard/AppointmentPanel")
 const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
 const Favorites = lazy(() => import("./pages/favorites/Favorites"));
 
-// Admin Panel
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminCareers = lazy(() => import("./pages/admin/AdminCareers"));

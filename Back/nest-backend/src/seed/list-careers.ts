@@ -1,9 +1,3 @@
-/**
- * Lists specialties of a cluster ordered by how many universities offer them,
- * so editorial content can be written for the most widely taught ones first.
- *
- *   npx ts-node --transpileOnly src/seed/list-careers.ts <cluster> [limit] [offset]
- */
 import { parseNtcData } from './parse-ntc';
 import { CAREER_CONTENT } from './content';
 

@@ -5,18 +5,9 @@ import { Compass, ArrowLeft, Search, GraduationCap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { usePageMeta } from "../lib/usePageMeta";
 
-/*
- * Саҳифаи «ёфт нашуд».
- *
- * Пештар роутер ҳеҷ роҳи захиравӣ надошт: ҳар суроғаи нодуруст — аз ҷумла
- * `/profile` ва `/settings`, ки дар сайдбар истинод доштанд, вале роҳ
- * надоштанд — экрани комилан сафед медод. Корбар намедонист, ки сайт вайрон
- * шуд ё интернет қатъ гардид.
- */
 const NotFound = () => {
     const { t } = useTranslation();
 
-    /* Барои Google: ин саҳифа набояд ба индекс афтад. */
     usePageMeta({
         title: t("not_found.title", "Саҳифа ёфт нашуд"),
         noIndex: true,

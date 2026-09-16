@@ -7,14 +7,12 @@ import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
 import { MailService } from '../mail/mail.service';
 
-/* Фосилаи ҳадди ақал байни ду номаи барқарорсозӣ ба як суроға. */
 const RESET_THROTTLE_MS = 60 * 1000;
 
 @Injectable()
 export class AuthService {
     private readonly logger = new Logger(AuthService.name);
 
-    /** email → вақти охирин фиристодан. Дар хотира, барои як нусхаи сервер. */
     private readonly recentResets = new Map<string, number>();
 
     constructor(
@@ -36,7 +34,6 @@ export class AuthService {
     async login(user: any) {
         const payload = { email: user.email, sub: user.id, role: user.role };
 
-        // Fetch full user with relations so frontend knows which careers are liked/saved
         const fullUser = await this.usersService.findById(user.id);
         const { password, ...safeUser } = fullUser as any;
 
@@ -51,20 +48,11 @@ export class AuthService {
         return this.login(user);
     }
 
-    /**
-     * Дархости барқарорсозии парол.
-     *
-     * Ҷавоб ҳамеша якхела аст — новобаста аз он ки чунин корбар ҳаст ё не.
-     * Вагарна саҳифа ба воситаи фарқи ҷавобҳо нишон медиҳад, ки кадом имейл
-     * дар база сабт аст.
-     */
     async forgotPassword(email: string): Promise<{ message: string }> {
         const message = 'Агар чунин ҳисоб бошад, дастур ба почтаи шумо фиристода шуд';
 
         const key = email.trim().toLowerCase();
         if (this.isThrottled(key)) {
-            // Ҳамон ҷавоб бармегардад — вагарна аз рӯи фарқи ҷавоб фаҳмидан
-            // мумкин мешуд, ки барои ин суроға тозагӣ нома рафтааст.
             return { message };
         }
 
@@ -76,8 +64,6 @@ export class AuthService {
         try {
             await this.mailService.sendPasswordResetCode(created.user.email, created.code, created.user.name);
         } catch (err) {
-            // Хатои SMTP набояд ба корбар нишон дода шавад — вагарна ҳамон
-            // фарқи ҷавоб пайдо мешавад, ки дар боло аз он худдорӣ кардем.
             this.logger.error(`Нома ба ${created.user.email} нарафт: ${err.message}`);
         }
 
@@ -130,18 +116,12 @@ export class AuthService {
         return this.login(user);
     }
 
-    /*
-     * Як нома дар як дақиқа ба як суроға. Бе ин касе метавонад формаро дар
-     * ҳалқа зада, ба почтаи бегона садҳо нома фиристад — ва квотаи рӯзонаи
-     * фиристодани Gmail-и худи мо тамом мешавад.
-     */
     private isThrottled(email: string): boolean {
         const last = this.recentResets.get(email);
         return last !== undefined && Date.now() - last < RESET_THROTTLE_MS;
     }
 
     private markSent(email: string): void {
-        // Навиштаҷоти кӯҳна тоза мешаванд, то Map беохир калон нашавад.
         const now = Date.now();
         for (const [key, at] of this.recentResets) {
             if (now - at >= RESET_THROTTLE_MS) this.recentResets.delete(key);

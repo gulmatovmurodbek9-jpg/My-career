@@ -6,13 +6,6 @@ import { Link } from "react-router";
 import { useAuthStore } from "../store/authStore";
 import { API } from "../lib/config";
 
-/**
- * Саволу ҷавоб дар бораи як ихтисоси мушаххас.
- *
- * Ба `/careers/:id/ask` муроҷиат мекунад, на ба чати умумӣ: он нуқта худи
- * сабти ихтисос ва нархҳои воқеии донишгоҳҳоро ба модел медиҳад, аз ин рӯ
- * ҷавоб аз маълумоти база меояд, на аз тахмини модел.
- */
 export default function CareerChat({ careerId, careerName }) {
   const { t, i18n } = useTranslation();
   const { token } = useAuthStore();
@@ -48,7 +41,6 @@ export default function CareerChat({ careerId, careerName }) {
       setTurns((prev) => [...prev, { role: "ai", text: data.answer }]);
       if (typeof data.remainingToday === "number") setRemaining(data.remainingToday);
     } catch (err) {
-      // Лимити рӯзона ва хатои шабака ду чизи гуногунанд ва бояд ҷудо гуфта шаванд.
       const status = err.response?.status;
       setError(
         status === 403

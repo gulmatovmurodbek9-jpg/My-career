@@ -8,24 +8,11 @@ import { Career } from '../career/career.entity';
 import { University } from '../university/university.entity';
 import { VrAskDto, VrExplainDto, VrMapQueryDto, VrSessionDto } from './dto/vr.dto';
 
-/**
- * Мӯҳлати сахт барои AI дар VR.
- *
- * Дар айнак интизории дароз аз ҷавоби бад бадтар аст: корбар дар саҳнаи
- * яхкарда мемонад ва намедонад, ки барнома шикаст ё не. Пас аз ин мӯҳлат
- * матни эҳтиётӣ бармегардад ва саҳна давом мекунад.
- */
 const VR_AI_DEADLINE_MS = 6_000;
 
-/** Кэш барои шарҳҳо — дар фестивал профилҳои якхела такрор мешаванд. */
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_MAX_ENTRIES = 500;
 
-/**
- * Калимаҳое, ки номи муассисаи таълимиро нишон медиҳанд.
- *
- * Барои санҷиши он ки AI донишгоҳи мавҷуднабударо ном набурд.
- */
 const INSTITUTION_WORDS = ['донишгоҳ', 'донишкада', 'академия', 'коллеҷ', 'филиал', 'институт', 'университет'];
 
 interface CacheEntry {
@@ -48,15 +35,7 @@ export class VrService {
         private readonly careerRepository: Repository<Career>,
     ) { }
 
-    // ─────────────────────────────────────────────────────────────
-    //  POST /vr/session — ҷавобҳои хом → ҳамаи натиҷа
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Роҳи «ҳамааш дар як дархост» — барои ҳолате ки Unity ҳисобро ба сервер
-     * вогузор мекунад. Роҳи асосии VR ин нест: барномаи айнак худаш ҳисоб
-     * мекунад ва танҳо `/vr/explain`-ро мезанад, то бе интернет ҳам кор кунад.
-     */
     async session(dto: VrSessionDto) {
         const scores = this.quizService.calculateScores({
             answers: dto.answers,
@@ -72,9 +51,6 @@ export class VrService {
         );
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  POST /vr/explain — холҳо аз Unity → шарҳ
-    // ─────────────────────────────────────────────────────────────
 
     async explain(dto: VrExplainDto) {
         return this.build(
@@ -86,13 +62,6 @@ export class VrService {
         );
     }
 
-    /**
-     * Ҷавоби ягонаи VR: профил, се касби беҳтарин, донишгоҳҳо бо координатҳо
-     * ва шарҳи кӯтоҳи AI.
-     *
-     * Холҳо ҳамон тавре бармегарданд, ки омадаанд — сервер онҳоро аз нав
-     * ҳисоб намекунад ва тағйир намедиҳад.
-     */
     private async build(userScores: any, lang: string) {
         const selection = await this.careerService.selectMatchedCareers(userScores);
 
@@ -123,9 +92,7 @@ export class VrService {
                 name: selection.cluster.clusterName,
                 description: selection.cluster.description,
             },
-            /* Холҳои хом — VR аз инҳо сутунҳои пардаи 4-ро месозад. */
             scores: userScores.mmtClusters,
-            /* Ҳамаи панҷ кластер бо ном, барои панҷ ҷазираи саҳна. */
             profile: (selection.clusterScores || []).map(cs => ({
                 number: cs.cluster.clusterId,
                 name: cs.cluster.clusterName,
@@ -138,7 +105,6 @@ export class VrService {
         };
     }
 
-    /** Корти касб барои истгоҳи ҷазира (пардаи 5) ва толори натиҷа (пардаи 10). */
     private careerCard(career: Career, matchPercentage: number) {
         const universities = career.universities || [];
 
@@ -154,17 +120,7 @@ export class VrService {
         };
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  GET /vr/map — нуқтаҳои харитаи Тоҷикистон (пардаи 7)
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Донишгоҳҳо бо координатҳои воқеӣ.
-     *
-     * Ҳеҷ чиз тавлид намешавад — `latitude`/`longitude` аллакай дар база
-     * ҳастанд (`seed/university-cities.ts`, 98 маҳал). VR онҳоро ба `Vector3`
-     * табдил медиҳад ва пинро мемонад.
-     */
     async map(query: VrMapQueryDto) {
         let universities: University[];
 
@@ -181,7 +137,6 @@ export class VrService {
             universities = await this.universityRepository.find();
         }
 
-        /* Бе координат пин гузошта намешавад — тахмин кардани ҷой мумкин нест. */
         const points = universities
             .filter(uni => uni.latitude != null && uni.longitude != null)
             .map(uni => this.mapPoint(uni));
@@ -204,13 +159,6 @@ export class VrService {
         };
     }
 
-    /**
-     * Сатри donishgoҳ барои харита.
-     *
-     * `latitude`/`longitude` дар Postgres сутуни `decimal`-анд ва TypeORM
-     * онҳоро ҳамчун сатр бармегардонад. Бе `Number()` дар Unity `JsonUtility`
-     * ҳангоми хондани `float` хато медиҳад.
-     */
     private mapPoint(uni: University) {
         return {
             id: uni.id,
@@ -227,7 +175,6 @@ export class VrService {
         };
     }
 
-    /** Масофаи хати рост (haversine), км. */
     private distanceKm(lat1: number, lon1: number, lat2: number | null, lon2: number | null): number | undefined {
         if (lat2 == null || lon2 == null) return undefined;
 
@@ -242,16 +189,7 @@ export class VrService {
         return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  POST /vr/ask — сӯҳбати озод бо Сино (пардаи 9)
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Ҷавоб ба саволи корбар — ТАНҲО аз маълумоти база.
-     *
-     * Агар маълумот набошад, Сино инро рӯйрост мегӯяд. Тахмин кардан манъ
-     * аст: дар фестивал як рақами сохта тамоми эътимодро мекушад.
-     */
     async ask(dto: VrAskDto) {
         const lang = dto.lang || 'tj';
 
@@ -320,9 +258,6 @@ export class VrService {
 
         const clean = this.clean(generated);
 
-        /* Санҷиши охирин: агар AI донишгоҳи берун аз рӯйхатро ном барад,
-           ҷавобаш партофта мешавад. Беҳтар аст «намедонам» гӯем, аз он ки
-           довталабро ба донишгоҳи мавҷуднабуда фиристем. */
         if (!this.institutionsAllowed(clean, allowedNames)) {
             this.logger.warn(`AI муассисаи берун аз база ном бурд — ҷавоб партофта шуд: ${clean}`);
             return { answer: this.unknownAnswer(lang), source: 'fallback' as const };
@@ -331,9 +266,6 @@ export class VrService {
         return { answer: clean, source: 'ai' as const };
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  Шарҳи натиҷа
-    // ─────────────────────────────────────────────────────────────
 
     private async explanationFor(
         scores: Record<string, number>,
@@ -379,7 +311,6 @@ export class VrService {
 
         const clean = this.clean(generated);
 
-        /* Дар шарҳ номи донишгоҳ умуман набояд бошад — санҷиши содда ва дақиқ. */
         if (this.mentionsInstitution(clean)) {
             this.logger.warn('AI дар шарҳ донишгоҳ ном бурд — матни эҳтиётӣ истифода шуд');
             return { text: this.staticExplanation(clusterName, lang), source: 'fallback' };
@@ -389,18 +320,7 @@ export class VrService {
         return { text: clean, source: 'ai' };
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  Ёридиҳандаҳо
-    // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Даъвати AI бо мӯҳлати сахт.
-     *
-     * `AiService` худаш занҷири Vertex → Gemini дорад ва ҳар кадомаш
-     * timeout-и худро. Барои VR ин кофӣ нест: ду провайдер пай дар пай
-     * метавонанд аз ҳадди бароҳатии саҳна берун раванд. Ин ҷо мӯҳлати умумӣ
-     * гузошта мешавад — баъд аз он саҳна бо матни эҳтиётӣ давом мекунад.
-     */
     private async generate(prompt: string): Promise<string | null> {
         try {
             return await Promise.race([
@@ -415,7 +335,6 @@ export class VrService {
         }
     }
 
-    /** Markdown ва эмодзиро мебарорад — дар VR танҳо матни оддӣ хонда мешавад. */
     private clean(text: string): string {
         return text
             .replace(/[*_`#>]/g, '')
@@ -424,19 +343,11 @@ export class VrService {
             .trim();
     }
 
-    /** Оё дар матн умуман номи муассисаи таълимӣ ҳаст? */
     private mentionsInstitution(text: string): boolean {
         const lower = text.toLowerCase();
         return INSTITUTION_WORDS.some(word => lower.includes(word));
     }
 
-    /**
-     * Оё ҳамаи муассисаҳои зикршуда аз рӯйхати иҷозатдодашуда ҳастанд?
-     *
-     * Санҷиш дағал аст — калимаи «донишгоҳ» бо матни атрофаш муқоиса
-     * мешавад. Вале барои ҳадафи мо кофист: AI бояд танҳо номҳои додашударо
-     * такрор кунад, на номи нав созад.
-     */
     private institutionsAllowed(text: string, allowedNames: string[]): boolean {
         if (!this.mentionsInstitution(text)) return true;
         if (!allowedNames.length) return false;
@@ -446,8 +357,6 @@ export class VrService {
             const needle = name.toLowerCase();
             if (lower.includes(needle)) return true;
 
-            /* Номи пурра дароз аст ва AI онро кӯтоҳ карда метавонад. Аз ин рӯ
-               калимаҳои маънодори ном (аз 5 ҳарф боло) санҷида мешаванд. */
             const words = needle.split(/\s+/).filter(w => w.length >= 5);
             return words.length > 0 && words.every(word => lower.includes(word));
         });
@@ -457,7 +366,6 @@ export class VrService {
         return lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
     }
 
-    /** Матни эҳтиётӣ — саҳна ҳеҷ гоҳ бе матн намемонад. */
     private staticExplanation(clusterName: string | null, lang: string): string {
         if (lang === 'en') {
             return clusterName
@@ -501,7 +409,6 @@ export class VrService {
     }
 
     private writeCache(key: string, text: string): void {
-        /* Кэш дар хотира аст — бе маҳдудият он дар кори дарози сервер месӯзад. */
         if (this.cache.size >= CACHE_MAX_ENTRIES) {
             const oldest = this.cache.keys().next().value;
             if (oldest) this.cache.delete(oldest);

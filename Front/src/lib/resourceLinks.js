@@ -1,14 +1,3 @@
-/**
- * Номи манбаъро ба суроғаи расмии он мебарорад.
- *
- * Дар база манбаъҳо матни оддианд («freeCodeCamp — Responsive Web Design»),
- * аз ин рӯ саҳифа онҳоро ҳамчун матни мурда нишон медод. Ин ҷадвал танҳо
- * платформаҳоеро дар бар мегирад, ки суроғаашон бешубҳа маълум аст.
- *
- * Барои номҳои дигар пайванд СОХТА НАМЕШАВАД. Пайванди бофта аз набудани
- * пайванд бадтар аст: корбар зер мекунад ва ба саҳифаи вайрон меафтад.
- * Китобҳо низ пайванд намегиранд — нашрияҳо ва фурӯшгоҳҳо гуногунанд.
- */
 const PLATFORMS = [
   [/freecodecamp/i, "https://www.freecodecamp.org/"],
   [/\bcs50\b/i, "https://cs50.harvard.edu/"],
@@ -38,7 +27,6 @@ const PLATFORMS = [
   [/\bnptel\b/i, "https://nptel.ac.in/"],
 ];
 
-/** Суроға, агар манбаъ шинохта шавад; вагарна `null`. */
 export function resourceUrl(name) {
   if (typeof name !== "string") return null;
   const hit = PLATFORMS.find(([pattern]) => pattern.test(name));

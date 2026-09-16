@@ -42,7 +42,6 @@ export function SpecialtyCardList({ specialty }) {
   );
 }
 
-// Full details card
 export default function SpecialtyCard({ specialty }) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState("skills");

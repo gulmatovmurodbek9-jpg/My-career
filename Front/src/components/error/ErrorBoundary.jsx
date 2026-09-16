@@ -1,11 +1,6 @@
 import React, { Component } from 'react';
 import i18n from '../../lib/i18n';
 
-/**
- * Error Boundary Component
- * Catches JavaScript errors anywhere in the component tree
- * and displays a fallback UI instead of crashing the whole app.
- */
 export class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -39,12 +34,10 @@ export class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
-      // Custom fallback UI provided by parent
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Default fallback UI
       return (
         <div className="min-h-[60vh] flex items-center justify-center p-4">
           <div className="max-w-md w-full glass-card p-8 text-center space-y-6">

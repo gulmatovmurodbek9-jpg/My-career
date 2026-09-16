@@ -7,29 +7,10 @@ import * as path from 'path';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-/*
- * Ҳадди вақт барои як провайдери AI. Се провайдер × 20с = 60с дар бадтарин
- * ҳолат, ки аз timeout-и 90-сонияи frontend камтар аст — яъне корбар ҳамеша
- * ё ҷавоб мегирад, ё паёми фаҳмо. Бо 25с се провайдер аз он ҳадд мегузаштанд.
- */
 const AI_PROVIDER_TIMEOUT_MS = 20000;
 
-/*
- * Провайдере, ки афтод, чанд муддат аз занҷир мегузарад.
- *
- * Бе ин ҳар дархост аз нав аз Vertex оғоз мешуд. Дар сервер Vertex ҳар дафъа
- * 20 сония интизор мешуд ва баъд меафтод, яъне ба ҳар ҷавоби AI 20 сонияи
- * беҳуда илова мешуд: ҳисоботи касбӣ 34.9 сония давом мекард.
- */
 const AI_PROVIDER_COOLDOWN_MS = 5 * 60 * 1000;
 
-/*
- * Ҳадди вақт барои провайдере, ки аз оғози сервер ҳанӯз ҷавоб надодааст.
- * Дархостҳои калон (ҳисобот, муқоиса) ҳадди худро медиҳанд, вале провайдери
- * номаълум онро пурра намегирад: Vertex дар сервер овезон мемонад, ва бо
- * 55 сония барои ҳар провайдер браузер (90 с) пеш аз ҷавоб timeout мешуд.
- * Vertex 30 + Gemini 30 = 60 с дар бадтарин ҳолат.
- */
 const AI_UNPROVEN_TIMEOUT_MS = 30000;
 
 type AiProvider = 'vertex' | 'gemini' | 'groq';
@@ -42,11 +23,8 @@ export class AiService implements OnModuleInit {
     private vertexModel = 'gemini-2.5-flash';
     private groqKey: string | null = null;
     private groqModel = 'openai/gpt-oss-120b';
-    /** Провайдер → вақте ки дубора кӯшиш кардан мумкин аст (ms). */
     private providerDownUntil = new Map<AiProvider, number>();
-    /** Шумораи афтишҳои пай дар пай. */
     private providerFailures = new Map<AiProvider, number>();
-    /** Провайдерҳое, ки аз оғози сервер ақаллан як бор ҷавоб доданд. */
     private providerProven = new Set<AiProvider>();
 
     constructor(private configService: ConfigService) { }
@@ -55,33 +33,12 @@ export class AiService implements OnModuleInit {
         const geminiKey = this.configService.get<string>('GEMINI_API_KEY');
         if (geminiKey) {
             this.genAI = new GoogleGenerativeAI(geminiKey);
-            // Алиас, на версияи мушаххас: gemini-2.0-flash ва gemini-2.5-flash аллакай
-            // бекор шудаанд ва ҳар як бекоркунӣ тамоми AI-ро мекушт.
             this.geminiModel = this.genAI.getGenerativeModel({
                 model: 'gemini-flash-latest',
-                /*
-                 * «Фикркунӣ» хомӯш — ҳамон сабабе, ки дар Vertex.
-                 *
-                 * Ин роҳ дар сервер асосист: он ҷо VERTEX_PROJECT_ID нест, аз
-                 * ин рӯ ҳамаи дархостҳо маҳз аз ҳамин ҷо мегузаранд. Дар
-                 * ченкунӣ модел 749 токени фикрро пеш аз ҷавоб месӯзонд ва
-                 * даъват 4.9 сония мекашид; бе он ҳамон дархост дар 1.7
-                 * сония иҷро мешавад.
-                 */
                 generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as any,
             });
         }
 
-        /*
-         * Groq — провайдери сеюм, берун аз Google.
-         *
-         * Vertex ва Gemini ҳарду ба ҳамон инфрасохтори Google мераванд:
-         * вақте Gemini 503 «серталабӣ» медиҳад, Vertex низ ҳамон ҳол аст.
-         * Дар сервер VERTEX_PROJECT_ID нест, яъне занҷир аз як ҳалқа иборат
-         * буд ва як садамаи Google тамоми AI-и барномаро мекушт. Groq
-         * шабакаи тамоман дигар аст ва калидаш аллакай дар сервер буд, вале
-         * ҳеҷ ҷо хонда намешуд.
-         */
         this.groqKey = this.configService.get<string>('GROQ_API_KEY') || null;
         this.groqModel = this.configService.get<string>('GROQ_MODEL') || 'openai/gpt-oss-120b';
         if (this.groqKey) {
@@ -92,16 +49,12 @@ export class AiService implements OnModuleInit {
 
         this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-2.5-flash';
 
-        // Vertex AI бо лоиҳаи воқеии Google Cloud кор мекунад: ҳисоб ба ҳамон
-        // лоиҳа меравад ва кредити $300 аз ҳамон ҷо сарф мешавад.
         const project =
             this.configService.get<string>('VERTEX_PROJECT_ID') ||
             this.configService.get<string>('GOOGLE_CLOUD_PROJECT');
         const location = this.configService.get<string>('VERTEX_LOCATION') || 'global';
 
         if (project) {
-            // Эътимоднома аз GOOGLE_APPLICATION_CREDENTIALS (файли калиди ҳисоби
-            // хизматӣ) ё аз `gcloud auth application-default login` гирифта мешавад.
             this.vertex = new GoogleGenAI({ vertexai: true, project, location });
             console.log(`AI: Vertex фаъол — лоиҳа ${project}, минтақа ${location}, модел ${this.vertexModel}`);
         } else {
@@ -109,17 +62,6 @@ export class AiService implements OnModuleInit {
         }
     }
 
-    /**
-     * Матн месозад, бо гузариши худкор аз Vertex ба Gemini ва баъд ба Groq.
-     *
-     * Ҳарду ба ҳамон ҳисоби Google Cloud-и корбар пайвастанд. Vertex аввал
-     * меистад; агар `aiplatform.googleapis.com` дар лоиҳа фаъол набошад, он
-     * 403 медиҳад ва дархост бесадо ба Gemini мегузарад. Баъди фаъол шудани
-     * API ҳамон код худаш ба Vertex мегузарад.
-     *
-     * Vertex ва Gemini ҳарду Google-анд: садамаи умумии Google ҳардуро якҷо
-     * мекушад. Groq берун аз он аст ва танҳо ҳамчун захираи охирин меояд.
-     */
     async generateContent(
         prompt: string,
         options: { provider?: AiProvider; timeoutMs?: number } = {},
@@ -130,8 +72,6 @@ export class AiService implements OnModuleInit {
             return this.generateGeminiContent(prompt);
         };
 
-        /* Groq ҳамеша охирин: сифати тоҷикиаш аз Gemini пасттар аст, пас
-           танҳо вақте меояд, ки роҳи Google тамоман баста бошад. */
         const chain: AiProvider[] = options.provider === 'gemini'
             ? ['gemini', 'vertex', 'groq']
             : ['vertex', 'gemini', 'groq'];
@@ -142,15 +82,8 @@ export class AiService implements OnModuleInit {
             return true;
         });
 
-        /* Провайдерҳои дар cooldown буда гузаронида мешаванд. Агар ҳамаашон дар
-           cooldown бошанд, ҳамаашон аз нав кӯшиш карда мешаванд — беҳтар аст
-           кӯшиш кунем, аз он ки бе кӯшиш хато диҳем. */
         const now = Date.now();
         const healthy = usable.filter((which) => (this.providerDownUntil.get(which) ?? 0) <= now);
-        /* Провайдери Google, ки аллакай ҷавоб додааст, аввал меистад: пас аз
-           аввалин ҷавоби Gemini дархостҳо дигар 20–30 сония ба Vertex-и овезон
-           интизор намешаванд. Groq пешбарӣ намешавад — сифати тоҷикиаш пасттар
-           аст ва он бояд захира монад. Sort устувор аст, тартиби занҷир мемонад. */
         const promoted = (which: AiProvider) => which !== 'groq' && this.providerProven.has(which);
         const order = [...(healthy.length ? healthy : usable)]
             .sort((a, b) => Number(promoted(b)) - Number(promoted(a)));
@@ -170,14 +103,6 @@ export class AiService implements OnModuleInit {
                 last = error;
                 const failures = (this.providerFailures.get(which) ?? 0) + 1;
                 this.providerFailures.set(which, failures);
-                /*
-                 * Провайдери исботшуда аз як дер мондан ҷудо намешавад: Gemini ба
-                 * ҳисоботи ~8 ҳазор токен баъзан 20+ сония сарф мекунад, ва агар
-                 * он 5 дақиқа ҷудо мешуд, дархости навбатӣ бе Google мемонд ва
-                 * Groq (лимити 8000 TPM) промптро рад мекард — 500 ба корбар.
-                 * Провайдере, ки ҳеҷ гоҳ ҷавоб надодааст, дар ҳоле ки дигаре
-                 * ҷавоб медиҳад, фавран ҷудо мешавад.
-                 */
                 const coolDown = failures >= 2 || (!proven && this.providerProven.size > 0);
                 if (coolDown) this.providerDownUntil.set(which, Date.now() + AI_PROVIDER_COOLDOWN_MS);
                 console.error(
@@ -186,11 +111,6 @@ export class AiService implements OnModuleInit {
                 );
             }
         }
-        /*
-         * Ҳама афтоданд. Хатои хом ба корбар 500-и бемаъно медиҳад, аз ин рӯ
-         * ин ҷо ба паёми фаҳмо табдил меёбад — ва «лимит» танҳо вақте гуфта
-         * мешавад, ки воқеан лимит бошад, на ҳар садама.
-         */
         if (last instanceof HttpException) throw last;
 
         const rateLimited = this.isRateLimitError(last);
@@ -206,15 +126,6 @@ export class AiService implements OnModuleInit {
         );
     }
 
-    /**
-     * Маҳдудияти вақт барои як провайдер.
-     *
-     * Провайдери овезонмонда набояд тамоми занҷирро боздорад: агар даъват на
-     * хато диҳад ва на ҷавоб, `generateContent` ҳеҷ гоҳ ба провайдери навбатӣ
-     * намегузарад ва дархост то timeout-и худи браузер кушода мемонад. Бо ин
-     * маҳдудият овезон мондан ҳамчун афтиш ҳисоб мешавад ва занҷир давом
-     * мекунад.
-     */
     private withTimeout<T>(work: Promise<T>, which: string, ms: number = AI_PROVIDER_TIMEOUT_MS): Promise<T> {
         return new Promise<T>((resolve, reject) => {
             const timer = setTimeout(
@@ -226,13 +137,6 @@ export class AiService implements OnModuleInit {
         });
     }
 
-    /**
-     * Vertex AI тавассути SDK-и расмӣ.
-     *
-     * Дархост ба `aiplatform.googleapis.com` бо эътимодномаи ҳисоби хизматӣ
-     * меравад, на бо калиди оддии API — танҳо ҳамин роҳ ба лоиҳа ва кредити
-     * Google Cloud пайваст мешавад.
-     */
     private async generateVertexContent(prompt: string): Promise<string> {
         if (!this.vertex) {
             throw new InternalServerErrorException('Vertex танзим нашудааст (VERTEX_PROJECT_ID)');
@@ -242,14 +146,6 @@ export class AiService implements OnModuleInit {
             model: this.vertexModel,
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {
-                /*
-                 * gemini-2.5-flash ба таври пешфарз «фикр» мекунад: дар
-                 * ченкунӣ он 2,566 токени фикрро пеш аз ҷавоб месӯзонд ва
-                 * даъват 18.8 сония мекашид. Бо хомӯш кардани он ҳамон
-                 * дархост дар 3.6 сония иҷро мешавад — 5.3 баробар тезтар,
-                 * ва ҷавоб ҳатто пурратар мебарояд. Барои маслиҳати касбӣ
-                 * занҷири дарозии мулоҳиза лозим нест.
-                 */
                 thinkingConfig: { thinkingBudget: 0 },
             },
         });
@@ -261,18 +157,12 @@ export class AiService implements OnModuleInit {
         return text;
     }
 
-    /**
-     * Extract retry delay (in ms) from a rate-limit error.
-     * Handles the retry-after header and Gemini's retryDelay field.
-     */
     private extractRetryDelay(error: any): number | null {
-        // 1. retry-after header (seconds)
         const retryAfterHeader = error?.headers?.['retry-after'];
         if (retryAfterHeader) {
             return Math.min(Number(retryAfterHeader) * 1000, 30_000);
         }
 
-        // 2. Gemini: errorDetails retryDelay
         if (error?.errorDetails) {
             for (const detail of error.errorDetails) {
                 if (detail.retryDelay) {
@@ -282,7 +172,6 @@ export class AiService implements OnModuleInit {
             }
         }
 
-        // 3. Parse "Please try again in Xm Ys" from message
         const msg = error?.error?.error?.message || error?.message || '';
         const match = msg.match(/try again in (\d+)m?([\d.]+)?s/i);
         if (match) {
@@ -294,23 +183,15 @@ export class AiService implements OnModuleInit {
         return null;
     }
 
-    /**
-     * Check if error is a rate-limit (429) error.
-     */
     private isRateLimitError(error: any): boolean {
         return error?.status === 429 ||
             error?.statusText === 'Too Many Requests' ||
             error?.error?.error?.code === 'rate_limit_exceeded';
     }
 
-    /**
-     * Check if the rate-limit is a DAILY quota (not recoverable by short retry).
-     */
     private isDailyQuotaExhausted(error: any): boolean {
         const msg = error?.error?.error?.message || error?.message || '';
-        // "tokens per day (TPD)"
         if (msg.includes('per day') || msg.includes('TPD')) return true;
-        // Gemini: "free_tier" with limit: 0
         if (msg.includes('limit: 0')) return true;
         return false;
     }
@@ -347,20 +228,9 @@ export class AiService implements OnModuleInit {
             }
         }
 
-        /* Пештар ҳар афтиши Gemini ҳамчун «лимити рӯзона тамом шуд» баромад
-           мекард — ҳатто 503-и «серталабӣ», ки ба лимит ҳеҷ рабте надорад.
-           Корбар бовар мекард, ки ҳаққи худро сарф кардааст, ва дигар
-           кӯшиш намекард. Ҳоло хатои аслӣ боло меравад ва занҷир ба
-           провайдери навбатӣ мегузарад. */
         throw lastError ?? new InternalServerErrorException('Gemini ҷавоб надод');
     }
 
-    /**
-     * Groq — API-и бо OpenAI мувофиқ, бе SDK-и алоҳида.
-     *
-     * Ҳадди вақт аз худи `withTimeout` меояд, вале `AbortController` низ
-     * лозим аст: бе он сокети кушода пас аз timeout дар замина мемонад.
-     */
     private async generateGroqContent(prompt: string, timeoutMs: number = AI_PROVIDER_TIMEOUT_MS): Promise<string> {
         if (!this.groqKey) {
             throw new InternalServerErrorException('Groq танзим нашудааст (GROQ_API_KEY)');

@@ -3,16 +3,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { VrService } from './vr.service';
 import { VrAskDto, VrExplainDto, VrMapQueryDto, VrSessionDto } from './dto/vr.dto';
 
-/**
- * API барои ҷаҳони виртуалии «Ихтисоси ман» (Meta Quest 2 / WebXR).
- *
- * Тақсими масъулият, ки дар ТЗ талаб карда шудааст:
- *   - профил бо КОД ҳисоб мешавад (дар Unity ва дар `QuizService`);
- *   - касбҳо аз БАЗА интихоб мешаванд;
- *   - AI танҳо ҳамон чизеро, ки код ва база доданд, бо забони содда мефаҳмонад.
- *
- * Калиди AI дар сервер мемонад — APK-ро декомпиля кардан мумкин аст.
- */
 @ApiTags('vr')
 @Controller('vr')
 export class VrController {

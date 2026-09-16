@@ -11,87 +11,48 @@ import { ConfigService } from '@nestjs/config';
 import { AiService } from '../ai/ai.service';
 import { User, UserRole } from '../users/user.entity';
 
-/**
- * Лимити рӯзонаи саволҳои AI барои як корбар.
- *
- * 0 маънои бе лимит дорад — ҳолати пешфарзи ҳозира, то ҳар кас, аз ҷумла
- * доварони озмун, озодона санҷида тавонад.
- *
- * Агар сарфи ҳисоб зиёд шавад, лимитро бе тағйири код баргардонидан мумкин
- * аст: дар .env сатри AI_DAILY_LIMIT=5 гузошта шавад.
- */
 const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 0);
 const LIMIT_ON = DAILY_LIMIT > 0;
 
-/*
- * Ҳамворкунии ҳарфҳои хоси тоҷикӣ барои ҷустуҷӯ.
- *
- * Дар клавиатураи русӣ ҳарфҳои ғ ӣ қ ӯ ҳ ҷ нестанд ва корбар ба ҷои онҳо
- * г и к у х ч менависад. Бе ин мутобиқсозӣ ҷустуҷӯи «Зех» ихтисоси «Зеҳни
- * сунъӣ»-ро намеёбад.
- */
 
-/**
- * Номи касбҳои гуфтугӯӣ → калимаҳои ҷустуҷӯ дар база.
- *
- * Довталаб «Юрист» менависад, вале дар рӯйхати ММТ чунин ном нест — он ҷо
- * «Ҳуқуқшиносӣ» аст. ILIKE '%юрист%' ҳеҷ чиз намеёбад, ҷустуҷӯ ба fallback
- * мегузарад ва чат ба ҷои ҳуқуқ «Таърих»-у «Идоракунии давлатӣ»-ро тавсия
- * мекунад — маҳз ҳамин дар демо дида шуд.
- *
- * Калидҳо folded навишта мешаванд (ғ→г, ӣ→и, қ→к, ӯ→у, ҳ→х, ҷ→ч), то ки
- * навишти русиклавиатура низ кор кунад: «хукук» ба «ҳуқуқ» мерасад.
- */
 const CAREER_SYNONYMS: Record<string, string[]> = {
-    // Ҳуқуқ
     юрист: ['хукук'], юристи: ['хукук'], адвокат: ['хукук'], прокурор: ['хукук'],
     судя: ['хукук'], судъя: ['хукук'], нотариус: ['хукук'], хукукшинос: ['хукук'],
-    // Тиб
     врач: ['табобат', 'тиб'], доктор: ['табобат', 'тиб'], духтур: ['табобат', 'тиб'],
     табиб: ['табобат', 'тиб'], хирург: ['чаррох', 'табобат'], педиатр: ['педиатр', 'кудакон'],
     стоматолог: ['дандон'], дантист: ['дандон'], медсестра: ['хамшира'],
     фельдшер: ['хамшира'], фармацевт: ['дорусоз'], аптекар: ['дорусоз'],
-    // IT
     программист: ['барнома', 'информатика'], программирование: ['барнома', 'информатика'],
     барномасоз: ['барнома'], кодер: ['барнома'], разработчик: ['барнома'],
     developer: ['барнома'], programmer: ['барнома'],
     айти: ['информатика', 'иттилоот'], it: ['информатика', 'иттилоот'],
     тестировщик: ['барнома'], дизайнер: ['дизайн'], design: ['дизайн'],
-    // Муҳандисӣ ва техника
     инженер: ['мухандис'], мухандис: ['мухандис'], электрик: ['электр'],
     энергетик: ['энергетика'], строитель: ['сохтмон'], сохтмончи: ['сохтмон'],
     архитектор: ['меъмор'], механик: ['механика'], водитель: ['наклиёт'],
-    // Иқтисод
     экономист: ['иктисод'], бухгалтер: ['бахисобгири', 'молия'],
     мухосиб: ['бахисобгири', 'молия'], банкир: ['молия', 'бонк'],
     финансист: ['молия'], менеджер: ['менечмент', 'идора'], маркетолог: ['маркетинг'],
     предприниматель: ['соибкори', 'бизнес'], логист: ['логистика', 'наклиёт'],
-    // Таълим ва забон
     учитель: ['омузгор', 'педагогика'], омузгор: ['омузгор', 'педагогика'],
     преподаватель: ['омузгор', 'педагогика'], воспитатель: ['томактаби', 'педагогика'],
     переводчик: ['тарчум'], тарчумон: ['тарчум'], филолог: ['филология'],
     лингвист: ['забон', 'филология'],
-    // Ҷомеашиносӣ
     психолог: ['психология'], социолог: ['сотсиология', 'чомеашиноси'],
     журналист: ['журналистика'], дипломат: ['байналмилали', 'муносибат'],
     политолог: ['сиёсатшиноси'], историк: ['таърих'],
-    // Дигар
     повар: ['хурок', 'технологияи хурок'], агроном: ['агроном', 'кишоварзи'],
     ветеринар: ['ветеринар'], эколог: ['экология'], геолог: ['геология'],
     химик: ['химия'], биолог: ['биология'], физик: ['физика'], математик: ['математика'],
     спортсмен: ['варзиш'], тренер: ['варзиш'], артист: ['санъат'], музыкант: ['мусики'],
     художник: ['наккоши', 'санъат'], актер: ['санъат'], режиссер: ['санъат'],
     военный: ['харби'], полицейский: ['хукук', 'харби'],
-    /* Бандакҳои русӣ «ь»-ро мехӯранд — «учителем», «строителя». Решаи бе
-       аломати мулоим ҳамчун калиди алоҳида, то мувофиқати оғоз кор кунад. */
     учител: ['омузгор', 'педагогика'], преподавател: ['омузгор', 'педагогика'],
     воспитател: ['томактаби', 'педагогика'], строител: ['сохтмон'],
     водител: ['наклиёт'], предпринимател: ['соибкори', 'бизнес'],
     учитил: ['омузгор', 'педагогика'],
 };
 
-/* Калидҳои дарозтар аввал, то ки «программирование» ба «программист» афтад,
-   на ба калиди кӯтоҳтари тасодуфӣ. */
 const SYNONYM_KEYS = Object.keys(CAREER_SYNONYMS).sort((a, b) => b.length - a.length);
 
 const TAJIK_LETTERS = 'ғӣқӯҳҷ';
@@ -105,20 +66,13 @@ const foldTajik = (value: string): string => {
     return out;
 };
 
-/** Ҳамон табдил, вале дар тарафи Postgres. */
 const TAJIK_FOLD = (column: string): string =>
     `translate(lower(${column}), 'ғӣқӯҳҷҒӢҚӮҲҶ', 'гикухчгикухч')`;
 
 @Injectable()
 export class CareerService {
-    /*
-     * Ҳадди болоии холи як кластер: 10 саволи ММТ × 4 холи имконпазир.
-     * Панел пештар 60 мегирифт ва саҳифаи натиҷаи тест 40 — як корбар дар ду
-     * ҷо ду фоизи гуногунро медид (масалан 27% ва 40%).
-     */
     private static readonly MMT_MAX_SCORE = 40;
 
-    /** То ин шумора рӯйхатро худи корбар аз назар мегузаронад — савол зиёдатист. */
     private static readonly AI_CHOICE_MIN = 8;
 
     constructor(
@@ -143,15 +97,6 @@ export class CareerService {
         qb.leftJoinAndSelect('career.universities', 'universities');
 
         if (search) {
-            /*
-             * Ҳарфҳои хоси тоҷикӣ ҳамвор карда мешаванд.
-             *
-             * Дар клавиатураи русӣ ҳарфҳои ғ ӣ қ ӯ ҳ ҷ нестанд, аз ин рӯ
-             * корбар «Зех» менависад, дар ҳоле ки дар база «Зеҳни сунъӣ» аст —
-             * ва ҷустуҷӯи оддии ILIKE ҳеҷ чиз намеёбад. Ҳоло ҳам сутун ва ҳам
-             * дархост ба як шакл оварда мешаванд, то ҳарду навъи навишт кор
-             * кунад.
-             */
             qb.andWhere(
                 `(${TAJIK_FOLD('career.name')} LIKE :search
                   OR ${TAJIK_FOLD('career.description')} LIKE :search
@@ -160,12 +105,6 @@ export class CareerService {
             );
         }
 
-        /*
-         * Ҷустуҷӯи AI: ҳар яке аз решаҳо дар НОМИ ихтисос («ё»).
-         *
-         * Танҳо дар ном, на дар тавсиф: дар матни дароз «дандон» ба ихтисосҳои
-         * бегона низ мерасид. Касби мушаххас бо номаш ёфт мешавад.
-         */
         const anyTerms = (query.searchAny || [])
             .map((term) => foldTajik(String(term).trim()))
             .filter((term) => term.length >= 3);
@@ -180,8 +119,6 @@ export class CareerService {
             }));
         }
 
-        /* Номҳои дақиқи расмӣ — роҳ ба касбе, ки ихтисоси алоҳида нест.
-           Муқоисаи айнан: номҳо аз худи база гирифта шудаанд. */
         const exactNames = (query.names || []).map((name) => String(name).trim()).filter(Boolean);
         if (exactNames.length) {
             qb.andWhere('career.name IN (:...exactNames)', { exactNames });
@@ -215,22 +152,6 @@ export class CareerService {
             qb.andWhere('career.hasFreeSeats = true');
         }
 
-        /*
-         * Тартиб аз рӯи рақами расмии ММТ.
-         *
-         * Пештар ҳеҷ ORDER BY набуд ва Postgres сатрҳоро бо тартиби дилхоҳ
-         * бармегардонд: як саҳифа имрӯз як хел, фардо дигар хел меомад.
-         *
-         * Кодҳо дарозии гуногун доранд (аз 5 то 18 рақам), барои ҳамин
-         * муқоисаи оддии матнӣ «10020503»-ро пеш аз «1010101» мегузошт.
-         * Ҳамаи рақамҳо гирифта ва то 20 аломат бо сифр пур карда мешаванд.
-         * Ин ҳисоб дар худи база ҳамчун сутуни GENERATED нигоҳ дошта мешавад:
-         * TypeORM ифодаи хомро дар ORDER BY ҳангоми саҳифабандӣ қабул намекунад
-         * («alias was not found»), вале сутуни ҳақиқиро бемалол мефаҳмад.
-         */
-        /* Сутун бо select: false аст, вале ҳангоми саҳифабандӣ TypeORM
-           зердархости DISTINCT месозад ва он ҷо танҳо сутунҳои интихобшуда
-           ҳастанд — бе ин сатр «distinctAlias.career_codeSort не существует». */
         qb.addSelect('career.codeSort');
         qb.orderBy('career.codeSort', 'ASC').addOrderBy('career.name', 'ASC');
 
@@ -251,18 +172,6 @@ export class CareerService {
 
 
 
-    /**
-     * Мазмунро ба забони интихобшуда мегардонад.
-     *
-     * Танҳо майдонҳое иваз мешаванд, ки тарҷума воқеан доранд — агар
-     * тарҷума нарасад, матни тоҷикӣ мемонад. Ин муҳим аст: холӣ мондани
-     * майдон аз матни забони дигар бадтар аст.
-     *
-     * `code` ва `name` ҳеҷ гоҳ иваз намешаванд. Код шиносаи расмии ММТ аст,
-     * ва номи тоҷикӣ ҳамонест, ки довталаб дар китобчаи ММТ меҷӯяд — номи
-     * тарҷумашуда ба `nameTranslated` меравад, то саҳифа ҳардуро дар як ҷо
-     * нишон диҳад.
-     */
     localize<T extends Partial<Career>>(career: T, lang?: string): T {
         if (!career || !lang || lang === 'tj') return career;
 
@@ -272,32 +181,17 @@ export class CareerService {
         const out: any = { ...career };
         for (const [key, value] of Object.entries(tr)) {
             if (value === null || value === undefined || value === '') continue;
-            /* Майдонҳои хидматии скрипти тарҷума (_fields) ба клиент намераванд. */
             if (key.startsWith('_')) continue;
             if (key === 'name') { out.nameTranslated = value; continue; }
             if (key === 'code') continue;
             out[key] = value;
         }
 
-        /* Ҷадвали пурраи тарҷумаҳо ба клиент лозим нест — вазни беҳуда. */
         delete out.translations;
         return out as T;
     }
 
 
-    /**
-     * Ҷустуҷӯи озод: саволи бо забони одӣ навишташуда → филтрҳои ҷустуҷӯ.
-     *
-     * AI дар ин ҷо ҷавоб намесозад — вай танҳо саволро мефаҳмад. «Мехоҳам
-     * барномасоз шавам, донишгоҳ то 4000 сомонӣ» ба
-     * `{ search: "барномасоз", maxPrice: 4000 }` табдил меёбад, ва баъд
-     * ҳамон `findAll`-и муқаррарӣ кор мекунад. Яъне рӯйхат ҳамеша аз база
-     * меояд ва ҳар филтрро дар экран нишон додан мумкин аст — модел на
-     * ихтисос месозад, на нарх.
-     *
-     * Агар AI дастрас набошад ё JSON вайрон бошад, худи матни савол ҳамчун
-     * калимаи ҷустуҷӯ меравад: корбар бе натиҷа намемонад.
-     */
     async aiSearch(
         rawQuery: string,
         lang = 'tj',
@@ -305,7 +199,6 @@ export class CareerService {
         limit = 12,
     ): Promise<{ data: Career[]; meta: any; filters: any; understood: boolean; question: string | null; options: any[]; answerLang: string }> {
         const question = (rawQuery || '').trim().slice(0, 300);
-        /* То даме модел забони саволро нагӯяд, забони саҳифа меистад. */
         let answerLang = ['tj', 'ru', 'en'].includes(lang) ? lang : 'tj';
 
         const toDto = (filters: any, p = page, l = limit) => ({
@@ -320,11 +213,6 @@ export class CareerService {
             ...(filters.onlyFree ? { freeSeatsOnly: 'true' } : {}),
         }) as GetCareersDto;
 
-        /*
-         * Вақте ҷустуҷӯ ҳеҷ чиз наёфт, панҷ кластер ҳамчун роҳи баромад
-         * пешниҳод мешаванд. Корбар ҳатто вақте саволаш номаълум аст —
-         * «намедонам чӣ кор кунам» — аз ҷои холӣ ба интихоб мегузарад.
-         */
         const clusterFallback = async () => {
             const all = await this.clusterRepository.find();
             const list: any[] = [];
@@ -343,15 +231,12 @@ export class CareerService {
 
         const finish = async (understood: boolean, filters: any, options: any[] = [], ask: string | null = null) => {
             const result = await this.findAll(toDto(filters));
-            /* Натиҷаи холӣ — ҷои ягонаест, ки кластерҳо ба ҷои вариантҳо меоянд. */
             const finalOptions = !result.meta.total && !options.length ? await clusterFallback() : options;
             return { ...result, filters, understood, question: ask, options: finalOptions, answerLang };
         };
 
         if (!question) return finish(false, {});
 
-        /* Шаҳр танҳо аз рӯйхати воқеӣ қабул мешавад — вагарна модел шаҳри
-           набударо менависад ва ҷустуҷӯ холӣ бармегардад. */
         const rows: Array<{ city: string }> = await this.careerRepository.manager.query(
             'SELECT DISTINCT city FROM universities WHERE city IS NOT NULL',
         );
@@ -367,7 +252,6 @@ export class CareerService {
             return JSON.parse(text.trim());
         };
 
-        /* ── Қадами 1: савол → филтрҳо ──────────────────────────────────── */
         const filterPrompt = [
             'Ту ёрирасони ҷустуҷӯи ихтисосҳои Маркази миллии тестии Тоҷикистон ҳастӣ.',
             'Саволи корбарро ба филтрҳои ҷустуҷӯ табдил деҳ.',
@@ -413,11 +297,9 @@ export class CareerService {
         try {
             parsed = readJson(await this.aiService.generateContent(filterPrompt));
         } catch (error) {
-            /* Модел афтод ё JSON-и вайрон дод — саволро ҳамчун калима мегирем. */
             return finish(false, { search: question });
         }
 
-        /* Ҳеҷ қимати модел бе санҷиш ба дархост намеравад. */
         if (typeof parsed?.lang === 'string') {
             const said = parsed.lang.trim().toLowerCase();
             if (said === 'tj' || said === 'ru' || said === 'en') answerLang = said;
@@ -425,7 +307,6 @@ export class CareerService {
 
         const filters: any = {};
 
-        /* Решаҳо: массив аз модели нав, сатри ягона аз шакли пештара. */
         const rawKeywords: unknown[] = Array.isArray(parsed?.keywords)
             ? parsed.keywords
             : typeof parsed?.search === 'string' ? [parsed.search] : [];
@@ -463,16 +344,6 @@ export class CareerService {
 
         if (parsed?.onlyFree === true) filters.onlyFree = true;
 
-        /*
-         * Решаҳо аввал дар НОМ ҷуста мешаванд, ҳамаашон якҷо.
-         *
-         * Кластери модел танҳо тахмин аст. Агар бо он решаҳо ҳеҷ чиз наёбанд,
-         * вале бе он меёбанд — кластер партофта мешавад: номи касб аз тахмини
-         * соҳа боэътимодтар аст.
-         *
-         * Агар дар ном ҳеҷ чиз набошад, решаи умумитарин бо ҷустуҷӯи пештара
-         * (ном ва тавсиф) санҷида мешавад.
-         */
         if (keywords.length) {
             let byName = await this.findAll(toDto({ ...filters, searchAny: keywords }, 1, 1));
 
@@ -504,14 +375,8 @@ export class CareerService {
 
         if (!Object.keys(filters).length) return finish(false, { search: question });
 
-        /* ── Қадами 2: агар натиҷа зиёд бошад, аниқ мекунем ─────────────── */
         const broad = await this.findAll(toDto(filters, 1, 24));
 
-        /*
-         * Савол танҳо вақте дода мешавад, ки воқеан интихоб лозим бошад.
-         * Бо ҳашт ихтисос корбар худаш нигоҳ карда метавонад — пурсидан
-         * танҳо як қадами зиёдатӣ мешуд.
-         */
         if (broad.meta.total <= CareerService.AI_CHOICE_MIN) {
             return finish(true, filters);
         }
@@ -553,18 +418,9 @@ export class CareerService {
         try {
             grouped = readJson(await this.aiService.generateContent(groupPrompt));
         } catch (error) {
-            /* Аниқкунӣ ихтиёрист — бе он ҳам рӯйхат кор мекунад. */
             return finish(true, filters);
         }
 
-        /*
-         * Ҳар вариант дар база санҷида мешавад.
-         *
-         * Модел метавонад гурӯҳи зебо бо калимае пешниҳод кунад, ки дар ягон
-         * ном нест. Чунин вариант дар экран мемонд ва пахш карда шуда, рӯйхати
-         * холӣ медод. Аз ин рӯ шумораи воқеӣ ҳисоб карда мешавад ва варианти
-         * бенатиҷа умуман нишон дода намешавад.
-         */
         const options: any[] = [];
         const seen = new Set<string>();
 
@@ -578,16 +434,10 @@ export class CareerService {
             if (seen.has(key)) continue;
             seen.add(key);
 
-            /* Решаҳои асосӣ (searchAny) мемонанд ва калимаи вариант бо онҳо
-               «ва» пайваст мешавад — вариант ҳамеша қисми натиҷаи асосист.
-               Пештар решаҳо партофта мешуданд ва вариант 74 нишон медод, дар
-               ҳоле ки худи натиҷа 19 буд. */
             const optionFilters: any = { ...filters, search: keyword };
             delete optionFilters.keywords;
             delete optionFilters.note;
             const check = await this.findAll(toDto(optionFilters, 1, 1));
-            /* Варианти бенатиҷа ва вариантеки ҳамаи натиҷаро мегирад — ҳарду
-               чизеро интихоб намекунанд: «Ҳифзи ҳуқуқ (35)» аз 35 савол набуд. */
             if (!check.meta.total || check.meta.total >= broad.meta.total) continue;
 
             options.push({ label, hint, count: check.meta.total, filters: optionFilters });
@@ -602,15 +452,6 @@ export class CareerService {
         return finish(true, filters, ask ? options : [], ask);
     }
 
-    /**
-     * Роҳи воқеӣ ба касбе, ки дар рӯйхати ММТ бо номи худ нест.
-     *
-     * Номзадҳо фақат номҳои ҳақиқии база мебошанд: ихтисосҳои кластери
-     * тахминӣ ва онҳое, ки калимаҳо дар ном ё тавсифашон вомехӯранд. Модел
-     * аз ҳамин рӯйхат интихоб мекунад; номе, ки дар он нест, рад мешавад.
-     * Бе ин модел «Урология» ё «Кардиология» менавишт — ихтисосҳое, ки
-     * довталаб ба онҳо ҳуҷҷат супорида наметавонад.
-     */
     private async findCareerPath(
         question: string,
         keywords: string[],
@@ -677,8 +518,6 @@ export class CareerService {
             return null;
         }
 
-        /* Номи модел бо номи база ҳамвор муқоиса мешавад, вале ба дархост худи
-           номи база меравад — то баробарии айнан кор кунад. */
         const byFolded = new Map(list.map((name) => [foldTajik(name.trim()), name]));
         const names: string[] = (Array.isArray(parsed?.names) ? parsed.names : [])
             .filter((name: unknown): name is string => typeof name === 'string')
@@ -692,7 +531,6 @@ export class CareerService {
         return { names: Array.from(new Set<string>(names)), note };
     }
 
-    /** Калимаҳои соҳаи умумӣ: пас аз калимаи мушаххас онро «об» мекунанд. */
     private static readonly BROAD_STEMS = new Set(
         ['тиб', 'табобат', 'муҳандис', 'иқтисод', 'омӯзгор', 'педагог', 'техник', 'технолог', 'биолог', 'санъат', 'илм']
             .map((word) => foldTajik(word)),
@@ -706,11 +544,6 @@ export class CareerService {
         return this.careerRepository.findOne({ where: { code }, relations: ['cluster', 'universities'] });
     }
 
-    /**
-     * Every university offering this specialty, with its own tuition, study form,
-     * language and seat count. Cheapest first so the list opens on the most
-     * affordable option; state-funded (ройгон) seats sort to the top.
-     */
     async findOfferings(careerId: string, lang?: string) {
         const offerings = await this.offeringRepository.find({
             where: { careerId },
@@ -726,8 +559,6 @@ export class CareerService {
                 language: offering.language,
                 seats: offering.seats,
                 basedOn: offering.basedOn,
-                /* Номи расмии тоҷикӣ дар 'name' мемонад — ҳуҷҷат маҳз бо он
-                   супорида мешавад — ва тарҷума ба 'nameTranslated' меравад. */
                 university: (() => {
                     const uni = offering.university;
                     const tr = lang && lang !== 'tj' ? (uni as any)?.translations?.[lang] : null;
@@ -808,23 +639,11 @@ export class CareerService {
         }
     }
 
-    /**
-     * Интихоби ихтисосҳои тавсияшуда аз рӯи натиҷаи тест.
-     *
-     * Ин ягона ҷоест, ки рӯйхати тавсияро месозад — ҳам саҳифаи натиҷаи тест
-     * ва ҳам панели корбар аз ҳамин ҷо мегиранд. Пештар ҳар кадом мантиқи
-     * худро дошт: тест аз кластери пешбар 24 ихтисос гирифта, онҳоро аз рӯи
-     * калидвожаҳои ҷавобҳо тартиб медод, панел бошад ҳамаи ихтисосҳои
-     * кластерро (масалан 351-торо) мегирифт, ба ҳамаашон як фоиз медод ва
-     * 12-тои аввали навбати базаро нишон медод. Барои ҳамин дар панел
-     * ихтисосҳои тамоман дигар мебаромаданд.
-     */
     async selectMatchedCareers(userScores: any): Promise<{
         cluster: Cluster | null;
         matchPercentage: number;
         careers: Career[];
         clusterScores: { cluster: Cluster; score: number }[];
-        /** Холи калидвожаи ҳар ихтисос — барои фоизи инфиродии корт. */
         careerRanks: Map<string, number>;
     }> {
         const mmtScores = userScores?.mmtClusters || { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
@@ -847,18 +666,6 @@ export class CareerService {
             Math.round((top.score / CareerService.MMT_MAX_SCORE) * 100),
         );
 
-        /*
-         * ҲАМАИ ихтисосҳои кластер баҳо дода мешаванд, на 24-тои аввал.
-         *
-         * Пештар ин ҷо `take: 24` буд — бе ҳеҷ тартиб, яъне 24 сабти аввали
-         * навбати база. Кластери «Табиӣ ва техникӣ» 351 ихтисос дорад, аз ин
-         * рӯ ихтисоси комилан мувофиқ дар ҷои 300 ҳеҷ гоҳ ба рӯйхат
-         * намеафтод. Дар экран бошад чизҳои тасодуфии алифбоӣ мебаромаданд.
-         *
-         * Аввал сабук бор мешавад (бе муносибатҳо), баъд танҳо барои 12-тои
-         * беҳтарин донишгоҳҳо гирифта мешавад — вагарна барои 351 сабт
-         * муносибат бор кардан лозим мешуд.
-         */
         const pool = await this.careerRepository.find({
             where: { clusterId: top.cluster.id },
             select: ['id', 'name', 'description', 'purpose', 'skills', 'likesCount'],
@@ -871,9 +678,6 @@ export class CareerService {
         const scoreOf = (career: Career): number => {
             if (!keywords.length) return 0;
 
-            /* Мувофиқат дар НОМ вазни бештар дорад: калидвожа дар номи
-               ихтисос нисбат ба ҳамон калима дар тавсифи дароз хеле
-               маънодортар аст. */
             const name = (career.name || '').toLowerCase();
             const body = [
                 career.description || '',
@@ -897,7 +701,6 @@ export class CareerService {
                 (a.career.name || '').localeCompare(b.career.name || ''))
             .slice(0, 12);
 
-        // Донишгоҳҳо танҳо барои ҳамон 12-то бор мешаванд.
         const topCareers = ranked.length
             ? await this.careerRepository.find({
                 where: { id: In(ranked.map(r => r.career.id)) },
@@ -905,7 +708,6 @@ export class CareerService {
             })
             : [];
 
-        // `In` тартибро нигоҳ намедорад — онро барқарор мекунем.
         const order = new Map(ranked.map((r, index) => [r.career.id, index]));
         topCareers.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 
@@ -922,11 +724,6 @@ export class CareerService {
         const { careers, matchPercentage, clusterScores, cluster, careerRanks } =
             await this.selectMatchedCareers(userScores);
 
-        /*
-         * Профили корбар дар миқёси 0–10 барои диаграммаи радар.
-         * Холи ММТ то 40 мерасад, диаграмма то 10 — бе ин тақсим ҳама
-         * нуқтаҳо аз ҳудуди диаграмма мебаромаданд.
-         */
         const userProfile: Record<string, number> = {};
         for (const entry of clusterScores) {
             userProfile[`c${entry.cluster.clusterId}`] = Number(
@@ -934,23 +731,15 @@ export class CareerService {
             );
         }
 
-        /* Ихтисос маҳз ба ЯК кластер тааллуқ дорад — профилаш ҳамин аст,
-           на тахмини нарм дар панҷ тараф. */
         const careerProfile: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
         if (cluster) careerProfile[`c${cluster.clusterId}`] = 10;
 
-        /*
-         * Косинус байни вектори корбар ва вектори «як кластер» ба
-           u[c] / ||u|| баробар мешавад: чӣ қадар холи корбар маҳз дар ҳамин
-           кластер ҷамъ шудааст.
-         */
         const values = clusterScores.map((entry) => entry.score);
         const norm = Math.sqrt(values.reduce((sum, v) => sum + v * v, 0));
         const topScore = clusterScores[0]?.score ?? 0;
         const secondScore = clusterScores[1]?.score ?? 0;
         const cosineSimilarity = norm > 0 ? Number((topScore / norm).toFixed(3)) : 0;
 
-        /* Масофа то вектори идеалӣ (ҳамаи 40 хол дар як кластер). */
         const ideal = CareerService.MMT_MAX_SCORE;
         const distance = Math.sqrt(
             clusterScores.reduce((sum, entry, index) => {
@@ -963,9 +752,6 @@ export class CareerService {
             ? Number(Math.max(0, 1 - distance / maxDistance).toFixed(3))
             : 0;
 
-        /* Боварӣ = чӣ қадар кластери аввал аз дуюм ҷудо истодааст. Вақте
-           ду кластер қариб баробаранд, натиҷа воқеан номуайян аст ва
-           довталаб бояд инро бидонад. */
         const confidenceIndex = topScore > 0
             ? Number(((topScore - secondScore) / topScore).toFixed(3))
             : 0;
@@ -978,26 +764,9 @@ export class CareerService {
                 : 0;
         }
 
-        /*
-         * Фоизи ҳар корт алоҳида.
-         *
-         * Пештар ин ҷо холи КЛАСТЕР мерафт — як рақам барои ҳар 12 корт,
-         * ва рӯйхат чунин менамуд, ки ҳисоб умуман кор намекунад. Ҳоло
-         * холи кластер асос аст, ва холи калидвожаи худи ихтисос онро то
-         * чоряк поён мефарорад: ихтисоси беҳтарин дар боло мемонад,
-         * сусттаринаш поёнтар. Агар калидвожа набошад, ҳамаи холҳо сифр
-         * мешаванд ва фоиз ба ҳамон холи кластер бармегардад — рақами
-         * бофта илова намешавад.
-         */
         const maxRank = Math.max(0, ...careers.map((c) => careerRanks.get(c.id) ?? 0));
 
         return careers.map(career => {
-            /*
-             * Донишгоҳҳо ҳамроҳи корт мераванд: бе онҳо довталаб мебинад, ки
-             * ихтисос ба ӯ мувофиқ аст, вале намедонад куҷо ҳуҷҷат супорад.
-             * Се номи аввал бас аст — боқимонда ҳамчун рақам («+4») нишон
-             * дода мешавад, то корт дароз нашавад.
-             */
             const universities = (career.universities || []);
 
             const rank = careerRanks.get(career.id) ?? 0;
@@ -1009,16 +778,11 @@ export class CareerService {
 
             return {
                 id: career.id,
-                /* Коди расмии ихтисос — маҳз ҳамин рақам ҳангоми супоридани
-                   ҳуҷҷат ба ММТ нависта мешавад. */
                 code: career.code,
                 name: career.name,
                 description: career.description,
                 purpose: career.purpose,
                 matchPercentage: careerMatch,
-                /* Ҳамон рақамҳое, ки равзанаи «Таҳлили мувофиқат» мехонад.
-                   Пештар ҳеҷ яке аз онҳо фиристода намешуд ва равзана ҳама
-                   ҷо 0% бо диаграммаи ҷамъшуда нишон медод. */
                 cosineSimilarity,
                 euclideanSimilarity,
                 confidenceIndex,
@@ -1120,24 +884,16 @@ export class CareerService {
 
     private extractSearchTerms(question: string, careerName?: string): string[] {
         const text = this.normalizeText(`${careerName || ''} ${question}`);
-        // Феълҳо ва калимаҳои умумӣ бояд ин ҷо бошанд.
-        //
-        // ILIKE '%кунам%' ё '%дорам%' ба садҳо тавсиф мувофиқ меояд, ва ҷустуҷӯ
-        // ба ҷои ихтисосҳои мувофиқ тамоми базаро бармегардонад. Ба саволи
-        // «ба барномасозӣ шавқ дорам» чат «Бизнес-маъмуриятчигӣ» тавсия медод.
         const stopWords = new Set([
             'ман', 'ба', 'бо', 'ва', 'ё', 'аз', 'дар', 'ки', 'чӣ', 'чи', 'кадом', 'барои', 'мехоҳам', 'мехохам',
             'ихтисос', 'ихтисоси', 'ихтисосро', 'ихтисосҳои', 'профессия', 'профессии',
             'хочу', 'где', 'что', 'как', 'the', 'and', 'for',
-            // Феълҳо ва пайвандакҳои сермаъмул
             'дорам', 'дорад', 'доранд', 'кунам', 'кунад', 'кунанд', 'кунед', 'шавам', 'шавад',
             'бошад', 'бошам', 'аст', 'ҳаст', 'ҳастам', 'будан', 'кардан', 'шудан', 'гирифтан',
             'интихоб', 'маслиҳат', 'савол', 'лутфан', 'илтимос', 'салом', 'ассалом',
             'ман_ро', 'худро', 'шумо', 'вай', 'онҳо', 'ҳамин', 'инро', 'онро',
             'хочу', 'нужно', 'какой', 'какая', 'выбрать', 'посоветуйте', 'помогите',
             'want', 'need', 'which', 'choose', 'advise', 'help', 'should',
-            // Шаклҳои «шудан» ва калимаҳои умумии савол: «Юрист шуданиям кадом
-            // ихтисосҳо мешаванд» — «мешаванд» қариб дар ҳар тавсиф ҳаст.
             'мешавад', 'мешаванд', 'мешавам', 'мешавем', 'мешавед', 'шуданиям', 'шуданӣ', 'шудани',
             'метавонам', 'метавонад', 'лозим', 'бояд', 'кадомаш', 'ихтисосҳо', 'ихтисосҳоро',
             'касб', 'касби', 'касбҳо', 'стать', 'специальность', 'специальности',
@@ -1149,17 +905,10 @@ export class CareerService {
             .map((word) => word.trim())
             .filter((word) => word.length >= 3 && !stopWords.has(word));
 
-        /* Ҳар калима ҳам худаш ва ҳам шакли folded-аш меравад, ва агар дар
-           ҷадвали ҳаммаъноҳо бошад — тарҷумаи тоҷикиаш низ. Ҷустуҷӯ баъдан
-           бо TAJIK_FOLD муқоиса мекунад, пас ҳамааш дар як алифбо мешавад. */
         const terms: string[] = [];
         for (const word of words) {
             const folded = foldTajik(word);
             terms.push(folded);
-            /* «врачом», «юристом», «программиста» — русӣ ва тоҷикӣ ҳарду
-               бандак мегиранд. Мувофиқати дақиқ онҳоро намегирад, барои
-               ҳамин калиди 4-ҳарфа ё дарозтар ҳамчун оғози калима низ
-               ҳисоб мешавад. */
             const prefixKey = SYNONYM_KEYS.find(
                 (key) => key.length >= 4 && folded.startsWith(key),
             );
@@ -1173,24 +922,6 @@ export class CareerService {
     private async findRelevantCareers(question: string, careerName?: string): Promise<Career[]> {
         const terms = this.extractSearchTerms(question, careerName);
 
-        /**
-         * Баҳо дар SQL, пеш аз LIMIT — на дар JS пас аз он.
-         *
-         * Пештар дархост бо OR ҳамаи мувофиқатҳоро мегирифт ва `take(60)` 60-тоашро
-         * бармегардонд. Бо leftJoinAndSelect TypeORM он 60-ро бо
-         * `DISTINCT id ORDER BY id` интихоб мекунад — аз рӯи UUID, яъне тасодуфан.
-         * Калимаи умумии савол («мешаванд») қариб ба ҳар тавсиф мувофиқ аст, пас
-         * ҳавз аз ихтисосҳои бемавзӯъ пур мешуд ва баҳои JS танҳо аз ҳамон 60
-         * интихоб мекард. Ба «Юрист шуданиям кадом ихтисосҳо мешаванд» чат
-         * «Таърих»-ро пешниҳод кард, дар ҳоле ки дар база 38 ихтисоси ҳуқуқӣ ҳаст.
-         *
-         * Акнун ҳамаи ихтисосҳо баҳо мегиранд (≈120 мс) ва танҳо 10-и беҳтарин бо
-         * донишгоҳҳояшон бор карда мешаванд.
-         *
-         * Вазн барои ҳар калима: ном бо он оғоз шавад 4 («Ҳуқуқи байналмилалӣ»
-         * аз «Равоншиносии ҳуқуқӣ» болотар), дар ном 3, дар номи кластер 2,
-         * дар тавсиф ё донишгоҳ/шаҳр 1. Лайкҳо танҳо ҳангоми баробарӣ.
-         */
         let matched: Career[] = [];
         if (terms.length > 0) {
             const ranked: Array<{ id: string }> = await this.careerRepository.manager.query(
@@ -1237,7 +968,6 @@ export class CareerService {
                     where: { id: In(ids) },
                     relations: ['cluster', 'universities'],
                 });
-                /* find() тартибро нигоҳ намедорад — аз рӯи баҳои SQL бармегардонем. */
                 const byId = new Map(rows.map((career) => [career.id, career]));
                 matched = ids
                     .map((id) => byId.get(id))
@@ -1247,10 +977,6 @@ export class CareerService {
 
         if (matched.length >= 4) return matched;
 
-        /* Вақте ҷустуҷӯ чизе намеёбад, ин ҷо ихтисосҳои машҳуртарин мегиранд.
-           Онҳо ба савол алоқа надоранд, вале модел инро намедонист ва онҳоро
-           ҳамчун ҷавоб пешниҳод мекард. `isFallback` дар промпт қайд мешавад,
-           то модел бигӯяд, ки мувофиқи аниқ наёфт. */
         const fallback = await this.careerRepository.find({
             relations: ['cluster', 'universities'],
             order: { likesCount: 'DESC' },
@@ -1297,15 +1023,6 @@ export class CareerService {
         }).join('\n\n---\n\n');
     }
 
-    /**
-     * Хулосаи кӯтоҳи профил барои промпт.
-     *
-     * Пештар ин ҷо `JSON.stringify(user.quizResults)` мерафт — тамоми натиҷа
-     * бо массиви хоми `specialtyKeywords`. Модел ҳамон рӯйхатро содда ба
-     * корбар такрор мекард («ба соҳаҳои авиатсия, сенсор, радио… таваҷҷуҳ
-     * доред»), ки на фоида дошт ва на зебо буд. Ҳоло танҳо хулосаи хондашаванда
-     * фиристода мешавад: кластери пешбар ва холҳо, бе рӯйхати калидвожаҳо.
-     */
     private formatSavedCareerSummary(user?: User | null): string {
         if (!user) return '';
 
@@ -1351,14 +1068,6 @@ export class CareerService {
         const language = this.getLanguageName(params.lang);
         const userContext = this.formatSavedCareerSummary(params.user);
         const careerContext = this.formatCareerContext(params.careers, params.userLocation);
-        /**
-         * Бахшҳои холӣ умуман фиристода намешаванд.
-         *
-         * Пештар дар ҷои холӣ «not provided» ва «not selected» навишта мешуд,
-         * ва модел ба ҳамин мечаспид: ба саволи равшани «кадом ихтисосро
-         * интихоб кунам?» ҷавоб медод «суроғаатон намоён намешавад» ва хоҳиш
-         * мекард саволро аз нав нависанд. Набудани бахш чунин чизе намедиҳад.
-         */
         const optional = (heading: string, value?: string) =>
             value && value.trim() ? `\n${heading}:\n${value.trim()}\n` : '';
 
@@ -1476,15 +1185,6 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         return { answer, remainingToday: null };
     }
 
-    /**
-     * Ба саволи корбар дар бораи як ихтисоси мушаххас ҷавоб медиҳад.
-     *
-     * Фарқаш аз `askAi`: он ихтисосро аз рӯи ном ҷустуҷӯ мекунад ва метавонад
-     * сабти нодурустро гирад. Дар саҳифаи ихтисос мо айнан медонем, ки сухан
-     * дар бораи кадом сабт меравад, аз ин рӯ ҳамон сабт ва пешниҳодҳои воқеии
-     * донишгоҳҳо (нарх, ҷойҳои ройгон, шакли таҳсил) ба промпт дода мешаванд.
-     * Ин муҳим аст: бе ин AI нархро аз худ мебофад.
-     */
     async askAboutCareer(
         careerId: string,
         question: string,
@@ -1535,13 +1235,6 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         return { answer, remainingToday: null };
     }
 
-    /**
-     * Промпт барои чати як ихтисос.
-     *
-     * Танҳо бахшҳои пуршуда фиристода мешаванд: сабтҳои холӣ ба монанди
-     * «''» ё «[]» ба модел ишора медиҳанд, ки маълумот нест, вале ҷои
-     * бештарро мегиранд ва ҷавобро суст мекунанд.
-     */
     private buildSingleCareerPrompt(
         career: Career,
         offerings: Array<any>,
@@ -1609,12 +1302,6 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         const topMatches = await this.matchCareers(scores);
         const top3 = topMatches.slice(0, 3);
 
-        // Ба модел доираи васеътар дода мешавад, на танҳо се беҳтарин.
-        //
-        // Номҳо ҳоло қатъӣ маҳдуданд (ниг. ҚОИДАИ ҚАТЪӢ дар промт). Агар се ном
-        // дода шавад, модел маҷбур мешавад ҳамон серо баргардонад ва мулоҳизаи
-        // он ҳеҷ нақш надорад. Бо ҳашт номзад он аз рӯйхати ВОҚЕӢ интихоб
-        // мекунад ва сабабашро шарҳ медиҳад.
         const candidates = topMatches.slice(0, 8);
         const topNames = candidates.map((career) => career.name).filter(Boolean);
         const detailedCareers = topNames.length
@@ -1696,12 +1383,6 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
 
         const instr = languageName === 'Russian' ? languageInstructions.Russian : languageName === 'English' ? languageInstructions.English : languageInstructions.Tajik;
 
-        // Номҳои иҷозатдодашуда алоҳида дода мешаванд.
-        //
-        // Бе ин модел номҳои «шинос»-ро месохт — «Дизайнери UX/UI», «Барномасози
-        // веб (Full-Stack)» — ки дар базаи 884-ихтисоса вуҷуд надоранд ва дар
-        // рӯйхати ММТ ҳам нестанд. Хонанда тавсия мегирифт, дар сайт меҷуст,
-        // намеёфт, ва ба чунин ихтисос ҳуҷҷат супорида ҳам наметавонист.
         const allowedNames = (detailedCareers.length ? detailedCareers : candidates)
             .map((c: any) => c.name)
             .filter(Boolean);
@@ -1790,12 +1471,8 @@ ${instr.format}
 
         let rawResponse: string;
         try {
-            /* Промпти ҳисобот ~8 ҳазор токен аст: Gemini ба он 16–25 сония сарф
-               мекунад, ва ҳадди умумии 20 сония дархостро мебурид. */
             rawResponse = await this.aiService.generateContent(prompt, { timeoutMs: 55_000 });
         } catch (error) {
-            /* 503/429-и AiService паёми фаҳмо дорад («Хидмати AI ҳоло дастрас
-               нест…»). Пештар он ба 500-и умумӣ табдил меёфт. */
             if (error instanceof HttpException) throw error;
             throw new InternalServerErrorException('Хатогӣ ҳангоми тавлиди тавсияи AI');
         }
@@ -1817,11 +1494,6 @@ ${instr.format}
             };
         }
 
-        // Тафтиши номҳо. Промт метавонад нодида монад; ин ҷо кафолат аст.
-        //
-        // Ҳар тавсияе, ки номаш дар база нест, партофта мешавад. Агар ҳеҷ чиз
-        // намонад, ихтисосҳои воқеии беҳтарин гузошта мешаванд — беҳтар аз
-        // рӯйхати холӣ ва хеле беҳтар аз номи бофта.
         const allowed = new Map(
             allowedNames.map((n: string) => [n.trim().toLowerCase(), n]),
         );
@@ -1932,16 +1604,6 @@ ${instr.format}
         }));
 
         return {
-            /*
-             * Холҳои кластерҳои ММТ.
-             *
-             * Дар паҳлӯи ин майдон боз `riasecScores` фиристода мешуд, ки
-             * қиматашро аз `scores?.riasec || scores?.cognitive || mmt`
-             * мегирифт. Дар барнома ҳеҷ RIASEC ҳисоб намешавад, ва `cognitive`
-             * объекти ХОЛӢ аст — вале дар JS объекти холӣ «рост» аст, аз ин рӯ
-             * ҳамеша маҳз ҳамон интихоб мешуд ва дар саҳифа ягон сутун
-             * намебаромад. Ҳоло саҳифа рост ҳамин майдонро мехонад.
-             */
             mmtScores: mmt,
             dominantTypes: Object.entries(mmt)
                 .map(([type, score]) => ({ type, score: Number(score) || 0 }))
@@ -1954,11 +1616,8 @@ ${instr.format}
 
     async compareCarers(scores: any, careerNames: string[], lang: string = 'tj', compareQuestion?: string): Promise<any> {
         const mmt = scores?.mmtClusters || scores;
-        /* Бе санҷиш «undefined» ба промпт мерафт ва модел дар бораи «профили
-           холии корбар» сафсата менавишт. Набудани сатр тозатар аст. */
         const hasQuizScores = !!mmt && typeof mmt === 'object' && Object.keys(mmt).length > 0;
 
-        // 1. Fetch careers by names
         const careers = await this.careerRepository.find({
             where: { name: In(careerNames) },
             relations: ['cluster']
@@ -2039,26 +1698,10 @@ ${instr.format}
 
         const instr = languageName === 'Russian' ? languageInstructions.Russian : languageName === 'English' ? languageInstructions.English : languageInstructions.Tajik;
 
-        /*
-         * Натиҷаи сохта намебошад.
-         *
-         * Пештар ин ҷо ва дар ду catch-и поён «муқоиса» бе AI бармегашт: 50%, 70%
-         * ё 75% барои ҳар ихтисос, бе афзалият, бо «medium». Саҳифа онро ҳамчун
-         * таҳлили воқеӣ нишон медод — довталаб рақами бофтаро медид. Акнун хатои
-         * рост меравад; frontend паёми сервер, 429 ва timeout-ро аллакай нишон медиҳад.
-         */
         if (careers.length === 0) {
             throw new NotFoundException(instr.notFound);
         }
 
-        /*
-         * Номзадҳо барои «вариантҳои беҳтар» — танҳо аз база.
-         *
-         * Ҳамон ҷустуҷӯи чат: саволи корбар ва номи ихтисосҳои интихобшуда.
-         * Интихобшудаҳо (ва номҳои якхелаи онҳо бо рамзи дигар) бароварда
-         * мешаванд. Агар ҷустуҷӯ ҳеҷ чиз наёфт ва танҳо машҳуртаринҳоро дод,
-         * вариант пешниҳод намешавад — онҳо ба савол рабт надоранд.
-         */
         const selectedNames = new Set(careers.map((c) => c.name));
         const candidatePool = await this.findRelevantCareers(
             `${compareQuestion?.trim() || ''} ${careers.map((c) => c.name).join(' ')}`,
@@ -2156,9 +1799,6 @@ ${instr.format}
             throw new InternalServerErrorException(instr.parseError);
         }
 
-        /* Ҳар вариант бо рӯйхати номзадҳо санҷида мешавад. Номе, ки дар он нест —
-           бофта ё аз интихобшудаҳо — бароварда мешавад. id, рамз ва кластер аз
-           база меоянд, на аз модел, то саҳифа ба ихтисоси воқеӣ истинод гузорад. */
         const byName = new Map(candidates.map((c) => [foldTajik(c.name.trim()), c]));
         const seenIds = new Set<string>();
         report.alternatives = (Array.isArray(report?.alternatives) ? report.alternatives : [])

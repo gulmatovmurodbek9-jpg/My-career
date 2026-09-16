@@ -1,8 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-//  MOCK API INTERCEPTOR
-//  Intercepts axios requests when backend is unavailable,
-//  returns realistic mock data so the entire app works offline.
-// ═══════════════════════════════════════════════════════════════
 
 import axios from "axios";
 import {
@@ -15,7 +10,7 @@ import {
 import { quizQuestions } from "../data/quizData";
 
 const MOCK_TOKEN = "mock-jwt-token-demo-2025";
-const MOCK_DELAY = 300; // ms
+const MOCK_DELAY = 300;
 
 function delay(ms = MOCK_DELAY) {
   return new Promise((r) => setTimeout(r, ms));
@@ -25,9 +20,6 @@ function generateId() {
   return "id_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-// ── Build quiz questions in the shape the backend returns ──
-// quizData.js stores plain-string questions without options; the Quiz page
-// expects `question: {tj, ru, en}` + an `options` array, so we adapt here.
 const LIKERT_OPTIONS = [
   { tj: "Тамоман не", ru: "Совсем нет", en: "Not at all" },
   { tj: "Камтар", ru: "Скорее нет", en: "Rarely" },
@@ -68,7 +60,6 @@ function buildMockQuestions() {
   });
 }
 
-// ── Analyze quiz answers and produce RIASEC-like results ──
 function analyzeQuizAnswers(answers) {
   const clusters = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
   const riasec = { realistic: 0, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 0 };
@@ -88,17 +79,14 @@ function analyzeQuizAnswers(answers) {
     else { clusters.c1 += val * 0.5; riasec.investigative += val * 0.5; }
   });
 
-  // Determine top cluster
   const topClusterKey = Object.entries(clusters).sort((a, b) => b[1] - a[1])[0][0];
   const allClusters = getMockClusters();
   const clusterIndex = parseInt(topClusterKey.replace("c", "")) - 1;
   const topCluster = allClusters[clusterIndex] || allClusters[0];
 
-  // Get careers from that cluster
   const careers = getMockCareers().filter((c) => c.clusterId === topCluster.id);
   const specializations = careers.slice(0, 5).map((c) => ({ id: c.id, name: c.name }));
 
-  // Determine top RIASEC type
   const topType = Object.entries(riasec).sort((a, b) => b[1] - a[1])[0][0];
   const typeNames = { realistic: "Realistic", investigative: "Investigative", artistic: "Artistic", social: "Social", enterprising: "Enterprising", conventional: "Conventional" };
 
@@ -111,7 +99,6 @@ function analyzeQuizAnswers(answers) {
   };
 }
 
-// ── Match careers based on quiz scores ──
 function matchCareers(scores) {
   const careers = getMockCareers();
   const clusters = scores?.mmtClusters || {};
@@ -135,7 +122,6 @@ function matchCareers(scores) {
   }).sort((a, b) => b.matchPercentage - a.matchPercentage).slice(0, 8);
 }
 
-// ── Route handler map ──
 async function handleMockRequest(config) {
   const { url, method, data: body, params } = config;
   const path = url.replace(/^https?:\/\/[^/]+\/api/, "");
@@ -143,7 +129,6 @@ async function handleMockRequest(config) {
 
   await delay();
 
-  // ── AUTH ──
   if (path === "/auth/login" && m === "post") {
     const users = getMockUsers();
     const user = users.find((u) => u.email === body?.email && u.password === body?.password);
@@ -174,12 +159,10 @@ async function handleMockRequest(config) {
     return { status: 200, data: { ...authUser, password: undefined } };
   }
 
-  // ── QUIZ ──
   if (path === "/quiz/questions" && m === "get") {
     return { status: 200, data: buildMockQuestions() };
   }
 
-  // No stage-2 questions offline — the quiz submits straight after stage 1.
   if (path === "/quiz/specialty-questions" && m === "get") {
     return { status: 200, data: [] };
   }
@@ -189,7 +172,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: results };
   }
 
-  // ── CAREERS ──
   if (path === "/careers" && m === "get") {
     let careers = getMockCareers();
     const { search, clusterId, page = 1, limit = 12 } = params || {};
@@ -213,25 +195,10 @@ async function handleMockRequest(config) {
     return { status: 200, data: { totalUsers: users.length, totalCareers: careers.length, totalClusters: clusters.length, totalLikes: careers.reduce((s, c) => s + (c.likesCount || 0), 0), topLiked: [...careers].sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0)).slice(0, 7), topSaved: [...careers].sort((a, b) => (b.savedCount || 0) - (a.savedCount || 0)).slice(0, 7) } };
   }
 
-  /**
-   * Нуқтаҳои AI ҷавоби омода надоранд — қасдан.
-   *
-   * Пештар дар ин ҷо ҷавобҳои сохта буданд: диапазони маош ("Барномасоз
-   * Junior: 2000-4000 сомонӣ"), тавсияи донишгоҳ ва даъвоҳое мисли
-   * "сертификати AWS маошро 30-50% зиёд мекунад". Ҳеҷ кадоми онҳо манбаъ
-   * надоштанд, ва дар экран ҳеҷ нишонае набуд, ки ин ҷавоби воқеии AI нест.
-   *
-   * Дар сайти роҳнамоии касбӣ ин хатарнок аст: хонанда рақами бофтаро ҳамчун
-   * маслиҳат мегирад ва дар асоси он қарори ҳаётӣ мебарорад.
-   *
-   * null баргардонида мешавад, то хатои аслӣ ба интерфейс расад ва корбар
-   * бубинад, ки хидмат дастрас нест — на ҷавоби сохта.
-   */
   if (m === "post" && /^\/careers\/(ask|voice-ask|ai-advisor|compare)$/.test(path)) {
     return null;
   }
 
-  // Career like
   const likeMatch = path.match(/^\/careers\/([^/]+)\/like$/);
   if (likeMatch && m === "post") {
     const careerId = likeMatch[1];
@@ -253,8 +220,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: { liked: !alreadyLiked, likesCount: career.likesCount } };
   }
 
-  // Universities offering a career, with tuition. Offline the mock careers only
-  // carry university names, so one рӯзона offering per name is synthesised.
   const careerOfferingsMatch = path.match(/^\/careers\/([^/]+)\/offerings$/);
   if (careerOfferingsMatch && m === "get") {
     const career = getMockCareers().find((c) => c.id === careerOfferingsMatch[1]);
@@ -285,7 +250,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: offerings };
   }
 
-  // Career detail by ID
   const careerDetailMatch = path.match(/^\/careers\/([^/]+)$/);
   if (careerDetailMatch && m === "get") {
     const career = getMockCareers().find((c) => c.id === careerDetailMatch[1]);
@@ -293,7 +257,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: career };
   }
 
-  // ── CLUSTERS ──
   if (path === "/clusters" && m === "get") {
     return { status: 200, data: getMockClusters() };
   }
@@ -312,12 +275,10 @@ async function handleMockRequest(config) {
     return { status: 201, data: newCluster };
   }
 
-  // ── UNIVERSITIES ──
   if (path === "/universities" && m === "get") {
     return { status: 200, data: getMockUniversities() };
   }
 
-  // Must be matched before the /:id route below.
   if (path === "/universities/cities" && m === "get") {
     const counts = new Map();
     for (const uni of getMockUniversities()) {
@@ -344,7 +305,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: careers.map((c) => ({ id: c.id, name: c.name, cluster: c.cluster })) };
   }
 
-  // ── USERS ──
   if (path === "/users/liked-careers" && m === "get") {
     const users = getMockUsers();
     const user = users.find((u) => u.role !== "admin") || users[0];
@@ -390,12 +350,10 @@ async function handleMockRequest(config) {
     ] };
   }
 
-  // ── ADMIN: Users list ──
   if (path === "/users" && m === "get") {
     return { status: 200, data: getMockUsers().map((u) => ({ ...u, password: undefined })) };
   }
 
-  // ── ADMIN: Careers CRUD ──
   if (path.startsWith("/careers") && m === "post" && !path.includes("match") && !path.includes("ask") && !path.includes("voice-ask") && !path.includes("compare") && !path.includes("ai-advisor") && !path.includes("like")) {
     const careers = getMockCareers();
     const newCareer = { id: generateId(), ...body, likesCount: 0, savedCount: 0 };
@@ -421,7 +379,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: { success: true } };
   }
 
-  // ── APPOINTMENTS ──
   if (path === "/appointments" && m === "post") {
     const appointments = getMockAppointments();
     const newAppt = { id: generateId(), ...body, status: "PENDING", createdAt: new Date().toISOString() };
@@ -444,7 +401,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: { slots } };
   }
 
-  // ── ADMIN: Users delete ──
   const userDeleteMatch = path.match(/^\/users\/([^/]+)$/);
   if (userDeleteMatch && m === "delete") {
     const users = getMockUsers().filter((u) => u.id !== userDeleteMatch[1]);
@@ -452,7 +408,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: { success: true } };
   }
 
-  // ── ADMIN: Users role change ──
   const userRoleMatch = path.match(/^\/users\/([^/]+)\/role$/);
   if (userRoleMatch && m === "patch") {
     const users = getMockUsers();
@@ -461,7 +416,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: { success: true } };
   }
 
-  // ── ADMIN: Specialists ──
   if (path === "/users/admin/specialists" && m === "get") {
     return { status: 200, data: [
       { id: "spec1", name: "Фаррух Ализода", email: "farrukh@mycareer.tj", role: "specialist", specialization: "Мушовири касбӣ", bio: "Мутахассиси роҳнамоии касбӣ бо 5 сол таҷриба.", ratingAverage: 4.7, meetingLocation: "Душанбе, кӯчаи Рудакӣ 45" },
@@ -478,7 +432,6 @@ async function handleMockRequest(config) {
     return { status: 200, data: { id: specEditMatch[1], ...body } };
   }
 
-  // ── ADMIN: Cluster edit/delete ──
   const clusterEditMatch = path.match(/^\/clusters\/([^/]+)$/);
   if (clusterEditMatch && m === "put") {
     const clusters = getMockClusters();
@@ -493,13 +446,11 @@ async function handleMockRequest(config) {
     return { status: 200, data: { success: true } };
   }
 
-  // ── ADMIN: Delete all careers ──
   if (path === "/careers" && m === "delete") {
     saveMockCareers([]);
     return { status: 200, data: { success: true } };
   }
 
-  // ── ADMIN: Specialist schedule ──
   if (path === "/appointments/specialist/my" && m === "get") {
     return { status: 200, data: getMockAppointments() };
   }
@@ -520,16 +471,9 @@ async function handleMockRequest(config) {
     return { status: 200, data: { success: true } };
   }
 
-  // Default: not found
   return null;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  INSTALL INTERCEPTOR
-//  Call this once at app startup.
-//  It adds an axios response interceptor that catches network
-//  errors (backend down) and returns mock data instead.
-// ═══════════════════════════════════════════════════════════════
 let installed = false;
 
 export function installMockInterceptor() {
@@ -541,19 +485,10 @@ export function installMockInterceptor() {
     async (error) => {
       const config = error.config;
 
-      // Дархости бекоршуда backend-и хомӯш нест.
-      //
-      // Вақте компонент дархости кӯҳнаро бо AbortController бекор мекунад,
-      // axios хатои бе `response` медиҳад — маҳз мисли хатои шабака. Бе ин
-      // санҷиш mock онро ҳамчун "backend афтод" мефаҳмид ва ба ҷои хато
-      // ҷавоби БОМУВАФФАҚИЯТИ сохта бармегардонд. Он ҷавоб дертар аз ҷавоби
-      // воқеӣ мерасид ва маълумоти дурустро мепӯшонд: саҳифаи ихтисосҳо
-      // ба ҷои 172 ихтисос "0 ихтисос ёфт шуд" нишон медод.
       if (axios.isCancel(error) || error.code === "ERR_CANCELED") {
         return Promise.reject(error);
       }
 
-      // Only intercept network errors (backend down) or 5xx errors
       const isNetworkError = !error.response || error.code === "ERR_NETWORK" || error.code === "ECONNREFUSED";
       const isServerError = error.response?.status >= 500;
 

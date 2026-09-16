@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HERO_IMAGES } from "../lib/media";
 
-// Нусхаҳои webp аз lib/media. Қаблан ин ҷо PNG-ҳои аслии ~8 МБ ҳар яке
-// мустақиман import мешуданд — ҳамон чор файл ~32 МБ-и bundle-ро ташкил медод.
 const images = HERO_IMAGES;
 
 export default function Hero3DSlider() {
@@ -99,7 +97,6 @@ export default function Hero3DSlider() {
     );
 }
 
-// Lazy loading wrapper
 export const LazyHero3DSlider = (props) => (
     <React.Suspense fallback={
         <div className="relative w-full h-[500px] lg:h-[600px] flex items-center justify-center overflow-hidden perspective-1000">

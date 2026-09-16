@@ -29,7 +29,6 @@ export const useAuthStore = create(
           user: { ...state.user, ...userData },
         })),
 
-      // Re-fetch the user profile with all relations from backend
       refreshProfile: async () => {
         const { token } = get();
         if (!token) return;

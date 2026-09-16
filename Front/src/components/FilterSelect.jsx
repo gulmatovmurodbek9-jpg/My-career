@@ -1,19 +1,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 
-/*
- * Интихобгари филтр барои саҳифаҳои ҷамъиятӣ.
- *
- * <select>-и браузер дар Windows рӯйхати 40+ шаҳрро то поёни экран мекашид,
- * ҷустуҷӯ надошт ва ба мавзӯи торик/равшан итоат намекард. Ин ҷо рӯйхат
- * тақрибан 5 сатр баланд аст ва боқӣ скрол мешавад.
- *
- * CustomSelect-и admin ба ин ҷо намеояд: рангҳояш сахт барои панели торик
- * навишта шудаанд (bg-[#0f172a], text-white).
- */
 
-/* «Хуҷанд» ва «Худжанд», «Ҳисор» ва «Хисор» — корбар ҳарфҳои тоҷикиро на ҳамеша
-   менависад. Ҳарду тараф ба як шакл оварда мешаванд. */
 const fold = (text) =>
     String(text || "")
         .toLowerCase()
@@ -25,16 +13,6 @@ const fold = (text) =>
         .replace(/ҷ/g, "ч")
         .replace(/ё/g, "е");
 
-/**
- * @param {object}   props
- * @param {string}   props.value
- * @param {(value: string) => void} props.onChange
- * @param {{ value: string, label: string, count?: number }[]} props.options
- * @param {boolean}  [props.searchable]
- * @param {string}   [props.searchPlaceholder]
- * @param {string}   [props.emptyText]
- * @param {string}   [props.ariaLabel]
- */
 export default function FilterSelect({
     value,
     onChange,
@@ -67,7 +45,6 @@ export default function FilterSelect({
         return () => document.removeEventListener("mousedown", onPointerDown);
     }, [open]);
 
-    /* Ҳангоми кушодан: ҷустуҷӯ холӣ, қайди фаъол дар варианти интихобшуда. */
     useEffect(() => {
         if (!open) {
             setQuery("");
@@ -82,7 +59,6 @@ export default function FilterSelect({
         setActive(0);
     }, [query]);
 
-    /* Бо тугмаҳои тир қайд аз сатрҳои намоён берун намеравад. */
     useEffect(() => {
         if (!open) return;
         listRef.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: "nearest" });

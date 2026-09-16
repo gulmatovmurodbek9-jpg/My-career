@@ -3,16 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { University } from './university.entity';
 
-/**
- * Маълумоти донишгоҳро ба забони интихобшуда мегардонад.
- *
- * Танҳо майдонҳое иваз мешаванд, ки тарҷума воқеан доранд — набудани
- * тарҷума матни тоҷикиро мемонад, на майдони холӣ.
- *
- * Номи расмии тоҷикӣ ҳамеша дар `name` мемонад ва тарҷума ба
- * `nameTranslated` меравад: ҳуҷҷат маҳз бо номи расмӣ супорида мешавад, ва
- * саҳифа бояд ҳардуро нишон дода тавонад.
- */
 const TRANSLATABLE = ['city', 'region', 'institutionType', 'address', 'description'] as const;
 
 function localizeUniversity<T extends Record<string, any>>(uni: T, lang?: string): T {
@@ -26,7 +16,6 @@ function localizeUniversity<T extends Record<string, any>>(uni: T, lang?: string
     for (const field of TRANSLATABLE) {
         if (tr[field]) out[field] = tr[field];
     }
-    /* Ҷадвали пурраи тарҷумаҳо ба клиент лозим нест — вазни беҳуда. */
     delete out.translations;
     return out as T;
 }
@@ -59,15 +48,12 @@ export class UniversityService {
                 description: uni.description,
                 latitude: uni.latitude,
                 longitude: uni.longitude,
-                /* Харита бояд донад, ки нуқта суроғаи воқеист ё танҳо
-                   маркази шаҳр — вагарна тахминро ҳамчун дақиқ мекашад. */
                 hasExactLocation: uni.hasExactLocation,
                 careerCount: uni.careers?.length || 0
             }, lang))
             .sort((a, b) => b.careerCount - a.careerCount);
     }
 
-    /** Distinct cities with how many institutions each has — used for the filter dropdown. */
     async findCities(lang?: string) {
         const rows = await this.universityRepo
             .createQueryBuilder('uni')
@@ -80,9 +66,6 @@ export class UniversityService {
             .orderBy('COUNT(*)', 'DESC')
             .getRawMany();
 
-        /* Номи шаҳр дар ҳар сатри донишгоҳ тарҷума шудааст; ин ҷо аз
-           ҳамон ҷо гирифта мешавад, то рӯйхати филтр бо забони саҳифа
-           мувофиқ бошад. */
         if (!lang || lang === 'tj') {
             return rows.map((row) => ({
                 city: row.city,

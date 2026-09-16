@@ -3,7 +3,6 @@ import { OrbitControls, Float, MeshDistortMaterial, Sphere, Box } from "@react-t
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
-// 3D Scene Component
 function Scene() {
   return (
     <>

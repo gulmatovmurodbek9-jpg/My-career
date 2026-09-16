@@ -9,7 +9,6 @@ export class GetCareersDto {
     search?: string;
     @ApiPropertyOptional({ description: 'Any of these words in the specialty name (used by AI search)', type: [String] })
     @IsOptional()
-    /* Дар GET як калима ҳамчун сатр меояд, якчанд — ҳамчун массив. */
     @Transform(({ value }) => (value === undefined ? undefined : Array.isArray(value) ? value : [value]))
     @IsArray()
     @IsString({ each: true })

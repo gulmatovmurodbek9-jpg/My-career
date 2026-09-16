@@ -37,7 +37,6 @@ export const ToastProvider = ({ children }) => {
   const warning = useCallback((message, duration) => addToast(message, 'warning', duration), [addToast]);
   const info = useCallback((message, duration) => addToast(message, 'info', duration), [addToast]);
 
-  // Expose error handler globally for api-client
   useEffect(() => {
     window.__TOAST_ERROR__ = error;
   }, [error]);

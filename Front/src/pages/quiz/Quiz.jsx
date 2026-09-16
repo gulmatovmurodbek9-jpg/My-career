@@ -33,19 +33,9 @@ import { MMT_CLUSTERS } from "../../lib/mmtClusters";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
 
-/* Чанд чипи «Ихтисосҳои пешниҳодшуда» якбора нишон дода мешавад. */
 const SPEC_WINDOW = 8;
-/* Ҳамон шумора, ки ҷадвали ихтисосҳои кластер нишон медиҳад. */
 const CLUSTER_PAGE_SIZE = 12;
 
-/*
- * Логотипи «Ихтисоси ман» ба ҷои иконкаи мағз.
- *
- * Иконкаи мағз дар корти савол ва нишонҳо ҳамчун «AI» хонда мешуд ва
- * ба тарҳи сайт мувофиқ набуд. Логотип шаффоф аст ва дар ҳарду мавзӯъ кор
- * мекунад. Бо ҳамон props-и иконкаи lucide (className) даъват мешавад, то
- * getIcon онро мисли иконкаи оддӣ баргардонад.
- */
 const LogoMark = ({ className = "" }) => (
     <img src="/logo.png" alt="" aria-hidden="true" className={`object-contain ${className}`} />
 );
@@ -63,21 +53,17 @@ const Quiz = () => {
     const [showResults, setShowResults] = useState(false);
     const [results, setResults] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [askRetake, setAskRetake] = useState(false); // show "retake or view" prompt
+    const [askRetake, setAskRetake] = useState(false);
 
-    // cluster careers + saved state
     const [clusterCareers, setClusterCareers] = useState([]);
     const [savedIds, setSavedIds] = useState(new Set());
     const [savingId, setSavingId] = useState(null);
     const [stageLoading, setStageLoading] = useState(false);
-    /* Саҳифаи ҳозираи ихтисосҳои кластер ва шумораи саҳифаҳо — тугмаи ⚡
-       саҳифаи тасодуфии дигарро мегирад. */
     const [clusterPage, setClusterPage] = useState(1);
     const [clusterLastPage, setClusterLastPage] = useState(1);
     const [refreshingCareers, setRefreshingCareers] = useState(false);
     const [specOffset, setSpecOffset] = useState(0);
 
-    // Sync savedIds with user.savedCareers
     useEffect(() => {
         if (user?.savedCareers) {
             setSavedIds(new Set(user.savedCareers.map(c => c.id)));
@@ -86,7 +72,6 @@ const Quiz = () => {
         }
     }, [user?.savedCareers]);
 
-    // On mount: if previous results exist, ask user
     useEffect(() => {
         const saved = localStorage.getItem(QUIZ_STORAGE_KEY);
         if (saved) {
@@ -115,14 +100,6 @@ const Quiz = () => {
         fetchQuestions();
     }, []);
 
-    /*
-     * Ихтисосҳои кластер.
-     *
-     * Пештар ҳамеша саҳифаи 1 (24 ихтисоси аввал) гирифта мешуд ва ⚡ танҳо
-     * тартиби онҳоро омехта мекард: дар кластере бо 172 ихтисос корбар
-     * ҳамон 12-торо медид ва фикр мекард, ки тугма кор намекунад. Акнун ⚡
-     * саҳифаи тасодуфии дигарро аз тамоми кластер мегирад.
-     */
     const fetchClusterCareers = async (shuffle = false) => {
         if (!results?.topCluster?.id || refreshingCareers) return;
         setRefreshingCareers(shuffle);
@@ -141,7 +118,6 @@ const Quiz = () => {
             setClusterCareers(careers);
             setClusterPage(page);
             setClusterLastPage(data.meta?.lastPage || 1);
-            /* Чипҳои болоӣ низ ба 8-тои навбатӣ мегузаранд. */
             if (shuffle) setSpecOffset((offset) => offset + SPEC_WINDOW);
         } catch (err) {
             console.error("Cluster careers fetch error:", err);
@@ -150,7 +126,6 @@ const Quiz = () => {
         }
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (showResults && results?.topCluster?.id && clusterCareers.length === 0) {
             fetchClusterCareers();
@@ -171,7 +146,6 @@ const Quiz = () => {
                 else { next.add(career.id); }
                 return next;
             });
-            // Update authStore
             const currentSaved = user?.savedCareers || [];
             const alreadySaved = currentSaved.some(c => c.id === career.id);
             const updatedSaved = alreadySaved
@@ -197,7 +171,6 @@ const Quiz = () => {
         if (currentStep < questions.length - 1) {
             setCurrentStep(currentStep + 1);
         } else if (quizStage === 1) {
-            // Stage 1 done — identify cluster, load 5 specialty questions
             setStageLoading(true);
             try {
                 const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
@@ -229,7 +202,6 @@ const Quiz = () => {
                 setStageLoading(false);
             }
         } else {
-            // Stage 2 done — final submit
             submitQuiz(newAnswers);
         }
     };
@@ -276,10 +248,9 @@ const Quiz = () => {
         } catch (err) {
             console.error("Submit quiz error:", err);
 
-            // Handle 401 Unauthorized (Expired Token)
             if (err.response?.status === 401 && token) {
                 console.warn("Token expired, retrying as guest...");
-                logout(); // Use store's logout to clear state properly
+                logout();
                 try {
                     const { data } = await axios.post(`${API}/quiz/submit`, { answers: finalAnswers, lang: i18n.language });
                     const answeredQuestions = finalAnswers.map((answer) => {
@@ -341,7 +312,6 @@ const Quiz = () => {
 
     const progress = questions.length > 0 ? ((currentStep + 1) / questions.length) * 100 : 0;
     const answeredCount = answers.length;
-    // Stage badge shown on the question screen
     const stageLabel = quizStage === 1 ? t('misc.quiz_stage_1') : t('misc.quiz_stage_2');
 
     const getIcon = (type) => {
@@ -356,7 +326,6 @@ const Quiz = () => {
         }
     };
 
-    // Prompt: view previous or retake
     if (askRetake && results) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -450,15 +419,6 @@ const Quiz = () => {
         );
     }
 
-    /*
-     * Номи кластер. Пештар ин ҷо ҷадвали «Кластери 1…5» сахт навишта шуда
-     * буд ва дар экран ҳамон тавр мебаромад — рақам ба хонанда ҳеҷ чиз
-     * намегӯяд. Номҳо аз ҳамон манбаи умумии панел гирифта мешаванд, то ду
-     * саҳифа якхела бошанд ва дар ҳар се забон тарҷума шаванд.
-     */
-    /* Номи дигар ҳатмист: clusterLabel аз lib/clusterLabel импорт шудааст.
-       Бо ҳамон ном ин const импортро пинҳон мекард, ва сатри болоӣ онро пеш аз
-       эълон даъват мекард — ReferenceError ва тамоми саҳифа меафтод. */
     const mmtClusterLabel = (key) => {
         const cluster = MMT_CLUSTERS.find((c) => c.key === key);
         return cluster ? t(cluster.i18nKey, cluster.fallback) : key.toUpperCase();
@@ -466,8 +426,6 @@ const Quiz = () => {
 
     if (showResults && results) {
         const topCluster = results.topCluster;
-        /* Натиҷаи санҷиш як ихтисосро бо рамзҳои гуногун чанд бор меовард
-           («Иқтисодиёт ва ташкил дар соҳаи сайёҳӣ» × 3). Аз рӯи ном як бор. */
         const uniqueSpecs = (topCluster?.specializations || []).filter(
             (spec, index, list) => list.findIndex((other) => other.name === spec.name) === index,
         );
@@ -782,16 +740,12 @@ const Quiz = () => {
     const questionText = typeof currentQuestion.question === "string"
         ? currentQuestion.question
         : currentQuestion.question?.[activeLang] || currentQuestion.question?.tj || "";
-    /* Навъи савол аз сервер ('scenario', 'Realistic', …) — танҳо агар тарҷума дошта бошад
-       нишон дода мешавад, то калимаи хоми англисӣ дар саҳифаи тоҷикӣ набарояд. */
     const typeKey = String(currentQuestion.type || "").toLowerCase();
     const typeLabel = !typeKey ? ""
         : i18n.exists(`quiz.type_${typeKey}`) ? t(`quiz.type_${typeKey}`)
         : i18n.exists(`quiz.category.${typeKey}`) ? t(`quiz.category.${typeKey}`)
         : "";
 
-    /* px-4 ҳатмист: <main> барои саҳифаҳои ғайрипанелӣ padding-и уфуқӣ надорад,
-       ва бе ин сарлавҳа дар телефон ба ҳарду канор мечаспид ва бурида мешуд. */
     return (
         <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 relative">
             <div className="space-y-4 relative">

@@ -33,7 +33,6 @@ const Dashboard = () => {
     const { error: showError } = useToast();
     const { user, token, refreshProfile } = useAuthStore();
 
-    // Refresh profile on mount to ensure we have the latest data (e.g. quizResults)
     useEffect(() => {
         if (token) {
             refreshProfile();
@@ -43,16 +42,8 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [likedIds, setLikedIds] = useState(new Set());
     const [savedIds, setSavedIds] = useState(new Set());
-    /* Худи сабтҳо, на танҳо шиносаҳо: рӯйхат дар поёни саҳифа нишон
-       дода мешавад. */
     const [savedCareers, setSavedCareers] = useState([]);
 
-    /*
-     * Ҳисоби бо қайд сабтшуда `name` надорад, ва корт `user.name` -ро рост
-     * нишон медод: аватар холӣ мемонд ва сарлавҳа тамоман намебаромад, аз ин
-     * рӯ дар байни корт ҷои холии калон пайдо мешуд. Ном аз почта гирифта
-     * мешавад, вақте ки худи ном нест.
-     */
     const displayName = user?.name?.trim() || user?.email?.split("@")[0] || t('dashboard.guest', 'Меҳмон');
     const leadingCluster = topCluster(user?.quizResults?.mmtClusters, t);
     const [explainData, setExplainData] = useState(null);
@@ -68,8 +59,6 @@ const Dashboard = () => {
             try {
                 const { data } = await axios.post(`${API}/careers/match`, {
                     scores: user.quizResults,
-                    /* Тавсияҳо бо забони интерфейс меоянд — вагарна
-                       дар дошборди русӣ кортҳо тоҷикӣ мемонанд. */
                     lang: currentApiLang() ?? undefined,
                 });
                 setMatches(data);
@@ -85,7 +74,6 @@ const Dashboard = () => {
         fetchMatches();
     }, [user?.id, user?.quizResults]);
 
-    // Sync with global authStore user data
     useEffect(() => {
         if (user) {
             setLikedIds(new Set((user.likedCareers || []).map(c => c.id)));
@@ -94,7 +82,6 @@ const Dashboard = () => {
         }
     }, [user?.likedCareers, user?.savedCareers]);
 
-    // Fetch initial liked/saved IDs if they are missing in store or on mount
     useEffect(() => {
         if (!token) return;
         Promise.all([

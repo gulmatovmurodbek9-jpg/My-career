@@ -18,11 +18,6 @@ const DashboardSidebar = () => {
     const location = useLocation();
     const { user } = useAuthStore();
 
-    /*
-     * Барои админ пайванд ба панели идора маҳз ин ҷост, на дар навбари боло.
-     * Дар боло ҳафт истинод аллакай ҷой надоранд ва ҳаштумин бурида мешуд —
-     * админ панели худро тамоман намедид.
-     */
     const menuItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard'), to: '/dashboard' },
         { icon: ClipboardCheck, label: t('nav.quiz'), to: '/quiz' },

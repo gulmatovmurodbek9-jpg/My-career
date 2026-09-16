@@ -1,18 +1,8 @@
-/**
- * Parses the official NTC (Маркази миллии тестӣ) admission table into the shape
- * the seeder needs.
- *
- * `ntc_raw_data.json` is a scraped HTML table: one array of 11 strings per row.
- * A handful of rows (38 of 5997) lost bytes during scraping and contain U+FFFD
- * replacement characters — those are repaired against the clean variant of the
- * same value rather than dropped, so no offering is lost.
- */
 import * as fs from 'fs';
 import * as path from 'path';
 
 export const RAW_DATA_PATH = path.join(__dirname, '..', '..', 'ntc_raw_data.json');
 
-/** Column indexes in a raw row. */
 const enum Col {
     Index = 0,
     Cluster = 1,
@@ -67,7 +57,6 @@ export interface ParsedData {
     };
 }
 
-/** The scraper left HTML entities in place. */
 function decodeEntities(value: string): string {
     return String(value)
         .replace(/&quot;/g, '"')
@@ -87,14 +76,6 @@ function escapeRegExp(value: string): string {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Builds a repair table for one column.
- *
- * A lost character does not map 1:1 onto replacement chars — a single Cyrillic
- * letter usually arrives as two (`Тоҷикистон` → `Тоҷик��стон`) — so each run of
- * replacement chars is matched as "one to four arbitrary characters" instead of
- * by position. Only unambiguous matches are recorded.
- */
 function buildRepairTable(values: string[]): Map<string, string> {
     const clean = new Set<string>();
     const corrupt = new Set<string>();
@@ -122,7 +103,6 @@ function buildRepairTable(values: string[]): Map<string, string> {
     return repairs;
 }
 
-/** `1-ум - "Табиӣ ва техникӣ"` → `{ clusterNumber: 1, clusterName: 'Табиӣ ва техникӣ' }` */
 function parseCluster(value: string): ParsedCluster | null {
     const numberMatch = value.match(/^(\d+)/);
     if (!numberMatch) return null;
@@ -136,14 +116,6 @@ function parseCluster(value: string): ParsedCluster | null {
     return { clusterNumber, clusterName };
 }
 
-/**
- * Reads the first integer in a cell.
- *
- * Fee cells are not always a bare number: some carry an alternative price in
- * parentheses ("7500 (7375)") and some are just "*" when the price is not
- * published. Stripping every non-digit would splice those into one huge number,
- * so only the leading group is taken.
- */
 function parseInteger(value: string): number | null {
     const match = value.match(/\d+/);
     if (!match) return null;
@@ -160,7 +132,6 @@ export function parseNtcData(rawPath: string = RAW_DATA_PATH): ParsedData {
         .map((row) => row.map(decodeEntities))
         .filter((row) => row.some((cell) => cell.length > 0));
 
-    // Repair the columns whose values must match exactly across rows.
     const universityRepairs = buildRepairTable(rows.map((r) => r[Col.University]));
     const nameRepairs = buildRepairTable(rows.map((r) => r[Col.Name]));
     const clusterRepairs = buildRepairTable(rows.map((r) => r[Col.Cluster]));
@@ -189,14 +160,12 @@ export function parseNtcData(rawPath: string = RAW_DATA_PATH): ParsedData {
         const universityName = repair(row[Col.University], universityRepairs);
         const cluster = parseCluster(repair(row[Col.Cluster], clusterRepairs));
 
-        // A row without these is not a real offering.
         if (!code || !name || !universityName || !cluster) continue;
         if (isCorrupt(code) || isCorrupt(name) || isCorrupt(universityName)) continue;
 
         clusters.set(cluster.clusterNumber, cluster);
         universities.set(universityName, { name: universityName });
 
-        // Codes repeat across universities; keep the first clean name we see.
         if (!careers.has(code)) {
             careers.set(code, { code, name, clusterNumber: cluster.clusterNumber });
         }
@@ -229,7 +198,6 @@ export function parseNtcData(rawPath: string = RAW_DATA_PATH): ParsedData {
     };
 }
 
-// Allow `npx ts-node src/seed/parse-ntc.ts` for a quick sanity report.
 if (require.main === module) {
     const data = parseNtcData();
     console.log('rawRows        :', data.stats.rawRows);

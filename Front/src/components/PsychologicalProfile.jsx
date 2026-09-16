@@ -12,14 +12,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { MMT_CLUSTERS, MMT_MAX } from "../lib/mmtClusters";
 
-/**
- * Нишонаи кластер дар атрофи чарх.
- *
- * Recharts барои `tick` матни SVG месозад, ва `textTransform` бо
- * `letterSpacing` дар он ҷо кор намекунанд. Номҳои тоҷикӣ дароз ҳастанд
- * («Ҷомеашиносӣ»), барои ҳамин нуқтаи чап ва рост ба тарафи худ рост карда
- * мешаванд, вагарна матн аз канори чарх мебарояд.
- */
 function ClusterTick({ payload, x, y, textAnchor }) {
     return (
         <text
@@ -112,7 +104,6 @@ const PsychologicalProfile = ({ results, className = "" }) => {
 
 export default PsychologicalProfile;
 
-// LazySuspense wrapper for lazy loading
 export const LazyPsychologicalProfile = (props) => (
     <React.Suspense fallback={
         <div className={`glass-card flex min-h-[360px] items-center justify-center p-6 ${props.className}`}>

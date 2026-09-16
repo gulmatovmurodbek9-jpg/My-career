@@ -11,7 +11,6 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
-    // ═══ ADMIN ENDPOINTS ═══
 
     @Get('specialists')
     @ApiOperation({ summary: 'Get active career specialists' })
@@ -74,7 +73,6 @@ export class UsersController {
         return this.usersService.changeRole(id, body.role);
     }
 
-    // ═══ USER ENDPOINTS ═══
 
     @Post('save-career/:careerId')
     @UseGuards(AuthGuard('jwt'))
@@ -92,7 +90,6 @@ export class UsersController {
         return this.usersService.getSavedCareers(req.user.userId);
     }
 
-    /* ─── Рӯйхати ҳуҷҷатсупорӣ ─── */
 
     @Get('application-plan')
     @UseGuards(AuthGuard('jwt'))
@@ -151,7 +148,6 @@ export class UsersController {
         if (!user) {
             throw new NotFoundException('Корбар ёфт нашуд');
         }
-        // Remove password from response
         const { password, ...result } = user;
         return result;
     }
@@ -172,14 +168,6 @@ export class UsersController {
         return this.usersService.getAiUsage(req.user.userId);
     }
 
-    /*
-     * ДИҚҚАТ: `@Delete(':id')` бояд аз ҳамаи роутҳои DELETE-и мушаххас
-     * ПОЁНТАР эълон шавад.
-     *
-     * NestJS роутҳоро бо тартиби эълон мутобиқ мекунад, аз ин рӯ агар ин
-     * дар боло бошад, `DELETE /users/application-plan` ба ҳамин меафтад ва
-     * «application-plan» ҳамчун id-и корбар хонда мешавад.
-     */
     @Delete(':id')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles('admin')

@@ -68,7 +68,7 @@ const Register = () => {
         try {
             const { data } = await axios.post(`${API}/auth/register`, { name, email, password });
             setAuth(data.user, data.access_token);
-            navigate("/quiz"); // Go to quiz after registration as per project vision
+            navigate("/quiz");
         } catch (err) {
             setError(err.response?.data?.message || t("auth.register_error"));
         } finally {

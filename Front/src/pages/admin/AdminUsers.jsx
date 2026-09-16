@@ -20,11 +20,8 @@ import { useToast } from "../../components/toast/ToastProvider";
 import { useTranslation } from "react-i18next";
 import ConfirmDialog from "../../components/admin/ConfirmDialog";
 
-/* 20 сатр: ҷадвал дар экрани ноутбук бе скролли дароз ҷой мегирад. */
 const PAGE_SIZE = 20;
 
-/* Ранги аватар аз email: ҳар корбар ранги худро дорад ва он ҳамеша ҳамон
-   мемонад. Ранг ҳам дар мавзӯи равшан ва ҳам дар торик хонда мешавад. */
 const AVATAR_TONES = [
   "bg-blue-500/15 text-blue-700 dark:text-blue-300",
   "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
@@ -41,7 +38,6 @@ const avatarTone = (seed = "") => {
   return AVATAR_TONES[hash % AVATAR_TONES.length];
 };
 
-/* Ҳамон равзана, ки дошборд барои «Ҳозир дар сайт» истифода мебарад. */
 const ONLINE_MINUTES = 5;
 
 const AdminUsers = () => {
@@ -109,9 +105,6 @@ const AdminUsers = () => {
     return (u.name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
   });
 
-  /* Саҳифабандӣ пас аз ҷустуҷӯ: ҷустуҷӯ дар ҳамаи корбарон меравад, на танҳо
-     дар саҳифаи ҷорӣ. Агар пас аз нест кардан саҳифаи охир холӣ шавад,
-     currentPage ба саҳифаи охирини мавҷуда меафтад. */
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const pageStart = (currentPage - 1) * PAGE_SIZE;
@@ -191,17 +184,12 @@ const AdminUsers = () => {
                   {pageUsers.map((user, i) => {
                     const isSelf = user.id === currentUser?.id;
 
-                    /* Ҳисоби бо Google сохташуда ё сабти кӯҳна ном надорад.
-                       «—» ҷадвалро пур аз хат мекард ва админ намедонист бо
-                       кӣ кор дорад; қисми имейл ҳадди ақал шиносост. */
                     const displayName = user.name?.trim() || user.email?.split("@")[0] || "—";
                     return (
                       <motion.tr
                         key={user.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        /* Бе маҳдудият сатри 100-ум 2 сония дер мебаромад —
-                           ҷадвал «суст» менамуд. Пас аз 0.3 сония ҳама якҷо. */
                         transition={{ delay: Math.min(i * 0.02, 0.3) }}
                         className="hover:bg-muted/50 transition-colors group"
                       >

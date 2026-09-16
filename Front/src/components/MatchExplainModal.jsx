@@ -12,9 +12,6 @@ import {
 } from "recharts";
 import { useTranslation } from "react-i18next";
 
-// ═══════════════════════════════════════════════════════════════
-//  TRANSLATIONS
-// ═══════════════════════════════════════════════════════════════
 
 const DIMENSION_NAMES = {
     c1: { tj: "Табиӣ-техникӣ", ru: "Естественно-технический", en: "Natural-Technical" },
@@ -47,9 +44,6 @@ const UI_TEXT = {
 
 const DIMENSIONS = ["c1", "c2", "c3", "c4", "c5"];
 
-// ═══════════════════════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════════════════════
 
 function txt(key, lang) {
     const entry = UI_TEXT[key];
@@ -87,9 +81,6 @@ function getConfidence(value) {
     return CONFIDENCE_CONFIG.low;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  COMPONENT
-// ═══════════════════════════════════════════════════════════════
 
 export default function MatchExplainModal({ isOpen, onClose, matchData }) {
     const { i18n } = useTranslation();
@@ -108,7 +99,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
         careerProfile = {},
     } = matchData;
 
-    // ── Radar chart data: two datasets (user vs career) ──
     const radarData = DIMENSIONS.map((dim) => ({
         dimension: dimName(dim, lang),
         [txt("yourProfile", lang)]: userProfile[dim] ?? 0,

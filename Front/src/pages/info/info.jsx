@@ -45,10 +45,6 @@ import SalarySection from "../../components/SalarySection";
 
 const fadeIn = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
 
-/**
- * Як сатри манбаъ. Агар платформа шинохта шавад, пайванди воқеӣ мешавад;
- * вагарна матн мемонад — пайванди бофта корбарро ба саҳифаи вайрон мебарад.
- */
 function ResourceItem({ name }) {
   const url = resourceUrl(name);
   const body = (
@@ -74,12 +70,6 @@ function ResourceItem({ name }) {
   );
 }
 
-/**
- * Кӯмак дар интихоби донишгоҳ барои ҳамин ихтисос.
- *
- * Ҳамаи рақамҳо аз `offerings` ҳисоб мешаванд — ҳамон ҷадвале, ки поёнтар
- * нишон дода мешавад. Ҳеҷ рақами беруна ё тахминӣ илова намешавад.
- */
 function ChoosingHelp({ offerings }) {
   const { t } = useTranslation();
   if (offerings.length < 2) return null;
@@ -143,14 +133,12 @@ const Info = () => {
   const [offerings, setOfferings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Stats for the Like/Save buttons
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  /* Рӯйхати ҳуҷҷатсупорӣ: кадом пешниҳодҳо аллакай интихоб шудаанд. */
   const [planIds, setPlanIds] = useState(new Set());
   const [planBusyId, setPlanBusyId] = useState(null);
   const [clusterConflict, setClusterConflict] = useState(null);
@@ -171,9 +159,6 @@ const Info = () => {
     setPlanBusyId(offeringId);
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      /* Ҳар пахш бояд ҷавоби намоён диҳад. Танҳо иваз шудани навишти тугма
-         аз «+ Илова» ба «✓ Дар рӯйхат» кофӣ набуд: тугма хурд аст ва дар
-         поёни ҷадвал, ва корбар бовар мекард, ки чизе рӯй надод. */
       if (planIds.has(offeringId)) {
         await axios.delete(`${API}/users/application-plan/${offeringId}`, { headers });
         setPlanIds((prev) => {
@@ -188,11 +173,6 @@ const Info = () => {
         showSuccess(t("career_page.added_ok"));
       }
     } catch (err) {
-      /*
-       * «Кластери дигар» роҳи баромад дорад, аз ин рӯ равзанаи тасдиқ
-       * кушода мешавад. «Рӯйхат пур» бошад — не: ҳамон равзана ҳамаи 12
-       * интихобро нест мекард, барои он ҳолат паёми оддӣ бас аст.
-       */
       if (err.response?.status === 409 && err.response.data?.code !== "PLAN_FULL") {
         setClusterConflict({ message: err.response.data?.message, offeringId });
       } else {
@@ -203,7 +183,6 @@ const Info = () => {
     }
   };
 
-  /** Рӯйхатро тоза мекунад ва ҳамон интихобро илова менамояд. */
   const clearPlanAndAdd = async () => {
     const offeringId = clusterConflict?.offeringId;
     setClusterConflict(null);
@@ -235,7 +214,6 @@ const Info = () => {
         setLoading(false);
       }
     }
-    // Offerings load separately — the page is useful without them.
     async function fetchOfferings() {
       try {
         const { data } = await axios.get(`${API}/careers/${id}/offerings`, { params: withLang() });
@@ -249,9 +227,8 @@ const Info = () => {
     window.scrollTo(0, 0);
     /* Забон дар вобастагиҳост: бе он иваз кардани забон танҳо интерфейсро
        мегардонд ва мазмуни ихтисос бо забони кӯҳна мемонд. */
-  }, [id, i18n.language]); // user-ро набояд гузорем — infinite loop мешавад
+  }, [id, i18n.language]);
 
-  // Like/Save холати аввалро аз user нишон деҳ (танҳо вақте user ё id тағйир ёбад)
   useEffect(() => {
     if (user) {
       setIsLiked(user.likedCareers?.some(c => c.id === id) || false);
@@ -259,12 +236,6 @@ const Info = () => {
     }
   }, [id, user?.id, user?.likedCareers, user?.savedCareers]);
 
-  /*
-   * Ин саҳифа 884 маротиба такрор мешавад — маҳз он чизест, ки довталаб дар
-   * Google меҷӯяд. Бе сарлавҳа ва тавсифи худӣ ҳамаашон барои Google як
-   * саҳифаи такрорӣ буданд, ва ҷустуҷӯи «Ҳуқуқшиносӣ Тоҷикистон» ба ин ҷо
-   * ҳеҷ гоҳ намеовард.
-   */
   const metaUniversities = career?.universities || [];
   usePageMeta({
     ready: !!career,
@@ -285,8 +256,6 @@ const Info = () => {
     jsonLd: career
       ? {
         "@context": "https://schema.org",
-        /* Ихтисоси таҳсилотист, на касби озод — Google маҳз ин навъро барои
-           барномаҳои донишгоҳӣ мефаҳмад. */
         "@type": "EducationalOccupationalProgram",
         name: career.name,
         description: career.description || career.purpose || undefined,
@@ -314,7 +283,6 @@ const Info = () => {
       setIsLiked(data.liked);
       setLikesCount(data.likesCount);
 
-      // Update global user state for persistence
       const currentLiked = user?.likedCareers || [];
       const updatedLiked = data.liked
         ? [...currentLiked, career]
@@ -336,7 +304,6 @@ const Info = () => {
       });
       setIsSaved(data.saved);
 
-      // Update global user state for persistence
       const currentSaved = user?.savedCareers || [];
       const updatedSaved = data.saved
         ? [...currentSaved, career]
@@ -382,7 +349,6 @@ const Info = () => {
     );
   }
 
-  /* --- Section wrapper --- */
   const Section = ({ icon: Icon, title, subtitle, gradient, children }) => (
     <motion.div {...fadeIn}>
       <div className="glass-card overflow-hidden">
@@ -405,7 +371,6 @@ const Info = () => {
     </motion.div>
   );
 
-  /* --- Stat card --- */
   const StatCard = ({ icon: Icon, label, value, color, bg }) => (
     <div className={`flex flex-col items-center p-4 rounded-xl ${bg} border border-border/30 text-center`}>
       <Icon className={`h-5 w-5 ${color} mb-2`} />
@@ -416,11 +381,6 @@ const Info = () => {
 
   const techSkills = career.skills?.technical || [];
   const softSkills = career.skills?.soft || [];
-  /*
-   * Нақша аз маълумоти худи ихтисос сохта мешавад — малакаҳо, технологияҳо,
-   * ҷойҳои кор. Нақшаи дар база захирашуда шаблон буд ва ҳамаи ин маълумотро
-   * нодида мегирифт. Агар сохтан имконнопазир бошад, захирашуда мемонад.
-   */
   const roadmap = buildRoadmap(career, t) ?? career.roadmap ?? [];
   const salary = career.salaryAndMarket;
   const techs = career.technologies || [];
@@ -650,8 +610,6 @@ const Info = () => {
             <Section icon={Map} title={t("career_page.roadmap_title")} subtitle={t("career_page.roadmap_sub")} gradient="from-emerald-500 to-teal-500">
               <div className="space-y-1">
                 {roadmap.map((entry, index) => {
-                  // A step is either a plain string ("Соли 1: ...") or the richer
-                  // { step, title, tasks[] } shape some records still use.
                   const isText = typeof entry === "string";
                   const number = isText ? index + 1 : entry.step ?? index + 1;
                   const title = isText ? entry : entry.title;

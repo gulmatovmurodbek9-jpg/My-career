@@ -1,12 +1,5 @@
-/**
- * Groups the 884 specialty names by keyword so the content families in
- * `content/families.ts` can be designed against what actually exists.
- *
- *   npx ts-node --transpileOnly src/seed/analyze-names.ts [cluster]
- */
 import { parseNtcData } from './parse-ntc';
 
-/** Keyword → family label. Order matters: the first match wins. */
 const PROBES: [string, string][] = [
     ['барномав', 'IT / барномасозӣ'],
     ['информатика', 'IT / информатика'],

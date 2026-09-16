@@ -14,11 +14,6 @@ import {
 
 } from "lucide-react";
 
-/**
- * Tuition shown as the range across every university that offers the specialty,
- * since the same programme costs very different amounts in Душанбе and a
- * district college. Collapses to one number when min and max agree.
- */
 export function formatTuition(specialty, t) {
   const min = specialty.minTuitionFee ?? specialty.tuitionFee;
   const max = specialty.maxTuitionFee ?? specialty.tuitionFee;
@@ -29,7 +24,6 @@ export function formatTuition(specialty, t) {
   return t("misc.per_year", { price: range });
 }
 
-/** Official NTC code + tuition range + a badge when state-funded seats exist. */
 export function SpecialtyMeta({ specialty, size = "normal" }) {
   const { t } = useTranslation();
   const tuition = formatTuition(specialty, t);
@@ -38,9 +32,6 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {specialty.code && (
-        /* Рақами расмии ММТ. Ранг аз токенҳои мавзӯъ: сафеди шаффоф танҳо
-           дар реҷаи торик дида мешуд, ва дар равшан рақам сафед рӯи сафед
-           мемонд — гӯё умуман набошад. */
         <span className={`inline-flex items-center rounded-full border border-border bg-muted font-mono font-bold tabular-nums tracking-wider text-foreground/70 ${pad}`}>
           {specialty.code}
         </span>
@@ -82,9 +73,6 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   GRID VIEW — premium rich card
-   ═══════════════════════════════════════════════ */
 export default function SpecialtyCard({ specialty }) {
   const { t } = useTranslation();
   const { token, user, updateUser } = useAuthStore();
@@ -96,7 +84,6 @@ export default function SpecialtyCard({ specialty }) {
   const [isLiking, setIsLiking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with user data
   React.useEffect(() => {
     setIsLiked(user?.likedCareers?.some(c => c.id === specialty.id) || false);
     setIsSaved(user?.savedCareers?.some(c => c.id === specialty.id) || false);
@@ -114,7 +101,6 @@ export default function SpecialtyCard({ specialty }) {
       setIsLiked(data.liked);
       setLikesCount(data.likesCount);
 
-      // Update global user state for persistence
       const currentLiked = user?.likedCareers || [];
       const updatedLiked = data.liked
         ? [...currentLiked, specialty]
@@ -138,7 +124,6 @@ export default function SpecialtyCard({ specialty }) {
       });
       setIsSaved(data.saved);
 
-      // Update global user state for persistence
       const currentSaved = user?.savedCareers || [];
       const updatedSaved = data.saved
         ? [...currentSaved, specialty]
@@ -237,7 +222,6 @@ export function SpecialtyCardList({ specialty }) {
   const [isLiking, setIsLiking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with user data
   React.useEffect(() => {
     setIsLiked(user?.likedCareers?.some(c => c.id === specialty.id) || false);
     setIsSaved(user?.savedCareers?.some(c => c.id === specialty.id) || false);
@@ -255,7 +239,6 @@ export function SpecialtyCardList({ specialty }) {
       setIsLiked(data.liked);
       setLikesCount(data.likesCount);
 
-      // Update global user state for persistence
       const currentLiked = user?.likedCareers || [];
       const updatedLiked = data.liked
         ? [...currentLiked, specialty]
@@ -279,7 +262,6 @@ export function SpecialtyCardList({ specialty }) {
       });
       setIsSaved(data.saved);
 
-      // Update global user state for persistence
       const currentSaved = user?.savedCareers || [];
       const updatedSaved = data.saved
         ? [...currentSaved, specialty]

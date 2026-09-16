@@ -54,33 +54,27 @@ export class Appointment {
     @Column({ nullable: true })
     careerId: string;
 
-    // Contact info (for Online/Offline types)
     @Column({ nullable: true })
     email: string;
 
     @Column({ nullable: true })
     phoneNumber: string;
 
-    // For Online: preferred contact channel
     @Column({ type: 'enum', enum: ContactMethod, nullable: true })
     contactMethod: ContactMethod;
 
-    // For Online/Offline: appointment date and time
     @Column({ type: 'timestamp', nullable: true })
     appointmentDate: Date;
 
     @Column({ type: 'time', nullable: true })
     appointmentTime: string;
 
-    // For Offline: location
     @Column({ nullable: true })
     location: string;
 
-    // Queue position
     @Column({ default: 0 })
     queuePosition: number;
 
-    // Notes/description
     @Column({ type: 'text', nullable: true })
     notes: string;
 

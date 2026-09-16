@@ -1,32 +1,11 @@
-/**
- * Содироти маълумоти саволҳо ва векторҳои санҷишӣ барои барномаи VR.
- *
- * Чаро ин лозим аст: барномаи Unity профилро ХУДАШ дар C# ҳисоб мекунад, то
- * дар фестивал бе интернет кор кунад. Агар саволҳо ва баллҳо дар ду ҷо дастӣ
- * нигоҳ дошта шаванд, онҳо рӯзе аз ҳам ҷудо мешаванд ва натиҷаи айнак бо
- * натиҷаи сайт мувофиқ намеояд. Аз ин рӯ манбаи ягона `questions.ts` мемонад,
- * ва ин скрипт аз он ду файл месозад:
- *
- *   vr-questions.json — худи саволҳо барои Unity
- *   vr-golden.json    — ҷавобҳои намунавӣ бо натиҷаи ҲИСОБКАРДАИ backend,
- *                       ки тести C# бо он муқоиса мешавад
- *
- * Иҷро:  npm run export:vr
- */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { QUIZ_QUESTIONS, QuizPart } from '../quiz/data/questions';
 import { QuizService } from '../quiz/quiz.service';
 
-/** Ҷои Unity-и лоиҳа — файлҳо рост ба StreamingAssets мераванд. */
 const OUT_DIR = path.resolve(__dirname, '../../../../VR/Assets/StreamingAssets');
 
-/**
- * `JsonUtility`-и Unity калиди набудаистодаро аз сифр фарқ карда наметавонад
- * ва `Dictionary`-ро умуман намехонад. Аз ин рӯ ҳамаи панҷ кластер ҳамеша
- * навишта мешаванд, ҳатто агар холашон сифр бошад.
- */
 function normalizeScores(scores?: Record<string, number>) {
     return {
         c1: Number(scores?.c1 ?? 0),
@@ -62,12 +41,6 @@ function exportQuestions() {
     return { questions };
 }
 
-/**
- * Векторҳои санҷишӣ.
- *
- * `calculateScores` ба ягон вобастагӣ даст намерасонад, аз ин рӯ хидматро бе
- * DI сохтан мумкин аст — ин ҷо танҳо худи формула санҷида мешавад.
- */
 function exportGolden() {
     const service = new QuizService(null as any, null as any);
 
@@ -76,8 +49,6 @@ function exportGolden() {
 
     const cases: Array<{ name: string; answers: Array<{ questionId: string; selectedValue: any }> }> = [];
 
-    /* 1–5: ҳар дафъа ҳамаи ҷавобҳо ба як кластер — профили тоза.
-       Интизор меравад: ҳамон кластер 40, боқимонда 0. */
     for (let cluster = 0; cluster < 5; cluster++) {
         cases.push({
             name: `hama-javob-c${cluster + 1}`,
@@ -85,19 +56,16 @@ function exportGolden() {
         });
     }
 
-    /* 6: омехта — вариантҳо навбат ба навбат. */
     cases.push({
         name: 'omekhta',
         answers: mmt.map((q, i) => ({ questionId: q.id, selectedValue: i % 5 })),
     });
 
-    /* 7: ҷавоби нопурра — танҳо нисфи саволҳо. */
     cases.push({
         name: 'nimta-javob',
         answers: mmt.slice(0, 5).map(q => ({ questionId: q.id, selectedValue: 0 })),
     });
 
-    /* 8: саволи номавҷуд бояд бесадо партофта шавад. */
     cases.push({
         name: 'savoli-nomavjud',
         answers: [
@@ -106,13 +74,11 @@ function exportGolden() {
         ],
     });
 
-    /* 9: индекси берун аз ҳудуд — бе шикастан. */
     cases.push({
         name: 'indeksi-beruna',
         answers: mmt.slice(0, 3).map(q => ({ questionId: q.id, selectedValue: 99 })),
     });
 
-    /* 10: калидвожаҳои саволҳои ихтисос ҷамъ мешаванд. */
     cases.push({
         name: 'kalidvozhaho',
         answers: [
@@ -121,13 +87,11 @@ function exportGolden() {
         ],
     });
 
-    /* 11: рақам ҳамчун сатр — Unity метавонад ҳамин тавр фиристад. */
     cases.push({
         name: 'raqam-hamchun-satr',
         answers: mmt.slice(0, 4).map(q => ({ questionId: q.id, selectedValue: '2' })),
     });
 
-    /* 12: ҷавобҳои холӣ. */
     cases.push({ name: 'javob-nest', answers: [] });
 
     const vectors = cases.map(c => {

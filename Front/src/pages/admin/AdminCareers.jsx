@@ -35,9 +35,6 @@ const AdminCareers = () => {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  /* Матни ҷустуҷӯ бевосита ба дархост мерафт: навиштани «Барномасоз» 10 дархости
-     пайиҳамро ба сервер мефиристод ва ҷавобҳо метавонистанд бо тартиби
-     дигар баргарданд. Акнун 350 мс пас аз охирин ҳарф як дархост меравад. */
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCluster, setSelectedCluster] = useState("");
   const [page, setPage] = useState(1);

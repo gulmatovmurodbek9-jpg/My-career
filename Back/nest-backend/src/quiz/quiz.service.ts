@@ -42,7 +42,6 @@ export class QuizService {
     }
 
     private getRandomQuestions(): QuizQuestion[] {
-        // Only return part 1 questions for the initial fetch
         const baseQuestions = QUIZ_QUESTIONS.filter(q => q.part !== QuizPart.SPECIALTY);
         return this.shuffleArray(baseQuestions);
     }
@@ -69,7 +68,6 @@ export class QuizService {
             const selectedOption = question.options[optionIndex];
 
             if (question.part === QuizPart.MMT && selectedOption) {
-                // Now MMT questions direct points to specific clusters
                 for (const [type, points] of Object.entries(selectedOption.scores)) {
                     if (type in scores.mmtClusters) {
                         (scores.mmtClusters as any)[type] += Number(points);
@@ -89,8 +87,6 @@ export class QuizService {
     }
 
     async matchCareers(userScores: UserScores, lang: string = 'tj'): Promise<any> {
-        /* Интихоб дар CareerService аст, то панели корбар ҳамон 12 ихтисоси
-           ин ҷо нишондодашударо барорад — на рӯйхати дигар. */
         const selection = await this.careerService.selectMatchedCareers(userScores);
         const { clusterScores, careers: topCareers, matchPercentage: clusterMatchPct } = selection;
 
@@ -120,8 +116,6 @@ export class QuizService {
                 specializations,
                 averageMatch: clusterMatchPct,
             },
-            /* Пештар ин ҷо «Cluster 1» мерафт ва дар экран ҳамон тавр
-               мебаромад. Номи воқеӣ маънидортар аст. */
             topType: topCluster.clusterName,
             personality,
             aiAdvice,
@@ -132,18 +126,6 @@ export class QuizService {
         };
     }
 
-    /**
-     * Маслиҳати шахсии касбӣ.
-     *
-     * Пештар ин ҷо як ҷумлаи тайёр бармегашт («барои имтиҳонҳои Кластери N
-     * тайёрӣ бинед») — он ҳеҷ иртиботе бо зеҳни сунъӣ надошт ва барои ҳама
-     * як хел буд. Ҳоло маслиҳат аз рӯи ҷавобҳои худи хонанда сохта мешавад:
-     * холи ҳар панҷ кластер, ангезаҳо, калидвожаҳои интихобкарда ва
-     * ихтисосҳои мувофиқ.
-     *
-     * Агар AI дастрас набошад, ҳамон матни пештара бармегардад — саҳифаи
-     * натиҷа набояд аз сабаби нарасидани AI шиканад.
-     */
     private async generateAiAdvice(
         userScores: UserScores,
         cluster: Cluster,

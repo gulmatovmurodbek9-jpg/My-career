@@ -24,14 +24,6 @@ const money = (value) =>
         ? null
         : new Intl.NumberFormat("ru-RU").format(value);
 
-/*
- * Рӯйхати ҳуҷҷатсупорӣ.
- *
- * Ҳар сатр як интихоби воқеӣ аст: ихтисос + донишгоҳ + шакли таҳсил +
- * ройгон/пулакӣ. Тартибро сервер медиҳад — аввал ҷойҳои ройгон — ва саҳифа
- * онро тағйир намедиҳад, то он чи дар экран аст, айнан ҳамон бошад, ки
- * дар PDF мебарояд.
- */
 const ApplicationPlan = () => {
     const { token } = useAuthStore();
     const { t } = useTranslation();
@@ -89,19 +81,6 @@ const ApplicationPlan = () => {
         }
     };
 
-    /*
-     * Боргирии рӯйхат ҳамчун PDF.
-     *
-     * Шрифтҳои стандартии PDF (Helvetica ва ғайра) кириллро умуман надоранд:
-     * бо онҳо ба ҷои ҳар ҳарфи тоҷикӣ мураббаъ мебарояд. Барои ҳамин DejaVu
-     * Sans дохил карда мешавад — санҷида шуд, ки ғ ӣ қ ӯ ҳ ҷ ҳамаашон дар
-     * он ҳастанд.
-     *
-     * Ду файли шрифт (оддӣ ва bold) якҷо 1,4 МБ мешаванд, аз ин рӯ на ба
-     * бандли асосӣ дохил мешаванд ва на ҳангоми кушодани саҳифа бор
-     * мегарданд: онҳо ва худи китобхонаи jsPDF танҳо пас аз пахши тугма
-     * гирифта мешаванд.
-     */
     const [downloading, setDownloading] = useState(false);
 
     const downloadPlan = async () => {
@@ -115,8 +94,6 @@ const ApplicationPlan = () => {
             ]);
             const autoTable = autoTableModule.default;
 
-            /* Порча-порча, вагарна `String.fromCharCode(...)` бо массиви
-               720 000-элемента стекро мешиканад. */
             const toBase64 = async (url) => {
                 const buffer = await (await fetch(url)).arrayBuffer();
                 const bytes = new Uint8Array(buffer);
@@ -132,9 +109,6 @@ const ApplicationPlan = () => {
             const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
             doc.addFileToVFS("DejaVuSans.ttf", regular);
             doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
-            /* Шрифти bold ҳатмист: autoTable сарлавҳаро bold мекашад ва агар
-               ин навъ набошад, ба шрифти стандартии PDF бармегардад — он
-               кириллро надорад ва сарлавҳа мураббаъ мешавад. */
             doc.addFileToVFS("DejaVuSans-Bold.ttf", bold);
             doc.addFont("DejaVuSans-Bold.ttf", "DejaVu", "bold");
             doc.setFont("DejaVu", "normal");
@@ -173,8 +147,6 @@ const ApplicationPlan = () => {
                             ? `${money(item.tuitionFee)} сом.`
                             : "—",
                 ]),
-                /* Ҳар се ҷой шрифт бояд зикр шавад: сарлавҳа ва бадана
-                   стилҳои алоҳида доранд ва ба styles барнамегарданд. */
                 styles: { font: "DejaVu", fontSize: 9, cellPadding: 5, valign: "middle" },
                 headStyles: { font: "DejaVu", fillColor: [37, 99, 235], textColor: 255, fontSize: 9 },
                 bodyStyles: { font: "DejaVu" },
@@ -191,15 +163,6 @@ const ApplicationPlan = () => {
             doc.setFontSize(8);
             doc.setTextColor(120);
             const afterTable = doc.lastAutoTable.finalY + 18;
-            /*
-             * Ҳуҷҷат ҳамеша тоҷикист, ҳатто вақте интерфейс русӣ ё англисӣ
-             * бошад.
-             *
-             * Онро ба ММТ ва донишгоҳ мебаранд: номи ихтисос ва код бояд
-             * айнан ҳамон бошанд, ки дар китобчаи расмӣ ҳастанд. Варақаи
-             * русӣ бо номҳои тарҷумашуда дар қабул кор намекунад — барои
-             * ҳамин сабабашро ҳамин ҷо менависем, то корбар ҳайрон нашавад.
-             */
             if (currentApiLang()) {
                 doc.text(
                     "Ҳуҷҷат бо забони тоҷикӣ аст: номи ихтисос ва код бояд бо китобчаи расмии ММТ мувофиқ бошанд.",

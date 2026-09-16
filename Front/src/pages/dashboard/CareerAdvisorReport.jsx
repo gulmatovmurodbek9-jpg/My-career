@@ -291,6 +291,7 @@ const CareerAdvisorReport = () => {
 
     const fetchingRef = useRef(false);
 
+    // Ҳисоботи охирин дар браузер нигоҳ дошта мешавад ва фавран нишон дода мешавад.
     const cacheKey = quizScores ? `ai_advisor_report_v1:${lang}:${JSON.stringify(quizScores)}` : null;
     const readCachedReport = () => {
         if (!cacheKey) return null;

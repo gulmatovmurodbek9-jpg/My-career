@@ -70,6 +70,7 @@ export class Career {
     certification: string[];
 
     @ManyToMany(() => University, (uni) => uni.careers, { cascade: true })
+    // Алоқаи бисёр-ба-бисёр: як ихтисос дар чанд донишгоҳ, як донишгоҳ чанд ихтисос.
     @JoinTable({ name: 'career_universities' })
     universities: University[];
 

@@ -17,6 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
+    // Ҳар дархости бо токен аз ин ҷо мегузарад: аз токен id, email ва нақш гирифта мешавад.
     async validate(payload: any) {
         void this.usersService.touchLastSeen(payload.sub);
         return { userId: payload.sub, email: payload.email, role: payload.role };

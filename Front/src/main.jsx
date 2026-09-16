@@ -15,6 +15,7 @@ installMockInterceptor();
 
 const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/quiz', '/profile', '/settings', '/favorites'];
 let handlingExpiredSession = false;
+// Агар сервер токенро рад кунад (401), корбар худкор хориҷ мешавад.
 axios.interceptors.response.use(
   (response) => response,
   (error) => {

@@ -286,6 +286,7 @@ const Careers = () => {
     return () => controller.abort();
   }, [aiQuery, aiChoice, currentPage, i18n.language]);
 
+  // Ҷустуҷӯи AI танҳо бо пахши тугма: ҳар даъват як дархост ба модел аст.
   const runAiSearch = () => {
     const text = searchQuery.trim();
     if (!text) return;

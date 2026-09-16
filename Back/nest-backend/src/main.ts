@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
+    // Ҳамаи роҳҳои API бо /api сар мешаванд.
     app.setGlobalPrefix('api');
 
     const allowList = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim());
@@ -16,12 +17,14 @@ async function bootstrap() {
     const devOrigin =
         /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(?::\d+)?$/;
 
+    // CORS: кадом сайтҳо ҳақ доранд ба ин API дархост фиристанд.
     app.enableCors({
         origin: allowList ?? (isProduction ? productionFallback : devOrigin),
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         credentials: true,
     });
 
+    // Ҳар дархост пеш аз расидан ба контроллер аз рӯи DTO санҷида мешавад.
     app.useGlobalPipes(new ValidationPipe({
         transform: true,
         whitelist: true,

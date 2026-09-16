@@ -100,6 +100,7 @@ const Quiz = () => {
         fetchQuestions();
     }, []);
 
+    // Тугмаи ⚡ саҳифаи тасодуфии дигари кластерро меорад, на ҳамон 12-тои аввалро.
     const fetchClusterCareers = async (shuffle = false) => {
         if (!results?.topCluster?.id || refreshingCareers) return;
         setRefreshingCareers(shuffle);

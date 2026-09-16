@@ -2,6 +2,7 @@ import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 
 
+// «Хуҷанд» ва «Худжанд» ба як шакл оварда мешаванд, то ҷустуҷӯ ҳардуро ёбад.
 const fold = (text) =>
     String(text || "")
         .toLowerCase()

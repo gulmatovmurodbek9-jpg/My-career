@@ -24,6 +24,7 @@ export class AuthService {
 
     async validateUser(email: string, pass: string): Promise<any> {
         const user = await this.usersService.findOne(email);
+        // Дар база танҳо hash-и парол ҳаст; bcrypt пароли воридшударо бо он муқоиса мекунад.
         if (user?.password && (await bcrypt.compare(pass, user.password))) {
             const { password, ...result } = user;
             return result;

@@ -7,8 +7,10 @@ import * as path from 'path';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Ҳадди вақт барои як провайдер: провайдери овезонмонда набояд тамоми занҷирро нигоҳ дорад.
 const AI_PROVIDER_TIMEOUT_MS = 20000;
 
+// Провайдере, ки афтод, 5 дақиқа гузаронида мешавад.
 const AI_PROVIDER_COOLDOWN_MS = 5 * 60 * 1000;
 
 const AI_UNPROVEN_TIMEOUT_MS = 30000;
@@ -62,6 +64,7 @@ export class AiService implements OnModuleInit {
         }
     }
 
+    // Занҷир: Vertex → Gemini → Groq. Агар яке афтад, навбатӣ кӯшиш мекунад.
     async generateContent(
         prompt: string,
         options: { provider?: AiProvider; timeoutMs?: number } = {},

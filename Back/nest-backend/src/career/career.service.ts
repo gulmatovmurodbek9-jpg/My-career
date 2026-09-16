@@ -66,6 +66,7 @@ const foldTajik = (value: string): string => {
     return out;
 };
 
+// Ҳарфҳои тоҷикӣ (ғ ӣ қ ӯ ҳ ҷ) ба шакли оддӣ оварда мешаванд, то «хукук» ҳам «ҳуқуқ»-ро ёбад.
 const TAJIK_FOLD = (column: string): string =>
     `translate(lower(${column}), 'ғӣқӯҳҷҒӢҚӮҲҶ', 'гикухчгикухч')`;
 
@@ -192,6 +193,7 @@ export class CareerService {
     }
 
 
+    // AI танҳо саволро ба филтр табдил медиҳад; худи рӯйхат ҳамеша аз база меояд.
     async aiSearch(
         rawQuery: string,
         lang = 'tj',
@@ -915,6 +917,7 @@ export class CareerService {
         let matched: Career[] = [];
         if (terms.length > 0) {
             const ranked: Array<{ id: string }> = await this.careerRepository.manager.query(
+                // MATERIALIZED: табдили ҳарфҳо як бор барои ҳар ихтисос ҳисоб мешавад, на барои ҳар калима (466мс → 118мс).
                 `WITH base AS MATERIALIZED (
                     SELECT c.id, c."likesCount",
                         ${TAJIK_FOLD('c.name')} AS n,

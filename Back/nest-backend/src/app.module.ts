@@ -33,6 +33,7 @@ import { VrModule } from './vr/vr.module';
                 username: configService.get<string>('DB_USERNAME', 'postgres'),
                 password: configService.get<string>('DB_PASSWORD', 'murodbek65'),
                 database: configService.get<string>('DB_NAME', 'career_db'),
+                // Ҳар файли *.entity.ts як ҷадвали база аст.
                 entities: [__dirname + '/**/*.entity{.ts,.js}'],
                 synchronize: configService.get<string>('NODE_ENV') !== 'production',
             }),

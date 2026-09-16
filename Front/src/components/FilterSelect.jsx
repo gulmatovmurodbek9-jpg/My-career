@@ -52,7 +52,6 @@ export default function FilterSelect({
         }
         setActive(Math.max(0, options.findIndex((option) => option.value === value)));
         if (searchable) searchRef.current?.focus();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
     useEffect(() => {
@@ -141,7 +140,6 @@ export default function FilterSelect({
                         </div>
                     )}
 
-                    {/* max-h ≈ 5 сатр: боқӣ скрол мешавад, рӯйхат экранро пур намекунад. */}
                     <ul
                         ref={listRef}
                         id={listId}

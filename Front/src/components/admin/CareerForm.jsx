@@ -113,7 +113,6 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: "spring", damping: 25, stiffness: 400 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl z-10 max-h-[90vh] flex flex-col">
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-xl font-bold text-foreground">
                 {career ? t("admin.careers.edit_title") : t("admin.careers.create_title")}
@@ -123,7 +122,6 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
               </button>
             </div>
 
-            {/* Tabs */}
             <div className="flex gap-1 px-6 pt-4">
               {tabs.map((tab) => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${activeTab === tab.id ? "bg-primary/15 text-primary border border-primary/20" : "bg-muted/60 text-muted-foreground hover:text-foreground border border-transparent"}`}>
@@ -132,7 +130,6 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
               ))}
             </div>
 
-            {/* Form Content */}
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
               {activeTab === "basic" && (
                 <>
@@ -236,12 +233,7 @@ const CareerForm = ({ open, onClose, onSubmit, career = null, clusters = [], loa
 
             </form>
 
-            {/* Footer */}
             <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
-              {/* Майдони ҳатмии «Ном» дар варақаи «Асосӣ» аст, вале тугмаи
-                  сабт дар ҳама варақаҳо дида мешавад. Пештар он танҳо
-                  хомӯш мешуд — админ пахш мекард, ҳеҷ чиз намешуд ва сабаб
-                  нонамоён буд, чунки худи майдон дар варақаи дигар аст. */}
               {!form.name.trim() && (
                 <button
                   type="button"

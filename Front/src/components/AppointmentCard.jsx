@@ -158,7 +158,6 @@ export default function AppointmentCard() {
     return (
         <div className="col-span-12 lg:col-span-4">
             <div className="glass-card p-6 h-full flex flex-col justify-between group">
-                {/* State: No appointment yet */}
                 {!appointment ? (
                     <>
                         <div className="space-y-4">
@@ -219,7 +218,6 @@ export default function AppointmentCard() {
                             </AnimatePresence>
                         </div>
 
-                        {/* Sub-type selector for Specialists */}
                         {selected?.hasSubType && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
@@ -288,7 +286,6 @@ export default function AppointmentCard() {
                 )}
             </div>
 
-            {/* DateTime Modal for Specialists */}
             <AnimatePresence>
                 {showTimeModal && (
                     <motion.div

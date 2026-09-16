@@ -255,7 +255,6 @@ function FitToResults({ points, enabled }) {
     }, 400);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, map, enabled]);
 
   return null;
@@ -365,8 +364,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         isDark ? "is-dark" : "is-light"
       }`}
     >
-      {/* Scrim behind the floating controls — dark over dark tiles, light over
-          light ones, otherwise the city name on top of it is unreadable. */}
       <div
         className={`pointer-events-none absolute inset-x-0 top-0 z-[500] h-40 bg-gradient-to-b ${
           isDark
@@ -375,8 +372,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         }`}
       />
 
-      {/* Гузариши намуди харита. z-[500] лозим аст: қабатҳои Leaflet то
-          z-index 400 мебароянд ва тугмаро мепӯшонанд. */}
       <div className="absolute right-4 top-4 z-[500] flex gap-1 rounded-xl border border-border bg-card/90 p-1 shadow-lg backdrop-blur">
         {[
           { id: "canvas", label: t("career_page.m_plan") },
@@ -398,11 +393,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         ))}
       </div>
 
-      {/*
-        Реҷаи 3D ҷудогона аст: Leaflet ҳаҷм намекашад, аз ин рӯ он ҷо
-        MapLibre GL кор мекунад. Агар он бор нашавад, ду реҷаи дигар
-        бетағйир мемонанд.
-      */}
       {mapMode === "3d" ? (
         <div className="h-[620px] w-full md:h-[700px]">
           <Suspense
@@ -429,27 +419,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           scrollWheelZoom={true}
           className="university-map h-full w-full"
         >
-          {/*
-            Плиткаҳо аз Esri, на аз CARTO.
-
-            CARTO барои basemap-ҳои худ калиди API талаб кардан гирифт ва ба
-            ҷои хато плиткаро бо навиштаи "API KEY REQUIRED" бармегардонад.
-            Ҳолати HTTP 200 мемонад, аз ин рӯ ин дар код ҳамчун хато дида
-            намешавад — танҳо дар экран.
-
-            Esri ҳам варианти торик, ҳам равшан дорад, бидуни калид. Диққат:
-            тартиби порчаҳо {z}/{y}/{x} аст, на {z}/{x}/{y}.
-          */}
-          {/*
-            Ду навъи плитка: нақшаи хокистарӣ ва тасвири МОҲВОРАӢ.
-
-            Нақшаи хокистарӣ мавқеъро абстрактӣ нишон медиҳад — барои ҳамин
-            харита «ғайривоқеӣ» менамуд. Тасвири моҳвораии Esri Тоҷикистонро
-            пурра мепӯшонад ва бе калид кор мекунад: биноҳои воқеии
-            донишгоҳ, роҳҳо ва ҳудуди кампус дида мешаванд.
-
-            Диққат: тартиби порчаҳо {z}/{y}/{x} аст, на {z}/{x}/{y}.
-          */}
           {satellite ? (
             <TileLayer
               key="satellite"
@@ -468,13 +437,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             />
           )}
 
-          {/* Дар тасвири моҳвораӣ ному кӯча нест — қабати шаффофи номҳо
-              болои он меафтад, ҳамон тавре ки дар «гибрид»-и Google: худи
-              роҳро тасвир нишон медиҳад, номро ин қабат.
-
-              Пештар ин ҷо қабати Esri буд — вай барои Душанбе аз z16 боло
-              плиткаи холӣ бармегардонд, бинобар ин маҳз ҳангоми наздик
-              шудан ном нест мешуд. */}
           {satellite && (
             <TileLayer
               key={isDark ? "labels-dark" : "labels-light"}
@@ -568,11 +530,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
       </div>
       )}
 
-      {/* Шарҳи нишонаҳо.
-
-          Иконкаҳо панҷ навъи муассисаро фарқ мекунанд, вале бе шарҳ корбар
-          намедонад, ки норинҷӣ коллеҷ аст ва кабуд донишгоҳ. Дар телефон он
-          ҷамъ мешавад — дар экрани хурд ҷои харита муҳимтар аст. */}
       {cityGroups.length > 0 && (
         <details
           open
@@ -611,10 +568,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         </div>
       )}
 
-      {/*
-        Наздикшавӣ ба ҷои холӣ харитаро тамоман бе маркер мемонад. Бе ин ишорат
-        корбар намедонад, ки ин холигӣ аст ё сомона вайрон шудааст.
-      */}
       {Boolean(cityGroups.length) &&
         viewport.zoom > CITY_OVERVIEW_ZOOM &&
         !visibleUniversities.length && (
@@ -645,9 +598,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             transition={{ duration: 0.22 }}
             className="absolute inset-x-4 bottom-4 z-[700] md:left-auto md:right-6 md:top-6 md:bottom-6 md:w-[430px]"
           >
-            {/* Дар телефон баландӣ камтар аст, то харита зери панел
-                намонад; мазмун скролл мешавад — пештар он танҳо бурида
-                мешуд ва тугмаи «Муфассал дидан» ба поён намерасид. */}
             <div className="flex max-h-[58vh] flex-col overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-black/72 p-4 text-white shadow-[0_24px_64px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:max-h-[78vh] md:p-5">
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
@@ -665,8 +615,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                   {selectedUni.nameTranslated && (
                     <p className="mt-0.5 text-xs leading-snug text-white/50">{selectedUni.name}</p>
                   )}
-                  {/* Суроғаи пурра, вақте маълум аст — довталабро маҳз ҳамин
-                      ба бинои дуруст мебарад, на номи шаҳр. */}
                   <p className="mt-1 flex items-start gap-1.5 text-sm text-white/65">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>{selectedUni.address || selectedUni.inferredCity}</span>
@@ -703,8 +651,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               </div>
 
               <div className="flex-1 rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
-                {/* Ном дар сарлавҳаи панел аллакай ҳаст. Дар телефон
-                    такрори он ним экранро мегирифт. */}
                 <p className="text-sm leading-7 text-white/70">
                   {selectedUni.description || t("career_page.m_no_short")}
                 </p>

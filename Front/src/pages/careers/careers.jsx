@@ -49,7 +49,6 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
 
   return (
     <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
-      {/* Prev */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
@@ -58,7 +57,6 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
         <ChevronLeft className="w-4 h-4" />
       </button>
 
-      {/* Pages */}
       {pages.map((page, i) =>
         page === "..." ? (
           <span key={`dots-${i}`} className="w-11 h-11 flex items-center justify-center text-muted-foreground/50 text-sm font-black">
@@ -78,7 +76,6 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
         )
       )}
 
-      {/* Next */}
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === lastPage}
@@ -217,8 +214,6 @@ const Careers = () => {
       });
 
     return () => controller.abort();
-    /* Забон дар вобастагиҳост: бе он рӯйхат ҳангоми иваз шудани забон
-       бо матни кӯҳна мемонад. */
   }, [currentPage, debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter, i18n.language, aiActive]);
 
   useEffect(() => {
@@ -363,7 +358,6 @@ const Careers = () => {
 
   return (
     <div>
-      {/* ═══ САРЛАВҲА ═══ */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
           <h1
@@ -382,10 +376,8 @@ const Careers = () => {
         </div>
       </section>
 
-      {/* ═══ МАЗМУН ВА ФИЛТРҲО ═══ */}
       <section className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-12">
-          {/* ─── Чап: ҷустуҷӯ ва натиҷаҳо ─── */}
           <div className="min-w-0">
             <div className="relative">
               <Search
@@ -410,8 +402,6 @@ const Careers = () => {
                 }}
               />
 
-              {/* Тугмаи AI дар дохили қуттӣ: савол ҳамон ҷое супорида мешавад,
-                  ки навишта шуд. */}
               <button
                 type="button"
                 onClick={runAiSearch}
@@ -480,9 +470,6 @@ const Careers = () => {
               </div>
             )}
 
-            {/* Шарҳи роҳ: вақте касб ихтисоси алоҳидаи ММТ нест — «Урология
-                алоҳида нест, аввал „Кори табобатӣ“». Бе он корбар намефаҳмид, ки
-                чаро ба ҷои урология «Кори табобатӣ» баромад. */}
             {aiFilters?.note && !aiError && (
               <p className="mt-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-[14px] leading-relaxed text-foreground">
                 <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -490,16 +477,12 @@ const Careers = () => {
               </p>
             )}
 
-            {/* Саволи аниқкунанда. Ҳар вариант шумораи воқеии худро нишон
-                медиҳад — он дар сервер аз база ҳисоб шудааст, на аз модел. */}
             {aiOptions.length > 0 && !aiChoice && !aiError && (
               <div className="mt-5 rounded-[1.5rem] border border-primary/20 bg-primary/5 p-3 sm:rounded-[1.75rem] sm:p-4">
                 <p className="flex items-start gap-2 px-1 pt-1 text-[15px] font-bold text-foreground">
                   <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   {aiQuestion || aiT("ai_search.pick_field")}
                 </p>
-                {/* Корт, на чип: бе шарҳ хонанда намедонад, ки «Энергетика ва
-                    бинокорӣ» дар амал чӣ кор аст. */}
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {aiOptions.map((option, index) => {
                     const label = option.clusterNumber
@@ -652,11 +635,7 @@ const Careers = () => {
             )}
           </div>
 
-          {/* ─── Рост: филтрҳо ───
-              lg:sticky — панел ҳангоми скролли рӯйхати дароз дар назар мемонад. */}
           <aside className="order-first space-y-5 lg:order-none lg:sticky lg:top-24 lg:self-start">
-            {/* Дар телефон тугмаи кушодан; аз lg панел ҳамеша кушода аст ва
-                ин тугма лозим нест. */}
             <button
               type="button"
               onClick={() => setFiltersOpen((open) => !open)}

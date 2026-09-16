@@ -10,7 +10,6 @@ function Scene() {
       <pointLight position={[10, 10, 10]} intensity={1} />
       <pointLight position={[-10, -10, -10]} intensity={0.5} color="#4f46e5" />
 
-      {/* Junior Level - Small Sphere */}
       <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5} position={[-3, -1, 0]}>
         <Sphere args={[0.8, 32, 32]}>
           <MeshDistortMaterial
@@ -23,7 +22,6 @@ function Scene() {
         </Sphere>
       </Float>
 
-      {/* Mid Level - Medium Box */}
       <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.8} position={[0, 0.5, 0]}>
         <Box args={[1.2, 1.2, 1.2]}>
           <MeshDistortMaterial
@@ -36,7 +34,6 @@ function Scene() {
         </Box>
       </Float>
 
-      {/* Senior Level - Large Sphere */}
       <Float speed={1} rotationIntensity={0.2} floatIntensity={1} position={[3, 1.5, 0]}>
         <Sphere args={[1.2, 32, 32]}>
           <MeshDistortMaterial

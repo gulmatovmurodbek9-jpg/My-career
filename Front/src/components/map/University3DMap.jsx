@@ -26,7 +26,7 @@ const University3DMap = ({ universities = [], center, zoom = 15, onSelect }) => 
                 style: STYLE_URL,
                 center: [center?.lng ?? 68.787, center?.lat ?? 38.5598],
                 zoom,
-                pitch: 55,     // нигоҳи моил — бе ин ҳаҷм дида намешавад
+                pitch: 55,
                 bearing: -18,
                 antialias: true,
                 attributionControl: { compact: true },
@@ -82,7 +82,6 @@ const University3DMap = ({ universities = [], center, zoom = 15, onSelect }) => 
             map.remove();
             mapRef.current = null;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {

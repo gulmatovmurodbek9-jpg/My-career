@@ -79,7 +79,6 @@ const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="glass-card !p-0 overflow-hidden border-border/50"
                         >
-                            {/* Step Header */}
                             <div className="flex items-center gap-3 bg-muted/20 px-4 py-3 border-b border-border/50">
                                 <div className="w-6 h-6 rounded-full bg-primary/20 text-primary text-[13px] font-bold flex items-center justify-center">
                                     {step.step}
@@ -98,7 +97,6 @@ const RoadmapBuilder = ({ initialRoadmap = [], onChange }) => {
                                 </button>
                             </div>
 
-                            {/* Tasks List */}
                             <div className="p-4 space-y-3">
                                 <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
                                     Вазифаҳо / Мавзӯъҳо

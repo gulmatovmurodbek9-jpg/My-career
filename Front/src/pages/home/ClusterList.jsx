@@ -28,10 +28,7 @@ function ClusterRow({ chapter, index, labels }) {
       as="article"
       className="border-t border-border py-14 first:border-t-0 first:pt-0 sm:py-16"
     >
-      {/* ── Муаррифӣ: расм ва тавсиф ── */}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-10">
-        {/* self-start ҳатмист: бе он grid контейнерро то баландии тамоми сатр
-            мекашад, вале расм 3:2 аст, ва дар поён қуттии холӣ мемонад. */}
         <div className="relative self-start overflow-hidden rounded-2xl bg-muted">
           <img
             src={image.src}
@@ -52,7 +49,6 @@ function ClusterRow({ chapter, index, labels }) {
             <span className="text-xl font-semibold tabular-nums text-background" aria-hidden>
               {number}
             </span>
-            {/* Иконкаҳои Lucide бо currentColor кашида мешаванд. */}
             <span className="text-background">
               <LucideIconRenderer name={chapter.icon} className="h-5 w-5" />
             </span>
@@ -60,8 +56,6 @@ function ClusterRow({ chapter, index, labels }) {
         </div>
 
         <div>
-          {/* Номи расмии гурӯҳ сарлавҳа аст, на номи шоирона: корбар бояд
-              фавран бифаҳмад, ки сухан дар бораи чист. */}
           <h3
             className="leading-[1.1] text-foreground"
             style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.5rem)" }}
@@ -80,7 +74,6 @@ function ClusterRow({ chapter, index, labels }) {
         </div>
       </div>
 
-      {/* ── Тафсилот: се сутун дар тамоми паҳно ── */}
       <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
         <Detail label={labels.forWhoLabel}>
           <ul className="space-y-2.5">

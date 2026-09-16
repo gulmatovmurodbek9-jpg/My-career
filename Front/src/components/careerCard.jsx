@@ -50,7 +50,6 @@ export default function SpecialtyCard({ specialty }) {
   return (
     <div className="glass-card overflow-hidden">
       <div className="p-5">
-        {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-3">
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-lg text-foreground mb-1 truncate">
@@ -67,7 +66,6 @@ export default function SpecialtyCard({ specialty }) {
           </Link>
         </div>
 
-        {/* Tags */}
         <div className="flex flex-wrap gap-1.5 mb-4">
           {specialty.skills?.technical?.slice(0, 4).map((skill, i) => (
             <span key={i} className="pill-tag !text-[10px] !py-0.5 !px-2">{skill}</span>
@@ -79,7 +77,6 @@ export default function SpecialtyCard({ specialty }) {
           )}
         </div>
 
-        {/* Quick stats */}
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mb-3">
           {specialty.salaryAndMarket?.junior && (
             <div className="flex items-center gap-1">
@@ -101,7 +98,6 @@ export default function SpecialtyCard({ specialty }) {
           )}
         </div>
 
-        {/* Expand/Collapse */}
         <button
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 cursor-pointer transition-colors"
@@ -110,7 +106,6 @@ export default function SpecialtyCard({ specialty }) {
           <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </button>
 
-        {/* Expanded Content */}
         <AnimatePresence>
           {expanded && (
             <motion.div

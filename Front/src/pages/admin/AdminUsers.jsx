@@ -132,7 +132,6 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">{t("admin.users.title")}</h1>
@@ -140,7 +139,6 @@ const AdminUsers = () => {
         </div>
       </motion.div>
 
-      {/* Search */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/80" />
@@ -154,7 +152,6 @@ const AdminUsers = () => {
         </div>
       </motion.div>
 
-      {/* Table */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card border border-border rounded-2xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -213,10 +210,6 @@ const AdminUsers = () => {
                           </div>
                         </td>
                         <td className="px-6 py-3.5 text-center">
-                          {/* Се нақш ҳаст, на ду. Пештар танҳо `admin` ҷудо
-                              мешуд, ва мутахассисон ҳамчун «User» нишон дода
-                              мешуданд — админ онҳоро аз довталабон фарқ карда
-                              наметавонист. */}
                           {user.role === "admin" ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[13px] font-bold">
                               <Shield className="w-3 h-3" /> Admin
@@ -253,11 +246,6 @@ const AdminUsers = () => {
                           })()}
                         </td>
                         <td className="px-6 py-3.5 text-right">
-                          {/* Пештар `opacity-0 group-hover:opacity-100` буд:
-                              сутуни «Амалҳо» холӣ менамуд, ва дар экрани
-                              ламсӣ, ки hover надорад, тугмаҳо ҳеҷ гоҳ
-                              намебаромаданд. Ҳоло онҳо ҳамеша дида мешаванд
-                              ва ҳангоми hover равшантар. */}
                           <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                             <button
                               onClick={() => handleRoleChange(user)}
@@ -300,7 +288,6 @@ const AdminUsers = () => {
         )}
       </motion.div>
 
-      {/* Саҳифабандӣ — танҳо вақте ки корбарон аз як саҳифа зиёданд. */}
       {!loading && filtered.length > PAGE_SIZE && (
         <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
           <p className="text-[14px] text-muted-foreground tabular-nums">

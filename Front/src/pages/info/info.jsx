@@ -225,8 +225,6 @@ const Info = () => {
     fetchCareer();
     fetchOfferings();
     window.scrollTo(0, 0);
-    /* Забон дар вобастагиҳост: бе он иваз кардани забон танҳо интерфейсро
-       мегардонд ва мазмуни ихтисос бо забони кӯҳна мемонд. */
   }, [id, i18n.language]);
 
   useEffect(() => {
@@ -352,7 +350,6 @@ const Info = () => {
   const Section = ({ icon: Icon, title, subtitle, gradient, children }) => (
     <motion.div {...fadeIn}>
       <div className="glass-card overflow-hidden">
-        {/* Section header with gradient accent */}
         <div className={`flex items-center gap-4 p-5 border-b border-border/30`}
           style={{ background: "linear-gradient(135deg, rgba(91,108,240,0.04) 0%, rgba(139,92,246,0.02) 100%)" }}
         >
@@ -392,17 +389,12 @@ const Info = () => {
 
   return (
     <div>
-      {/* ═══════════════════════════════════════════════
-          HERO — Premium header
-         ═══════════════════════════════════════════════ */}
       <section className="pt-8 pb-6 sm:pt-10 hero-gradient relative overflow-hidden">
-        {/* Background decoration */}
         <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #5B6CF0 1px, transparent 1px), radial-gradient(circle at 80% 30%, #8B5CF6 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-5">
 
-            {/* Top row: Back link & Actions */}
             <div className="flex items-center justify-between">
               <Link to="/careers" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group">
                 <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> {t("career_page.back_to_list")}
@@ -428,13 +420,11 @@ const Info = () => {
             </div>
 
             <div className="flex items-start gap-5">
-              {/* Big icon */}
               <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl icon-box-solid flex items-center justify-center flex-shrink-0 shadow-xl">
                 <Briefcase className="h-8 w-8 sm:h-9 sm:w-9 text-white" />
               </div>
 
               <div className="flex-1 min-w-0">
-                {/* Cluster badge */}
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   {career.cluster?.clusterName && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/15">
@@ -444,7 +434,6 @@ const Info = () => {
                   {career.code && (
                     <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm bg-white/5 border border-white/10">
                       <span className="text-muted-foreground">{t("misc2.mmt_code")}</span>
-                      {/* Рақам бо моношрифт: рақамҳо ба як паҳно меафтанд ва хондан осон мешавад. */}
                       <span className="font-mono font-semibold tracking-wide text-foreground">{career.code}</span>
                     </span>
                   )}
@@ -457,20 +446,16 @@ const Info = () => {
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight">
                   {career.nameTranslated || career.name}
                 </h1>
-                {/* Номи расмии тоҷикӣ ҳамеша дида мешавад — ҳуҷҷат маҳз бо
-                    ҳамин ном ва бо ҳамин код супорида мешавад. */}
                 {career.nameTranslated && (
                   <p className="mt-2 text-base text-muted-foreground">{career.name}</p>
                 )}
               </div>
             </div>
 
-            {/* Description */}
             <p className="text-muted-foreground max-w-3xl leading-relaxed text-base sm:text-lg">
               {career.description || career.purpose}
             </p>
 
-            {/* Quick stats row */}
             <div className="flex flex-wrap gap-3">
               {(career.minTuitionFee || career.maxTuitionFee) && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
@@ -521,27 +506,21 @@ const Info = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          CONTENT — Info sections
-         ═══════════════════════════════════════════════ */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
         <div className="space-y-5">
 
-          {/* --- Мақсади ихтисос --- */}
           {career.purpose && (
             <Section icon={Target} title={t("career_page.purpose_title")} subtitle={t("career_page.purpose_sub")} gradient="from-blue-500 to-indigo-500">
               <p className="text-muted-foreground leading-relaxed">{career.purpose}</p>
             </Section>
           )}
 
-          {/* --- Psychological Profile (User Specific) --- */}
           {user?.quizResults && (
             <motion.div {...fadeIn}>
               <PsychologicalProfile results={user.quizResults} />
             </motion.div>
           )}
 
-          {/* --- Маоши меҳнат --- */}
           <Section icon={DollarSign} title={t("career_page.salary_title")} subtitle={t("career_page.salary_sub")} gradient="from-emerald-500 to-green-500">
             <SalarySection
               salary={salary}
@@ -551,7 +530,6 @@ const Info = () => {
             />
           </Section>
 
-          {/* --- Маҳоратҳо --- */}
           {career.skills && (
             <Section icon={Code} title={t("career_page.skills_title")} subtitle={t("career_page.skills_sub")} gradient="from-violet-500 to-purple-500">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -591,7 +569,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Технологияҳо --- */}
           {techs.length > 0 && (
             <Section icon={Lightbulb} title={t("career_page.tech_title")} subtitle={t("career_page.tech_sub")} gradient="from-cyan-500 to-blue-500">
               <div className="flex flex-wrap gap-2">
@@ -605,7 +582,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Нақшаи роҳ --- */}
           {roadmap.length > 0 && (
             <Section icon={Map} title={t("career_page.roadmap_title")} subtitle={t("career_page.roadmap_sub")} gradient="from-emerald-500 to-teal-500">
               <div className="space-y-1">
@@ -617,7 +593,6 @@ const Info = () => {
 
                   return (
                     <div key={index} className="relative flex gap-4">
-                      {/* Timeline line */}
                       <div className="flex flex-col items-center flex-shrink-0">
                         <div className="w-10 h-10 rounded-xl icon-box-solid flex items-center justify-center text-white font-bold text-sm shadow-md z-10">
                           {number}
@@ -626,7 +601,6 @@ const Info = () => {
                           <div className="w-0.5 h-full min-h-[40px] mt-2" style={{ background: "linear-gradient(180deg, rgba(91,108,240,0.25), transparent)" }} />
                         )}
                       </div>
-                      {/* Content */}
                       <div className="flex-1 pb-5">
                         <div className="glass-card-sm p-4 rounded-xl">
                           <h3 className="font-semibold leading-6 text-foreground">{title}</h3>
@@ -649,7 +623,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Намунаҳои лоиҳаҳо --- */}
           {career.projectsExamples?.length > 0 && (
             <Section icon={Building} title={t("career_page.projects_title")} subtitle={t("career_page.projects_sub")} gradient="from-orange-500 to-amber-500">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -665,14 +638,8 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Имкониятҳои касбӣ --- */}
           {opportunities.length > 0 && (
             <Section icon={Briefcase} title={t("career_page.jobs_title")} subtitle={t("career_page.jobs_sub")} gradient="from-indigo-500 to-violet-500">
-              {/*
-                Пештар ҳаббҳои бунафш бо ситорачаи «AI» буданд. Ин ҷойҳои кори
-                воқеӣ ҳастанд, на теги ороишӣ, аз ин рӯ ҳамчун рӯйхат нишон
-                дода мешаванд.
-              */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {opportunities.map((opp, i) => (
                   <div key={i} className="flex items-center gap-3 rounded-xl border border-border p-4">
@@ -686,7 +653,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Сертификатҳо --- */}
           {certs.length > 0 && (
             <Section icon={Award} title={t("career_page.certs_title")} subtitle={t("career_page.certs_sub")} gradient="from-amber-500 to-yellow-500">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -702,7 +668,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Донишгоҳҳо ва нархҳо --- */}
           {offerings.length > 0 ? (
             <Section
               id="universities"
@@ -796,7 +761,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Манбаъҳои омӯзишӣ --- */}
           {resources && (
             <Section icon={BookOpen} title={t("career_page.resources_title")} subtitle={t("career_page.resources_sub")} gradient="from-rose-500 to-pink-500">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -843,14 +807,8 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Ихтисосҳои вобаста --- */}
           {related.length > 0 && (
             <Section icon={Layers} title={t("career_page.related_title")} subtitle={t("career_page.related_sub")} gradient="from-violet-500 to-purple-500">
-              {/*
-                Инҳо `span` буданд — намуди зернашаванда доштанд, вале ҳеҷ ҷо
-                намебурданд. Ҳоло ба рӯйхати ихтисосҳо бо ҷустуҷӯи ҳамон ном
-                мебаранд.
-              */}
               <div className="flex flex-wrap gap-2.5">
                 {related.map((spec, i) => (
                   <Link
@@ -866,7 +824,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* --- Маслиҳати муҳим --- */}
           {career.advice && (
             <motion.div {...fadeIn}>
               <div className="relative glass-card overflow-hidden">
@@ -891,12 +848,10 @@ const Info = () => {
             </motion.div>
           )}
 
-          {/* --- Саволу ҷавоб дар бораи ҳамин ихтисос --- */}
           <motion.div {...fadeIn}>
             <CareerChat careerId={career.id} careerName={career.name} />
           </motion.div>
 
-          {/* --- Back to careers --- */}
           <motion.div {...fadeIn} className="text-center pt-8 pb-4">
             <p className="text-sm text-muted-foreground mb-4">{t("career_page.more_careers")}</p>
             <Link to="/careers" className="inline-flex items-center gap-2 btn-primary px-8 py-3.5 text-sm shadow-lg hover:shadow-xl transition-shadow">
@@ -906,10 +861,6 @@ const Info = () => {
         </div>
       </section>
 
-      {/* Бархӯрди кластер — равзанаи марказӣ, на панели дохили саҳифа.
-          Панел дар болои ҷадвал меистод ва саҳифа то он ҷо мелағжид: корбар
-          ҷои худро дар рӯйхати дарози пешниҳодҳо гум мекард. Равзана дар
-          ҳамон ҷое мебарояд, ки чашм аст, ва саҳифа ҳеҷ намеҷунбад. */}
       {clusterConflict && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"

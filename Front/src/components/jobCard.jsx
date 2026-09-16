@@ -36,15 +36,6 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
           {specialty.code}
         </span>
       )}
-      {/* Дараҷа ва мӯҳлат.
-
-          Дар рӯйхати ММТ 80 ном такрор мешавад — «Информатика» чор бор,
-          «Забони хориҷӣ (англисӣ)» ҳафт бор. Инҳо хато нестанд ва набояд
-          нест карда шаванд: ҳар яке коди расмии худро дорад ва довталаб маҳз
-          ҳамон рақамро дар ариза менависад (ДМТ — 1310304, Хуҷанд — 1020505).
-
-          Вале дар корт онҳо айнан як хел менамуданд. Дараҷа калонтарин
-          фарқашон аст: яке бакалаври 4-сола, дигаре миёнаи касбии 3-сола. */}
       {specialty.degreeType && (
         <span className={`inline-flex items-center rounded-full border border-primary/20 bg-primary/10 font-bold text-primary ${pad}`}>
           {degreeLabel(t, specialty.degreeType)}
@@ -61,9 +52,6 @@ export function SpecialtyMeta({ specialty, size = "normal" }) {
           {t("misc.free_available")}
         </span>
       )}
-      {/* Дуюмин фарқи ҳамномҳо: се «Информатика»-и бакалаврӣ дар 3, 1 ва 7
-          донишгоҳ таълим дода мешаванд — ва ин маҳз он чизест, ки довталаб
-          донистан мехоҳад. */}
       {specialty.universities?.length > 0 && (
         <span className={`inline-flex items-center rounded-full border border-border bg-muted/60 font-semibold text-muted-foreground ${pad}`}>
           {t("misc2.universities_count", { count: specialty.universities.length })}
@@ -138,16 +126,12 @@ export default function SpecialtyCard({ specialty }) {
 
   return (
     <Link to={`/info/${specialty.id}`} className="block h-full">
-      {/* Бе hover: корт боло намеравад ва калон намешавад. glass-card низ не —
-          backdrop-blur дар 12 корт ҳар кадри скроллро гарон мекард. */}
       <div className="relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[1.5rem] border border-border bg-card p-6 sm:p-7">
 
         <div className="flex justify-between items-start mb-6">
           <div className="flex flex-col gap-2">
             {specialty.cluster?.clusterName && (
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/20 w-fit">
-                {/* Рақами кластер пеш аз ном: ариза ба ЯК кластер меравад,
-                    ва маҳз ҳамин рақам барои довталаб муҳим аст. */}
                 {clusterLabelNumbered(t, specialty.cluster)}
               </span>
             )}
@@ -190,8 +174,6 @@ export default function SpecialtyCard({ specialty }) {
             <h3 className="font-extrabold text-xl sm:text-2xl text-foreground leading-tight">
               {specialty.nameTranslated || specialty.name}
             </h3>
-            {/* Номи расмии тоҷикӣ дар зер мемонад: маҳз бо ҳамин ном
-                довталаб ихтисосро дар китобчаи ММТ меёбад. */}
             {specialty.nameTranslated && (
               <p className="mt-1 text-sm text-muted-foreground">{specialty.name}</p>
             )}
@@ -201,7 +183,6 @@ export default function SpecialtyCard({ specialty }) {
           </p>
         </div>
 
-        {/* Се доираи «аватар» ҳеҷ маълумот надоштанд — танҳо ороиш. */}
         <div className="mt-8 flex items-center justify-end pt-5 border-t border-border">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <ArrowRight className="h-4 w-4" />

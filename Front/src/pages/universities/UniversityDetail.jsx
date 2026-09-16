@@ -125,7 +125,6 @@ export default function UniversityDetail() {
     <div className="min-h-screen pt-24 pb-24 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         
-        {/* BACK BUTTON */}
         <button 
           onClick={() => navigate("/universities")}
           className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-bold group"
@@ -134,7 +133,6 @@ export default function UniversityDetail() {
           {t("career_page.u_back_to_map")}
         </button>
 
-        {/* UNIVERSITY HEADER */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -153,26 +151,12 @@ export default function UniversityDetail() {
             
             <div className="flex-1 space-y-4">
               <div className="space-y-2">
-                {/* Номи тарҷумашуда сарлавҳа мешавад, вале номи расмии тоҷикӣ
-                    зери он мемонад: ҳуҷҷат маҳз бо ҳамон ном супорида мешавад
-                    ва довталаб бояд онро дар рӯйхати ММТ ёфта тавонад. */}
                 <h1 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
                   {university.nameTranslated || university.name}
                 </h1>
                 {university.nameTranslated && (
                   <p className="text-sm text-muted-foreground">{university.name}</p>
                 )}
-                {/*
-                  Нишонҳо танҳо аз маълумоти воқеии база сохта мешаванд.
-                  Пештар дар ин ҷо «Аккредитатсияшуда» сахт навишта шуда буд ва
-                  ҳар 128 донишгоҳ онро нишон медод, дар ҳоле ки дар база ягон
-                  маълумоти аккредитатсия нест. Дар сайти таълимӣ ин даъвои
-                  беасос аст.
-
-                  Нишони навъ низ `university.type`-ро мехонд, ки вуҷуд надорад
-                  (API `institutionType` мефиристад), аз ин рӯ ҳама ба «Давлатӣ»
-                  меафтоданд — ҳатто донишгоҳҳои хусусӣ.
-                */}
                 <div className="flex flex-wrap gap-3">
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-xs font-bold text-muted-foreground border border-white/5">
                     <MapPin className="w-3.5 h-3.5" />
@@ -218,7 +202,6 @@ export default function UniversityDetail() {
           </div>
         </motion.div>
 
-        {/* FILTER BAR */}
         <section className="mb-8 space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -274,7 +257,6 @@ export default function UniversityDetail() {
           </p>
         </section>
 
-        {/* SPECIALTIES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filteredSpecialties.map((spec, idx) => {

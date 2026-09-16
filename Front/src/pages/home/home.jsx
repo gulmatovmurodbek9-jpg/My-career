@@ -157,9 +157,6 @@ function ClosingScene() {
   return (
     <section className="bg-muted/40">
       <div className="mx-auto max-w-4xl px-6 py-24 sm:py-32 lg:px-8">
-        {/* Видео пеш аз савол меистад: аввал хонандаро мебинед, баъд савол
-            дода мешавад, баъд тугма. preload="none" — ин бахш дар поёни саҳифа
-            аст, ва аксари корбарон то он ҷо намерасанд. */}
         <Reveal>
           <SceneVideo
             src={CLOSING_VIDEO}
@@ -211,11 +208,6 @@ export default function Home() {
 
   return (
     <>
-      {/*
-        Ду экрани аввал — савол ва мушкил — гардиш мекунанд. Онҳо як фикрро
-        аз ду тараф мегӯянд, аз ин рӯ паҳлӯи ҳам гузоштанашон саҳифаро дароз
-        мекард ва такрор менамуд.
-      */}
       <SceneSlider
         label={t("misc.intro_label")}
         slides={[<HomeHero key="hero" />, <OverwhelmScene key="overwhelm" />]}

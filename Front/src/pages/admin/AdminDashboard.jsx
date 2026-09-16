@@ -197,7 +197,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
-      {/* Page Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
           {t("admin.dashboard.title")}
@@ -205,7 +204,6 @@ const AdminDashboard = () => {
         <p className="text-[15px] text-muted-foreground mt-1">{t("admin.dashboard.subtitle")}</p>
       </motion.div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           icon={Users}
@@ -241,9 +239,6 @@ const AdminDashboard = () => {
         />
       </div>
 
-      {/* Фаъолият — кӣ ҳозир дар сайт аст ва чанд нафар истифода мебарад.
-          Агар сутуни lastSeenAt ҳанӯз дар база набошад, дархост ноком мешавад
-          ва тамоми блок нонамоён мемонад — боқии саҳифа кор мекунад. */}
       {activity && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -322,9 +317,7 @@ const AdminDashboard = () => {
         </motion.div>
       )}
 
-      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Liked */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -361,10 +354,6 @@ const AdminDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Top Saved — ҳамон шакл, то ки ду диаграмма ҳамоҳанг бошанд.
-            Пештар AreaChart буд: он хатти вақтро нишон медиҳад, вале ин ҷо
-            рӯйхати ихтисосҳост, на вақт — бо як қимат он як росткунҷаи
-            холӣ мекашид. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -397,7 +386,6 @@ const AdminDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Likes Distribution */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -453,7 +441,6 @@ const AdminDashboard = () => {
         </motion.div>
       </div>
 
-      {/* Popular Careers Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

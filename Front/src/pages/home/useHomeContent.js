@@ -30,7 +30,6 @@ export function useClusterChapters() {
         setLive(new Map(data.map((cluster) => [cluster.clusterId, cluster])));
       })
       .catch(() => {
-        /* матни статикӣ аллакай намоиш дода шудааст */
       });
 
     return () => controller.abort();

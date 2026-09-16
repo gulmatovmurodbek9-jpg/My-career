@@ -124,7 +124,6 @@ export default function Interactive3DSection() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* 3D Canvas */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -137,7 +136,6 @@ export default function Interactive3DSection() {
             </Canvas>
           </motion.div>
 
-          {/* Info Panel */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}

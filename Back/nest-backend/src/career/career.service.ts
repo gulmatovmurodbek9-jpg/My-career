@@ -316,9 +316,6 @@ export class CareerService {
                 .map((k) => k.trim().slice(0, 40))
                 .filter((k) => k.length >= 3),
         )]
-            /* Калимаи соҳаи умумӣ, ки ПАС аз калимаи мушаххас омадааст, касбро
-               «об» мекунад: ["уролог", "тиб"] ветеринарияро меовард. Агар
-               калимаи умумӣ худаш аввал бошад (корбар касбро нагуфтааст), мемонад. */
             .filter((k, index) => index === 0 || !CareerService.BROAD_STEMS.has(foldTajik(k)))
             .slice(0, 3);
 
@@ -573,13 +570,6 @@ export class CareerService {
                     };
                 })(),
             }))
-            /*
-             * Ҷойҳои РОЙГОН аввал.
-             *
-             * Пештар танҳо аз рӯи нарх тартиб дода мешуд, ва ҷойҳои буҷавӣ
-             * дар байни пулакиҳо гум мешуданд. Довталаб бошад аввал маҳз
-             * ҷои ройгонро меҷӯяд.
-             */
             .sort((a, b) => {
                 const freeA = a.paymentType === 'ройгон';
                 const freeB = b.paymentType === 'ройгон';
@@ -926,10 +916,6 @@ export class CareerService {
         if (terms.length > 0) {
             const ranked: Array<{ id: string }> = await this.careerRepository.manager.query(
                 `WITH base AS MATERIALIZED (
-                    /* Fold як бор барои ҳар ихтисос, на барои ҳар ихтисос × калима.
-                       Бе MATERIALIZED Postgres translate()-ро дар ҳар сатри CROSS JOIN
-                       такрор мекард: 466 мс → 118 мс. Ному шаҳри донишгоҳҳо низ як
-                       бор ба як сатр ҷамъ мешаванд — EXISTS барои ҳар калима 729 мс буд. */
                     SELECT c.id, c."likesCount",
                         ${TAJIK_FOLD('c.name')} AS n,
                         ${TAJIK_FOLD(`coalesce(cl."clusterName", '')`)} AS cl,

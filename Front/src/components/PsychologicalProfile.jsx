@@ -68,17 +68,11 @@ const PsychologicalProfile = ({ results, className = "" }) => {
                 {t('dashboard.radar_hint', 'Хол аз рӯи ҷавобҳои саволномаи шумо')}
             </p>
 
-            {/*
-              Баландии муайян, на flex-1: ResponsiveContainer баландии
-              волидро чен мекунад, ва дар қуттии flex ҳангоми аввалин
-              кашидан 0 мегирад ва дигар барнамегардад — чарх холӣ мемонад.
-            */}
             <div className="mt-4 h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="52%" outerRadius="72%" data={radarData}>
                         <PolarGrid stroke="hsl(var(--border))" />
                         <PolarAngleAxis dataKey="subject" tick={<ClusterTick />} />
-                        {/* Бе миқёс чарх танҳо шакл аст; хонанда намедонад 12 аз чанд аст. */}
                         <PolarRadiusAxis
                             domain={[0, max]}
                             tickCount={4}

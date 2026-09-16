@@ -59,7 +59,6 @@ export const ToastProvider = ({ children }) => {
     <ToastContext.Provider value={{ success, error, warning, info, addToast, removeToast }}>
       {children}
 
-      {/* Toast Container */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none">
         <AnimatePresence mode="popLayout">
           {toasts.map((toast) => {

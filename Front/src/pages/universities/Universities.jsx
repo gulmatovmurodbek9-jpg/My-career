@@ -124,9 +124,6 @@ export default function Universities() {
         <div className="absolute inset-x-0 top-0 -z-10 mx-auto h-80 max-w-6xl rounded-full bg-primary/12 blur-[120px]" />
         <div className="absolute left-1/2 top-16 -z-10 h-56 w-56 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[120px]" />
 
-        {/* Ранги кортҳо аз токенҳои мавзӯъ мегирад, на аз `bg-white/5`.
-            Он сафеди шаффоф танҳо дар заминаи торик дида мешуд — дар реҷаи
-            равшан сафед рӯи сафед меафтод ва рақамҳо бе корт мемонданд. */}
         <div className="mx-auto max-w-7xl">
           <div className="rounded-[2.25rem] border border-border bg-card p-6 shadow-lg md:p-8">
             <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
@@ -235,9 +232,6 @@ export default function Universities() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.25 }}
               >
-                {/* Ҳангоми ҷустуҷӯ харита худаш ба натиҷаҳо меравад —
-                    бе ин корбар се нишонаро дар харитаи пурраи кишвар
-                    мебоист худаш меҷуст. */}
                 <TajikistanMap
                   universities={filteredUnis}
                   focusResults={normalizedQuery.length > 0}

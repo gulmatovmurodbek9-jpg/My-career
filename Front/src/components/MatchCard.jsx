@@ -90,7 +90,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
     return (
         <article className={`match-card group ${isTop ? "match-card--top" : ""}`}>
             <div className="relative z-10 flex h-full flex-col p-6 md:p-7">
-                {/* Сарлавҳа: ҷои рейтинг ва тугмаи захира */}
                 <div className="flex items-start justify-between gap-3">
                     <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] ${isTop
@@ -122,7 +121,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                     </button>
                 </div>
 
-                {/* Ном ва тавсиф — дар ҳама кортҳо як андоза, то сатр ҳамвор монад */}
                 <div className="mt-5 flex-1" onDoubleClick={handleLike}>
                     <h3 className="text-xl leading-[1.2] font-bold text-foreground">
                         <Link
@@ -132,8 +130,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                             {careerName(career, lang)}
                         </Link>
                     </h3>
-                    {/* Коди расмӣ — маҳз ҳамин рақам ҳангоми супоридани
-                        ҳуҷҷат ба ММТ нависта мешавад. */}
                     {career.code && (
                         <div className="mt-2 flex items-center gap-1.5">
                             <span className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
@@ -150,8 +146,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                     </p>
                 </div>
 
-                {/* Донишгоҳҳо: бе онҳо довталаб мебинад, ки ихтисос мувофиқ
-                    аст, вале намедонад куҷо ҳуҷҷат супорад. */}
                 {universities.length > 0 && (
                     <div className="mt-4">
                         <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
@@ -176,8 +170,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                     </div>
                 )}
 
-                {/* Ченаки мувофиқат: сатри уфуқӣ ба ҷои ҳалқаи хурди 64px — фоиз
-                   хонотар аст ва ранги роҳаш дар ҳарду тема намоён мемонад. */}
                 <div className="mt-6">
                     <div className="flex items-baseline justify-between gap-2">
                         <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
@@ -202,7 +194,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                     </div>
                 </div>
 
-                {/* Поя */}
                 <div className="mt-5 flex items-center justify-between gap-1 border-t border-border pt-4">
                     <button
                         type="button"
@@ -228,8 +219,6 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                         </button>
                     )}
 
-                    {/* Ба ҷои саҳифаи умумӣ рост ба ҷадвали донишгоҳҳо мебарад:
-                        интихоби донишгоҳ ва намуди ҷой маҳз он ҷост. */}
                     <Link
                         to={`/info/${career.id}#universities`}
                         className="group/btn flex items-center gap-2 rounded-lg py-1.5 pl-2 text-xs font-black uppercase tracking-[0.12em] text-foreground transition-colors hover:text-primary"

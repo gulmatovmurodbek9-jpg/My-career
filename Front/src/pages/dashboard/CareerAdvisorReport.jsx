@@ -307,7 +307,6 @@ const CareerAdvisorReport = () => {
         try {
             localStorage.setItem(cacheKey, JSON.stringify({ data: report, savedAt: new Date().toISOString() }));
         } catch (_) {
-            /* storage пур ё баста аст — ҳисобот бе кеш ҳам кор мекунад */
         }
     };
 
@@ -371,7 +370,6 @@ const CareerAdvisorReport = () => {
         } else {
             fetchReport();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasQuizProfile, token, lang]);
 
     if (!hasQuizProfile) {
@@ -407,8 +405,6 @@ const CareerAdvisorReport = () => {
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center gap-6"
                 >
-                    {/* Ҳамон нишони AI, ки дар панел аст. Се нуқтаи давразананда
-                        ба ҳар тараф мепариданд ва беқарор менамуданд. */}
                     <AiBotIcon size="lg" />
                     <div className="text-center space-y-1.5">
                         <p className="text-foreground font-bold text-base flex items-center justify-center gap-2">
@@ -453,9 +449,7 @@ const CareerAdvisorReport = () => {
         <div className="pb-20">
             <motion.div key="report" variants={containerVariants} initial="hidden" animate="visible" className="space-y-8">
 
-                {/* ── Header ── */}
                 <motion.header variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-4">
-                    {/* Сутун: «Бозгашт» ва нишони AI ҳарду inline буданд ва дар як сатр ба ҳам мечаспиданд. */}
                     <div className="flex flex-col items-start gap-3">
                         <Link to="/dashboard" className="inline-flex items-center gap-1.5 py-1 text-sm font-semibold text-muted-foreground hover:text-foreground">
                             <ArrowLeft className="w-3.5 h-3.5" />
@@ -471,7 +465,6 @@ const CareerAdvisorReport = () => {
                         <p className="text-muted-foreground text-sm font-medium opacity-60">{t.subtitle}</p>
                     </div>
 
-                    {/* Нишонҳои кластерҳои пешбар */}
                     <div className="flex flex-wrap gap-2">
                         {dominantTypes?.map((dt, i) => (
                             <div
@@ -487,7 +480,6 @@ const CareerAdvisorReport = () => {
                     </div>
                 </motion.header>
 
-                {/* ═══ SECTION 1: Personality Analysis ═══ */}
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={Bot} title={t.section1} />
                     <div className="glass-card p-6 md:p-8 mt-3">
@@ -497,7 +489,6 @@ const CareerAdvisorReport = () => {
                             </p>
                         </div>
 
-                        {/* Сутунҳои холи кластерҳои ММТ */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Object.entries(mmtScores || {}).map(([key, val]) => (
                                 <div key={key} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
@@ -521,7 +512,6 @@ const CareerAdvisorReport = () => {
                     </div>
                 </motion.section>
 
-                {/* ═══ SECTION 2: Career Recommendations ═══ */}
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={Target} title={t.section2} color="from-blue-500 to-cyan-500" />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
@@ -569,7 +559,6 @@ const CareerAdvisorReport = () => {
                     </div>
                 </motion.section>
 
-                {/* ═══ SECTION 3: Explanation ═══ */}
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={Sparkles} title={t.section3} color="from-amber-500 to-orange-500" />
                     <div className="space-y-3 mt-3">
@@ -595,7 +584,6 @@ const CareerAdvisorReport = () => {
                     </div>
                 </motion.section>
 
-                {/* ═══ SECTION 4: Success Prediction ═══ */}
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={TrendingUp} title={t.section4} color="from-emerald-500 to-green-500" />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
@@ -609,7 +597,6 @@ const CareerAdvisorReport = () => {
                                     {pred.career}
                                 </h5>
 
-                                {/* Circular progress */}
                                 <div className="relative w-28 h-28 mx-auto">
                                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                         <circle
@@ -658,7 +645,6 @@ const CareerAdvisorReport = () => {
                     </div>
                 </motion.section>
 
-                {/* ═══ SECTION 5: Career Roadmap ═══ */}
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={Route} title={t.section5} color="from-rose-500 to-pink-500" />
                     <div className="glass-card p-6 md:p-8 mt-3">
@@ -685,7 +671,6 @@ const CareerAdvisorReport = () => {
                                     variants={itemVariants}
                                     className="flex gap-4 group"
                                 >
-                                    {/* Timeline line */}
                                     <div className="flex flex-col items-center">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500/20 to-pink-500/20 border-2 border-rose-500/30 flex items-center justify-center flex-shrink-0 group-hover:border-rose-500/60 transition-colors">
                                             <span className="text-xs font-black text-rose-400">{step.step || idx + 1}</span>
@@ -695,10 +680,6 @@ const CareerAdvisorReport = () => {
                                         )}
                                     </div>
 
-                                    {/* Content */}
-                                    {/* Сарлавҳа ва тавсиф дар як сутун, нишони муддат дар сутуни
-                                        худ. Пештар нишон танҳо дар сатри сарлавҳа ҷой дошт ва
-                                        тавсифи дароз дар зери он то канори рост мерафт. */}
                                     <div className="pb-6 flex-1 flex items-start gap-3">
                                         <div className="min-w-0 flex-1">
                                             <h5 className="text-base font-bold text-foreground">
@@ -723,7 +704,6 @@ const CareerAdvisorReport = () => {
                     </div>
                 </motion.section>
 
-                {/* SECTION 6: Resources */}
                 {(report.learningResources || report.resources) && (
                     <motion.section variants={itemVariants}>
                         <SectionHeader icon={BookOpen} title={t.section6} color="from-cyan-500 to-blue-500" />
@@ -736,7 +716,6 @@ const CareerAdvisorReport = () => {
                     </motion.section>
                 )}
 
-                {/* SECTION 7: 10-Year Outlook */}
                 {report.tenYearOutlook && (
                     <motion.section variants={itemVariants}>
                         <SectionHeader icon={CalendarDays} title={t.section7} color="from-indigo-500 to-sky-500" />
@@ -769,7 +748,6 @@ const CareerAdvisorReport = () => {
                     </motion.section>
                 )}
 
-                {/* SECTION 8: Quiz Answers */}
                 {(report.quizAnswerAnalysis?.length > 0 || storedQuiz?.answers?.length > 0) && (
                     <motion.section variants={itemVariants}>
                         <SectionHeader icon={ListChecks} title={t.section8} color="from-emerald-500 to-teal-500" />

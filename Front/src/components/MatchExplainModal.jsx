@@ -115,7 +115,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -124,7 +123,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
                     />
 
-                    {/* Modal */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -133,22 +131,12 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
                         onClick={(e) => e.target === e.currentTarget && onClose()}
                     >
-                        {/* На glass-card. .glass-card дар index.css бе @layer аст, пас дар Tailwind 4
-                            аз синфҳои utility қавитар: overflow-hidden-и он overflow-y-auto-ро
-                            бекор мекард ва равзана скрол намешуд; заминаи ниммушаффофи
-                            bg-card/60 аз болои пардаи сиёҳ хокистарӣ менамуд. */}
-                        {/* Қуттӣ кунҷҳоро мебурад, скрол танҳо дар бадан аст. Вақте скрол дар
-                            худи қуттии мудаввар буд, scrollbar ба кунҷҳо итоат намекард ва
-                            ҳамчун рахи сафед берун аз канори рост менамуд. */}
                         <div className="relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
-                            {/* ── Header ── */}
                             <div className="shrink-0 bg-card border-b border-border px-6 py-4 flex items-start justify-between gap-4">
                                 <div className="min-w-0 space-y-1">
                                     <p className="text-xs font-bold uppercase tracking-wide text-primary">
                                         {txt("modalTitle", lang)}
                                     </p>
-                                    {/* Бе truncate: номи ихтисос дароз аст ва «…» маҳз қисми
-                                        муҳимашро мебурид. */}
                                     <h2 className="text-lg font-black leading-snug text-foreground">
                                         {name}
                                     </h2>
@@ -163,9 +151,7 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                             </div>
 
                             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-8">
-                                {/* ── Score badges row ── */}
                                 <div className="grid grid-cols-3 gap-3">
-                                    {/* Match % */}
                                     <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
                                         <div className="text-3xl font-black text-primary">{matchPercentage}%</div>
                                         <div className="text-xs font-semibold text-muted-foreground mt-1">
@@ -173,7 +159,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                         </div>
                                     </div>
 
-                                    {/* Similarity scores */}
                                     <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
                                         <div className="text-xl font-black text-foreground">
                                             {Math.round(cosineSimilarity * 100)}%
@@ -189,7 +174,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                         </div>
                                     </div>
 
-                                    {/* Confidence badge */}
                                     <div className={`rounded-xl p-4 text-center border ${confidence.bg} ${confidence.border}`}>
                                         <ConfIcon className={`w-6 h-6 mx-auto mb-1 ${confidence.color}`} />
                                         <div className={`text-sm font-black ${confidence.color}`}>
@@ -201,7 +185,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                     </div>
                                 </div>
 
-                                {/* ── 1. Dual Radar Chart ── */}
                                 <div>
                                     <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-primary" />
@@ -253,14 +236,12 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                     </div>
                                 </div>
 
-                                {/* ── 2. Dimension Breakdown Table ── */}
                                 <div>
                                     <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                                         <TrendingUp className="w-4 h-4 text-primary" />
                                         {txt("dimBreakdown", lang)}
                                     </h3>
                                     <div className="rounded-2xl border border-border bg-muted/40 overflow-hidden">
-                                        {/* Table header */}
                                         <div className="grid grid-cols-[1fr_100px_140px] gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">
                                             <span className="text-xs font-semibold text-muted-foreground">
                                                 {txt("dimension", lang)}
@@ -273,7 +254,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                             </span>
                                         </div>
 
-                                        {/* Rows */}
                                         {DIMENSIONS.map((dim, idx) => {
                                             const value = dimensionBreakdown[dim] ?? 0;
                                             const pct = Math.round(value * 100);
@@ -287,10 +267,8 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                                     transition={{ delay: idx * 0.05 }}
                                                     className="grid grid-cols-[1fr_100px_140px] gap-2 items-center px-4 py-3 border-b border-border/60 last:border-b-0"
                                                 >
-                                                    {/* Dimension name — translated */}
                                                     <span className="text-sm font-bold text-foreground">{dimName(dim, lang)}</span>
 
-                                                    {/* Alignment bar + percentage */}
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                                                             <motion.div
@@ -303,7 +281,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                                         <span className="text-xs font-black text-muted-foreground w-9 text-right">{pct}%</span>
                                                     </div>
 
-                                                    {/* Strength badge — translated */}
                                                     <div className="flex justify-end">
                                                         <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${str.bg} ${str.border} ${str.color}`}>
                                                             {txt(str.key, lang)}

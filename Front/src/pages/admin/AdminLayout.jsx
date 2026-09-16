@@ -47,16 +47,12 @@ const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* ═══ SIDEBAR ═══ */}
       <motion.aside
         animate={{ width: collapsed ? 72 : 260 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className="fixed top-0 left-0 h-screen z-40 flex flex-col bg-card backdrop-blur-2xl border-r border-border"
       >
-        {/* Logo area */}
         <div className="flex items-center gap-3 px-4 h-16 border-b border-border">
-          {/* Ҳамон логотипи «Ихтисоси ман», ки дар сайт аст — на иконкаи сипар.
-              Логотип шаффоф аст ва дар ҳарду мавзӯъ хонда мешавад. */}
           <Link to="/" className="flex-shrink-0" aria-label="Ихтисоси ман">
             <img src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
           </Link>
@@ -76,7 +72,6 @@ const AdminLayout = () => {
           </AnimatePresence>
         </div>
 
-        {/* Nav links */}
         <nav className="flex-1 py-4 px-3 space-y-1">
           {navItems.map((item) => {
             const active = isActive(item.path, item.end);
@@ -114,10 +109,8 @@ const AdminLayout = () => {
             );
           })}
 
-          {/* Divider */}
           <div className="my-3 border-t border-border" />
 
-          {/* Back to site link */}
           <Link
             to="/"
             className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-emerald-600/50 dark:text-emerald-400/50 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
@@ -138,7 +131,6 @@ const AdminLayout = () => {
           </Link>
         </nav>
 
-        {/* User info & collapse */}
         <div className="p-3 border-t border-border space-y-2">
           <div className={`flex items-center gap-3 px-3 py-2 rounded-xl bg-muted/40 ${collapsed ? 'justify-center' : ''}`}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/25 to-accent-blue/20 flex items-center justify-center flex-shrink-0 border border-primary/20">
@@ -161,7 +153,6 @@ const AdminLayout = () => {
             </AnimatePresence>
           </div>
 
-          {/* Ҳамон интихоби мавзӯъ, ки дар сайт аст: пештар админ ҳамеша торик буд. */}
           <button
             onClick={toggleTheme}
             aria-label={theme === "dark" ? t("admin.theme_light", "Мавзӯи равшан") : t("admin.theme_dark", "Мавзӯи торик")}
@@ -194,7 +185,6 @@ const AdminLayout = () => {
         </div>
       </motion.aside>
 
-      {/* ═══ MAIN CONTENT ═══ */}
       <motion.main
         animate={{ marginLeft: collapsed ? 72 : 260 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}

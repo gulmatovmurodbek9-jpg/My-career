@@ -78,7 +78,6 @@ const Register = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-hero py-12 px-4">
-            {/* Decorative Blur Blobs */}
             <div className="absolute top-1/4 -right-20 w-80 h-80 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
             <div className="absolute bottom-1/4 -left-20 w-80 h-80 bg-secondary/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
 
@@ -158,9 +157,6 @@ const Register = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
-                                {/* Ҳангоми сохтани парол дидан муҳимтар аст:
-                                    хатои имло дар ин ҷо баъдтар ҳамчун
-                                    «пароли нодуруст» бармегардад. */}
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((v) => !v)}

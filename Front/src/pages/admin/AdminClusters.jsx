@@ -106,7 +106,6 @@ const AdminClusters = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -125,7 +124,6 @@ const AdminClusters = () => {
         </button>
       </motion.div>
 
-      {/* Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -149,11 +147,9 @@ const AdminClusters = () => {
                   transition={{ delay: i * 0.04 }}
                   className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all duration-300"
                 >
-                  {/* Gradient header */}
                   <div className={`h-2 bg-gradient-to-r ${gradient}`} />
 
                   <div className="p-5">
-                    {/* Top row: Icon + Name + Actions */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-11 h-11 rounded-xl ${riasec?.bg || 'bg-primary/10'} flex items-center justify-center ${riasec?.text || 'text-primary'}`}>
@@ -184,12 +180,10 @@ const AdminClusters = () => {
                       </div>
                     </div>
 
-                    {/* Description */}
                     {cluster.description && (
                       <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-2 mb-4">{cluster.description}</p>
                     )}
 
-                    {/* Footer stats */}
                     <div className="flex items-center gap-2 pt-3 border-t border-border">
                       <Briefcase className="w-3.5 h-3.5 text-muted-foreground/80" />
                       <span className="text-[13px] text-muted-foreground">{t("admin.clusters.careers_count")}:</span>

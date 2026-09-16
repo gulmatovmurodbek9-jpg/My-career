@@ -232,7 +232,7 @@ function getStore(key, defaults) {
   try {
     const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
-  } catch (_) { /* ignore */ }
+  } catch (_) {  }
   localStorage.setItem(key, JSON.stringify(defaults));
   return defaults;
 }

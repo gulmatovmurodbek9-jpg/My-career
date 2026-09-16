@@ -704,7 +704,6 @@ const CareerCompare = () => {
         <div className="career-compare-page pb-10">
             <motion.div key="compare" variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
 
-                {/* ═══ Header ═══ */}
                 <motion.header variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div className="space-y-1.5">
                         <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition text-xs font-bold mb-2">
@@ -722,7 +721,6 @@ const CareerCompare = () => {
                     </div>
                 </motion.header>
 
-                {/* ═══ Suggested Careers Grid ═══ */}
                 <motion.div variants={itemVariants} className="space-y-3">
                     <SectionHeader icon={Bookmark} title={t.savedTitle} color="from-blue-500 to-cyan-500" />
                     <p className="text-muted-foreground text-xs font-medium opacity-60">{t.savedDesc}</p>
@@ -776,12 +774,10 @@ const CareerCompare = () => {
                                                 : "hover:border-primary/20"
                                         }`}
                                     >
-                                        {/* Background glow */}
                                         <div className={`absolute -right-10 -top-10 w-32 h-32 blur-[60px] transition-all duration-500 ${
                                             isSelected ? "bg-primary/15" : "bg-primary/0 group-hover:bg-primary/8"
                                         }`} />
 
-                                        {/* Checkmark badge */}
                                         <AnimatePresence>
                                             {isSelected && (
                                                 <motion.div
@@ -801,7 +797,6 @@ const CareerCompare = () => {
                                             </div>
                                         )}
 
-                                        {/* Icon */}
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors duration-300 ${
                                             isSelected
                                                 ? "bg-gradient-to-br from-primary/20 to-accent-blue/10 border border-primary/20"
@@ -810,12 +805,10 @@ const CareerCompare = () => {
                                             <GraduationCap className={`w-5 h-5 ${isSelected ? "text-primary" : "text-muted-foreground group-hover:text-primary"} transition-colors`} />
                                         </div>
 
-                                        {/* Career name */}
                                         <h4 className="text-sm font-black text-foreground uppercase tracking-normal leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors">
                                             {careerName(career, apiLang)}
                                         </h4>
 
-                                        {/* Description */}
                                         {career.description && (
                                             <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 mt-2 opacity-70">
                                                 {careerDescription(career, apiLang)}
@@ -834,7 +827,6 @@ const CareerCompare = () => {
                     )}
                 </motion.div>
 
-                {/* ═══ Manual Input Divider ═══ */}
                 <motion.div variants={itemVariants}>
                     <div className="flex items-center gap-3">
                         <div className="h-px flex-1 bg-border" />
@@ -843,10 +835,8 @@ const CareerCompare = () => {
                     </div>
                 </motion.div>
                 <motion.div variants={itemVariants} className="glass-card p-4 md:p-5 space-y-4 relative overflow-hidden">
-                    {/* Decorative gradient */}
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent pointer-events-none" />
 
-                    {/* Input row */}
                     <div className="relative flex flex-col sm:flex-row gap-3">
                         <div className="flex-1 relative group">
                             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -870,7 +860,6 @@ const CareerCompare = () => {
                         </button>
                     </div>
 
-                    {/* Career count & hint */}
                     <div className="flex items-center justify-between">
                         <span className="text-[13px] font-medium text-muted-foreground">
                             {t.selected}: {careers.length}/5
@@ -882,7 +871,6 @@ const CareerCompare = () => {
                         )}
                     </div>
 
-                    {/* Selected careers chips */}
                     <AnimatePresence mode="popLayout">
                         {careers.length > 0 && (
                             <motion.div layout className="flex flex-wrap gap-2">
@@ -912,7 +900,6 @@ const CareerCompare = () => {
                         )}
                     </AnimatePresence>
 
-                    {/* Custom comparison question */}
                     <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                             <label className="text-[15px] font-semibold text-foreground">
@@ -940,7 +927,6 @@ const CareerCompare = () => {
                         />
                     </div>
 
-                    {/* Compare button */}
                     <motion.button
                         onClick={handleCompare}
                         disabled={careers.length < 2 || loading || retryCountdown > 0}
@@ -961,7 +947,6 @@ const CareerCompare = () => {
                     </motion.button>
                 </motion.div>
 
-                {/* ═══ Loading State ═══ */}
                 <AnimatePresence>
                     {loading && (
                         <motion.div
@@ -974,7 +959,6 @@ const CareerCompare = () => {
                                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-blue/20 to-primary/20 flex items-center justify-center">
                                     <Scale className="w-10 h-10 text-secondary" />
                                 </div>
-                                {/* Orbiting dots */}
                                 {[0, 1, 2].map((i) => (
                                     <motion.div
                                         key={i}
@@ -1005,7 +989,6 @@ const CareerCompare = () => {
                     )}
                 </AnimatePresence>
 
-                {/* ═══ Error State ═══ */}
                 <AnimatePresence>
                     {error && !loading && (
                         <motion.div
@@ -1046,7 +1029,6 @@ const CareerCompare = () => {
                     )}
                 </AnimatePresence>
 
-                {/* ═══════════════════ RESULTS ═══════════════════ */}
                 <AnimatePresence>
                     {data && !loading && (
                         <motion.div
@@ -1056,7 +1038,6 @@ const CareerCompare = () => {
                             animate="visible"
                             className="space-y-6"
                         >
-                            {/* ── Best Career Banner ── */}
                             {bestCareer && (
                                 <motion.div variants={scaleIn}>
                                     <SectionHeader icon={Crown} title={t.bestMatch} color="from-amber-500 to-yellow-500" />
@@ -1089,7 +1070,6 @@ const CareerCompare = () => {
                                 </motion.div>
                             )}
 
-                            {/* ── Далелҳо аз база: рақами санҷидашуда пеш аз матни AI ── */}
                             {selectedFacts.length > 0 && (
                                 <motion.div variants={itemVariants}>
                                     <SectionHeader icon={Scale} title={t.factsTitle} subtitle={t.factsPurpose} />
@@ -1138,7 +1118,6 @@ const CareerCompare = () => {
                                 </motion.div>
                             )}
 
-                            {/* ── Career Comparison Cards ── */}
                             <motion.div variants={itemVariants}>
                                 <SectionHeader icon={Scale} title={t.title} color="from-blue-500 to-cyan-500" />
                                 {comparedCareers.length > 0 ? (
@@ -1155,7 +1134,6 @@ const CareerCompare = () => {
                                                 className={`glass-card p-5 space-y-4 relative overflow-hidden ${isBest ? "ring-1 ring-primary/30" : ""
                                                     }`}
                                             >
-                                                {/* Best badge */}
                                                 {isBest && (
                                                     <div className="absolute top-4 right-4">
                                                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center shadow-lg shadow-primary/20">
@@ -1164,7 +1142,6 @@ const CareerCompare = () => {
                                                     </div>
                                                 )}
 
-                                                {/* Career name + match bar */}
                                                 <div className="space-y-3 pr-10">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -1190,12 +1167,10 @@ const CareerCompare = () => {
                                                     <span className="text-xs font-semibold text-muted-foreground">{t.match}</span>
                                                 </div>
 
-                                                {/* Summary */}
                                                 {career.summary && (
                                                     <p className="text-muted-foreground text-[15px] leading-relaxed border-l-2 border-border pl-3">{career.summary}</p>
                                                 )}
 
-                                                {/* Pros */}
                                                 {career.pros?.length > 0 && (
                                                     <div>
                                                         <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
@@ -1215,7 +1190,6 @@ const CareerCompare = () => {
                                                     </div>
                                                 )}
 
-                                                {/* Cons */}
                                                 {career.cons?.length > 0 && (
                                                     <div>
                                                         <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
@@ -1235,7 +1209,6 @@ const CareerCompare = () => {
                                                     </div>
                                                 )}
 
-                                                {/* Meta badges */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                     {career.marketDemand && (
                                                         <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-muted/40 p-3 text-center text-foreground">
@@ -1266,7 +1239,6 @@ const CareerCompare = () => {
                                                     )}
                                                 </div>
 
-                                                {/* Skills */}
                                                 {career.skillsRequired?.length > 0 && (
                                                     <div>
                                                         <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
@@ -1295,8 +1267,6 @@ const CareerCompare = () => {
                                 )}
                             </motion.div>
 
-                            {/* ── Вариантҳои беҳтар аз база ──
-                                Танҳо ихтисосҳои воқеии ММТ: сервер ҳар номро бо база санҷидааст. */}
                             {comparisonData.alternatives?.length > 0 && (
                                 <motion.div variants={itemVariants}>
                                     <SectionHeader icon={Lightbulb} title={t.alternativesTitle} subtitle={t.alternativesDesc} />

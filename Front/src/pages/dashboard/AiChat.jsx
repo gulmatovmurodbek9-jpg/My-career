@@ -87,18 +87,9 @@ const renderMarkdown = (text) => {
         .replace(/^### (.+)$/gm, '<h4 class="ai-h4">$1</h4>')
         .replace(/^## (.+)$/gm, '<h3 class="ai-h3">$1</h3>')
         .replace(/^# (.+)$/gm, '<h2 class="ai-h2">$1</h2>')
-        /*
-         * Рӯйхатҳо ПЕШ аз курсив коркард мешаванд.
-         *
-         * «*» низ ҳамчун нуқтаи рӯйхат қабул мешавад: пештар танҳо «-» ва «•»
-         * фаҳмида мешуданд, ва модел бошад аксар вақт «* матн» менавишт —
-         * дар натиҷа ситорача дар экран хом мемонд. Агар курсив пеш иҷро
-         * мешуд, ҳамон ситорачаи аввали сатрро мехӯрд.
-         */
         .replace(/^\s*[-•*]\s+(.+)$/gm, '<li class="ai-ul-item">$1</li>')
         .replace(/^\s*\d+\.\s+(.+)$/gm, '<li class="ai-ol-item">$1</li>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        // Курсив танҳо дар дохили як сатр ва бе фосилаи оғозӣ
         .replace(/\*(?!\s)([^*\n]+?)(?<!\s)\*/g, "<em>$1</em>");
 
     html = html.replace(/((?:<li class="ai-ul-item">.*?<\/li>\s*)+)/g, '<ul class="ai-ul">$1</ul>');
@@ -155,7 +146,6 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
             transition={{ type: "spring", stiffness: 350, damping: 30 }}
             className={`flex items-end gap-2.5 ${isUser ? "flex-row-reverse" : "flex-row"}`}
         >
-            {/* Avatar */}
             {!isUser ? (
                 <div className="flex-shrink-0 mb-5">
                     <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary via-accent-blue to-primary p-[2px] shadow-lg shadow-primary/20">
@@ -172,7 +162,6 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
                 </div>
             )}
 
-            {/* Bubble */}
             <div className={`max-w-[82%] sm:max-w-[72%] group relative ${isUser ? "items-end" : "items-start"}`}>
                 <div className={`relative px-4 py-3 text-[13.5px] leading-[1.65] ${
                     isUser
@@ -191,7 +180,6 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
                     )}
                 </div>
 
-                {/* Meta bar */}
                 <div className={`flex items-center gap-1.5 mt-1.5 px-1 ${isUser ? "justify-end" : "justify-start"}`}>
                     <span className="text-[10px] text-[hsl(var(--muted-foreground))]/40 font-semibold tabular-nums">
                         {formatTime(msg.time)}
@@ -202,7 +190,6 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
                             <path d="M5 8.5L8.5 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/>
                         </svg>
                     )}
-                    {/* Actions for assistant */}
                     {voiceEnabled && !isUser && !msg.isError && done && (
                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <button onClick={() => speakText(msg.text, msg.id)} className="p-1 rounded-lg hover:bg-[hsl(var(--muted))]/60 transition-colors cursor-pointer" title="Баланд хондан">
@@ -557,10 +544,8 @@ const AiChat = () => {
 
     return (
         <div className="ai-chat-wrapper">
-            {/* ─── BG Decor ─── */}
             <div className="ai-chat-bg" />
 
-            {/* ─── Header ─── */}
             <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="ai-chat-header">
                 <div className="flex items-center gap-3">
                     <Link to="/dashboard">
@@ -621,12 +606,10 @@ const AiChat = () => {
                 </div>
             </motion.header>
 
-            {/* ─── Messages ─── */}
             <div ref={chatContainerRef} className="ai-chat-messages custom-scrollbar">
                 {messages.length === 0 && !loading && (
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
                         className="flex flex-col items-center justify-center h-full gap-8 text-center px-4">
-                        {/* Hero icon */}
                         <div className="relative">
                             <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-accent-blue/15 flex items-center justify-center backdrop-blur-xl border border-primary/10">
                                 <Bot className="w-12 h-12 text-primary" />
@@ -635,7 +618,6 @@ const AiChat = () => {
                                 className="absolute -top-2 -right-2 w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-accent-blue flex items-center justify-center shadow-lg shadow-primary/30">
                                 <Sparkles className="w-4 h-4 text-white" />
                             </motion.div>
-                            {/* Orbiting dots */}
                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 8, ease: "linear" }} className="absolute inset-[-18px]">
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-secondary/50" />
                                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary/40" />
@@ -669,7 +651,6 @@ const AiChat = () => {
                     ))}
                 </AnimatePresence>
 
-                {/* Typing indicator */}
                 {loading && (
                     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="flex items-end gap-2.5">
                         <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary via-accent-blue to-primary p-[2px] shadow-lg shadow-primary/20 mb-5">
@@ -692,18 +673,14 @@ const AiChat = () => {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* ─── Input ─── */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="ai-chat-input-area relative">
-                {/* Recording overlay */}
                 <AnimatePresence>
                     {isRecording && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                             className="absolute inset-0 z-20 flex items-center gap-3 px-4 rounded-2xl bg-gradient-to-r from-red-500/10 to-primary/10 border border-red-500/20 backdrop-blur-xl">
-                            {/* Pulsing mic indicator */}
                             <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1.2 }}
                                 className="flex-shrink-0 w-3.5 h-3.5 rounded-full bg-red-500 shadow-lg shadow-red-500/50" />
 
-                            {/* Live transcript preview */}
                             <div className="flex-1 overflow-hidden">
                                 <p className="text-sm text-[hsl(var(--foreground))] font-medium truncate">
                                     {input || <span className="text-[hsl(var(--muted-foreground))]/50 italic">{currentDict.voiceListening || "Listening…"}</span>}
@@ -713,19 +690,16 @@ const AiChat = () => {
                                 )}
                             </div>
 
-                            {/* Timer */}
                             <span className="flex-shrink-0 text-xs font-bold text-[hsl(var(--muted-foreground))] tabular-nums">
                                 {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, '0')}
                             </span>
 
-                            {/* Confirm (stop + keep text in input) */}
                             <motion.button whileTap={{ scale: 0.9 }} onClick={stopRecording}
                                 title={currentDict.voiceStop || "Stop & keep"}
                                 className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-violet-600 text-white flex items-center justify-center shadow-lg shadow-primary/30 cursor-pointer">
                                 <MicOff className="w-4 h-4" />
                             </motion.button>
 
-                            {/* Cancel (discard everything) */}
                             <button onClick={cancelRecording}
                                 title={currentDict.voiceCancel || "Cancel"}
                                 className="flex-shrink-0 w-9 h-9 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center cursor-pointer hover:bg-red-500/25 transition-colors">
@@ -735,7 +709,6 @@ const AiChat = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Mic error banner */}
                 <AnimatePresence>
                     {micError && (
                         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
@@ -747,7 +720,6 @@ const AiChat = () => {
                 </AnimatePresence>
 
                 <div className="ai-chat-input-container">
-                    {/* Voice Record Button */}
                     {VOICE_FEATURE_ENABLED && (
                         <button onClick={isRecording ? stopRecording : startRecording} disabled={loading || !SPEECH_SUPPORTED}
                             className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
@@ -767,7 +739,6 @@ const AiChat = () => {
                         </button>
                     )}
 
-                    {/* Text Input */}
                     <textarea ref={inputRef} value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -778,7 +749,6 @@ const AiChat = () => {
                         onInput={e => { e.target.style.height = "40px"; e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px"; }}
                     />
 
-                    {/* Auto-speak toggle */}
                     {VOICE_FEATURE_ENABLED && (
                         <button onClick={() => setAutoSpeak(!autoSpeak)}
                             className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
@@ -788,7 +758,6 @@ const AiChat = () => {
                         </button>
                     )}
 
-                    {/* Send text */}
                     <motion.button onClick={sendMessage} disabled={!input.trim() || loading}
                         whileHover={input.trim() && !loading ? { scale: 1.08 } : {}}
                         whileTap={input.trim() && !loading ? { scale: 0.92 } : {}}

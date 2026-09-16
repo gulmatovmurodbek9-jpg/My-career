@@ -58,7 +58,6 @@ const CustomSelect = ({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Trigger button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -97,7 +96,6 @@ const CustomSelect = ({
         />
       </button>
 
-      {/* Dropdown */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -107,7 +105,6 @@ const CustomSelect = ({
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute z-[60] top-[calc(100%+6px)] left-0 w-full bg-card border border-border rounded-xl shadow-2xl shadow-black/20 overflow-hidden"
           >
-            {/* Search input */}
             {searchable && (
               <div className="p-2 border-b border-border">
                 <input
@@ -121,9 +118,7 @@ const CustomSelect = ({
               </div>
             )}
 
-            {/* Options list */}
             <div className="max-h-[240px] overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-              {/* Empty placeholder option */}
               {placeholder && (
                 <button
                   type="button"

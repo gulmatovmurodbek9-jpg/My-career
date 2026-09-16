@@ -19,8 +19,6 @@ export default function StoryScene({
 
   return (
     <section className="bg-background">
-      {/* max-w-6xl = 1152px. Видео 1024px паҳноии аслӣ дорад, аз ин рӯ
-          контейнери калонтар онро танҳо ноаниқ мекунад. */}
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20 lg:px-8">
         <Reveal>
           <SceneVideo src={video} poster={poster} alt={videoAlt} preload={preload} />

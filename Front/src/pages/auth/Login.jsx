@@ -76,7 +76,6 @@ const Login = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-hero py-12 px-4">
-            {/* Decorative Blur Blobs */}
             <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
             <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-secondary/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
 
@@ -87,7 +86,6 @@ const Login = () => {
                 className="w-full max-w-md relative z-10"
             >
                 <div className="glass-card p-8 sm:p-10 border border-white/10 shadow-2xl relative overflow-hidden group">
-                    {/* Subtle Shine Effect */}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
                     <div className="text-center mb-8">
@@ -145,9 +143,6 @@ const Login = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
-                                {/* Бе ин корбар намебинад, ки чӣ навишт — ва
-                                    хатои имло дар парол ҳамчун «пароли нодуруст»
-                                    менамояд. */}
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((v) => !v)}

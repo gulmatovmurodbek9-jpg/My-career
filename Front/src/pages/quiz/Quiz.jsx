@@ -500,7 +500,6 @@ const Quiz = () => {
                         </div>
                     </div>
 
-                    {/* AI Advice Section (New) */}
                     {aiAdvice && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -520,7 +519,6 @@ const Quiz = () => {
                         </motion.div>
                     )}
 
-                    {/* Top Cluster & Personality Section */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                         <div className="p-8 rounded-3xl bg-primary/5 border border-primary/20 space-y-4 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
@@ -578,7 +576,6 @@ const Quiz = () => {
                         </div>
                     </div>
 
-                    {/* MMT Clusters Chart Preview */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 py-4">
                         {results.scores?.mmtClusters && Object.entries(results.scores.mmtClusters).map(([cat, score], i) => (
                             <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5 text-center group hover:bg-white/10 transition-colors">
@@ -595,7 +592,6 @@ const Quiz = () => {
                         ))}
                     </div>
 
-                    {/* ═══ Cluster Careers Section ═══ */}
                     {clusterCareers.length > 0 && (
                         <div className="pt-4 space-y-6 text-left">
                             <div className="rounded-[2rem] border border-primary/15 bg-primary/5 p-6 space-y-5">
@@ -749,8 +745,6 @@ const Quiz = () => {
     return (
         <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 relative">
             <div className="space-y-4 relative">
-                {/* Сарлавҳа. Навиштаҳои 6–7px дар телефон хонда намешуданд,
-                    ва "Progress" / "answered" бо англисӣ сахт навишта шуда буданд. */}
                 <div className="flex items-center justify-between gap-4">
                     <div className="space-y-2">
                         <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2.5 py-1 rounded-full">
@@ -782,7 +776,6 @@ const Quiz = () => {
                     {typeLabel && <span>{typeLabel}</span>}
                 </div>
 
-                {/* Progress Bar */}
                 <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                     <motion.div
                         initial={{ width: 0 }}
@@ -791,7 +784,6 @@ const Quiz = () => {
                     />
                 </div>
 
-                {/* Question Card */}
                 <AnimatePresence mode="wait">
                             {stageLoading && (
                                 <motion.div
@@ -805,8 +797,6 @@ const Quiz = () => {
                                     <p className="text-sm text-muted-foreground mt-2">{t("quiz.preparing")}</p>
                                 </motion.div>
                             )}
-                    {/* На glass-card: он ҳангоми hover тамоми кортро боло мебардошт ва
-                        ҳошияашро медурахшонд. Саволи тест бояд ором истад. */}
                     <motion.div
                         key={currentQuestion.id}
                         initial={{ opacity: 0, y: 8 }}
@@ -825,9 +815,6 @@ const Quiz = () => {
                                 </h2>
                             </div>
 
-                            {/* Ҷавобҳо бо ҳарфи хурди муқаррарӣ ва бе фосилаи калони ҳарфҳо —
-                                UPPERCASE + tracking-[0.2em] матни дароз дар 10px хонда намешуд.
-                                Ба ҷои тирча ҳарфи A/B/C; ҷавоби интихобшуда аломати ✓ мегирад. */}
                             <div className="grid grid-cols-1 gap-2.5">
                                 {currentQuestion.options.map((option, idx) => {
                                     const selected = currentAnswer === idx;
@@ -864,7 +851,6 @@ const Quiz = () => {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Тугмаҳои поён дар як сатр. Пештар 8px буданд ва "Оянда" базӯр намоён буд. */}
                 <div className="flex items-center gap-3 pt-1">
                     {currentStep > 0 && (
                         <button

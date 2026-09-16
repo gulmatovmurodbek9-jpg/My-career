@@ -20,7 +20,6 @@ function applyTheme(theme) {
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch (e) {
-    /* storage blocked (private mode) — the class is still applied */
   }
 
   listeners.forEach((listener) => listener());

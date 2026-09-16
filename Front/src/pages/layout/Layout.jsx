@@ -114,8 +114,6 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary-foreground">
-      {/* Аввалин чизи фокусшаванда: корбари клавиатура набояд ҳар дафъа
-          тамоми навбарро гузарад, то ба мазмун расад. */}
       <a href="#main" className="skip-link">
         {t("common.skip_to_content", "Ба мазмун гузаштан")}
       </a>
@@ -127,8 +125,6 @@ const Layout = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14 md:h-16 gap-3 lg:gap-5">
               <Link to="/" className="flex shrink-0 items-center gap-2 lg:gap-3 group text-decoration-none">
-                {/* Логотип шаффоф аст, аз ин рӯ дар ҳарду тема кор мекунад ва
-                    қуттии градиентӣ дигар лозим нест. */}
                 <img
                   src="/logo.png"
                   alt=""
@@ -136,27 +132,11 @@ const Layout = () => {
                   height={40}
                   className="h-9 w-9 lg:h-10 lg:w-10 flex-shrink-0 transition-transform duration-500 group-hover:scale-110"
                 />
-                {/*
-                  Номи бренд танҳо аз 2xl намоён мешавад.
-                  Дар русӣ номҳои меню дарозтаранд («Университеты»,
-                  «Консультации»), ва дар xl қатор ба ҷои худ намеғунҷад.
-                  Азбаски он `justify-center` аст, барзиёдӣ ба ҳарду тараф
-                  мебарояд — ва «Главная» ба болои номи бренд мехазид.
-                */}
                 <span className="hidden 2xl:block max-w-[210px] font-extrabold text-xl text-foreground tracking-normal uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                   {t("common.brand", "Ikhtisosiman")}
                 </span>
               </Link>
 
-              {/*
-                Марказонидашуда: акнун панҷ истиноди оммавӣ ҳаст, на ҳафт, ва
-                онҳо дар ҳар се забон бо фосила меғунҷанд. Бо `justify-start`
-                тамоми қатор ба чап мечаспид ва дар мобайн холигии калон
-                мемонд.
-
-                `overflow-hidden` ҳамчун эҳтиёт мемонад — агар рӯзе забони
-                нав ё истиноди нав илова шавад, қатор ба болои бренд намехазад.
-              */}
               <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden px-2 lg:gap-2">
                 {navLinks.map((link) => {
                   const isActive = link.to.includes("#")
@@ -173,9 +153,6 @@ const Layout = () => {
                       }`}
                     >
                       {link.label}
-                      {/* Хатчаи борики ягона. Нусхаи қаблӣ ҳам заминаи ранга,
-                          ҳам хатчаи 4px-и градиентӣ дошт: таъкиди дубора, ва
-                          градиент бо бақияи саҳифа намезад. */}
                       {isActive && (
                         <motion.span
                           layoutId="nav-indicator"
@@ -228,8 +205,6 @@ const Layout = () => {
 
                 {isAuthenticated ? (
                   <div className="flex items-center gap-2">
-                    {/* Ном акнун пайванд ба панел аст: «Панел» аз қатори боло
-                        бароварда шуд, ва бе ин ба он ҷо роҳи зуд намемонд. */}
                     <Link
                       to="/dashboard"
                       title={t("nav.dashboard", "Панел")}

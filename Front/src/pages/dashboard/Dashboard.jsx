@@ -118,7 +118,6 @@ const Dashboard = () => {
     return (
         <div className="pb-20">
             <div className="space-y-12">
-                {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                     <div className="space-y-2">
                         <motion.div
@@ -135,9 +134,6 @@ const Dashboard = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                        {/* Админ ба ҳамин саҳифа меафтад ва паёми «тестро
-                            супоред»-ро мебинад, ки ба ӯ дахл надорад. Роҳ ба
-                            панели идора бояд ҳамин ҷо намоён бошад. */}
                         {user?.role === 'admin' && (
                             <Link to="/admin">
                                 <button className="flex cursor-pointer items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-6 py-3 text-xs font-bold text-primary transition-colors hover:bg-primary/20">
@@ -165,7 +161,6 @@ const Dashboard = () => {
                         animate="visible"
                         className="bento-grid"
                     >
-                        {/* 1. Profile card */}
                         <motion.div variants={itemVariants} className="col-span-12 lg:col-span-4 glass-card flex flex-col p-6">
                             <div className="flex items-center gap-4">
                                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
@@ -207,7 +202,6 @@ const Dashboard = () => {
                             </div>
                         </motion.div>
 
-                        {/* 2. Radar Chart */}
                         <motion.div variants={itemVariants} className="col-span-12 lg:col-span-8">
                             <Suspense fallback={
                                 <div className="glass-card p-6 flex items-center justify-center min-h-[300px]">
@@ -221,8 +215,6 @@ const Dashboard = () => {
                             </Suspense>
                         </motion.div>
 
-                        {/* Кортҳои CTA бе hover: на заминаи дурахшон, на тирчаи ҳаракаткунанда. */}
-                        {/* 2.5 AI Career Advisor CTA */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/ai-advisor">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
@@ -242,7 +234,6 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
-                        {/* 2.55 AI Chat CTA */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/ai-chat">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
@@ -264,7 +255,6 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
-                        {/* 2.6 Career Compare CTA */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/compare">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
@@ -286,7 +276,6 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
-                        {/* 2.65 Рӯйхати ҳуҷҷатсупорӣ */}
                         <motion.div variants={itemVariants} className="col-span-12">
                             <Link to="/dashboard/plan">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
@@ -308,10 +297,7 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
-                        {/* 2.7 Appointment CTA */}
-                        {/* Removed - using AppointmentCard component instead */}
 
-                        {/* 3. Match Grid Header */}
                         <motion.div id="recommendations" variants={itemVariants} className="col-span-12 pt-8">
                             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
                                 <div className="flex items-center gap-3">
@@ -327,7 +313,6 @@ const Dashboard = () => {
                                         </p>
                                     </div>
                                 </div>
-                                {/* Пештар: «AI Powered» — англисӣ дар саҳифаи тоҷикӣ, 9px ва бо фосилаи 0.2em. */}
                                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[13px] font-semibold text-primary">
                                     <Bot className="h-3.5 w-3.5" aria-hidden />
                                     {t('dashboard.ai_powered', 'Интихоб бо ёрии AI')}
@@ -335,8 +320,6 @@ const Dashboard = () => {
                             </div>
                         </motion.div>
 
-                        {/* 4. Individual Matches — ҳама кортҳо як андоза: сатрҳои
-                            ноҳамвор аз андозаҳои гуногун пайдо мешуданд. */}
                         {matches.map((career, idx) => (
                             <motion.div
                                 key={career.id}
@@ -360,9 +343,6 @@ const Dashboard = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="glass-card p-16 text-center flex flex-col items-center gap-6 relative overflow-hidden"
                     >
-                        {/* pointer-events-none ҳатмист: ин қабати ороишӣ absolute
-                            аст ва болои тугмаи «Гузаштани санҷиш» меистод —
-                            клик ба он мерасид, на ба тугма. */}
                         <div className="absolute inset-0 tajik-pattern opacity-10 pointer-events-none" />
                         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center relative">
                             <ClipboardCheck className="w-8 h-8 text-primary" />
@@ -381,10 +361,6 @@ const Dashboard = () => {
                         </Link>
                     </motion.div>
                 )}
-                {/* Ихтисосҳои захирашуда.
-                    Берун аз шарти тавсияҳост: корбаре, ки ҳанӯз санҷиш
-                    насупоридааст, метавонад аллакай чанд ихтисосро захира
-                    карда бошад. */}
                 {savedCareers.length > 0 && (
                     <motion.div variants={containerVariants} initial="hidden" animate="show" className="col-span-12 grid grid-cols-12 gap-5">
                         <motion.div variants={itemVariants} className="col-span-12 pt-8">
@@ -424,7 +400,6 @@ const Dashboard = () => {
                 )}
             </div>
 
-            {/* Explainability Modal */}
             <MatchExplainModal
                 isOpen={explainOpen}
                 onClose={() => setExplainOpen(false)}

@@ -141,7 +141,6 @@ const AdminCareers = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -169,7 +168,6 @@ const AdminCareers = () => {
         </div>
       </motion.div>
 
-      {/* Filters */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/80" />
@@ -195,7 +193,6 @@ const AdminCareers = () => {
         />
       </motion.div>
 
-      {/* Table */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card border border-border rounded-2xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -254,8 +251,6 @@ const AdminCareers = () => {
                           </span>
                         </td>
                         <td className="px-6 py-3.5 text-right">
-                          {/* Дар экрани ламсӣ hover нест — тугмаҳо ҳеҷ гоҳ
-                              намебаромаданд ва сутун холӣ менамуд. */}
                           <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                             <button
                               onClick={() => { setEditingCareer(career); setFormOpen(true); }}
@@ -278,7 +273,6 @@ const AdminCareers = () => {
               </table>
             </div>
 
-            {/* Pagination */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-border">
               <p className="text-[13px] text-muted-foreground">
                 {t("admin.careers.page_info", { page: meta.page, lastPage: meta.lastPage, total: meta.total })}
@@ -324,7 +318,6 @@ const AdminCareers = () => {
         )}
       </motion.div>
 
-      {/* Career Form Modal */}
       <CareerForm
         open={formOpen}
         onClose={() => { setFormOpen(false); setEditingCareer(null); }}
@@ -334,7 +327,6 @@ const AdminCareers = () => {
         loading={formLoading}
       />
 
-      {/* Delete Single */}
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -345,7 +337,6 @@ const AdminCareers = () => {
         loading={deleteLoading}
       />
 
-      {/* Delete All */}
       <ConfirmDialog
         open={deleteAllOpen}
         onClose={() => { setDeleteAllOpen(false); setDeleteAllConfirm(false); }}

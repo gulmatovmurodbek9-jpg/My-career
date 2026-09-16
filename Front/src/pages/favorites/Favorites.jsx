@@ -168,7 +168,6 @@ const Favorites = () => {
 
     return (
         <div className="pb-24 pt-4">
-            {/* Hero */}
             <section className="pt-16 pb-10 relative overflow-hidden">
                 <div className="absolute inset-0 tajik-pattern opacity-5 pointer-events-none" />
                 <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
@@ -190,7 +189,6 @@ const Favorites = () => {
                 </div>
             </section>
 
-            {/* Tabs */}
             <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-8">
                 <div className="flex items-center gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/5 w-fit">
                     <button
@@ -212,7 +210,6 @@ const Favorites = () => {
                 </div>
             </div>
 
-            {/* Content */}
             <section className="max-w-7xl mx-auto px-6 lg:px-8">
                 {loading ? (
                     <div className="flex items-center justify-center py-32">

@@ -36,7 +36,6 @@ const ClusterForm = ({ open, onClose, onSubmit, cluster = null, loading = false 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: "spring", damping: 25, stiffness: 400 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl z-10">
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-xl font-bold text-foreground">
                 {cluster ? t("admin.clusters.edit_title") : t("admin.clusters.create_title")}
@@ -46,7 +45,6 @@ const ClusterForm = ({ open, onClose, onSubmit, cluster = null, loading = false 
               </button>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className={labelClass}>{t("admin.form.cluster_name")} *</label>
@@ -66,7 +64,6 @@ const ClusterForm = ({ open, onClose, onSubmit, cluster = null, loading = false 
               </div>
             </form>
 
-            {/* Footer */}
             <div className="flex justify-end gap-3 p-6 border-t border-border">
               <button type="button" onClick={onClose} disabled={loading} className="px-5 py-2.5 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground text-[15px] font-semibold border border-border transition-all cursor-pointer">
                 {t("admin.form.cancel")}

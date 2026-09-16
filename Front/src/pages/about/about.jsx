@@ -79,7 +79,6 @@ const About = () => {
 
   return (
     <div>
-      {/* ═══ HERO ═══ */}
       <section className="pt-12 pb-10 sm:pt-16 hero-gradient">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-5">
@@ -97,7 +96,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══ STATS ═══ */}
       <section className="pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -116,7 +114,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══ VALUES ═══ */}
       <section className="py-16 section-wash">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
@@ -145,7 +142,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══ TIMELINE ═══ */}
       <section className="py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
@@ -180,7 +176,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══ TEAM ═══ */}
       <section className="py-16 section-wash">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
@@ -205,7 +200,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══ CTA ═══ */}
       <section className="py-16 hero-gradient">
         <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>

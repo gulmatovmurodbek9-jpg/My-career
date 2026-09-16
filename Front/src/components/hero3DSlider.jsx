@@ -80,7 +80,6 @@ export default function Hero3DSlider() {
                 />
             </AnimatePresence>
 
-            {/* Navigation Dots */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
                 {images.map((_, i) => (
                     <button

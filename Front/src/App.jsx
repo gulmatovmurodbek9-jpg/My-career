@@ -43,19 +43,14 @@ const App = () => {
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route element={<Layout />}>
-              {/* Public Shared Routes */}
               <Route index element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/universities" element={<Universities />} />
               <Route path="/universities/:id" element={<UniversityDetail />} />
-              {/* Саҳифаи алоҳидаи кластерҳо бароварда шуд: сафҳаи асосӣ ҳамон
-                  панҷ гурӯҳро пурратар нишон медиҳад. Равонакунӣ мемонад, то
-                  истинодҳои кӯҳна ва хатчӯбҳо ба хатои 404 наафтанд. */}
               <Route path="/clusters" element={<Navigate to="/#cluster-groups" replace />} />
               <Route path="/info/:id" element={<Info />} />
 
-              {/* Protected Routes (Require Login) */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -68,7 +63,6 @@ const App = () => {
               </Route>
             </Route>
 
-            {/* Admin Routes — own layout with sidebar (no main navbar/footer) */}
             <Route element={<AdminRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin" element={<AdminDashboard />} />
@@ -79,19 +73,13 @@ const App = () => {
               </Route>
             </Route>
 
-            {/* Auth Routes (Only for non-logged in users) */}
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Route>
 
-            {/* Берун аз PublicRoute: он корбари воридшударо ба /dashboard
-                мепартояд, ва касе ки дар як таб кушода мондааст, саҳифаи
-                барқарорсозиро ҳеҷ гоҳ дида наметавонист. */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Роҳи захиравӣ. Бе он ҳар суроғаи номаълум экрани комилан
-                сафед медод — аз ҷумла ду истиноди худи сайдбар. */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

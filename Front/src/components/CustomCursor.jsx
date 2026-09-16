@@ -29,7 +29,6 @@ const CustomCursor = () => {
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[9999] hidden md:block">
-            {/* Main Dot */}
             <motion.div
                 className="fixed w-3 h-3 bg-primary rounded-full mix-blend-difference"
                 style={{
@@ -39,7 +38,6 @@ const CustomCursor = () => {
                     translateY: '-50%',
                 }}
             />
-            {/* Outer Ring */}
             <motion.div
                 className="fixed w-8 h-8 border border-primary/30 rounded-full"
                 animate={{

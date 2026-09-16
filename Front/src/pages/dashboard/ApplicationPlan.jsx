@@ -207,7 +207,6 @@ const ApplicationPlan = () => {
 
     return (
         <div className="pb-20">
-            {/* Сарлавҳа — ҳангоми чоп намоён намешавад */}
             <header className="print:hidden">
                 <Link
                     to="/dashboard"
@@ -276,7 +275,6 @@ const ApplicationPlan = () => {
                 )}
             </header>
 
-            {/* Сарлавҳаи танҳо барои чоп */}
             <div className="hidden print:block">
                 <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{t("plan.title")}</h1>
                 {cluster && (
@@ -298,10 +296,6 @@ const ApplicationPlan = () => {
                     <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
                         {t("plan.empty_text")}
                     </p>
-                    {/* Услуб рост ба `Link` меравад, на ба тугмаи дохилӣ.
-                        `.btn-primary` `display: flex` аст — яъне блокӣ, ва дар
-                        дохили `<a>`-и сатрӣ он `text-center`-и волидро нодида
-                        мегирифт ва ба канори чап мечаспид. */}
                     <Link
                         to="/careers"
                         className="btn-primary mt-6 inline-flex !px-6 !py-3 !text-sm !rounded-xl cursor-pointer"
@@ -339,9 +333,6 @@ const ApplicationPlan = () => {
                                     <td className="py-3 pr-3 font-mono text-xs tabular-nums">{item.code}</td>
                                     <td className="py-3 pr-3 font-semibold text-foreground">{item.careerName}</td>
                                     <td className="py-3 pr-3">
-                                        {/* Номи пурра ва суроға: довталаб бояд донад, ки ҳуҷҷатро
-                                            ба куҷо барад. Суроға ҳоло танҳо барои қисми донишгоҳҳо
-                                            дар база ҳаст — дар боқӣ шаҳр мемонад. */}
                                         <div className="text-foreground">
                                             {item.universityName || item.universityShortName}
                                         </div>

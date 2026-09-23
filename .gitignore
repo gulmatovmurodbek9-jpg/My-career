@@ -60,3 +60,7 @@ RESET-POSTGRES.bat
 
 # Нусхаи захиравии база: маълумоти корбарон ва калидҳо дорад.
 backups/
+
+.claude/
+.agents/
+skills-lock.json

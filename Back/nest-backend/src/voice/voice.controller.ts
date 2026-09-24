@@ -32,6 +32,16 @@ export class VoiceController {
             return;
         }
 
+        // Модели худамон — бепул ва бе ҳадди моҳона.
+        const local = await this.voiceService.speakLocal(text);
+        if (local) {
+            res.setHeader('Content-Type', 'audio/wav');
+            res.setHeader('X-Voice-Cache', 'local');
+            res.setHeader('Content-Length', String(local.length));
+            res.end(local);
+            return;
+        }
+
         const cached = await this.voiceService.readCache(file);
         if (cached) {
             res.setHeader('X-Voice-Cache', 'hit');

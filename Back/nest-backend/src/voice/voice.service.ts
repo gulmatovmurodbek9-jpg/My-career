@@ -9,6 +9,7 @@ import { createHash } from 'crypto';
 import { existsSync, readdirSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { TajikTts } from './tajik-tts';
 
 const MAX_TEXT_LENGTH = 500;
 const TTS_TIMEOUT_MS = 20_000;
@@ -73,6 +74,7 @@ export class VoiceService {
     // Овозҳои пешакӣ бо модели худамон (VITS, аз mms-tts-tgk омӯзонида шуд).
     // Номи файл — sha1 аз матни талаффуз, бе вобастагӣ ба хизматрасон.
     private readonly packDir = join(process.cwd(), 'voice-pack');
+    private readonly tajik = new TajikTts();
 
     constructor(private readonly configService: ConfigService) { }
 
@@ -123,6 +125,7 @@ export class VoiceService {
         }
 
         return {
+            localModel: this.tajik.available,
             configured: !!this.apiKey,
             voiceId: this.voiceId,
             model: this.modelId,
@@ -234,6 +237,37 @@ export class VoiceService {
         } catch {
             return null;
         }
+    }
+
+    // Модели худамон тоҷикиро аслӣ мехонад — sayify лозим нест,
+    // он танҳо барои фиреб додани ElevenLabs сохта шуда буд.
+    async speakLocal(rawText: string): Promise<Buffer | null> {
+        if (!this.tajik.available) return null;
+
+        const text = String(rawText || '').trim();
+        if (!text) return null;
+
+        const hash = createHash('sha1').update(`local|${text}`).digest('hex');
+        const file = join(this.cacheDir, `${hash}.wav`);
+
+        if (existsSync(file)) {
+            try {
+                return await readFile(file);
+            } catch {
+                /* аз нав месозем */
+            }
+        }
+
+        const audio = await this.tajik.speak(text);
+        if (!audio) return null;
+
+        try {
+            await mkdir(this.cacheDir, { recursive: true });
+            await writeFile(file, audio);
+        } catch (error) {
+            this.logger.warn(`Кеши маҳаллӣ нашуд: ${error}`);
+        }
+        return audio;
     }
 
     async readCache(file: string): Promise<Buffer | null> {

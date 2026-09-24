@@ -55,6 +55,7 @@
     "class-validator": "^0.14.3",
     "google-auth-library": "^10.6.2",
     "nodemailer": "^10.0.1",
+    "onnxruntime-node": "^1.30.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

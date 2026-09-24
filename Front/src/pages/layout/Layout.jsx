@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router";
+import VoiceAssistant from "../../components/voice/VoiceAssistant";
 import {
   ArrowRight,
   Github,
@@ -407,6 +408,7 @@ const Layout = () => {
         </footer>
       )}
 
+      <VoiceAssistant />
     </div>
   );
 };

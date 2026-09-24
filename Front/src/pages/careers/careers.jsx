@@ -145,12 +145,28 @@ const Careers = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Ёвари овозӣ бо ?ai= ё ?search= меояд — ҳатто вақте саҳифа аллакай кушода бошад.
+  useEffect(() => {
+    const askedAi = searchParams.get("ai");
+    const askedPlain = searchParams.get("search");
+    if (askedAi) {
+      setSearchQuery(askedAi);
+      setAiQuery((old) => (old === askedAi ? old : askedAi));
+      setCurrentPage(1);
+    } else if (askedPlain) {
+      setSearchQuery(askedPlain);
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
+
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { refreshProfile } = useAuthStore();
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const [aiQuery, setAiQuery] = useState("");
+  const [aiQuery, setAiQuery] = useState(
+    () => new URLSearchParams(window.location.search).get("ai") ?? "",
+  );
   const [aiFilters, setAiFilters] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(false);

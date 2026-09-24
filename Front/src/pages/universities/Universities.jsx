@@ -67,7 +67,15 @@ export default function Universities() {
   const navigate = useNavigate();
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  // Ёвари овозӣ шаҳрро бо ?q= мефиристад.
+  const [searchQuery, setSearchQuery] = useState(
+    () => new URLSearchParams(window.location.search).get("q") ?? "",
+  );
+
+  useEffect(() => {
+    const asked = new URLSearchParams(window.location.search).get("q");
+    if (asked) setSearchQuery(asked);
+  }, [location.search]);
   const [viewMode, setViewMode] = useState("map");
 
   useEffect(() => {

@@ -460,7 +460,11 @@ const CareerCompare = () => {
     const token = useAuthStore((s) => s.token);
     const refreshProfile = useAuthStore((s) => s.refreshProfile);
 
-    const [careers, setCareers] = useState([]);
+    // Ёвари овозӣ номҳоро бо ?names=A|B мефиристад.
+    const [careers, setCareers] = useState(() => {
+        const asked = new URLSearchParams(window.location.search).get("names");
+        return asked ? asked.split("|").map((name) => name.trim()).filter(Boolean).slice(0, 5) : [];
+    });
     const [inputValue, setInputValue] = useState("");
     const [compareQuestion, setCompareQuestion] = useState("");
     const apiLang = currentApiLang();

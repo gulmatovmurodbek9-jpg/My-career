@@ -32,6 +32,7 @@ import { useParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/authStore";
 import PsychologicalProfile from "../../components/PsychologicalProfile";
+import AdmissionScores from "../../components/AdmissionScores";
 import { API } from "../../lib/config";
 import { useToast } from "../../components/toast/ToastProvider";
 import { resourceUrl } from "../../lib/resourceLinks";
@@ -514,6 +515,16 @@ const Info = () => {
               <p className="text-muted-foreground leading-relaxed">{career.purpose}</p>
             </Section>
           )}
+
+          {/* Рақамҳои расмии НМТ — чизе ки дар ягон чатбот нест. */}
+          <Section
+            icon={GraduationCap}
+            title={t("career_page.scores_title", "Бали гузариш")}
+            subtitle={t("career_page.scores_sub", "Маълумоти расмии Маркази миллии тестӣ, панҷ соли охир")}
+            gradient="from-amber-500 to-orange-500"
+          >
+            <AdmissionScores careerId={id} />
+          </Section>
 
           {user?.quizResults && (
             <motion.div {...fadeIn}>

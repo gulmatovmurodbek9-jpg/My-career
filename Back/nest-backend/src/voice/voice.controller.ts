@@ -10,68 +10,55 @@ export class VoiceController {
     constructor(private readonly voiceService: VoiceService) { }
 
     @Get('status')
-    @ApiOperation({ summary: 'Танзимоти овоз: калид ҳаст ё не, чанд ҷумла дар кеш' })
+    @ApiOperation({ summary: 'Ҳолати овоз: модел, кеш, шинохти нутқ' })
     status() {
         return this.voiceService.status();
     }
 
-    @Get('speak')
-    @ApiOperation({ summary: 'Матн → овоз, пора-пора (браузер якбора хондан сар мекунад)' })
-    async speakStream(@Query('text') text: string, @Res() res: Response, @Ip() ip: string) {
-        const { file, spoken } = this.voiceService.resolveCache(text);
-
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-
-        // Овози худамон аз ҳама боло меистад — бепул ва фаврӣ.
-        const packed = await this.voiceService.readPack(spoken);
-        if (packed) {
-            res.setHeader('X-Voice-Cache', 'pack');
-            res.setHeader('Content-Length', String(packed.length));
-            res.end(packed);
-            return;
-        }
-
-        // Модели худамон — бепул ва бе ҳадди моҳона.
-        const local = await this.voiceService.speakLocal(text);
-        if (local) {
-            res.setHeader('Content-Type', 'audio/wav');
-            res.setHeader('X-Voice-Cache', 'local');
-            res.setHeader('Content-Length', String(local.length));
-            res.end(local);
-            return;
-        }
-
-        const cached = await this.voiceService.readCache(file);
-        if (cached) {
-            res.setHeader('X-Voice-Cache', 'hit');
-            res.setHeader('Content-Length', String(cached.length));
-            res.end(cached);
-            return;
-        }
-
-        res.setHeader('X-Voice-Cache', 'miss');
-        this.voiceService.guardSpend(ip);
-        await this.voiceService.streamAudio(spoken, file, (chunk) => res.write(chunk));
-        res.end();
-    }
-
     @Post('stt')
     @UseInterceptors(FileInterceptor('audio', { limits: { fileSize: 8 * 1024 * 1024 } }))
-    @ApiOperation({ summary: 'Садо → матни тоҷикӣ (ElevenLabs Scribe)' })
+    @ApiOperation({ summary: 'Садо → матни тоҷикӣ' })
     async stt(@UploadedFile() audio: Express.Multer.File, @Ip() ip: string) {
         this.voiceService.guardSpend(ip);
         return this.voiceService.transcribe(audio?.buffer, audio?.mimetype);
     }
 
+    @Get('speak')
+    @ApiOperation({ summary: 'Матн → овози тоҷикӣ (модели худамон)' })
+    async speakGet(
+        @Query('text') text: string,
+        @Query('speed') speed: string,
+        @Res() res: Response,
+    ) {
+        await this.send(text, Number(speed) || 1, res);
+    }
+
     @Post('speak')
-    @ApiOperation({ summary: 'Матн → овози тоҷикӣ (mp3), бо кеши доимӣ' })
-    async speak(@Body() body: { text: string }, @Res() res: Response) {
-        const { audio, cached } = await this.voiceService.speak(body?.text);
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.setHeader('Content-Length', String(audio.length));
+    @ApiOperation({ summary: 'Матн → овози тоҷикӣ (модели худамон)' })
+    async speakPost(
+        @Body() body: { text: string; speed?: number },
+        @Res() res: Response,
+    ) {
+        await this.send(body?.text, Number(body?.speed) || 1, res);
+    }
+
+    private async send(text: string, speed: number, res: Response) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        res.setHeader('X-Voice-Cache', cached ? 'hit' : 'miss');
-        res.send(audio);
+
+        // Агар ягон ҷумларо пешакӣ сохта бошем — ҳамонро медиҳем.
+        const packed = await this.voiceService.readPack(String(text || '').trim());
+        if (packed) {
+            res.setHeader('Content-Type', 'audio/mpeg');
+            res.setHeader('X-Voice-Source', 'pack');
+            res.setHeader('Content-Length', String(packed.length));
+            res.end(packed);
+            return;
+        }
+
+        const { audio, cached } = await this.voiceService.speak(text, speed);
+        res.setHeader('Content-Type', 'audio/wav');
+        res.setHeader('X-Voice-Source', cached ? 'cache' : 'model');
+        res.setHeader('Content-Length', String(audio.length));
+        res.end(audio);
     }
 }

@@ -1,62 +1,79 @@
-# ═══════════════════════════════════════════════════════════════════
-#  Модели VITS-ро ба ONNX табдил медиҳад.
-#  Баъди ин backend-и Node худаш овоз месозад — бе Python, бе ElevenLabs.
+# ═══════════════════════════════════════════════════════════════════════════
+#  Модели fine-tune-и тоҷикиро ба ONNX табдил медиҳад ва сифаташро месанҷад.
 #
-#  Дар Google Colab иҷро кунед. Дар охир ду файл зеркашӣ мешавад:
-#    tajik-tts.onnx   — худи модел
-#    tajik-tts.json   — луғат ва танзимот
-# ═══════════════════════════════════════════════════════════════════
+#  Дар Google Colab як катак — нусха гиред ва иҷро кунед.
+#  Дар охир tajik-onnx.zip зеркашӣ мешавад.
+#
+#  Дарунаш:
+#    onnx/model.onnx      — модел (fp32, бе quantization)
+#    config.json + токенизатор — барои @huggingface/transformers
+#    tokenizer-test.json  — барои санҷиши баробарии токенизатор дар Node
+#    compare/*.wav        — PyTorch ва ONNX паҳлӯ ба паҳлӯ
+# ═══════════════════════════════════════════════════════════════════════════
 
-!pip -q install "transformers>=4.41" "optimum[exporters]" onnx onnxruntime soundfile
+MODEL_DIR = "/content/drive/MyDrive/tajik-tts/model"   # ← модели fine-tune-и шумо
 
-import json, os, shutil
-import torch
+print("1/7  Google Drive…")
+from google.colab import drive
+drive.mount('/content/drive')
+
+import os, json, shutil, glob, time
+
+if not os.path.exists(f"{MODEL_DIR}/config.json"):
+    guess = glob.glob('/content/drive/MyDrive/**/config.json', recursive=True)
+    guess = [g for g in guess if 'tajik' in g.lower() or 'tgk' in g.lower()]
+    if guess:
+        MODEL_DIR = os.path.dirname(guess[0])
+        print(f"     модел дар ҷои дигар ёфт шуд: {MODEL_DIR}")
+    else:
+        raise SystemExit(f"config.json дар {MODEL_DIR} нест. Роҳи дурустро нависед.")
+print(f"     модел: {MODEL_DIR}")
+
+print("\n2/7  Китобхонаҳо (2–3 дақиқа)…")
+os.system('pip -q install "transformers==4.46.3" "huggingface_hub<1.0" '
+          '"optimum[exporters]" onnx onnxscript onnxruntime soundfile 2>&1 | tail -2')
+
+import numpy as np, torch, soundfile as sf, onnxruntime as ort
 from transformers import VitsModel, AutoTokenizer
 
-# Агар zip бор карда бошед: !unzip -q /content/tajik-tts-model.zip -d /content/tajik-tts-model
-MODEL_DIR = "/content/tajik-tts-model"
-OUT_DIR = "/content/tajik-onnx"
-os.makedirs(OUT_DIR, exist_ok=True)
+OUT = '/content/tajik-onnx'
+shutil.rmtree(OUT, ignore_errors=True)
+os.makedirs(f'{OUT}/onnx', exist_ok=True)
+os.makedirs(f'{OUT}/compare', exist_ok=True)
 
-model = VitsModel.from_pretrained(MODEL_DIR)
-model.eval()
+print("\n3/7  Моделро мекушоям…")
+model = VitsModel.from_pretrained(MODEL_DIR).eval()
 tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+SR = model.config.sampling_rate
+print(f"     sampling_rate = {SR}")
 
-# ── Ҷумлаи намунавӣ. Дароз бошад беҳтар — то шаклҳо васеъ трас шаванд.
-SAMPLE = "Хуш омадед! Ман ёвари шумо ҳастам, чӣ кор кунем имрӯз?"
-example = tokenizer(SAMPLE, return_tensors="pt")
+# ─────────────────────────────────────────────────────────────────────────
+print("\n4/7  Табдил ба ONNX — аввал optimum…")
+ONNX_PATH = f'{OUT}/onnx/model.onnx'
+done = False
 
-print("=== 1. Кӯшиши аввал: optimum ===")
-ok = False
-try:
-    os.system(f"optimum-cli export onnx --model {MODEL_DIR} --task text-to-audio {OUT_DIR}/optimum")
-    candidate = None
-    for root, _, files in os.walk(f"{OUT_DIR}/optimum"):
-        for f in files:
-            if f.endswith(".onnx"):
-                candidate = os.path.join(root, f)
-    if candidate:
-        shutil.copy(candidate, f"{OUT_DIR}/tajik-tts.onnx")
-        ok = True
-        print(f"   OK — {candidate}")
-except Exception as error:
-    print(f"   нашуд: {error}")
+code = os.system(f'optimum-cli export onnx --model "{MODEL_DIR}" '
+                 f'--task text-to-audio /content/opt-export 2>&1 | tail -6')
+found = glob.glob('/content/opt-export/**/*.onnx', recursive=True)
+if code == 0 and found:
+    shutil.copy(found[0], ONNX_PATH)
+    for extra in glob.glob('/content/opt-export/**/*.onnx_data', recursive=True):
+        shutil.copy(extra, f'{OUT}/onnx/')
+    done = True
+    print(f"     optimum: ОК")
+else:
+    print("     optimum нашуд → torch.onnx.export")
 
-if not ok:
-    print("\n=== 2. Кӯшиши дуюм: torch.onnx.export ===")
-
+if not done:
     class Wrapper(torch.nn.Module):
         def __init__(self, inner):
             super().__init__()
             self.inner = inner
-
         def forward(self, input_ids, attention_mask):
             return self.inner(input_ids=input_ids, attention_mask=attention_mask).waveform
 
-    torch.onnx.export(
-        Wrapper(model),
-        (example["input_ids"], example["attention_mask"]),
-        f"{OUT_DIR}/tajik-tts.onnx",
+    sample = tokenizer("Хуш омадед! Ман ёвари шумо ҳастам, чӣ кор кунем имрӯз?", return_tensors="pt")
+    export_args = dict(
         input_names=["input_ids", "attention_mask"],
         output_names=["waveform"],
         dynamic_axes={
@@ -67,46 +84,111 @@ if not ok:
         opset_version=17,
         do_constant_folding=True,
     )
-    print("   OK")
 
-# ── Луғат ва танзимот барои токенизатори JavaScript.
-with open(f"{MODEL_DIR}/vocab.json", encoding="utf-8") as handle:
-    vocab = json.load(handle)
-with open(f"{MODEL_DIR}/tokenizer_config.json", encoding="utf-8") as handle:
-    tok_cfg = json.load(handle)
+    # torch-и нав экспортери dynamo-ро пешфарз мегирад — он барои VITS
+    # ҳанӯз хом аст. Аввал экспортери кӯҳнаи TorchScript-ро маҷбур мекунем.
+    try:
+        torch.onnx.export(
+            Wrapper(model),
+            (sample["input_ids"], sample["attention_mask"]),
+            ONNX_PATH,
+            dynamo=False,
+            **export_args,
+        )
+        print("     torch.onnx.export (кӯҳна): ОК")
+    except TypeError:
+        torch.onnx.export(
+            Wrapper(model),
+            (sample["input_ids"], sample["attention_mask"]),
+            ONNX_PATH,
+            **export_args,
+        )
+        print("     torch.onnx.export: ОК")
 
-meta = {
-    "vocab": vocab,
-    "addBlank": tok_cfg.get("add_blank", True),
-    "normalize": tok_cfg.get("normalize", True),
-    "padToken": tok_cfg.get("pad_token", "о"),
-    "unkToken": tok_cfg.get("unk_token", "<unk>"),
-    "samplingRate": model.config.sampling_rate,
-}
-with open(f"{OUT_DIR}/tajik-tts.json", "w", encoding="utf-8") as handle:
-    json.dump(meta, handle, ensure_ascii=False, indent=1)
+for name in ["config.json", "vocab.json", "tokenizer_config.json",
+             "special_tokens_map.json", "added_tokens.json", "preprocessor_config.json"]:
+    src = f"{MODEL_DIR}/{name}"
+    if os.path.exists(src):
+        shutil.copy(src, f"{OUT}/{name}")
 
-# ── САНҶИШ: ONNX ҳамон садоро медиҳад ё не, ва бо дарозии ДИГАР кор мекунад?
-print("\n=== 3. Санҷиш ===")
-import numpy as np, onnxruntime as ort, soundfile as sf
+# ─────────────────────────────────────────────────────────────────────────
+print("\n5/7  САНҶИШИ 1 — токенизатор (барои Node)")
 
-session = ort.InferenceSession(f"{OUT_DIR}/tajik-tts.onnx", providers=["CPUExecutionProvider"])
-print("   вуруд:", [i.name for i in session.get_inputs()])
-print("   баромад:", [o.name for o in session.get_outputs()])
+SENTENCES = [
+    "Кушодам.",
+    "Ана ин ихтисосҳо.",
+    "Санҷишро сар мекунам.",
+    "Ҳисоботи шуморо кушодам.",
+    "Ана нақшаи ҳуҷҷатсупорӣ.",
+    "Барои супоридани ҳуҷҷат шаҳодатнома лозим аст.",
+    "Ҳуқуқшинос, муҳандис ва омӯзгор.",
+    "Донишгоҳи миллии Тоҷикистон дар Душанбе ҷойгир аст.",
+    "Бали гузариш шашсаду ёздаҳ буд.",
+    "Хуш омадед! Ман ёвари шумо ҳастам, чӣ кор кунем имрӯз?",
+]
 
-for label, text in [("kutoh", "Кушодам."), ("daroz", "Барои супоридани ҳуҷҷат шаҳодатнома ва маълумотномаи тиббӣ лозим аст.")]:
-    ids = tokenizer(text, return_tensors="np")
-    audio = session.run(None, {
-        "input_ids": ids["input_ids"].astype(np.int64),
-        "attention_mask": ids["attention_mask"].astype(np.int64),
-    })[0]
-    wave = np.squeeze(audio)
-    sf.write(f"{OUT_DIR}/test-{label}.wav", wave, meta["samplingRate"])
-    print(f"   {label}: {len(wave)} намуна = {len(wave)/meta['samplingRate']:.1f} сония")
+token_cases = []
+for text in SENTENCES:
+    ids = tokenizer(text, return_tensors="np")["input_ids"][0].tolist()
+    token_cases.append({"text": text, "ids": ids})
+    print(f"     {len(ids):4} токен  {text[:45]}")
 
-size = os.path.getsize(f"{OUT_DIR}/tajik-tts.onnx") / 1024 / 1024
-print(f"\ntajik-tts.onnx — {size:.0f} MB")
+with open(f'{OUT}/tokenizer-test.json', 'w', encoding='utf-8') as h:
+    json.dump(token_cases, h, ensure_ascii=False, indent=1)
 
-shutil.make_archive("/content/tajik-onnx", "zip", OUT_DIR)
+# ─────────────────────────────────────────────────────────────────────────
+print("\n6/7  САНҶИШИ 2 — PyTorch ва ONNX паҳлӯ ба паҳлӯ")
+
+session = ort.InferenceSession(ONNX_PATH, providers=['CPUExecutionProvider'])
+print(f"     вуруди ONNX: {[i.name for i in session.get_inputs()]}")
+
+COMPARE = SENTENCES[:2] + SENTENCES[5:8]
+report = []
+passed = 0
+
+for index, text in enumerate(COMPARE, 1):
+    ids = tokenizer(text, return_tensors="pt")
+
+    torch.manual_seed(1)
+    started = time.time()
+    with torch.no_grad():
+        torch_wave = model(**ids).waveform[0].cpu().numpy().astype(np.float32)
+    torch_ms = (time.time() - started) * 1000
+
+    try:
+        started = time.time()
+        onnx_wave = np.squeeze(session.run(None, {
+            "input_ids": ids["input_ids"].numpy().astype(np.int64),
+            "attention_mask": ids["attention_mask"].numpy().astype(np.int64),
+        })[0]).astype(np.float32)
+        onnx_ms = (time.time() - started) * 1000
+
+        sf.write(f'{OUT}/compare/{index}-torch.wav', torch_wave, SR)
+        sf.write(f'{OUT}/compare/{index}-onnx.wav', onnx_wave, SR)
+
+        t_sec, o_sec = len(torch_wave) / SR, len(onnx_wave) / SR
+        drift = abs(t_sec - o_sec) / max(t_sec, 0.01) * 100
+        ok = drift < 20
+        passed += ok
+        print(f"     {'OK ' if ok else 'ФАРҚ'} {index}: torch {t_sec:.2f}s ({torch_ms:.0f}ms) | "
+              f"onnx {o_sec:.2f}s ({onnx_ms:.0f}ms) | фарқ {drift:.0f}%")
+        report.append({"text": text, "torchSec": t_sec, "onnxSec": o_sec, "driftPct": drift})
+    except Exception as error:
+        print(f"     ХАТО {index}: {str(error)[:160]}")
+        report.append({"text": text, "error": str(error)[:300]})
+
+with open(f'{OUT}/compare/report.json', 'w', encoding='utf-8') as h:
+    json.dump(report, h, ensure_ascii=False, indent=1)
+
+# ─────────────────────────────────────────────────────────────────────────
+print("\n7/7  Бастабандӣ")
+size = os.path.getsize(ONNX_PATH) / 1024 / 1024
+print(f"     model.onnx — {size:.0f} MB, санҷиш {passed}/{len(COMPARE)}")
+
+if passed < len(COMPARE):
+    print("     ДИҚҚАТ: ҳамаи ҷумлаҳо нагузаштанд — ин матнро ба Клод нишон диҳед.")
+
+shutil.make_archive('/content/tajik-onnx', 'zip', OUT)
 from google.colab import files
-files.download("/content/tajik-onnx.zip")
+files.download('/content/tajik-onnx.zip')
+print("\nТамом.")

@@ -5,8 +5,17 @@ import { Logger } from '@nestjs/common';
 // Модели VITS-и худамон (аз facebook/mms-tts-tgk омӯзонида шуд), ба ONNX табдил дода.
 // Бе Python, бе torch — танҳо onnxruntime дар худи Node.
 const MODEL_DIR = join(process.cwd(), 'voice-model');
-const MODEL_FILE = join(MODEL_DIR, 'tajik-tts.onnx');
+// Colab моделро ҳамчун onnx/model.onnx мебарорад; номи кӯҳна низ қабул мешавад.
+const MODEL_CANDIDATES = [
+    join(MODEL_DIR, 'onnx', 'model.onnx'),
+    join(MODEL_DIR, 'tajik-tts.onnx'),
+];
+const modelFile = (): string | null => MODEL_CANDIDATES.find((path) => existsSync(path)) || null;
 const META_FILE = join(MODEL_DIR, 'tajik-tts.json');
+
+// Ҷумлаи хеле дароз хотираро мехӯрад ва садояш якранг мешавад.
+const MAX_CHUNK = 160;
+const PAUSE_SECONDS = 0.35;
 
 interface TtsMeta {
     vocab: Record<string, number>;
@@ -23,7 +32,7 @@ export class TajikTts {
     private loading: Promise<boolean> | null = null;
 
     get available(): boolean {
-        return existsSync(MODEL_FILE) && existsSync(META_FILE);
+        return !!modelFile() && existsSync(META_FILE);
     }
 
     get sampleRate(): number {
@@ -31,6 +40,11 @@ export class TajikTts {
     }
 
     // Модел вазнин аст — онро як маротиба ва танҳо ҳангоми ниёз мекушоем.
+    // Аз берун: моделро пешакӣ мекушоем, то корбари аввал интизор нашавад.
+    warmup(): Promise<boolean> {
+        return this.load();
+    }
+
     private async load(): Promise<boolean> {
         if (this.session) return true;
         if (!this.available) return false;
@@ -40,7 +54,7 @@ export class TajikTts {
             try {
                 const ort = require('onnxruntime-node');
                 this.meta = JSON.parse(readFileSync(META_FILE, 'utf8'));
-                this.session = await ort.InferenceSession.create(MODEL_FILE, {
+                this.session = await ort.InferenceSession.create(modelFile() as string, {
                     executionProviders: ['cpu'],
                     graphOptimizationLevel: 'all',
                 });
@@ -60,8 +74,9 @@ export class TajikTts {
 
     // Токенизатори VitsTokenizer: хурдҳарфӣ, партофтани аломатҳои бегона,
     // ва гузоштани холӣ байни ҳарфҳо (add_blank).
-    private encode(text: string): number[] {
-        const meta = this.meta!;
+    encodeText(text: string): number[] {
+        if (!this.meta) this.meta = JSON.parse(readFileSync(META_FILE, 'utf8'));
+        const meta = this.meta;
         const source = meta.normalize ? text.toLowerCase() : text;
         const ids: number[] = [];
 
@@ -107,30 +122,80 @@ export class TajikTts {
         return Buffer.concat([header, data]);
     }
 
-    async speak(text: string): Promise<Buffer | null> {
-        if (!(await this.load())) return null;
+    // Матнро ба ҷумлаҳо мебурад; ҷумлаи дароз аз рӯи вергул ё фосила бурида мешавад.
+    static split(text: string, maxLen = MAX_CHUNK): string[] {
+        const sentences = text.match(/[^.!?…]+[.!?…]*/g) || [text];
+        const out: string[] = [];
 
-        const ids = this.encode(text);
+        for (const raw of sentences) {
+            let part = raw.trim();
+            if (!part) continue;
+
+            while (part.length > maxLen) {
+                let cut = part.lastIndexOf(',', maxLen);
+                if (cut <= 20) cut = part.lastIndexOf(' ', maxLen);
+                if (cut <= 0) cut = maxLen;
+                out.push(part.slice(0, cut + 1).trim());
+                part = part.slice(cut + 1).trim();
+            }
+            if (part) out.push(part);
+        }
+
+        return out;
+    }
+
+    private async synthesize(text: string): Promise<Float32Array | null> {
+        const ids = this.encodeText(text);
         if (ids.length < 3) return null;
 
+        const ort = require('onnxruntime-node');
+        const length = ids.length;
+        const inputIds = new ort.Tensor('int64', BigInt64Array.from(ids.map((n) => BigInt(n))), [1, length]);
+        const attention = new ort.Tensor('int64', BigInt64Array.from(new Array(length).fill(BigInt(1))), [1, length]);
+
+        const feeds: Record<string, any> = {};
+        for (const name of this.session.inputNames) {
+            feeds[name] = name.includes('attention') ? attention : inputIds;
+        }
+
+        const output = await this.session.run(feeds);
+        return output[this.session.outputNames[0]].data as Float32Array;
+    }
+
+    async speak(text: string, speed = 1): Promise<Buffer | null> {
+        if (!(await this.load())) return null;
+
+        const chunks = TajikTts.split(text);
+        if (!chunks.length) return null;
+
+        const gap = Math.round(this.sampleRate * PAUSE_SECONDS);
+        const pieces: Float32Array[] = [];
+
         try {
-            const ort = require('onnxruntime-node');
-            const length = ids.length;
-            const inputIds = new ort.Tensor('int64', BigInt64Array.from(ids.map((n) => BigInt(n))), [1, length]);
-            const attention = new ort.Tensor('int64', BigInt64Array.from(new Array(length).fill(BigInt(1))), [1, length]);
-
-            const feeds: Record<string, any> = {};
-            for (const name of this.session.inputNames) {
-                if (name.includes('attention')) feeds[name] = attention;
-                else feeds[name] = inputIds;
+            for (const chunk of chunks) {
+                const wave = await this.synthesize(chunk);
+                if (!wave?.length) continue;
+                pieces.push(wave);
+                if (chunks.length > 1) pieces.push(new Float32Array(gap));
             }
-
-            const output = await this.session.run(feeds);
-            const first = output[this.session.outputNames[0]];
-            return this.toWav(first.data as Float32Array);
         } catch (error) {
             this.logger.error(`Синтез нашуд: ${error}`);
             return null;
         }
+
+        if (!pieces.length) return null;
+
+        const total = pieces.reduce((sum, piece) => sum + piece.length, 0);
+        const all = new Float32Array(total);
+        let offset = 0;
+        for (const piece of pieces) {
+            all.set(piece, offset);
+            offset += piece.length;
+        }
+
+        // Суръат ҳангоми табдил ба ONNX дар худи модел сабт шудааст —
+        // баъдан онро тағйир дода намешавад, вале дар кеш фарқ мекунад.
+        void speed;
+        return this.toWav(all);
     }
 }

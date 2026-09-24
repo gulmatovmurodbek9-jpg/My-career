@@ -2,6 +2,7 @@ import {
     BadRequestException,
     Injectable,
     Logger,
+    OnModuleInit,
     ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -11,169 +12,178 @@ import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { TajikTts } from './tajik-tts';
 
-const MAX_TEXT_LENGTH = 500;
-const TTS_TIMEOUT_MS = 20_000;
-const ELEVEN_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
+const MAX_TEXT_LENGTH = 2000;
+const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
 const STT_URL = 'https://api.elevenlabs.io/v1/speech-to-text';
 const STT_TIMEOUT_MS = 25_000;
-const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
 const IP_WINDOW_MS = 10 * 60 * 1000;
 
-// Scribe баъзан ба хатти форсӣ мегузарад («من» ба ҷойи «ман»), чунки
-// тоҷикӣ забони форсист. Калимаҳои маъмулро бармегардонем.
-const PERSIAN_WORDS: Array<[RegExp, string]> = [
-    [/می‌?خواهم/g, 'мехоҳам'],
-    [/می‌?خواهی/g, 'мехоҳӣ'],
-    [/برای/g, 'барои'],
-    [/شما/g, 'шумо'],
-    [/کدام/g, 'кадом'],
-    [/کجا/g, 'куҷо'],
-    [/این/g, 'ин'],
-    [/است/g, 'аст'],
-    [/من/g, 'ман'],
-    [/تو/g, 'ту'],
-    [/ما/g, 'мо'],
-    [/در/g, 'дар'],
-    [/که/g, 'ки'],
-    [/را/g, 'ро'],
-    [/به/g, 'ба'],
-    [/از/g, 'аз'],
-    [/با/g, 'бо'],
-    [/وا/g, 'во'],
-    [/آن/g, 'он'],
-    [/چه/g, 'чӣ'],
-    [/و/g, 'ва'],
-];
+// ── Рақамҳо ────────────────────────────────────────────────────────────
+// Модел рақамро намехонад: «4000» бояд «чор ҳазор» шавад.
+const ONES = ['сифр', 'як', 'ду', 'се', 'чор', 'панҷ', 'шаш', 'ҳафт', 'ҳашт', 'нӯҳ'];
+const TEENS = ['даҳ', 'ёздаҳ', 'дувоздаҳ', 'сенздаҳ', 'чордаҳ', 'понздаҳ', 'шонздаҳ', 'ҳабдаҳ', 'ҳаждаҳ', 'нуздаҳ'];
+const TENS = ['', '', 'бист', 'сӣ', 'чил', 'панҷоҳ', 'шаст', 'ҳафтод', 'ҳаштод', 'навад'];
+const HUNDREDS = ['', 'сад', 'дусад', 'сесад', 'чорсад', 'панҷсад', 'шашсад', 'ҳафтсад', 'ҳаштсад', 'нӯҳсад'];
 
-const toCyrillic = (text: string): string => {
-    if (!/[؀-ۿ]/.test(text)) return text;
-    let result = text;
-    for (const [pattern, word] of PERSIAN_WORDS) result = result.replace(pattern, word);
-    // Ҳарфи форсии боқимонда маъно надорад — мебарорем.
-    return result.replace(/[؀-ۿ‌]+/g, ' ').replace(/s{2,}/g, ' ').trim();
+const joinTj = (parts: string[]): string => parts.filter(Boolean).reduce((a, b) => `${a}у ${b}`);
+
+const under100 = (value: number): string => {
+    if (value < 10) return ONES[value];
+    if (value < 20) return TEENS[value - 10];
+    const rest = value % 10;
+    return rest ? joinTj([TENS[Math.floor(value / 10)], ONES[rest]]) : TENS[Math.floor(value / 10)];
 };
 
-// Модел тоҷикиро расман намедонад ва ҳарфҳои хосро вайрон мехонад.
-// Барои садо онҳоро ба шакли наздиктарин мегардонем; матни экран дигар намешавад.
-const SPEECH_MAP: Record<string, string> = {
-    'ӯ': 'у', 'Ӯ': 'У',
-    'ӣ': 'и', 'Ӣ': 'И',
-    'ғ': 'г', 'Ғ': 'Г',
-    'қ': 'к', 'Қ': 'К',
-    'ҳ': 'х', 'Ҳ': 'Х',
-    'ҷ': 'дж', 'Ҷ': 'Дж',
+const under1000 = (value: number): string => {
+    if (value < 100) return under100(value);
+    const rest = value % 100;
+    return rest ? joinTj([HUNDREDS[Math.floor(value / 100)], under100(rest)]) : HUNDREDS[Math.floor(value / 100)];
 };
 
-export const sayify = (text: string): string =>
-    text.replace(/[ӯӮӣӢғҒқҚҳҲҷҶ]/g, (letter) => SPEECH_MAP[letter] ?? letter);
+export const numberToTajik = (value: number): string => {
+    if (!Number.isFinite(value)) return '';
+    if (value < 0) return `манфии ${numberToTajik(-value)}`;
+    if (value === 0) return ONES[0];
+    if (value < 1000) return under1000(value);
+
+    if (value < 1_000_000) {
+        const thousands = Math.floor(value / 1000);
+        const rest = value % 1000;
+        const head = `${under1000(thousands)} ҳазор`;
+        return rest ? joinTj([head, under1000(rest)]) : head;
+    }
+
+    const millions = Math.floor(value / 1_000_000);
+    const rest = value % 1_000_000;
+    const head = `${under1000(millions)} миллион`;
+    return rest ? joinTj([head, numberToTajik(rest)]) : head;
+};
+
+// «то 4000 сомонӣ» → «то чор ҳазор сомонӣ». Фосилаи дарунирақамӣ низ гирифта мешавад.
+export const spellNumbers = (text: string): string =>
+    text.replace(/\d[\d\s ]*/g, (match) => {
+        const digits = match.replace(/[\s ]/g, '');
+        const value = Number(digits);
+        if (!Number.isFinite(value) || digits.length > 9) return match;
+        const tail = /[\s ]$/.test(match) ? ' ' : '';
+        return numberToTajik(value) + tail;
+    });
 
 @Injectable()
-export class VoiceService {
+export class VoiceService implements OnModuleInit {
     private readonly logger = new Logger(VoiceService.name);
     private readonly cacheDir = join(process.cwd(), 'voice-cache');
-    // Овозҳои пешакӣ бо модели худамон (VITS, аз mms-tts-tgk омӯзонида шуд).
-    // Номи файл — sha1 аз матни талаффуз, бе вобастагӣ ба хизматрасон.
+    // Овозҳои пешакӣ — агар ягон ҷумларо дастӣ сохта бошем.
     private readonly packDir = join(process.cwd(), 'voice-pack');
     private readonly tajik = new TajikTts();
 
-    constructor(private readonly configService: ConfigService) { }
+    // Сервер 2 ядро дорад: ду синтези ҳамзамон онро мехобонад.
+    private queue: Promise<unknown> = Promise.resolve();
 
-    private get apiKey(): string | null {
-        return this.configService.get<string>('ELEVENLABS_API_KEY') || null;
-    }
-
-    private get voiceId(): string {
-        return this.configService.get<string>('ELEVENLABS_VOICE_ID') || 'o6mkaley5d7ALxBgZ1dx';
-    }
-
-    private get modelId(): string {
-        return this.configService.get<string>('ELEVENLABS_MODEL_ID') || 'eleven_multilingual_v2';
-    }
-
-    // Аз .env идора мешаванд, то овозро бе тағйири код танзим кунем.
-    private get voiceSettings() {
-        const num = (key: string, fallback: number) => {
-            const value = Number(this.configService.get<string>(key));
-            return Number.isFinite(value) ? value : fallback;
-        };
-        return {
-            stability: num('ELEVENLABS_STABILITY', 0.75),
-            similarity_boost: num('ELEVENLABS_SIMILARITY', 0.95),
-            style: num('ELEVENLABS_STYLE', 0),
-            use_speaker_boost: this.configService.get<string>('ELEVENLABS_SPEAKER_BOOST') !== 'false',
-        };
-    }
-
-    // Танзимро нишон медиҳад, вале худи калидро ҳеҷ гоҳ бармегардонад.
-    status() {
-        let cached = 0;
-        try {
-            if (existsSync(this.cacheDir)) {
-                cached = readdirSync(this.cacheDir).filter((name) => name.endsWith('.mp3')).length;
-            }
-        } catch {
-            cached = 0;
-        }
-
-        let packed = 0;
-        try {
-            if (existsSync(this.packDir)) {
-                packed = readdirSync(this.packDir).filter((name) => name.endsWith('.mp3')).length;
-            }
-        } catch {
-            packed = 0;
-        }
-
-        return {
-            localModel: this.tajik.available,
-            configured: !!this.apiKey,
-            voiceId: this.voiceId,
-            model: this.modelId,
-            cached,
-            packed,
-        };
-    }
-
-    // Браузер тоҷикиро намешиносад ва «муҳандис»-ро «мультик» мешунавад.
-    // Scribe забони тоҷикиро мешиносад ва ҳамон калиди мо кор мекунад.
     private spendByIp = new Map<string, number[]>();
     private spendToday = { day: '', count: 0 };
 
-    // Кеш ройгон аст — танҳо сохтани садои НАВ пул мегирад, пас
-    // ҳамонро ҳисоб мекунем. Ду сатҳ: як корбар ва тамоми рӯз.
-    guardSpend(ip = 'unknown'): void {
-        const perIp = Number(this.configService.get<string>('VOICE_IP_LIMIT')) || 15;
-        const perDay = Number(this.configService.get<string>('VOICE_DAILY_LIMIT')) || 400;
-        const now = Date.now();
-        const today = new Date().toISOString().slice(0, 10);
+    constructor(private readonly configService: ConfigService) { }
 
-        if (this.spendToday.day !== today) this.spendToday = { day: today, count: 0 };
-        if (this.spendToday.count >= perDay) {
-            this.logger.warn(`Лимити рӯзона пур шуд (${perDay})`);
-            throw new ServiceUnavailableException('Лимити рӯзонаи овоз пур шуд');
+    // Кушодани файли 110 МБ 20 сония мегирад — онро дар оғоз мекунем,
+    // то дархости аввали корбар фаврӣ бошад.
+    onModuleInit(): void {
+        if (!this.tajik.available) {
+            this.logger.warn('Модели овоз дар voice-model/ нест');
+            return;
         }
+        const started = Date.now();
+        void this.tajik
+            .warmup()
+            .then((ok) => {
+                if (ok) this.logger.log(`Модели овоз тайёр — ${Date.now() - started} мс`);
+            })
+            .catch(() => undefined);
+    }
 
-        const recent = (this.spendByIp.get(ip) || []).filter((at) => now - at < IP_WINDOW_MS);
-        if (recent.length >= perIp) {
-            throw new ServiceUnavailableException('Дархостҳо аз ҳад зиёд — каме интизор шавед');
-        }
+    private get sttKey(): string | null {
+        return this.configService.get<string>('ELEVENLABS_API_KEY') || null;
+    }
 
-        recent.push(now);
-        this.spendByIp.set(ip, recent);
-        this.spendToday.count += 1;
-
-        // Хотираро тоза нигоҳ медорем.
-        if (this.spendByIp.size > 500) {
-            for (const [key, times] of this.spendByIp) {
-                if (!times.some((at) => now - at < IP_WINDOW_MS)) this.spendByIp.delete(key);
+    status() {
+        const count = (dir: string, ext: string) => {
+            try {
+                return existsSync(dir) ? readdirSync(dir).filter((name) => name.endsWith(ext)).length : 0;
+            } catch {
+                return 0;
             }
+        };
+
+        return {
+            tts: this.tajik.available ? 'local' : 'none',
+            sampleRate: this.tajik.sampleRate,
+            cached: count(this.cacheDir, '.wav'),
+            packed: count(this.packDir, '.mp3'),
+            speechToText: !!this.sttKey,
+        };
+    }
+
+    // ── Овоз ───────────────────────────────────────────────────────────
+    private prepare(rawText: string): string {
+        const text = String(rawText || '').trim();
+        if (!text) throw new BadRequestException('Матн холӣ аст');
+        if (text.length > MAX_TEXT_LENGTH) {
+            throw new BadRequestException(`Матн аз ${MAX_TEXT_LENGTH} ҳарф дароз аст`);
+        }
+        return spellNumbers(text);
+    }
+
+    async readPack(spoken: string): Promise<Buffer | null> {
+        const hash = createHash('sha1').update(spoken).digest('hex');
+        const file = join(this.packDir, `${hash}.mp3`);
+        if (!existsSync(file)) return null;
+        try {
+            return await readFile(file);
+        } catch {
+            return null;
         }
     }
 
+    async speak(rawText: string, speed = 1): Promise<{ audio: Buffer; cached: boolean }> {
+        if (!this.tajik.available) {
+            throw new ServiceUnavailableException('Модели овоз дар voice-model/ нест');
+        }
+
+        const spoken = this.prepare(rawText);
+        const hash = createHash('sha1').update(`${spoken}|${speed}`).digest('hex');
+        const file = join(this.cacheDir, `${hash}.wav`);
+
+        if (existsSync(file)) {
+            try {
+                return { audio: await readFile(file), cached: true };
+            } catch {
+                /* аз нав месозем */
+            }
+        }
+
+        // Навбат: дархостҳо як-як мегузаранд.
+        const audio = await (this.queue = this.queue
+            .catch(() => undefined)
+            .then(() => this.tajik.speak(spoken, speed))) as Buffer | null;
+
+        if (!audio) throw new ServiceUnavailableException('Овоз сохта нашуд');
+
+        try {
+            await mkdir(this.cacheDir, { recursive: true });
+            await writeFile(file, audio);
+        } catch (error) {
+            this.logger.warn(`Кеш нигоҳ дошта нашуд: ${error}`);
+        }
+
+        return { audio, cached: false };
+    }
+
+    // ── Шинохти нутқ ───────────────────────────────────────────────────
+    // Модели мо танҳо гап мезанад. Барои шунидани тоҷикӣ ивазкунанда надорем.
     async transcribe(buffer?: Buffer, mimetype?: string): Promise<{ text: string }> {
         if (!buffer?.length) throw new BadRequestException('Садо холӣ аст');
         if (buffer.length > MAX_AUDIO_BYTES) throw new BadRequestException('Садо хеле калон аст');
-        if (!this.apiKey) throw new ServiceUnavailableException('ELEVENLABS_API_KEY дар .env нест');
+        if (!this.sttKey) throw new ServiceUnavailableException('ELEVENLABS_API_KEY дар .env нест');
 
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), STT_TIMEOUT_MS);
@@ -191,7 +201,7 @@ export class VoiceService {
 
             const response = await fetch(STT_URL, {
                 method: 'POST',
-                headers: { 'xi-api-key': this.apiKey },
+                headers: { 'xi-api-key': this.sttKey },
                 body: form,
                 signal: controller.signal,
             });
@@ -214,203 +224,63 @@ export class VoiceService {
         }
     }
 
-    resolveCache(rawText: string): { file: string; spoken: string } {
-        const text = String(rawText || '').trim();
-        if (!text) throw new BadRequestException('Матн холӣ аст');
-        if (text.length > MAX_TEXT_LENGTH) {
-            throw new BadRequestException(`Матн аз ${MAX_TEXT_LENGTH} ҳарф дароз аст`);
+    // Танҳо шинохти нутқ пул мегирад — овоз акнун аз они худамон аст.
+    guardSpend(ip = 'unknown'): void {
+        const perIp = Number(this.configService.get<string>('VOICE_IP_LIMIT')) || 30;
+        const perDay = Number(this.configService.get<string>('VOICE_DAILY_LIMIT')) || 800;
+        const now = Date.now();
+        const today = new Date().toISOString().slice(0, 10);
+
+        if (this.spendToday.day !== today) this.spendToday = { day: today, count: 0 };
+        if (this.spendToday.count >= perDay) {
+            this.logger.warn(`Лимити рӯзона пур шуд (${perDay})`);
+            throw new ServiceUnavailableException('Лимити рӯзонаи шинохти нутқ пур шуд');
         }
-        const spoken = sayify(text);
-        const hash = createHash('sha1')
-            .update([this.voiceId, this.modelId, spoken].join('|'))
-            .digest('hex');
-        return { file: join(this.cacheDir, `${hash}.mp3`), spoken };
-    }
 
-    // Аввал овози худамонро меҷӯем — он бепул ва фаврӣ аст.
-    async readPack(spoken: string): Promise<Buffer | null> {
-        const hash = createHash('sha1').update(spoken).digest('hex');
-        const file = join(this.packDir, `${hash}.mp3`);
-        if (!existsSync(file)) return null;
-        try {
-            return await readFile(file);
-        } catch {
-            return null;
+        const recent = (this.spendByIp.get(ip) || []).filter((at) => now - at < IP_WINDOW_MS);
+        if (recent.length >= perIp) {
+            throw new ServiceUnavailableException('Дархостҳо аз ҳад зиёд — каме интизор шавед');
         }
-    }
 
-    // Модели худамон тоҷикиро аслӣ мехонад — sayify лозим нест,
-    // он танҳо барои фиреб додани ElevenLabs сохта шуда буд.
-    async speakLocal(rawText: string): Promise<Buffer | null> {
-        if (!this.tajik.available) return null;
+        recent.push(now);
+        this.spendByIp.set(ip, recent);
+        this.spendToday.count += 1;
 
-        const text = String(rawText || '').trim();
-        if (!text) return null;
-
-        const hash = createHash('sha1').update(`local|${text}`).digest('hex');
-        const file = join(this.cacheDir, `${hash}.wav`);
-
-        if (existsSync(file)) {
-            try {
-                return await readFile(file);
-            } catch {
-                /* аз нав месозем */
+        if (this.spendByIp.size > 500) {
+            for (const [key, times] of this.spendByIp) {
+                if (!times.some((at) => now - at < IP_WINDOW_MS)) this.spendByIp.delete(key);
             }
-        }
-
-        const audio = await this.tajik.speak(text);
-        if (!audio) return null;
-
-        try {
-            await mkdir(this.cacheDir, { recursive: true });
-            await writeFile(file, audio);
-        } catch (error) {
-            this.logger.warn(`Кеши маҳаллӣ нашуд: ${error}`);
-        }
-        return audio;
-    }
-
-    async readCache(file: string): Promise<Buffer | null> {
-        if (!existsSync(file)) return null;
-        try {
-            return await readFile(file);
-        } catch {
-            return null;
-        }
-    }
-
-    // Садоро пора-пора мефиристем: браузер пеш аз тайёр шудани тамоми файл
-    // хондан сар мекунад. Ҳамзамон онро дар кеш ҷамъ мекунем.
-    async streamAudio(spoken: string, file: string, onChunk: (chunk: Buffer) => void): Promise<void> {
-        if (!this.apiKey) {
-            throw new ServiceUnavailableException('ELEVENLABS_API_KEY дар .env нест');
-        }
-
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), TTS_TIMEOUT_MS);
-
-        try {
-            const response = await fetch(
-                `${ELEVEN_URL}/${this.voiceId}/stream?output_format=mp3_44100_128`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'audio/mpeg',
-                        'xi-api-key': this.apiKey,
-                    },
-                    body: JSON.stringify({
-                        text: spoken,
-                        model_id: this.modelId,
-                        voice_settings: this.voiceSettings,
-                    }),
-                    signal: controller.signal,
-                },
-            );
-
-            if (!response.ok || !response.body) {
-                const detail = (await response.text()).slice(0, 200);
-                this.logger.error(`ElevenLabs stream ${response.status}: ${detail}`);
-                throw new ServiceUnavailableException(`ElevenLabs ҷавоб надод (${response.status})`);
-            }
-
-            const parts: Buffer[] = [];
-            const reader = response.body.getReader();
-            for (;;) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = Buffer.from(value);
-                parts.push(chunk);
-                onChunk(chunk);
-            }
-
-            try {
-                await mkdir(this.cacheDir, { recursive: true });
-                await writeFile(file, Buffer.concat(parts));
-            } catch (error) {
-                this.logger.warn(`Кеш нигоҳ дошта нашуд: ${error}`);
-            }
-        } finally {
-            clearTimeout(timer);
-        }
-    }
-
-    async speak(rawText: string): Promise<{ audio: Buffer; cached: boolean }> {
-        const text = String(rawText || '').trim();
-        if (!text) throw new BadRequestException('Матн холӣ аст');
-        if (text.length > MAX_TEXT_LENGTH) {
-            throw new BadRequestException(`Матн аз ${MAX_TEXT_LENGTH} ҳарф дароз аст`);
-        }
-
-        const spoken = sayify(text);
-        const hash = createHash('sha1')
-            .update([this.voiceId, this.modelId, spoken].join('|'))
-            .digest('hex');
-        const file = join(this.cacheDir, `${hash}.mp3`);
-
-        // Ҳар ҷумла танҳо як маротиба пул мегирад — баъдан аз диск меояд.
-        if (existsSync(file)) {
-            return { audio: await readFile(file), cached: true };
-        }
-
-        if (!this.apiKey) {
-            throw new ServiceUnavailableException('ELEVENLABS_API_KEY дар .env нест');
-        }
-
-        const audio = await this.requestAudio(spoken);
-        try {
-            await mkdir(this.cacheDir, { recursive: true });
-            await writeFile(file, audio);
-        } catch (error) {
-            this.logger.warn(`Кеш нигоҳ дошта нашуд: ${error}`);
-        }
-
-        return { audio, cached: false };
-    }
-
-    private async requestAudio(spoken: string): Promise<Buffer> {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), TTS_TIMEOUT_MS);
-
-        try {
-            const response = await fetch(
-                `${ELEVEN_URL}/${this.voiceId}?output_format=mp3_44100_128`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'audio/mpeg',
-                        'xi-api-key': this.apiKey as string,
-                    },
-                    body: JSON.stringify({
-                        text: spoken,
-                        model_id: this.modelId,
-                        voice_settings: this.voiceSettings,
-                    }),
-                    signal: controller.signal,
-                },
-            );
-
-            if (!response.ok) {
-                const detail = (await response.text()).slice(0, 200);
-                this.logger.error(`ElevenLabs ${response.status}: ${detail}`);
-                if (response.status === 401) {
-                    throw new ServiceUnavailableException('Калиди ElevenLabs нодуруст аст');
-                }
-                if (response.status === 429) {
-                    throw new ServiceUnavailableException('Лимити ElevenLabs тамом шуд');
-                }
-                throw new ServiceUnavailableException(`ElevenLabs ҷавоб надод (${response.status})`);
-            }
-
-            return Buffer.from(await response.arrayBuffer());
-        } catch (error: any) {
-            if (error?.name === 'AbortError') {
-                throw new ServiceUnavailableException('ElevenLabs дер кард');
-            }
-            throw error;
-        } finally {
-            clearTimeout(timer);
         }
     }
 }
+
+// Scribe баъзан ба хатти форсӣ мегузарад («من» ба ҷойи «ман»).
+const PERSIAN_WORDS: Array<[RegExp, string]> = [
+    [/می‌?خواهم/g, 'мехоҳам'],
+    [/می‌?خواهی/g, 'мехоҳӣ'],
+    [/برای/g, 'барои'],
+    [/شما/g, 'шумо'],
+    [/کدام/g, 'кадом'],
+    [/کجا/g, 'куҷо'],
+    [/این/g, 'ин'],
+    [/است/g, 'аст'],
+    [/من/g, 'ман'],
+    [/تو/g, 'ту'],
+    [/ما/g, 'мо'],
+    [/در/g, 'дар'],
+    [/که/g, 'ки'],
+    [/را/g, 'ро'],
+    [/به/g, 'ба'],
+    [/از/g, 'аз'],
+    [/با/g, 'бо'],
+    [/آن/g, 'он'],
+    [/چه/g, 'чӣ'],
+    [/و/g, 'ва'],
+];
+
+const toCyrillic = (text: string): string => {
+    if (!/[؀-ۿ]/.test(text)) return text;
+    let result = text;
+    for (const [pattern, word] of PERSIAN_WORDS) result = result.replace(pattern, word);
+    return result.replace(/[؀-ۿ‌]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+};

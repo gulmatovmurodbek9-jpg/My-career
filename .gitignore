@@ -74,3 +74,8 @@ tajik-tts/tajik-tts-model/
 tajik-tts/*.zip
 tajik-tts-model.zip
 tajik-tts/model.safetensors
+
+# Модели овоз — калон аст, ба git намеравад (110 МБ)
+Back/nest-backend/voice-model/
+tajik-tts/node-test/
+tajik-tts/compare/

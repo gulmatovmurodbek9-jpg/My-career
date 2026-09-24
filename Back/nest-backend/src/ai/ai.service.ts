@@ -15,7 +15,7 @@ const AI_PROVIDER_COOLDOWN_MS = 5 * 60 * 1000;
 
 const AI_UNPROVEN_TIMEOUT_MS = 30000;
 
-type AiProvider = 'vertex' | 'gemini' | 'groq';
+type AiProvider = 'vertex' | 'gemini';
 
 @Injectable()
 export class AiService implements OnModuleInit {
@@ -23,8 +23,6 @@ export class AiService implements OnModuleInit {
     private geminiModel: any = null;
     private vertex: GoogleGenAI | null = null;
     private vertexModel = 'gemini-2.5-flash';
-    private groqKey: string | null = null;
-    private groqModel = 'openai/gpt-oss-120b';
     private providerDownUntil = new Map<AiProvider, number>();
     private providerFailures = new Map<AiProvider, number>();
     private providerProven = new Set<AiProvider>();
@@ -39,14 +37,6 @@ export class AiService implements OnModuleInit {
                 model: 'gemini-flash-latest',
                 generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as any,
             });
-        }
-
-        this.groqKey = this.configService.get<string>('GROQ_API_KEY') || null;
-        this.groqModel = this.configService.get<string>('GROQ_MODEL') || 'openai/gpt-oss-120b';
-        if (this.groqKey) {
-            console.log(`AI: Groq ҳамчун захира фаъол — модел ${this.groqModel}`);
-        } else {
-            console.warn('AI: GROQ_API_KEY нест — агар Gemini афтад, захира намемонад');
         }
 
         this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-2.5-flash';
@@ -64,30 +54,28 @@ export class AiService implements OnModuleInit {
         }
     }
 
-    // Занҷир: Vertex → Gemini → Groq. Агар яке афтад, навбатӣ кӯшиш мекунад.
+    // Занҷир: Vertex → Gemini. Агар яке афтад, навбатӣ кӯшиш мекунад.
     async generateContent(
         prompt: string,
         options: { provider?: AiProvider; timeoutMs?: number } = {},
     ): Promise<string> {
-        const run = (which: AiProvider, ms: number) => {
+        const run = (which: AiProvider) => {
             if (which === 'vertex') return this.generateVertexContent(prompt);
-            if (which === 'groq') return this.generateGroqContent(prompt, ms);
             return this.generateGeminiContent(prompt);
         };
 
         const chain: AiProvider[] = options.provider === 'gemini'
-            ? ['gemini', 'vertex', 'groq']
-            : ['vertex', 'gemini', 'groq'];
+            ? ['gemini', 'vertex']
+            : ['vertex', 'gemini'];
 
         const usable = chain.filter((which) => {
             if (which === 'vertex') return !!this.vertex;
-            if (which === 'groq') return !!this.groqKey;
             return true;
         });
 
         const now = Date.now();
         const healthy = usable.filter((which) => (this.providerDownUntil.get(which) ?? 0) <= now);
-        const promoted = (which: AiProvider) => which !== 'groq' && this.providerProven.has(which);
+        const promoted = (which: AiProvider) => this.providerProven.has(which);
         const order = [...(healthy.length ? healthy : usable)]
             .sort((a, b) => Number(promoted(b)) - Number(promoted(a)));
 
@@ -97,7 +85,7 @@ export class AiService implements OnModuleInit {
             const requested = Math.max(options.timeoutMs ?? AI_PROVIDER_TIMEOUT_MS, AI_PROVIDER_TIMEOUT_MS);
             const ms = proven ? requested : Math.min(requested, AI_UNPROVEN_TIMEOUT_MS);
             try {
-                const result = await this.withTimeout(run(which, ms), which, ms);
+                const result = await this.withTimeout(run(which), which, ms);
                 this.providerProven.add(which);
                 this.providerFailures.delete(which);
                 this.providerDownUntil.delete(which);
@@ -232,42 +220,5 @@ export class AiService implements OnModuleInit {
         }
 
         throw lastError ?? new InternalServerErrorException('Gemini ҷавоб надод');
-    }
-
-    private async generateGroqContent(prompt: string, timeoutMs: number = AI_PROVIDER_TIMEOUT_MS): Promise<string> {
-        if (!this.groqKey) {
-            throw new InternalServerErrorException('Groq танзим нашудааст (GROQ_API_KEY)');
-        }
-
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-        try {
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${this.groqKey}`,
-                },
-                body: JSON.stringify({
-                    model: this.groqModel,
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.7,
-                }),
-                signal: controller.signal,
-            });
-
-            if (!response.ok) {
-                const detail = await response.text();
-                throw new Error(`Groq ${response.status}: ${detail.slice(0, 200)}`);
-            }
-
-            const data: any = await response.json();
-            const text = data?.choices?.[0]?.message?.content;
-            if (!text) throw new Error('Groq ҷавоби холӣ баргардонд');
-            return text;
-        } finally {
-            clearTimeout(timer);
-        }
     }
 }

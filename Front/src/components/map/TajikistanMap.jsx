@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Circle,
   GeoJSON,
   MapContainer,
   Marker,
@@ -24,6 +25,36 @@ import {
   Users,
   X,
 } from "lucide-react";
+
+// Масофаи ҳавоӣ байни ду нуқта (км) — формулаи ҳаверсин.
+function distanceKm(fromLat, fromLng, toLat, toLng) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(toLat - fromLat);
+  const dLng = toRad(toLng - fromLng);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(fromLat)) * Math.cos(toRad(toLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function createMeIcon() {
+  return L.divIcon({
+    className: "",
+    html: '<div style="position:relative;width:22px;height:22px"><span style="position:absolute;inset:0;border-radius:9999px;background:#2563eb;opacity:.35;animation:ping 1.6s cubic-bezier(0,0,.2,1) infinite"></span><span style="position:absolute;inset:5px;border-radius:9999px;background:#2563eb;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.45)"></span></div>',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
+
+// Харитаро ба нуқтаи додашуда мебарад.
+function FlyToPoint({ point }) {
+  const map = useMap();
+  useEffect(() => {
+    if (point) map.flyTo([point.lat, point.lng], 13, { duration: 1.1 });
+  }, [point, map]);
+  return null;
+}
 
 const DEFAULT_CITY = "Душанбе";
 const DEFAULT_ZOOM = 11;
@@ -269,6 +300,9 @@ export default function TajikistanMap({ universities = [], focusResults = false 
   const [activeCity, setActiveCity] = useState(DEFAULT_CITY);
   const [selectedUni, setSelectedUni] = useState(null);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [myLocation, setMyLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState("");
 
   const [mapMode, setMapMode] = useState("satellite");
   const satellite = mapMode === "satellite";
@@ -288,6 +322,43 @@ export default function TajikistanMap({ universities = [], focusResults = false 
     () => buildDisplayUniversities(universities),
     [universities]
   );
+
+  // Браузер ҷойгиршавиро танҳо бо иҷозати корбар медиҳад.
+  const locateMe = () => {
+    if (!navigator.geolocation) {
+      setGeoError(t("career_page.m_geo_unsupported", "Браузери шумо ҷойгиршавиро дастгирӣ намекунад"));
+      return;
+    }
+    setLocating(true);
+    setGeoError("");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setMyLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        setGeoError(t("career_page.m_geo_denied", "Ҷойгиршавӣ дастрас нашуд. Дар браузер иҷозат диҳед."));
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+    );
+  };
+
+  // Наздиктарин донишгоҳҳо аз ҷойи корбар.
+  const nearest = useMemo(() => {
+    if (!myLocation) return [];
+    return displayUniversities
+      .map((uni) => ({
+        uni,
+        km: distanceKm(myLocation.lat, myLocation.lng, uni.displayLat, uni.displayLng),
+      }))
+      .sort((a, b) => a.km - b.km)
+      .slice(0, 5);
+  }, [myLocation, displayUniversities]);
 
   const cityGroups = useMemo(() => {
     const grouped = new Map();
@@ -526,6 +597,19 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               >
               </Marker>
             ))}
+          {myLocation && (
+            <>
+              <FlyToPoint point={myLocation} />
+              <Circle
+                center={[myLocation.lat, myLocation.lng]}
+                radius={Math.min(myLocation.accuracy || 300, 2000)}
+                pathOptions={{ color: "#2563eb", weight: 1, fillOpacity: 0.12 }}
+              />
+              <Marker position={[myLocation.lat, myLocation.lng]} icon={createMeIcon()}>
+                <Popup>{t("career_page.m_you_are_here", "Шумо дар ин ҷоед")}</Popup>
+              </Marker>
+            </>
+          )}
         </MapContainer>
       </div>
       )}
@@ -588,6 +672,51 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         <LocateFixed className="h-4 w-4" />
         {t("career_page.m_to_dushanbe")}
       </button>
+
+      <button
+        type="button"
+        onClick={locateMe}
+        disabled={locating}
+        className="absolute bottom-5 left-5 z-[700] ml-[10.5rem] inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-primary px-4 py-3 text-sm font-bold text-white shadow-xl backdrop-blur-xl transition hover:brightness-110 disabled:opacity-60"
+      >
+        <Navigation className="h-4 w-4" />
+        {locating
+          ? t("career_page.m_locating", "Меҷӯям…")
+          : t("career_page.m_find_me", "Маро ёб")}
+      </button>
+
+      {(nearest.length > 0 || geoError) && (
+        <div className="absolute left-5 top-5 z-[700] w-[min(20rem,calc(100%-2.5rem))] rounded-2xl border border-white/10 bg-black/70 p-4 text-white shadow-xl backdrop-blur-xl">
+          {geoError ? (
+            <p className="text-sm">{geoError}</p>
+          ) : (
+            <>
+              <h4 className="mb-3 text-sm font-bold">
+                {t("career_page.m_nearest", "Наздиктарин донишгоҳҳо")}
+              </h4>
+              <ul className="space-y-2">
+                {nearest.map(({ uni, km }) => (
+                  <li key={uni.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedUni(uni);
+                        setPanelOpen(true);
+                      }}
+                      className="flex w-full items-start justify-between gap-3 text-left text-[13px] hover:text-primary"
+                    >
+                      <span className="min-w-0 flex-1 truncate">{uni.shortName || uni.name}</span>
+                      <span className="shrink-0 font-semibold tabular-nums">
+                        {km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(1)} км`}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
 
       <AnimatePresence>
         {viewport.zoom > CITY_OVERVIEW_ZOOM && currentCityGroup && panelOpen && selectedUni && (

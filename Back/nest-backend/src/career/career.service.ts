@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, In } from 'typeorm';
 import { Career } from './career.entity';
 import { CareerOffering } from './career-offering.entity';
+import { AdmissionScore } from './admission-score.entity';
 import { Cluster } from '../cluster/cluster.entity';
 import { CreateCareerDto } from './dto/create-career.dto';
 import { UpdateCareerDto } from './dto/update-career.dto';
@@ -67,6 +68,8 @@ const foldTajik = (value: string): string => {
 };
 
 // Ҳарфҳои тоҷикӣ (ғ ӣ қ ӯ ҳ ҷ) ба шакли оддӣ оварда мешаванд, то «хукук» ҳам «ҳуқуқ»-ро ёбад.
+const NTC_SOURCE = { name: 'Маркази миллии тестӣ', url: 'https://stat.ntc.tj/' };
+
 const TAJIK_FOLD = (column: string): string =>
     `translate(lower(${column}), 'ғӣқӯҳҷҒӢҚӮҲҶ', 'гикухчгикухч')`;
 
@@ -85,6 +88,8 @@ export class CareerService {
         private clusterRepository: Repository<Cluster>,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        @InjectRepository(AdmissionScore)
+        private admissionRepository: Repository<AdmissionScore>,
         private configService: ConfigService,
         private aiService: AiService,
     ) { }
@@ -794,6 +799,61 @@ export class CareerService {
         const replyKey = action === 'open_universities' && params.id ? 'open_career' : action;
         const canned = CareerService.ASSISTANT_REPLIES[answerLang]?.[replyKey];
         return { reply: canned || reply, action, params, answerLang };
+    }
+
+    // Балҳои гузариши расмии НМТ аз рӯи коди ихтисос.
+    async admissionScores(careerId: string) {
+        const career = await this.careerRepository.findOne({ where: { id: careerId } });
+        const code = career?.code ? String(career.code).trim() : '';
+        if (!code) return { code: null, source: NTC_SOURCE, years: [], universities: [] };
+
+        const rows = await this.admissionRepository.find({
+            where: { code },
+            order: { year: 'ASC', score: 'DESC' },
+        });
+        if (!rows.length) return { code, source: NTC_SOURCE, years: [], universities: [] };
+
+        // Ҷамъбаст аз рӯи сол: аз кадом бал то кадом бал қабул карданд.
+        const byYear = new Map<number, any[]>();
+        for (const row of rows) {
+            if (!byYear.has(row.year)) byYear.set(row.year, []);
+            byYear.get(row.year)!.push(row);
+        }
+
+        const years = [...byYear.entries()]
+            .map(([year, list]) => {
+                const scores = list.map((r) => r.score).filter((s): s is number => typeof s === 'number');
+                const seats = list.reduce((sum, r) => sum + (r.seats || 0), 0);
+                const competitions = list.map((r) => r.competition).filter((c): c is number => typeof c === 'number');
+                return {
+                    year,
+                    offers: list.length,
+                    seats,
+                    minScore: scores.length ? Math.round(Math.min(...scores) * 10) / 10 : null,
+                    maxScore: scores.length ? Math.round(Math.max(...scores) * 10) / 10 : null,
+                    avgScore: scores.length
+                        ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+                        : null,
+                    maxCompetition: competitions.length ? Math.round(Math.max(...competitions) * 100) / 100 : null,
+                };
+            })
+            .sort((a, b) => a.year - b.year);
+
+        // Соли охирин аз рӯи донишгоҳ — то корбар бубинад, куҷо осонтар аст.
+        const lastYear = years[years.length - 1]?.year;
+        const universities = rows
+            .filter((row) => row.year === lastYear)
+            .map((row) => ({
+                university: row.university,
+                studyForm: row.studyForm,
+                paymentType: row.paymentType,
+                seats: row.seats,
+                competition: row.competition,
+                score: row.score === null ? null : Math.round(row.score * 10) / 10,
+            }))
+            .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+
+        return { code, source: NTC_SOURCE, lastYear, years, universities };
     }
 
     findOne(id: string): Promise<Career | null> {

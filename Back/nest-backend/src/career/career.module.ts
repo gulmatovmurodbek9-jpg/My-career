@@ -4,6 +4,7 @@ import { CareerService } from './career.service';
 import { CareerController } from './career.controller';
 import { Career } from './career.entity';
 import { CareerOffering } from './career-offering.entity';
+import { AdmissionScore } from './admission-score.entity';
 import { Cluster } from '../cluster/cluster.entity';
 import { AiModule } from '../ai/ai.module';
 import { User } from '../users/user.entity';
@@ -12,7 +13,7 @@ import { SitemapController } from './sitemap.controller';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Career, CareerOffering, Cluster, User, University]),
+        TypeOrmModule.forFeature([Career, CareerOffering, Cluster, User, University, AdmissionScore]),
         AiModule,
     ],
     controllers: [CareerController, SitemapController],

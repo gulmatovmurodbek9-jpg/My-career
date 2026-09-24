@@ -150,6 +150,12 @@ export class CareerController {
         };
     }
 
+    @Get(':id/scores')
+    @ApiOperation({ summary: 'Балҳои гузариши расмии НМТ аз рӯи солҳо' })
+    async scores(@Param('id') id: string) {
+        return this.careerService.admissionScores(id);
+    }
+
     @Post('assistant')
     @ApiOperation({ summary: 'Voice assistant: turns a spoken request into one allowed app action' })
     async assistant(@Body() body: { message: string; lang?: string; careerName?: string }) {

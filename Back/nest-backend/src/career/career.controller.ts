@@ -150,6 +150,14 @@ export class CareerController {
         };
     }
 
+    @Post('assistant')
+    @ApiOperation({ summary: 'Voice assistant: turns a spoken request into one allowed app action' })
+    async assistant(@Body() body: { message: string; lang?: string; careerName?: string }) {
+        return this.careerService.assistant(body?.message, body?.lang, {
+            careerName: body?.careerName,
+        });
+    }
+
     @Post('match')
     @ApiOperation({ summary: 'Match careers based on user quiz results' })
     async match(@Body() body: { scores: any; lang?: string }) {

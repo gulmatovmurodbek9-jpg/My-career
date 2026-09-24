@@ -535,6 +535,267 @@ export class CareerService {
             .map((word) => foldTajik(word)),
     );
 
+    private static readonly ASSISTANT_ACTIONS = [
+        'search', 'open_career', 'compare', 'save_career',
+        'start_quiz', 'open_universities', 'open_report', 'open_plan', 'answer',
+    ];
+
+    // Ҷавоби собит барои ҳар амал: ҳамеша якхела — яъне садояш як бор сохта
+    // мешавад ва баъд аз кеш меояд. AI танҳо барои сӯҳбати озод ҷавоб менависад.
+    private static readonly ASSISTANT_REPLIES: Record<string, Record<string, string>> = {
+        tj: {
+            search: 'Ана ин ихтисосҳо.',
+            open_career: 'Кушодам.',
+            compare: 'Муқоиса тайёр аст.',
+            save_career: 'Захира шуд.',
+            start_quiz: 'Санҷишро сар мекунам.',
+            open_universities: 'Ана донишгоҳҳо.',
+            open_report: 'Ҳисоботи шуморо кушодам.',
+            open_plan: 'Ана нақшаи ҳуҷҷатсупорӣ.',
+        },
+        ru: {
+            search: 'Вот эти специальности.',
+            open_career: 'Открыл.',
+            compare: 'Сравнение готово.',
+            save_career: 'Сохранено.',
+            start_quiz: 'Начинаю тест.',
+            open_universities: 'Вот университеты.',
+            open_report: 'Открыл ваш отчёт.',
+            open_plan: 'Вот план подачи документов.',
+        },
+        en: {
+            search: 'Here are the specialties.',
+            open_career: 'Opened.',
+            compare: 'The comparison is ready.',
+            save_career: 'Saved.',
+            start_quiz: 'Starting the test.',
+            open_universities: 'Here are the universities.',
+            open_report: 'I opened your report.',
+            open_plan: 'Here is the application plan.',
+        },
+    };
+
+    private async resolveCareer(name?: string): Promise<Career | null> {
+        const wanted = String(name || '').trim();
+        if (wanted.length < 3) return null;
+
+        // 1) Номи рост: ҳамон калима дар номи ихтисос ҳаст.
+        const exact: Career[] = await this.careerRepository
+            .createQueryBuilder('career')
+            .where(`${TAJIK_FOLD('career.name')} LIKE :name`, { name: `%${foldTajik(wanted)}%` })
+            .orderBy('length(career.name)', 'ASC')
+            .limit(1)
+            .getMany();
+        if (exact[0]) return exact[0];
+
+        // 2) «иқтисодчӣ» → «Иқтисодиёт»: решаи калимаи дарозтаринро меҷӯем.
+        const stem = foldTajik(wanted)
+            .split(/[^a-zа-яё0-9]+/i)
+            .filter((word) => word.length >= 6)
+            .sort((a, b) => b.length - a.length)[0]
+            ?.slice(0, 7);
+        if (stem) {
+            const rows: Array<{ id: string }> = await this.careerRepository.manager.query(
+                `SELECT id FROM career
+                 WHERE ${TAJIK_FOLD('name')} LIKE $1
+                 ORDER BY (CASE WHEN ${TAJIK_FOLD('name')} LIKE $2 THEN 0 ELSE 1 END), length(name)
+                 LIMIT 1`,
+                [`%${stem}%`, `${stem}%`],
+            );
+            if (rows[0]) {
+                const found = await this.careerRepository.findOne({ where: { id: rows[0].id } });
+                if (found) return found;
+            }
+        }
+
+        // 3) Роҳи охирин: ҳамон ранкинги ҷустуҷӯи чат.
+        const ranked = await this.findRelevantCareers(wanted);
+        if ((ranked as any).isFallback) return null;
+        return ranked[0] || null;
+    }
+
+    async assistant(rawMessage: string, lang = 'tj', context: { careerName?: string } = {}) {
+        const message = String(rawMessage || '').trim().slice(0, 400);
+        const answerLang = ['tj', 'ru', 'en'].includes(lang) ? lang : 'tj';
+        const langName = answerLang === 'ru' ? 'русӣ' : answerLang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+        if (!message) return { reply: '', action: 'answer', params: {}, answerLang };
+
+        const readJson = (raw: string) => {
+            let text = raw.trim();
+            if (text.startsWith('```json')) text = text.slice(7);
+            else if (text.startsWith('```')) text = text.slice(3);
+            if (text.endsWith('```')) text = text.slice(0, -3);
+            return JSON.parse(text.trim());
+        };
+
+        const prompt = [
+            'Ту ёвари овозии сомонаи «Ихтисоси ман» ҳастӣ — роҳнамои интихоби касб дар Тоҷикистон.',
+            'Гуфтаи корбарро ба ЯК амали иҷозатдодашуда табдил деҳ.',
+            'МУҲИМ: матн аз шинохти нутқ омадааст ва метавонад калимаҳои вайрон дошта бошад.',
+            'Масалан «эҳсос» ба ҷойи «ихтисос», «иқтисочӣ» ба ҷойи «иқтисодчӣ».',
+            'Маънои наздиктаринро гир, ба ҳарфҳо часпида намон.',
+            `ДИҚҚАТ: «reply» ҲАТМАН бо забони ${langName} бошад — ҳатто агар корбар бо забони дигар гап занад.`,
+            '',
+            'ГУФТАИ КОРБАР:',
+            message,
+            context.careerName ? `КОРБАР ҲОЗИР ИН ИХТИСОСРО МЕБИНАД: ${context.careerName}` : '',
+            '',
+            'АМАЛҲОИ ИҶОЗАТДОДАШУДА:',
+            '- search — ҷустуҷӯи ихтисос («барномасозиро нишон деҳ», «то 4000 сомонӣ»). params: {"query": "матни ҷустуҷӯ"}',
+            '- open_career — кушодани як ихтисоси мушаххас. params: {"name": "номи ихтисос"}',
+            '- compare — муқоисаи ду ё зиёда ихтисос. params: {"names": ["ном1", "ном2"]}',
+            '- save_career — захира кардани ихтисос. params: {"name": "номи ихтисос"}',
+            '- start_quiz — оғози санҷиши касбӣ. params: {}',
+            '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "номи донишгоҳ", "city": "шаҳр"}',
+            '- open_report — ҳисоботи AI аз рӯи санҷиш. params: {}',
+            '- open_plan — рӯйхати ҳуҷҷатсупорӣ. params: {}',
+            '- answer — танҳо ҷавоби шифоҳӣ, бе амал. params: {}',
+            '',
+            'ФОРМАТИ ҶАВОБ — танҳо JSON:',
+            '{"action": "ном", "params": {...}, "reply": "як ҷумлаи кӯтоҳ"}',
+            '',
+            'МИСОЛҲО:',
+            '«Салом, ман намедонам кадом касбро интихоб кунам» → {"action":"answer","params":{},"reply":"Биёед санҷиш гузарем. Сар кунам?"}',
+            '«Ҳа, сар кун» → {"action":"start_quiz","params":{},"reply":"Санҷиш оғоз ёфт."}',
+            '«Духтуриро кушо» → {"action":"open_career","params":{"name":"Духтур"},"reply":"Кушодам."}',
+            '',
+            'ҚОИДАҲО:',
+            `- "reply" бо забони ${langName}, ҲАТМАН кӯтоҳ: то 15 калима, чунки онро овоз мехонад.`,
+            '- Агар аниқ нафаҳмидӣ, "action": "answer" гузор ва саволи равшанкунанда бипурс.',
+            '- Салом, шикоят ё саволи умумӣ → "answer". Амалро танҳо вақте интихоб кун, ки корбар онро равшан хоста бошад.',
+            '- Номи ихтисосро тахмин накун; калимаи худи корбарро нависед.',
+            '- Рақам, нарх ё номи донишгоҳ аз худат насоз.',
+        ].filter(Boolean).join(String.fromCharCode(10));
+
+        let parsed: any = null;
+        try {
+            parsed = readJson(await this.aiService.generateContent(prompt, { timeoutMs: 20000 }));
+        } catch (error) {
+            // AI ҷавоб надод — ёвар набояд хомӯш монад.
+            const excuse = answerLang === 'ru'
+                ? 'Извините, сейчас не могу ответить. Повторите, пожалуйста.'
+                : answerLang === 'en'
+                    ? 'Sorry, I cannot answer right now. Please say it again.'
+                    : 'Мебахшед, ҳозир ҷавоб дода наметавонам. Бори дигар бигӯед.';
+            return { reply: excuse, action: 'answer', params: {}, answerLang, failed: true };
+        }
+
+        const wanted = String(parsed?.action || 'answer');
+        let action = CareerService.ASSISTANT_ACTIONS.includes(wanted) ? wanted : 'answer';
+        const reply = typeof parsed?.reply === 'string' ? parsed.reply.trim().slice(0, 300) : '';
+        const given = parsed?.params && typeof parsed.params === 'object' ? parsed.params : {};
+        let params: any = {};
+
+        if (action === 'search') {
+            const rawQuery = String(given.query || message).trim().slice(0, 200);
+
+            // «Дар бораи ихтисосҳо гӯй» — калимаи умумӣ филтр нест, онро мебарорем.
+            const generic = /ихтисос[а-яёғӣқӯҳҷ]*|касб[а-яёғӣқӯҳҷ]*|профессия[а-я]*|специальност[а-я]*|специалност[а-я]*/gi;
+            const cleaned = rawQuery.replace(generic, ' ').replace(/ {2,}/g, ' ').trim();
+
+            if (!rawQuery) {
+                action = 'answer';
+            } else if (cleaned.length < 3) {
+                // Танҳо калимаи умумӣ гуфт — ҳамаи ихтисосҳоро мекушоем.
+                return {
+                    reply: CareerService.ASSISTANT_REPLIES[answerLang]?.search || '',
+                    action,
+                    params: { query: '' },
+                    answerLang,
+                };
+            } else {
+                // Пеш аз кушодани саҳифа мебинем, ки дар база чизе ҳаст ё не —
+                // саҳифаи холӣ дар назди корбар бадтарин ҷавоб аст.
+                const matches = await this.findRelevantCareers(cleaned);
+                let found = (matches as any).isFallback ? [] : matches;
+                let refined = cleaned;
+
+                // Ранкинг баъзан «иқтисодчӣ»-ро намеёбад, вале решаҷӯӣ меёбад.
+                if (found.length === 0) {
+                    const near = await this.resolveCareer(cleaned);
+                    if (near) {
+                        found = [near];
+                        refined = near.name;
+                    }
+                }
+
+                if (found.length === 0) {
+                    action = 'answer';
+                    params = {};
+                    return {
+                        reply: answerLang === 'ru'
+                            ? `По запросу «${cleaned}» ничего не нашлось. Попробуйте другое слово.`
+                            : answerLang === 'en'
+                                ? `I found nothing for "${cleaned}". Try another word.`
+                                : `Аз рӯи «${cleaned}» чизе наёфтам. Калимаи дигар бигӯед.`,
+                        action,
+                        params,
+                        answerLang,
+                    };
+                }
+
+                params = { query: refined, count: found.length };
+            }
+        }
+        if (action === 'open_career' || action === 'save_career') {
+            const career = await this.resolveCareer(given.name || context.careerName);
+            if (!career) {
+                action = 'search';
+                params = { query: String(given.name || message).slice(0, 200) };
+            } else {
+                params = { id: career.id, name: career.name, code: career.code };
+            }
+        }
+
+        if (action === 'compare') {
+            const names = Array.isArray(given.names) ? given.names.slice(0, 5) : [];
+            const found: string[] = [];
+            for (const name of names) {
+                const career = await this.resolveCareer(name);
+                if (career && !found.includes(career.name)) found.push(career.name);
+            }
+            if (found.length < 2) {
+                action = 'search';
+                params = { query: names.join(' ').slice(0, 200) || message };
+            } else {
+                params = { names: found };
+            }
+        }
+
+        if (action === 'open_universities') {
+            // «донишгоҳи Миллиро ёб» — аввал номи мушаххасро меҷӯем,
+            // вагарна корбар ба рӯйхати 33-тоӣ мерасад.
+            const wantedName = String(given.name || '').trim();
+            if (wantedName.length >= 3) {
+                const rows: Array<{ id: string; name: string }> = await this.careerRepository.manager.query(
+                    `SELECT id, name FROM universities
+                     WHERE ${TAJIK_FOLD('name')} LIKE $1
+                        OR ${TAJIK_FOLD(`coalesce("shortName", '')`)} LIKE $1
+                     ORDER BY (CASE WHEN ${TAJIK_FOLD('name')} LIKE $2 THEN 0 ELSE 1 END), length(name)
+                     LIMIT 1`,
+                    [`%${foldTajik(wantedName)}%`, `${foldTajik(wantedName)}%`],
+                );
+                if (rows[0]) params = { id: rows[0].id, name: rows[0].name };
+            }
+
+            if (!params.id) {
+                const city = String(given.city || '').trim();
+                if (city) {
+                    const rows: Array<{ city: string }> = await this.careerRepository.manager.query(
+                        `SELECT DISTINCT city FROM universities WHERE ${TAJIK_FOLD('city')} LIKE $1 LIMIT 1`,
+                        [`%${foldTajik(city)}%`],
+                    );
+                    if (rows[0]?.city) params = { city: rows[0].city };
+                }
+            }
+        }
+
+        // Барои амалҳо ҷумлаи собит мегирем — садояш ҳамеша аз кеш меояд.
+        const replyKey = action === 'open_universities' && params.id ? 'open_career' : action;
+        const canned = CareerService.ASSISTANT_REPLIES[answerLang]?.[replyKey];
+        return { reply: canned || reply, action, params, answerLang };
+    }
+
     findOne(id: string): Promise<Career | null> {
         return this.careerRepository.findOne({ where: { id }, relations: ['cluster', 'universities'] });
     }

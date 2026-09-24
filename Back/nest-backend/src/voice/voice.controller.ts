@@ -19,11 +19,20 @@ export class VoiceController {
     @ApiOperation({ summary: 'Матн → овоз, пора-пора (браузер якбора хондан сар мекунад)' })
     async speakStream(@Query('text') text: string, @Res() res: Response, @Ip() ip: string) {
         const { file, spoken } = this.voiceService.resolveCache(text);
-        const cached = await this.voiceService.readCache(file);
 
         res.setHeader('Content-Type', 'audio/mpeg');
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
+        // Овози худамон аз ҳама боло меистад — бепул ва фаврӣ.
+        const packed = await this.voiceService.readPack(spoken);
+        if (packed) {
+            res.setHeader('X-Voice-Cache', 'pack');
+            res.setHeader('Content-Length', String(packed.length));
+            res.end(packed);
+            return;
+        }
+
+        const cached = await this.voiceService.readCache(file);
         if (cached) {
             res.setHeader('X-Voice-Cache', 'hit');
             res.setHeader('Content-Length', String(cached.length));

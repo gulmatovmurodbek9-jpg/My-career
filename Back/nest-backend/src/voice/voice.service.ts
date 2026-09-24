@@ -70,6 +70,9 @@ export const sayify = (text: string): string =>
 export class VoiceService {
     private readonly logger = new Logger(VoiceService.name);
     private readonly cacheDir = join(process.cwd(), 'voice-cache');
+    // Овозҳои пешакӣ бо модели худамон (VITS, аз mms-tts-tgk омӯзонида шуд).
+    // Номи файл — sha1 аз матни талаффуз, бе вобастагӣ ба хизматрасон.
+    private readonly packDir = join(process.cwd(), 'voice-pack');
 
     constructor(private readonly configService: ConfigService) { }
 
@@ -110,11 +113,21 @@ export class VoiceService {
             cached = 0;
         }
 
+        let packed = 0;
+        try {
+            if (existsSync(this.packDir)) {
+                packed = readdirSync(this.packDir).filter((name) => name.endsWith('.mp3')).length;
+            }
+        } catch {
+            packed = 0;
+        }
+
         return {
             configured: !!this.apiKey,
             voiceId: this.voiceId,
             model: this.modelId,
             cached,
+            packed,
         };
     }
 
@@ -209,6 +222,18 @@ export class VoiceService {
             .update([this.voiceId, this.modelId, spoken].join('|'))
             .digest('hex');
         return { file: join(this.cacheDir, `${hash}.mp3`), spoken };
+    }
+
+    // Аввал овози худамонро меҷӯем — он бепул ва фаврӣ аст.
+    async readPack(spoken: string): Promise<Buffer | null> {
+        const hash = createHash('sha1').update(spoken).digest('hex');
+        const file = join(this.packDir, `${hash}.mp3`);
+        if (!existsSync(file)) return null;
+        try {
+            return await readFile(file);
+        } catch {
+            return null;
+        }
     }
 
     async readCache(file: string): Promise<Buffer | null> {

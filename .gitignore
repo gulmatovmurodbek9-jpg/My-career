@@ -68,3 +68,9 @@ skills-lock.json
 # Овози санҷишӣ ва кеши mp3 — аз нав сохта мешаванд
 ovozi-sanjish/
 Back/nest-backend/voice-cache/
+
+# Модели TTS — калон аст, ба git намеравад
+tajik-tts/tajik-tts-model/
+tajik-tts/*.zip
+tajik-tts-model.zip
+tajik-tts/model.safetensors

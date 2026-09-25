@@ -17,6 +17,7 @@ const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
 const STT_URL = 'https://api.elevenlabs.io/v1/speech-to-text';
 const STT_TIMEOUT_MS = 25_000;
 const IP_WINDOW_MS = 10 * 60 * 1000;
+const REMOTE_TTS_TIMEOUT_MS = 60_000;
 
 // ── Рақамҳо ────────────────────────────────────────────────────────────
 // Модел рақамро намехонад: «4000» бояд «чор ҳазор» шавад.
@@ -88,6 +89,10 @@ export class VoiceService implements OnModuleInit {
     // Кушодани файли 110 МБ 20 сония мегирад — онро дар оғоз мекунем,
     // то дархости аввали корбар фаврӣ бошад.
     onModuleInit(): void {
+        if (this.ttsUrl) {
+            this.logger.log(`Овоз аз сервери Python — ${this.ttsUrl}`);
+            return;
+        }
         if (!this.tajik.available) {
             this.logger.warn('Модели овоз дар voice-model/ нест');
             return;
@@ -99,6 +104,13 @@ export class VoiceService implements OnModuleInit {
                 if (ok) this.logger.log(`Модели овоз тайёр — ${Date.now() - started} мс`);
             })
             .catch(() => undefined);
+    }
+
+    // Сервери Python бо модели аслӣ (tajik-tts/server.py).
+    // Агар монда нашуда бошад, модели ONNX дар худи Node кор мекунад.
+    private get ttsUrl(): string | null {
+        const raw = this.configService.get<string>('TTS_URL');
+        return raw ? raw.trim().replace(/\/+$/, '') : null;
     }
 
     private get sttKey(): string | null {
@@ -115,7 +127,8 @@ export class VoiceService implements OnModuleInit {
         };
 
         return {
-            tts: this.tajik.available ? 'local' : 'none',
+            tts: this.ttsUrl ? 'python' : this.tajik.available ? 'onnx' : 'none',
+            ttsUrl: this.ttsUrl,
             sampleRate: this.tajik.sampleRate,
             cached: count(this.cacheDir, '.wav'),
             packed: count(this.packDir, '.mp3'),
@@ -144,9 +157,36 @@ export class VoiceService implements OnModuleInit {
         }
     }
 
+    private async remoteSpeak(text: string, speed: number): Promise<Buffer | null> {
+        const url = this.ttsUrl;
+        if (!url) return null;
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), REMOTE_TTS_TIMEOUT_MS);
+
+        try {
+            const response = await fetch(`${url}/api/tts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, speed }),
+                signal: controller.signal,
+            });
+            if (!response.ok) {
+                this.logger.error(`Сервери овоз ${response.status}: ${(await response.text()).slice(0, 160)}`);
+                return null;
+            }
+            return Buffer.from(await response.arrayBuffer());
+        } catch (error) {
+            this.logger.error(`Сервери овоз нарасид: ${error}`);
+            return null;
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
     async speak(rawText: string, speed = 1): Promise<{ audio: Buffer; cached: boolean }> {
-        if (!this.tajik.available) {
-            throw new ServiceUnavailableException('Модели овоз дар voice-model/ нест');
+        if (!this.ttsUrl && !this.tajik.available) {
+            throw new ServiceUnavailableException('На TTS_URL монда шудааст, на модел дар voice-model/');
         }
 
         const spoken = this.prepare(rawText);
@@ -161,10 +201,13 @@ export class VoiceService implements OnModuleInit {
             }
         }
 
-        // Навбат: дархостҳо як-як мегузаранд.
-        const audio = await (this.queue = this.queue
-            .catch(() => undefined)
-            .then(() => this.tajik.speak(spoken, speed))) as Buffer | null;
+        // Сервери Python худаш навбат дорад; ONNX-ро мо навбат мекунем.
+        let audio = await this.remoteSpeak(spoken, speed);
+        if (!audio && this.tajik.available) {
+            audio = await (this.queue = this.queue
+                .catch(() => undefined)
+                .then(() => this.tajik.speak(spoken, speed))) as Buffer | null;
+        }
 
         if (!audio) throw new ServiceUnavailableException('Овоз сохта нашуд');
 

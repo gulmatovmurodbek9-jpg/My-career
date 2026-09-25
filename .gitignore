@@ -79,3 +79,9 @@ tajik-tts/model.safetensors
 Back/nest-backend/voice-model/
 tajik-tts/node-test/
 tajik-tts/compare/
+
+# Муҳити Python ва модели аслӣ — калонанд
+tajik-tts/.venv/
+tajik-tts/model/
+tajik-tts/*.wav
+tajik-tts/__pycache__/

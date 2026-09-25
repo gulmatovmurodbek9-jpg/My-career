@@ -50,7 +50,8 @@ export class VoiceController {
     }
 
     private async send(text: string, speed: number | undefined, res: Response) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        // Як рӯз, на як сол: агар модели овоз иваз шавад, браузер садои нав мегирад.
+        res.setHeader('Cache-Control', 'public, max-age=86400');
 
         // Агар ягон ҷумларо пешакӣ сохта бошем — ҳамонро медиҳем.
         const packed = await this.voiceService.readPack(String(text || '').trim());

@@ -12,6 +12,10 @@ const Avatar3D = lazy(() => import("./Avatar3D"));
 
 const GREETED_KEY = "assistant_greeted_v1";
 
+// Версияи овоз дар URL. Браузер садоро нигоҳ медорад — агар моделро иваз
+// кунем, ин рақамро зиёд кунед, вагарна корбар садои кӯҳнаро мешунавад.
+const VOICE_VERSION = "murod-2";
+
 // Браузер садоро танҳо баъди пахши корбар иҷозат медиҳад. Ҳамин файли хомӯшро
 // дар пахши аввал мешунавонем ва баъд ҳамон элементро дубора кор мефармоем.
 const SILENT_WAV =
@@ -57,6 +61,7 @@ export default function VoiceAssistant() {
     const sttRef = useRef(null);
     const greetedAloudRef = useRef(false);
     const greetRef = useRef(null);
+    const speakDoneRef = useRef(null);
     const realtimeFailedRef = useRef(false);
 
     const lang = i18n.language || "tj";
@@ -146,8 +151,12 @@ export default function VoiceAssistant() {
         const player = playerRef.current;
         if (player) {
             player.onended = null;
+            player.onerror = null;
             player.pause();
         }
+        const done = speakDoneRef.current;
+        speakDoneRef.current = null;
+        done?.();
     }, []);
 
     const unlockAudio = useCallback(() => {
@@ -172,9 +181,11 @@ export default function VoiceAssistant() {
         const finish = () => {
             if (settled) return;
             settled = true;
+            if (speakDoneRef.current === finish) speakDoneRef.current = null;
             stopPulse();
             resolve();
         };
+        speakDoneRef.current = finish;
         // Овози браузер русист ва тоҷикиро вайрон мехонад —
         // беҳтар аст хомӯш монем ва матнро нишон диҳем.
         const fallback = () => {
@@ -187,7 +198,7 @@ export default function VoiceAssistant() {
         playerRef.current = player;
         player.onended = finish;
         player.onerror = fallback;
-        player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}`;
+        player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&v=${VOICE_VERSION}`;
         player.play().then(() => setVoiceWarning(false)).catch(fallback);
     }), [startPulse, stopAudio, stopPulse]);
 
@@ -419,7 +430,7 @@ export default function VoiceAssistant() {
                     onPartial: (text) => setHeard(text),
                     onLevel: (rms) => setOrbLevel(Math.min(1, rms * 7)),
                     onFinal: (text) => {
-                        if (!text || busyRef.current) return;
+                        if (!text || busyRef.current || !handsFreeRef.current) return;
                         stt.stop();
                         sttRef.current = null;
                         setOrbLevel(0);
@@ -512,6 +523,7 @@ export default function VoiceAssistant() {
         handsFreeRef.current = false;
         releaseMic();
         stopAudio();
+        busyRef.current = false;
         setState("idle");
     }, [releaseMic, stopAudio]);
 

@@ -609,7 +609,7 @@ export class CareerService {
     // Фармонҳои маъмулӣ AI-ро лозим надоранд: «санҷишро сар кун» ҳамеша
     // як маъно дорад. Инҳоро дар як миллисония мешиносем; танҳо чизҳои
     // номаълум ва номҳо (ихтисос, донишгоҳ) ба AI мераванд.
-    private quickRoute(message: string): { action: string; params: any } | null {
+    private quickRoute(message: string): { action: string; params: any; reply?: string } | null {
         const text = foldTajik(message)
             .replace(/[^a-zа-яё0-9\s]/gi, ' ')
             .replace(/\s+/g, ' ')
@@ -639,6 +639,64 @@ export class CareerService {
             if (has('руси')) return { action: 'set_language', params: { lang: 'ru' } };
             if (has('англиси')) return { action: 'set_language', params: { lang: 'en' } };
             if (has('точики')) return { action: 'set_language', params: { lang: 'tj' } };
+        }
+
+        // «Ихтисос интихоб кунам», «намедонам ба куҷо дароям» — худи ҳамин
+        // санҷиш барои интихоб сохта шудааст. Пурсидани «кадомашро?» бефоида
+        // аст: одам маҳз барои он омадааст, ки намедонад.
+        if (has('ихтисос интихоб', 'касб интихоб', 'интихоби ихтисос', 'интихоби касб', 'намедонам', 'барои ман хуб', 'ба ман мувофик', 'ба кучо дароям', 'кумак кун')) {
+            return { action: 'start_quiz', params: {} };
+        }
+
+        // «Дар бораи ихтисосҳо», «ҳамаи ихтисосҳо» — ҳамаашро нишон медиҳем.
+        if (has('дар бораи ихтисос', 'хамаи ихтисос', 'руйхати ихтисос')) {
+            return { action: 'search', params: { query: '' } };
+        }
+
+        // Ройгон ва пулакӣ — ҷустуҷӯи AI-и саҳифа инро ба филтр табдил медиҳад.
+        if (has('ройгон', 'бепул', 'грант')) {
+            return { action: 'search', params: { query: 'ихтисосҳои ройгон', trusted: true } };
+        }
+
+        // «Ман дар Кӯлоб зиндагӣ мекунам» — донишгоҳҳои ҳамон шаҳрро нишон медиҳем.
+        const CITIES: Array<[string, string]> = [
+            ['душанбе', 'Душанбе'], ['хучанд', 'Хуҷанд'], ['бохтар', 'Бохтар'],
+            ['кулоб', 'Кӯлоб'], ['хоруг', 'Хоруғ'], ['истаравшан', 'Истаравшан'],
+            ['панчакент', 'Панҷакент'], ['вахдат', 'Ваҳдат'], ['турсунзода', 'Турсунзода'],
+            ['хисор', 'Ҳисор'], ['исфара', 'Исфара'], ['дангара', 'Данғара'],
+            ['конибодом', 'Конибодом'],
+        ];
+        if (has('зиндаги', 'хастам', 'мебошам', 'истикомат')) {
+            const city = CITIES.find(([folded]) => text.includes(folded));
+            if (city) return { action: 'open_universities', params: { city: city[1] } };
+        }
+
+        // «Донишгоҳҳоро нишон деҳ» (ҷамъ) — рӯйхат. «Донишгоҳи миллӣ» (як ном)
+        // ба AI меравад, чунки номро шинохтан лозим аст.
+        if (has('донишгоххо')) {
+            const city = CITIES.find(([folded]) => text.includes(folded));
+            return { action: 'open_universities', params: city ? { city: city[1] } : {} };
+        }
+
+        // Салом, раҳмат ва «ту кистӣ» — ҷавоби тайёр, бе AI.
+        // «Салом» аввалин калимаи ҳар сӯҳбат аст ва пештар то 8 сония мегирифт.
+        const words = text.split(' ');
+        if (words.length <= 3 && has('салом', 'ассалом', 'хуш омадед')) {
+            return {
+                action: 'answer',
+                params: {},
+                reply: 'Салом! Ихтисос интихоб кунем, донишгоҳҳоро бинем ё санҷиш гузарем?',
+            };
+        }
+        if (words.length <= 3 && has('рахмат', 'ташаккур')) {
+            return { action: 'answer', params: {}, reply: 'Марҳамат! Боз чӣ кӯмак кунам?' };
+        }
+        if (has('ту киста', 'ту кисти', 'шумо киста', 'шумо кисти', 'чи кор карда метавони', 'чи кор карда метавонед')) {
+            return {
+                action: 'answer',
+                params: {},
+                reply: 'Ман ёвари овозии «Ихтисоси ман» ҳастам. Ихтисос меёбам, донишгоҳҳоро нишон медиҳам ва санҷиш мегузаронам.',
+            };
         }
 
         return null;
@@ -774,7 +832,8 @@ export class CareerService {
             '',
             'ҚОИДАҲО:',
             `- "reply" бо забони ${langName}, ҲАТМАН кӯтоҳ: то 15 калима, чунки онро овоз мехонад.`,
-            '- Агар аниқ нафаҳмидӣ, "action": "answer" гузор ва саволи равшанкунанда бипурс.',
+            '- ҲАМЕША амалро афзал дон. Саволи бозгашт танҳо вақте бипурс, ки ягон амал тамоман мувофиқ наояд.',
+            '- Дар бораи бал, нарх ё донишгоҳҳои як ихтисоси мушаххас пурсанд — open_career (дар саҳифааш ҳамааш ҳаст).',
             '- Салом, шикоят ё саволи умумӣ → "answer". Амалро танҳо вақте интихоб кун, ки корбар онро равшан хоста бошад.',
             '- Номи ихтисосро тахмин накун; калимаи худи корбарро нависед.',
             '- Рақам, нарх ё номи донишгоҳ аз худат насоз.',
@@ -784,7 +843,9 @@ export class CareerService {
         let parsed: any = this.quickRoute(message);
         if (!parsed) try {
             // Сӯҳбати зинда: ҳадди 6 сония, бе хобидан ҳангоми 429.
-            parsed = readJson(await this.aiService.generateContent(prompt, { fast: true, timeoutMs: 6000 }));
+            // Gemini аввал: Vertex квотаашро тамом кардааст (429) ва ҳар дархостро
+            // 2–4 сония дер мекард, пеш аз он ки ба Gemini гузарад.
+            parsed = readJson(await this.aiService.generateContent(prompt, { fast: true, timeoutMs: 6000, provider: 'gemini' }));
         } catch (error) {
             // AI ҷавоб надод — ёвар набояд хомӯш монад.
             const excuse = answerLang === 'ru'
@@ -800,6 +861,18 @@ export class CareerService {
         const reply = typeof parsed?.reply === 'string' ? parsed.reply.trim().slice(0, 300) : '';
         const given = parsed?.params && typeof parsed.params === 'object' ? parsed.params : {};
         let params: any = {};
+
+        // Роутери тез гоҳо ошкоро мегӯяд: «ҳамаашро нишон деҳ» (query холӣ)
+        // ё «ин филтр аст, на ном» (trusted). Инҳоро дар база насанҷида
+        // рост мефиристем — ҷустуҷӯи AI-и саҳифа филтрро худаш мефаҳмад.
+        if (action === 'search' && (given.query === '' || given.trusted)) {
+            return {
+                reply: CareerService.ASSISTANT_REPLIES[answerLang]?.search || '',
+                action,
+                params: { query: String(given.query || '') },
+                answerLang,
+            };
+        }
 
         if (action === 'search') {
             const rawQuery = String(given.query || message).trim().slice(0, 200);

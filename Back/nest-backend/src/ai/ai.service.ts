@@ -82,13 +82,19 @@ export class AiService implements OnModuleInit {
         const order = [...(healthy.length ? healthy : usable)]
             .sort((a, b) => Number(promoted(b)) - Number(promoted(a)));
 
+        // Реҷаи тез: як мӯҳлат барои ҳамаи провайдерҳо, на барои ҳар кадом.
+        // Вагарна агар якумаш овезон шавад, 6 + 6 = 12 сония мешавад.
+        const deadline = fast ? Date.now() + (options.timeoutMs ?? 5000) : Infinity;
+
         let last: any = null;
         for (const which of order) {
+            const left = deadline - Date.now();
+            if (fast && left < 400) break;
             const proven = this.providerProven.has(which);
             const requested = fast
                 ? (options.timeoutMs ?? 5000)
                 : Math.max(options.timeoutMs ?? AI_PROVIDER_TIMEOUT_MS, AI_PROVIDER_TIMEOUT_MS);
-            const ms = fast || proven ? requested : Math.min(requested, AI_UNPROVEN_TIMEOUT_MS);
+            const ms = fast ? Math.min(requested, left) : proven ? requested : Math.min(requested, AI_UNPROVEN_TIMEOUT_MS);
             try {
                 const result = await this.withTimeout(run(which), which, ms);
                 this.providerProven.add(which);

@@ -222,6 +222,23 @@ export class VoiceService implements OnModuleInit {
     }
 
     // ── Шинохти нутқ ───────────────────────────────────────────────────
+    // Токени якбораи браузер: калиди аслӣ ба frontend намеравад.
+    // Токен баъди 15 дақиқа худаш нест мешавад.
+    async sttToken(): Promise<{ token: string }> {
+        if (!this.sttKey) throw new ServiceUnavailableException('ELEVENLABS_API_KEY дар .env нест');
+        try {
+            const { ElevenLabsClient } = require('@elevenlabs/elevenlabs-js');
+            const client = new ElevenLabsClient({ apiKey: this.sttKey });
+            const created: any = await client.tokens.singleUse.create('realtime_scribe');
+            const token = created?.token || created;
+            if (typeof token !== 'string') throw new Error('токен нодуруст');
+            return { token };
+        } catch (error) {
+            this.logger.error(`Токени шинохт сохта нашуд: ${error}`);
+            throw new ServiceUnavailableException('Токени шинохти нутқ сохта нашуд');
+        }
+    }
+
     // Модели мо танҳо гап мезанад. Барои шунидани тоҷикӣ ивазкунанда надорем.
     async transcribe(buffer?: Buffer, mimetype?: string): Promise<{ text: string }> {
         if (!buffer?.length) throw new BadRequestException('Садо холӣ аст');

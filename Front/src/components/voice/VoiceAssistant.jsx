@@ -4,6 +4,7 @@ import { Keyboard, Mic, Send, Square, X } from "lucide-react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
+import { RealtimeStt } from "./realtimeStt";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 
@@ -53,6 +54,8 @@ export default function VoiceAssistant() {
     const levelRef = useRef(0);
     const pulseRef = useRef(0);
     const listenRef = useRef(null);
+    const sttRef = useRef(null);
+    const realtimeFailedRef = useRef(false);
 
     const lang = i18n.language || "tj";
     const greeting = t(
@@ -244,6 +247,8 @@ export default function VoiceAssistant() {
     }, [navigate, token, theme, toggleTheme, i18n]);
 
     const releaseMic = useCallback(() => {
+        sttRef.current?.stop();
+        sttRef.current = null;
         const recorder = recorderRef.current;
         recorderRef.current = null;
         if (recorder && recorder.state !== "inactive") {
@@ -329,7 +334,7 @@ export default function VoiceAssistant() {
         tick();
     }, [setOrbLevel]);
 
-    const startListening = useCallback(async () => {
+    const startRecording = useCallback(async () => {
         if (busyRef.current || recorderRef.current) return;
         if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
             setSaid(t("assistant.no_mic", "Браузери шумо микрофонро дастгирӣ намекунад. Матн нависед."));
@@ -371,6 +376,43 @@ export default function VoiceAssistant() {
             setShowKeyboard(true);
         }
     }, [setOrbLevel, stopAudio, t, transcribe, watchSilence]);
+
+    // Шинохти ҷараёнӣ: матн ҳангоми гап задан меояд, на баъди он.
+    // Агар нашавад, як бор қайд мекунем ва дигар кӯшиш намекунем.
+    const startListening = useCallback(async () => {
+        if (busyRef.current || sttRef.current?.active || recorderRef.current) return;
+
+        if (!realtimeFailedRef.current) {
+            stopAudio();
+            try {
+                const stt = new RealtimeStt({
+                    lang,
+                    onPartial: (text) => setHeard(text),
+                    onLevel: (rms) => setOrbLevel(Math.min(1, rms * 7)),
+                    onFinal: (text) => {
+                        if (!text || busyRef.current) return;
+                        stt.stop();
+                        sttRef.current = null;
+                        setOrbLevel(0);
+                        sendRef.current?.(text);
+                    },
+                    onError: () => {
+                        sttRef.current = null;
+                        setState("idle");
+                    },
+                });
+                await stt.start();
+                sttRef.current = stt;
+                setState("listening");
+                return;
+            } catch (error) {
+                realtimeFailedRef.current = true;
+                sttRef.current = null;
+            }
+        }
+
+        await startRecording();
+    }, [lang, setOrbLevel, startRecording, stopAudio]);
 
     const send = useCallback(async (rawText) => {
         const text = String(rawText || "").trim();

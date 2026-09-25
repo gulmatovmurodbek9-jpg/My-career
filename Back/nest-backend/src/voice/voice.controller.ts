@@ -15,6 +15,13 @@ export class VoiceController {
         return this.voiceService.status();
     }
 
+    @Get('stt-token')
+    @ApiOperation({ summary: 'Токени якбора барои шинохти ҷараёнӣ дар браузер' })
+    async sttToken(@Ip() ip: string) {
+        this.voiceService.guardSpend(ip);
+        return this.voiceService.sttToken();
+    }
+
     @Post('stt')
     @UseInterceptors(FileInterceptor('audio', { limits: { fileSize: 8 * 1024 * 1024 } }))
     @ApiOperation({ summary: 'Садо → матни тоҷикӣ' })

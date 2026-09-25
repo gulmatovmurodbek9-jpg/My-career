@@ -55,6 +55,8 @@ export default function VoiceAssistant() {
     const pulseRef = useRef(0);
     const listenRef = useRef(null);
     const sttRef = useRef(null);
+    const greetedAloudRef = useRef(false);
+    const greetRef = useRef(null);
     const realtimeFailedRef = useRef(false);
 
     const lang = i18n.language || "tj";
@@ -75,6 +77,19 @@ export default function VoiceAssistant() {
             greeted = false;
         }
         if (greeted) return undefined;
+        // Браузер садоро то пахши корбар манъ мекунад. Пас бо пахши аввал
+        // дар ҳар ҷои саҳифа салом медиҳем — ба ҷуз худи панел, ки тугмаи
+        // худашро дорад.
+        const onGesture = (event) => {
+            if (event?.target?.closest?.("[data-voice-panel]")) return;
+            cleanup();
+            greetRef.current?.();
+        };
+        const cleanup = () => {
+            document.removeEventListener("pointerdown", onGesture, true);
+            document.removeEventListener("keydown", onGesture, true);
+        };
+
         const timer = setTimeout(() => {
             setOpen(true);
             try {
@@ -82,8 +97,22 @@ export default function VoiceAssistant() {
             } catch {
                 /* режими пинҳонӣ */
             }
+            document.addEventListener("pointerdown", onGesture, true);
+            document.addEventListener("keydown", onGesture, true);
+
+            // Агар браузер аллакай иҷозат дода бошад (корбар пештар дар сайт
+            // садо шунида бошад), фавран гап мезанем.
+            const probe = new Audio(SILENT_WAV);
+            probe.play().then(() => {
+                cleanup();
+                greetRef.current?.();
+            }).catch(() => undefined);
         }, 1200);
-        return () => clearTimeout(timer);
+
+        return () => {
+            clearTimeout(timer);
+            cleanup();
+        };
     }, []);
 
     const setOrbLevel = useCallback((value) => {
@@ -455,9 +484,23 @@ export default function VoiceAssistant() {
         setStarted(true);
         handsFreeRef.current = true;
         setSaid(greeting);
-        await speak(greeting);
+        if (!greetedAloudRef.current) {
+            greetedAloudRef.current = true;
+            await speak(greeting);
+        }
         startListening();
     }, [greeting, speak, startListening, unlockAudio]);
+
+    // Саломи худкор: танҳо садо, микрофонро намекушоем — бе хости корбар
+    // браузер иҷозати микрофон мепурсад, ки халал мерасонад.
+    useEffect(() => {
+        greetRef.current = () => {
+            if (greetedAloudRef.current || handsFreeRef.current) return;
+            greetedAloudRef.current = true;
+            unlockAudio();
+            speak(greeting).then(() => setState("idle"));
+        };
+    }, [greeting, speak, unlockAudio]);
 
     const resumeConversation = useCallback(() => {
         unlockAudio();
@@ -509,7 +552,7 @@ export default function VoiceAssistant() {
     return (
         <>
             {open && (
-                <div className="fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
+                <div data-voice-panel className="fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
                     <button
                         type="button"
                         onClick={close}
@@ -636,6 +679,7 @@ export default function VoiceAssistant() {
                 type="button"
                 onClick={() => (open ? close() : setOpen(true))}
                 aria-label={t("assistant.title", "Ёвари овозӣ")}
+                data-voice-panel
                 className="fixed bottom-6 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring"
             >
                 {open ? <X className="h-6 w-6" aria-hidden /> : <Mic className="h-6 w-6" aria-hidden />}

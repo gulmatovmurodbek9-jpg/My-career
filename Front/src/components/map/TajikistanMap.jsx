@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Circle,
@@ -10,7 +10,6 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-const University3DMap = lazy(() => import("./University3DMap"));
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router";
 import { useTheme } from "../../hooks/useTheme";
@@ -304,8 +303,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState("");
 
-  const [mapMode, setMapMode] = useState("satellite");
-  const satellite = mapMode === "satellite";
+  // Харита ҳамеша намуди моҳвораро нишон медиҳад.
+  const satellite = true;
   const [viewport, setViewport] = useState({
     zoom: DEFAULT_ZOOM,
     center: CITY_CENTERS[DEFAULT_CITY],
@@ -451,44 +450,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
         }`}
       />
 
-      <div className="absolute right-4 top-4 z-[500] flex gap-1 rounded-xl border border-border bg-card/90 p-1 shadow-lg backdrop-blur">
-        {[
-          { id: "canvas", label: t("career_page.m_plan") },
-          { id: "satellite", label: t("career_page.m_satellite") },
-          { id: "3d", label: "3D" },
-        ].map((mode) => (
-          <button
-            key={mode.id}
-            type="button"
-            onClick={() => setMapMode(mode.id)}
-            aria-pressed={mapMode === mode.id}
-            className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${mapMode === mode.id
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground"
-              }`}
-          >
-            {mode.label}
-          </button>
-        ))}
-      </div>
-
-      {mapMode === "3d" ? (
-        <div className="h-[620px] w-full md:h-[700px]">
-          <Suspense
-            fallback={
-              <div className="flex h-full items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/25 border-t-primary" />
-              </div>
-            }
-          >
-            <University3DMap
-              universities={displayUniversities}
-              center={CITY_CENTERS[activeCity] || CITY_CENTERS[DEFAULT_CITY]}
-              onSelect={setSelectedUni}
-            />
-          </Suspense>
-        </div>
-      ) : (
       <div className="h-[620px] w-full md:h-[700px]">
         <MapContainer
           center={[CITY_CENTERS[DEFAULT_CITY].lat, CITY_CENTERS[DEFAULT_CITY].lng]}
@@ -620,7 +581,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           )}
         </MapContainer>
       </div>
-      )}
 
       {cityGroups.length > 0 && (
         <details

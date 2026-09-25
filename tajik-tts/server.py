@@ -32,6 +32,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(HERE, "model")
 PORT = int(os.environ.get("TTS_PORT", "8123"))
 MAX_TEXT = 2000
+# Суръати гап. 1.0 — суст, 1.3 — табиӣ, 1.6 — тез.
+DEFAULT_SPEED = float(os.environ.get("TTS_SPEED", "1.3"))
 
 # ── Рақамҳо ────────────────────────────────────────────────────────────
 # Модел рақамро намехонад: «4000» бояд «чор ҳазор» шавад.
@@ -111,12 +113,12 @@ app.add_middleware(
 
 class SpeakRequest(BaseModel):
     text: str
-    speed: float = 1.0
+    speed: float | None = None
 
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "sampleRate": tts.sr, "device": tts.device}
+    return {"ok": True, "sampleRate": tts.sr, "device": tts.device, "speed": DEFAULT_SPEED}
 
 
 @app.post("/api/tts")
@@ -128,7 +130,7 @@ def speak(body: SpeakRequest):
         raise HTTPException(status_code=400, detail=f"Матн аз {MAX_TEXT} ҳарф дароз аст")
 
     spoken = spell_numbers(text)
-    speed = min(max(body.speed or 1.0, 0.5), 2.0)
+    speed = min(max(body.speed or DEFAULT_SPEED, 0.5), 2.0)
 
     started = time.time()
     with lock:

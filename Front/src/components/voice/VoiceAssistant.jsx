@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Keyboard, Mic, Send, Square, X } from "lucide-react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
+
+const Avatar3D = lazy(() => import("./Avatar3D"));
 
 const GREETED_KEY = "assistant_greeted_v1";
 
@@ -46,6 +48,7 @@ export default function VoiceAssistant() {
     const busyRef = useRef(false);
     const sendRef = useRef(null);
     const orbRef = useRef(null);
+    const levelRef = useRef(0);
     const pulseRef = useRef(0);
     const listenRef = useRef(null);
 
@@ -79,9 +82,10 @@ export default function VoiceAssistant() {
     }, []);
 
     const setOrbLevel = useCallback((value) => {
+        const level = Math.max(0, Math.min(1, value));
+        levelRef.current = level;
         const node = orbRef.current;
         if (!node) return;
-        const level = Math.max(0, Math.min(1, value));
         node.style.transform = `scale(${1 + level * 0.14})`;
         node.style.opacity = String(0.55 + level * 0.45);
     }, []);
@@ -426,7 +430,6 @@ export default function VoiceAssistant() {
         idle: t("assistant.state_idle", "Тайёрам"),
     }[state];
 
-    const active = state === "listening" || state === "speaking";
     const glow = {
         listening: "from-sky-400 to-primary",
         thinking: "from-amber-400 to-orange-500",
@@ -437,7 +440,7 @@ export default function VoiceAssistant() {
     return (
         <>
             {open && (
-                <div className="fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[23rem] overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[23rem]">
+                <div className="fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
                     <button
                         type="button"
                         onClick={close}
@@ -448,27 +451,15 @@ export default function VoiceAssistant() {
                     </button>
 
                     <div className="flex flex-col items-center px-6 pb-6 pt-9">
-                        <div className="relative flex h-[7.5rem] w-[7.5rem] items-center justify-center">
-                            {active && (
-                                <span className={`absolute inset-0 animate-ping rounded-full bg-gradient-to-br ${glow} opacity-20`} />
-                            )}
+                        <div className="relative h-[15rem] w-full">
                             <span
                                 ref={orbRef}
-                                className={`absolute inset-0 rounded-full bg-gradient-to-br ${glow} opacity-50 blur-xl`}
+                                className={`pointer-events-none absolute inset-x-8 bottom-2 top-10 rounded-full bg-gradient-to-br ${glow} opacity-30 blur-3xl`}
                                 style={{ willChange: "transform, opacity" }}
                             />
-                            <div className={`relative h-[6.5rem] w-[6.5rem] overflow-hidden rounded-full bg-gradient-to-br ${glow} p-[3px]`}>
-                                <div className="h-full w-full overflow-hidden rounded-full bg-card">
-                                    <img
-                                        src="/persona.jpg"
-                                        alt=""
-                                        width={104}
-                                        height={104}
-                                        className="h-full w-full scale-[1.12] object-cover object-[50%_32%]"
-                                        onError={(event) => { event.currentTarget.src = "/logo.png"; }}
-                                    />
-                                </div>
-                            </div>
+                            <Suspense fallback={<div className="h-full w-full animate-pulse rounded-[1.25rem] bg-muted/40" />}>
+                                <Avatar3D state={state} levelRef={levelRef} />
+                            </Suspense>
                         </div>
 
                         <p className="mt-5 text-[13px] font-semibold text-muted-foreground" aria-live="polite">

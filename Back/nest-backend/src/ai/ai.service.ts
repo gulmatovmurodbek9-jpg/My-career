@@ -57,11 +57,14 @@ export class AiService implements OnModuleInit {
     // Занҷир: Vertex → Gemini. Агар яке афтад, навбатӣ кӯшиш мекунад.
     async generateContent(
         prompt: string,
-        options: { provider?: AiProvider; timeoutMs?: number } = {},
+        options: { provider?: AiProvider; timeoutMs?: number; fast?: boolean } = {},
     ): Promise<string> {
+        // Реҷаи тез — барои сӯҳбати зинда: бе такрори хобидан ва бо ҳадди кӯтоҳ.
+        // Ҳисобот 55 сония интизор шуда метавонад; одаме, ки гап мезанад — не.
+        const fast = options.fast === true;
         const run = (which: AiProvider) => {
             if (which === 'vertex') return this.generateVertexContent(prompt);
-            return this.generateGeminiContent(prompt);
+            return this.generateGeminiContent(prompt, fast ? 0 : 2);
         };
 
         const chain: AiProvider[] = options.provider === 'gemini'
@@ -82,8 +85,10 @@ export class AiService implements OnModuleInit {
         let last: any = null;
         for (const which of order) {
             const proven = this.providerProven.has(which);
-            const requested = Math.max(options.timeoutMs ?? AI_PROVIDER_TIMEOUT_MS, AI_PROVIDER_TIMEOUT_MS);
-            const ms = proven ? requested : Math.min(requested, AI_UNPROVEN_TIMEOUT_MS);
+            const requested = fast
+                ? (options.timeoutMs ?? 5000)
+                : Math.max(options.timeoutMs ?? AI_PROVIDER_TIMEOUT_MS, AI_PROVIDER_TIMEOUT_MS);
+            const ms = fast || proven ? requested : Math.min(requested, AI_UNPROVEN_TIMEOUT_MS);
             try {
                 const result = await this.withTimeout(run(which), which, ms);
                 this.providerProven.add(which);

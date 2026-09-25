@@ -606,6 +606,44 @@ export class CareerService {
         },
     };
 
+    // Фармонҳои маъмулӣ AI-ро лозим надоранд: «санҷишро сар кун» ҳамеша
+    // як маъно дорад. Инҳоро дар як миллисония мешиносем; танҳо чизҳои
+    // номаълум ва номҳо (ихтисос, донишгоҳ) ба AI мераванд.
+    private quickRoute(message: string): { action: string; params: any } | null {
+        const text = foldTajik(message)
+            .replace(/[^a-zа-яё0-9\s]/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (!text) return null;
+        const has = (...words: string[]) => words.some((word) => text.includes(word));
+
+        const cluster = text.match(/кластер\S*\s*(\d)/);
+        if (cluster) return { action: 'open_cluster', params: { number: Number(cluster[1]) } };
+
+        if (has('наздиктарин', 'наздик') && has('донишгох')) {
+            return { action: 'nearest_universities', params: {} };
+        }
+        if (has('санчиш', 'тест') && has('сар', 'огоз', 'гузар', 'кушо', 'мехохам', 'супор')) {
+            return { action: 'start_quiz', params: {} };
+        }
+        if (has('хисобот')) return { action: 'open_report', params: {} };
+        if (has('хуччат', 'накшаи хуччат')) return { action: 'open_plan', params: {} };
+        if (has('захирахо', 'дустдошта')) return { action: 'open_favorites', params: {} };
+        if (/(^| )чат( |$)/.test(text)) return { action: 'open_chat', params: {} };
+        if (has('сахифаи асоси', 'ба асоси')) return { action: 'go_home', params: {} };
+        if (has('дар бораи мо', 'дар бораи лоиха')) return { action: 'open_about', params: {} };
+        if (has('торик')) return { action: 'set_theme', params: { theme: 'dark' } };
+        if (has('равшан', 'рушан')) return { action: 'set_theme', params: { theme: 'light' } };
+
+        if (has('забон')) {
+            if (has('руси')) return { action: 'set_language', params: { lang: 'ru' } };
+            if (has('англиси')) return { action: 'set_language', params: { lang: 'en' } };
+            if (has('точики')) return { action: 'set_language', params: { lang: 'tj' } };
+        }
+
+        return null;
+    }
+
     private clusterCache: Cluster[] | null = null;
 
     private async loadClusters(): Promise<Cluster[]> {
@@ -742,9 +780,11 @@ export class CareerService {
             '- Рақам, нарх ё номи донишгоҳ аз худат насоз.',
         ].filter(Boolean).join(String.fromCharCode(10));
 
-        let parsed: any = null;
-        try {
-            parsed = readJson(await this.aiService.generateContent(prompt, { timeoutMs: 20000 }));
+        // Аввал роутери тез: фармони маълумро бе AI иҷро мекунем.
+        let parsed: any = this.quickRoute(message);
+        if (!parsed) try {
+            // Сӯҳбати зинда: ҳадди 6 сония, бе хобидан ҳангоми 429.
+            parsed = readJson(await this.aiService.generateContent(prompt, { fast: true, timeoutMs: 6000 }));
         } catch (error) {
             // AI ҷавоб надод — ёвар набояд хомӯш монад.
             const excuse = answerLang === 'ru'

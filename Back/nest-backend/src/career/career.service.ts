@@ -651,7 +651,22 @@ export class CareerService {
             }
         }
 
-        // 3) Роҳи охирин: ҳамон ранкинги ҷустуҷӯи чат.
+        // 3) Хатои имлоӣ: шабоҳати се-ҳарфӣ. 0.25 — ҳадди поёнӣ,
+        // аз он камтар тасодуфӣ мешавад («донишгох» → 0.12).
+        const fuzzy: Array<{ id: string; sim: number }> = await this.careerRepository.manager.query(
+            `SELECT id, similarity(${TAJIK_FOLD('name')}, $1) AS sim
+             FROM career
+             WHERE similarity(${TAJIK_FOLD('name')}, $1) > 0.25
+             ORDER BY ${TAJIK_FOLD('name')} <-> $1
+             LIMIT 1`,
+            [foldTajik(wanted)],
+        );
+        if (fuzzy[0]) {
+            const found = await this.careerRepository.findOne({ where: { id: fuzzy[0].id } });
+            if (found) return found;
+        }
+
+        // 4) Роҳи охирин: ҳамон ранкинги ҷустуҷӯи чат.
         const ranked = await this.findRelevantCareers(wanted);
         if ((ranked as any).isFallback) return null;
         return ranked[0] || null;

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router";
 import { Keyboard, Mic, Send, Square, X } from "lucide-react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../hooks/useTheme";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 
@@ -31,6 +32,7 @@ export default function VoiceAssistant() {
     const navigate = useNavigate();
     const location = useLocation();
     const { token } = useAuthStore();
+    const { theme, toggleTheme } = useTheme();
 
     const [open, setOpen] = useState(false);
     const [started, setStarted] = useState(false);
@@ -211,10 +213,35 @@ export default function VoiceAssistant() {
             case "open_plan":
                 navigate("/dashboard/plan");
                 break;
+            case "nearest_universities":
+                // ?near=1 — харита худаш ҷойгиршавиро меҷӯяд.
+                navigate("/universities?near=1");
+                break;
+            case "open_cluster":
+                navigate(params?.id ? `/careers?clusterId=${params.id}` : "/careers");
+                break;
+            case "open_chat":
+                navigate("/dashboard/ai-chat");
+                break;
+            case "open_favorites":
+                navigate("/favorites");
+                break;
+            case "open_about":
+                navigate("/about");
+                break;
+            case "go_home":
+                navigate("/");
+                break;
+            case "set_language":
+                if (params?.lang) i18n.changeLanguage(params.lang);
+                break;
+            case "set_theme":
+                if (params?.theme && params.theme !== theme) toggleTheme();
+                break;
             default:
                 break;
         }
-    }, [navigate, token]);
+    }, [navigate, token, theme, toggleTheme, i18n]);
 
     const releaseMic = useCallback(() => {
         const recorder = recorderRef.current;

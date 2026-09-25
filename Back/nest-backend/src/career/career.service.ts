@@ -542,7 +542,9 @@ export class CareerService {
 
     private static readonly ASSISTANT_ACTIONS = [
         'search', 'open_career', 'compare', 'save_career',
-        'start_quiz', 'open_universities', 'open_report', 'open_plan', 'answer',
+        'start_quiz', 'open_universities', 'nearest_universities', 'open_cluster',
+        'open_report', 'open_plan', 'open_chat', 'open_favorites', 'open_about',
+        'go_home', 'set_language', 'set_theme', 'answer',
     ];
 
     // Ҷавоби собит барои ҳар амал: ҳамеша якхела — яъне садояш як бор сохта
@@ -557,6 +559,14 @@ export class CareerService {
             open_universities: 'Ана донишгоҳҳо.',
             open_report: 'Ҳисоботи шуморо кушодам.',
             open_plan: 'Ана нақшаи ҳуҷҷатсупорӣ.',
+            nearest_universities: 'Донишгоҳҳои наздиктаринро меҷӯям.',
+            open_cluster: 'Ана ин кластер.',
+            open_chat: 'Чатро кушодам.',
+            open_favorites: 'Ана захираҳои шумо.',
+            open_about: 'Дар бораи мо.',
+            go_home: 'Ба саҳифаи асосӣ.',
+            set_language: 'Забон иваз шуд.',
+            set_theme: 'Мавзӯъ иваз шуд.',
         },
         ru: {
             search: 'Вот эти специальности.',
@@ -567,6 +577,14 @@ export class CareerService {
             open_universities: 'Вот университеты.',
             open_report: 'Открыл ваш отчёт.',
             open_plan: 'Вот план подачи документов.',
+            nearest_universities: 'Ищу ближайшие университеты.',
+            open_cluster: 'Вот этот кластер.',
+            open_chat: 'Открыл чат.',
+            open_favorites: 'Вот ваши сохранённые.',
+            open_about: 'О нас.',
+            go_home: 'На главную.',
+            set_language: 'Язык изменён.',
+            set_theme: 'Тема изменена.',
         },
         en: {
             search: 'Here are the specialties.',
@@ -577,8 +595,28 @@ export class CareerService {
             open_universities: 'Here are the universities.',
             open_report: 'I opened your report.',
             open_plan: 'Here is the application plan.',
+            nearest_universities: 'Looking for the nearest universities.',
+            open_cluster: 'Here is that cluster.',
+            open_chat: 'Chat opened.',
+            open_favorites: 'Here are your saved items.',
+            open_about: 'About us.',
+            go_home: 'Going home.',
+            set_language: 'Language changed.',
+            set_theme: 'Theme changed.',
         },
     };
+
+    private clusterCache: Cluster[] | null = null;
+
+    private async loadClusters(): Promise<Cluster[]> {
+        if (this.clusterCache) return this.clusterCache;
+        try {
+            this.clusterCache = await this.clusterRepository.find({ order: { clusterId: 'ASC' } });
+        } catch {
+            this.clusterCache = [];
+        }
+        return this.clusterCache;
+    }
 
     private async resolveCareer(name?: string): Promise<Career | null> {
         const wanted = String(name || '').trim();
@@ -633,6 +671,11 @@ export class CareerService {
             return JSON.parse(text.trim());
         };
 
+        const clusters = await this.loadClusters();
+        const clusterLines = clusters
+            .filter((cluster) => cluster.clusterId)
+            .map((cluster) => `${cluster.clusterId}. ${cluster.clusterName} — ${(cluster.description || '').slice(0, 130)}`);
+
         const prompt = [
             'Ту ёвари овозии сомонаи «Ихтисоси ман» ҳастӣ — роҳнамои интихоби касб дар Тоҷикистон.',
             'Гуфтаи корбарро ба ЯК амали иҷозатдодашуда табдил деҳ.',
@@ -654,7 +697,19 @@ export class CareerService {
             '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "номи донишгоҳ", "city": "шаҳр"}',
             '- open_report — ҳисоботи AI аз рӯи санҷиш. params: {}',
             '- open_plan — рӯйхати ҳуҷҷатсупорӣ. params: {}',
+            '- nearest_universities — «донишгоҳи наздиктарин», «дар наздикии ман». params: {}',
+            '- open_cluster — кушодани яке аз 5 кластер. params: {"number": 1-5}',
+            '- open_chat — чати матнӣ бо AI. params: {}',
+            '- open_favorites — захираҳои корбар. params: {}',
+            '- open_about — дар бораи лоиҳа. params: {}',
+            '- go_home — саҳифаи асосӣ. params: {}',
+            '- set_language — иваз кардани забон. params: {"lang": "tj" ё "ru" ё "en"}',
+            '- set_theme — рӯшноӣ ё торикӣ. params: {"theme": "light" ё "dark"}',
             '- answer — танҳо ҷавоби шифоҳӣ, бе амал. params: {}',
+            '',
+            clusterLines.length ? 'ПАНҶ КЛАСТЕРИ ИХТИСОСҲО:' : '',
+            ...clusterLines,
+            clusterLines.length ? 'Агар корбар дар бораи кластер пурсад, аз ҳамин рӯйхат ҷавоб деҳ.' : '',
             '',
             'ФОРМАТИ ҶАВОБ — танҳо JSON:',
             '{"action": "ном", "params": {...}, "reply": "як ҷумлаи кӯтоҳ"}',
@@ -767,6 +822,29 @@ export class CareerService {
             }
         }
 
+        if (action === 'open_cluster') {
+            const number = Number(given.number);
+            const cluster = clusters.find((item) => item.clusterId === number);
+            if (!cluster) {
+                action = 'answer';
+                params = {};
+            } else {
+                params = { id: cluster.id, number: cluster.clusterId, name: cluster.clusterName };
+            }
+        }
+
+        if (action === 'set_language') {
+            const lang = String(given.lang || '').toLowerCase();
+            if (['tj', 'ru', 'en'].includes(lang)) params = { lang };
+            else action = 'answer';
+        }
+
+        if (action === 'set_theme') {
+            const theme = String(given.theme || '').toLowerCase();
+            if (['light', 'dark'].includes(theme)) params = { theme };
+            else action = 'answer';
+        }
+
         if (action === 'open_universities') {
             // «донишгоҳи Миллиро ёб» — аввал номи мушаххасро меҷӯем,
             // вагарна корбар ба рӯйхати 33-тоӣ мерасад.
@@ -796,6 +874,20 @@ export class CareerService {
         }
 
         // Барои амалҳо ҷумлаи собит мегирем — садояш ҳамеша аз кеш меояд.
+        // Кластерро на танҳо мекушоем — кӯтоҳ шарҳ ҳам медиҳем.
+        if (action === 'open_cluster' && params.number) {
+            const cluster = clusters.find((item) => item.clusterId === params.number);
+            const about = (cluster?.description || '').split('—')[1] || cluster?.description || '';
+            if (about) {
+                return {
+                    reply: `${params.name}. ${about.trim().split('.')[0]}.`.slice(0, 300),
+                    action,
+                    params,
+                    answerLang,
+                };
+            }
+        }
+
         const replyKey = action === 'open_universities' && params.id ? 'open_career' : action;
         const canned = CareerService.ASSISTANT_REPLIES[answerLang]?.[replyKey];
         return { reply: canned || reply, action, params, answerLang };

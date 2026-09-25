@@ -30,7 +30,7 @@ export class VoiceController {
         @Query('speed') speed: string,
         @Res() res: Response,
     ) {
-        await this.send(text, Number(speed) || 1, res);
+        await this.send(text, Number(speed) || undefined, res);
     }
 
     @Post('speak')
@@ -39,10 +39,10 @@ export class VoiceController {
         @Body() body: { text: string; speed?: number },
         @Res() res: Response,
     ) {
-        await this.send(body?.text, Number(body?.speed) || 1, res);
+        await this.send(body?.text, Number(body?.speed) || undefined, res);
     }
 
-    private async send(text: string, speed: number, res: Response) {
+    private async send(text: string, speed: number | undefined, res: Response) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
         // Агар ягон ҷумларо пешакӣ сохта бошем — ҳамонро медиҳем.

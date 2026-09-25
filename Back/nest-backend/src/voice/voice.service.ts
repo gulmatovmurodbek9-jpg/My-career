@@ -157,7 +157,7 @@ export class VoiceService implements OnModuleInit {
         }
     }
 
-    private async remoteSpeak(text: string, speed: number): Promise<Buffer | null> {
+    private async remoteSpeak(text: string, speed?: number): Promise<Buffer | null> {
         const url = this.ttsUrl;
         if (!url) return null;
 
@@ -168,7 +168,7 @@ export class VoiceService implements OnModuleInit {
             const response = await fetch(`${url}/api/tts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, speed }),
+                body: JSON.stringify(speed ? { text, speed } : { text }),
                 signal: controller.signal,
             });
             if (!response.ok) {
@@ -184,13 +184,13 @@ export class VoiceService implements OnModuleInit {
         }
     }
 
-    async speak(rawText: string, speed = 1): Promise<{ audio: Buffer; cached: boolean }> {
+    async speak(rawText: string, speed?: number): Promise<{ audio: Buffer; cached: boolean }> {
         if (!this.ttsUrl && !this.tajik.available) {
             throw new ServiceUnavailableException('На TTS_URL монда шудааст, на модел дар voice-model/');
         }
 
         const spoken = this.prepare(rawText);
-        const hash = createHash('sha1').update(`${spoken}|${speed}`).digest('hex');
+        const hash = createHash('sha1').update(`${spoken}|${speed ?? 'auto'}`).digest('hex');
         const file = join(this.cacheDir, `${hash}.wav`);
 
         if (existsSync(file)) {
@@ -206,7 +206,7 @@ export class VoiceService implements OnModuleInit {
         if (!audio && this.tajik.available) {
             audio = await (this.queue = this.queue
                 .catch(() => undefined)
-                .then(() => this.tajik.speak(spoken, speed))) as Buffer | null;
+                .then(() => this.tajik.speak(spoken, speed ?? 1))) as Buffer | null;
         }
 
         if (!audio) throw new ServiceUnavailableException('Овоз сохта нашуд');

@@ -348,6 +348,14 @@ export default function TajikistanMap({ universities = [], focusResults = false 
     );
   };
 
+  // Ёвари овозӣ бо ?near=1 меояд — ҷойгиршавиро худамон мепурсем.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("near") && !myLocation && !locating) {
+      locateMe();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Наздиктарин донишгоҳҳо аз ҷойи корбар.
   const nearest = useMemo(() => {
     if (!myLocation) return [];

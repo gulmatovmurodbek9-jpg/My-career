@@ -5,16 +5,29 @@ import * as THREE from "three";
 
 const MODEL_URL = "/murod-agent.glb";
 
-// Модел аниматсия надорад — ҳаракатро худамон месозем.
+// Устухонҳое, ки ҳаракат медиҳем.
+const BONES = [
+    "UpperArm_L", "Forearm_L", "Hand_L",
+    "UpperArm_R", "Forearm_R", "Hand_R",
+    "Head", "Neck", "Chest", "Spine",
+];
+
+const lerp = (from, to, amount) => from + (to - from) * amount;
+
+// Модел аниматсияи тайёр надорад — ҳаракатро худамон месозем.
 function Character({ state, levelRef }) {
     const { scene } = useGLTF(MODEL_URL);
     const group = useRef(null);
+    const bones = useRef({});
+    const rest = useRef({});
+    const mouth = useRef(null);
+    const gesture = useRef({ phase: 0, amount: 0 });
 
     // Нусхаи алоҳида: як модел дар ду ҷо истифода шуданаш мумкин аст.
     const model = useMemo(() => scene.clone(true), [scene]);
 
-    // Моделро ба маркази кадр меорем ва андозаашро ба воҳид меоварем.
     useLayoutEffect(() => {
+        // Моделро ба маркази кадр меорем ва андозаашро ба воҳид меоварем.
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
@@ -23,13 +36,20 @@ function Character({ state, levelRef }) {
         model.position.set(-center.x, -box.min.y - height / 2, -center.z);
         model.scale.setScalar(2 / height);
 
+        bones.current = {};
+        rest.current = {};
+
         model.traverse((node) => {
-            if (node.isMesh) {
-                node.castShadow = false;
-                node.receiveShadow = false;
-                if (node.material) node.material.envMapIntensity = 0.8;
+            if (BONES.includes(node.name) && !bones.current[node.name]) {
+                bones.current[node.name] = node;
+                rest.current[node.name] = node.rotation.clone();
             }
+            // Ду даҳон: пӯшида ва кушода. Барои гап задан онҳоро иваз мекунем.
+            if (node.name === "Mouth" && !mouth.current) mouth.current = { closed: node, open: null };
+            if (node.name === "MouthOpen" && mouth.current) mouth.current.open = node;
         });
+
+        if (mouth.current?.open) mouth.current.open.visible = false;
     }, [model]);
 
     useFrame((_, delta) => {
@@ -38,18 +58,57 @@ function Character({ state, levelRef }) {
 
         const time = performance.now() / 1000;
         const level = levelRef.current || 0;
+        const smooth = Math.min(1, delta * 6);
+        const bone = bones.current;
+        const base = rest.current;
 
-        // Оромона нафас мекашад.
-        const breath = Math.sin(time * 1.6) * 0.012;
-        // Ҳангоми гап задан ё гӯш кардан бо садо ҷунбиш мекунад.
-        const pulse = state === "speaking" ? level * 0.06 : 0;
+        // Нафаскашии доимӣ, то мурда нанамояд.
+        node.position.y = Math.sin(time * 1.6) * 0.012;
 
-        node.position.y = breath + pulse;
-        node.scale.setScalar(1 + pulse * 0.4);
+        // Ҳангоми гап задан дастҳо оҳиста ишора мекунанд.
+        const talking = state === "speaking";
+        gesture.current.amount = lerp(gesture.current.amount, talking ? 0.6 + level * 0.4 : 0, smooth);
+        gesture.current.phase += delta * (talking ? 2.6 : 1);
 
-        // Каме ба тарафи бинанда рӯ мегардонад; ҳангоми фикр — ба паҳлӯ.
-        const target = state === "thinking" ? 0.35 : state === "listening" ? -0.12 : 0;
-        node.rotation.y += (target + Math.sin(time * 0.5) * 0.08 - node.rotation.y) * Math.min(1, delta * 2.5);
+        const wave = Math.sin(gesture.current.phase);
+        const wave2 = Math.sin(gesture.current.phase * 0.7 + 1.1);
+        const amount = gesture.current.amount;
+
+        const apply = (name, dx, dy, dz) => {
+            const target = bone[name];
+            const start = base[name];
+            if (!target || !start) return;
+            target.rotation.x = lerp(target.rotation.x, start.x + dx, smooth);
+            target.rotation.y = lerp(target.rotation.y, start.y + dy, smooth);
+            target.rotation.z = lerp(target.rotation.z, start.z + dz, smooth);
+        };
+
+        // Дастҳо: ҳангоми гап задан аз бадан дур мешаванд ва ишора мекунанд.
+        apply("UpperArm_R", -0.55 * amount + wave * 0.18 * amount, 0, -0.3 * amount);
+        apply("Forearm_R", -0.7 * amount - wave * 0.3 * amount, 0, 0);
+        apply("UpperArm_L", -0.45 * amount + wave2 * 0.16 * amount, 0, 0.28 * amount);
+        apply("Forearm_L", -0.6 * amount - wave2 * 0.26 * amount, 0, 0);
+
+        // Вақте корбар гап мезанад, персонаж гӯш карда фикр мекунад:
+        // сар каме хам ва ба паҳлӯ мегардад.
+        const pondering = state === "listening" || state === "thinking";
+        const tilt = pondering ? 0.22 : 0;
+        const turn = pondering ? 0.18 : 0;
+
+        apply("Head",
+            (pondering ? 0.12 : 0) + (talking ? wave * 0.05 : 0),
+            turn + Math.sin(time * 0.4) * 0.05,
+            tilt);
+        apply("Neck", pondering ? 0.08 : 0, turn * 0.4, tilt * 0.4);
+        apply("Chest", talking ? wave * 0.03 : 0, 0, 0);
+        apply("Spine", 0, Math.sin(time * 0.3) * 0.03, 0);
+
+        // Даҳон ҳангоми гап задан кушода мешавад.
+        if (mouth.current?.open && mouth.current?.closed) {
+            const speaking = talking && (level > 0.28 || Math.sin(gesture.current.phase * 3.4) > 0.2);
+            mouth.current.open.visible = speaking;
+            mouth.current.closed.visible = !speaking;
+        }
     });
 
     return (

@@ -5,6 +5,7 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
 import { RealtimeStt } from "./realtimeStt";
+import { guideFor } from "./pageGuide";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 
@@ -65,6 +66,9 @@ export default function VoiceAssistant() {
     const greetedAloudRef = useRef(false);
     const greetRef = useRef(null);
     const speakDoneRef = useRef(null);
+    // Кадом саҳифаҳо аллакай муаррифӣ шудаанд — ҳар кадомаш як бор.
+    const spokenGuidesRef = useRef(new Set());
+    const speakGuideRef = useRef(null);
     const realtimeFailedRef = useRef(false);
 
     const lang = i18n.language || "tj";
@@ -484,7 +488,21 @@ export default function VoiceAssistant() {
             );
             reply = data?.reply || t("assistant.no_reply", "Мебахшед, нафаҳмидам. Бори дигар бигӯед.");
             setSaid(reply);
+
+            const before = window.location.pathname + window.location.hash;
             await runAction(data?.action, data?.params);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            // Амал ба саҳифаи нав бурд — «Ана донишгоҳҳо»-и кӯтоҳ ба ҷои
+            // муаррифии пурраи ҳамон саҳифа. Ду бор гап задан лозим нест.
+            if (window.location.pathname + window.location.hash !== before) {
+                const guide = guideFor(window.location.pathname, window.location.hash, !token);
+                if (guide && !spokenGuidesRef.current.has(guide.id)) {
+                    spokenGuidesRef.current.add(guide.id);
+                    reply = guide.text;
+                    setSaid(reply);
+                }
+            }
         } catch {
             reply = t("assistant.failed", "Алоқа бо сервер нест. Backend-ро санҷед.");
             setSaid(reply);
@@ -494,7 +512,39 @@ export default function VoiceAssistant() {
         busyRef.current = false;
         setState("idle");
         if (handsFreeRef.current) startListening();
-    }, [currentCareerName, lang, runAction, speak, startListening, t]);
+    }, [currentCareerName, lang, runAction, speak, startListening, t, token]);
+
+    // Муаррифии саҳифа: пеш аз гап задан микрофонро мебандем, вагарна ёвар
+    // садои худашро мешунавад ва онро ҳамчун гапи корбар мефаҳмад.
+    const speakGuide = useCallback(async (text) => {
+        busyRef.current = true;
+        releaseMic();
+        setSaid(text);
+        setHeard("");
+        await speak(text);
+        busyRef.current = false;
+        setState("idle");
+        if (handsFreeRef.current) startListening();
+    }, [releaseMic, speak, startListening]);
+
+    useEffect(() => {
+        speakGuideRef.current = speakGuide;
+    }, [speakGuide]);
+
+    // Корбар худаш ба саҳифаи нав гузашт (тугма ё истинод) — муаррифӣ мекунем.
+    // Агар ин кор аз ҷониби ёвар бошад, send() онро аллакай кардааст.
+    useEffect(() => {
+        if (!open || !started) return undefined;
+        const guide = guideFor(location.pathname, location.hash, !token);
+        if (!guide || spokenGuidesRef.current.has(guide.id)) return undefined;
+
+        const timer = setTimeout(() => {
+            if (busyRef.current || spokenGuidesRef.current.has(guide.id)) return;
+            spokenGuidesRef.current.add(guide.id);
+            speakGuideRef.current?.(guide.text);
+        }, 700);
+        return () => clearTimeout(timer);
+    }, [location.pathname, location.hash, open, started, token]);
 
     useEffect(() => {
         sendRef.current = send;
@@ -509,6 +559,7 @@ export default function VoiceAssistant() {
         setSaid(greeting);
         if (!greetedAloudRef.current) {
             greetedAloudRef.current = true;
+            spokenGuidesRef.current.add("home");
             await speak(greeting);
         }
         startListening();
@@ -520,6 +571,7 @@ export default function VoiceAssistant() {
         greetRef.current = () => {
             if (greetedAloudRef.current || handsFreeRef.current) return;
             greetedAloudRef.current = true;
+            spokenGuidesRef.current.add("home");
             unlockAudio();
             speak(greeting).then(() => setState("idle"));
         };

@@ -46,6 +46,17 @@ async function warm(text) {
 }
 
 (async () => {
+    // Муаррифии саҳифаҳо — аз худи frontend, то матн ҳамеша якхела бошад.
+    try {
+        const guideUrl = require('url').pathToFileURL(
+            require('path').join(__dirname, '../../Front/src/components/voice/pageGuide.js'),
+        ).href;
+        const { allGuideTexts } = await import(guideUrl);
+        PHRASES.push(...allGuideTexts());
+    } catch (error) {
+        console.log('муаррифиҳо хонда нашуданд:', String(error).slice(0, 120));
+    }
+
     // Шарҳи панҷ кластер низ садо мегирад — онҳо аз база меоянд.
     for (let number = 1; number <= 5; number += 1) {
         try {

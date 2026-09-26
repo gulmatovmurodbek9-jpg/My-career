@@ -5,7 +5,7 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
 import { RealtimeStt } from "./realtimeStt";
-import { guideFor } from "./pageGuide";
+import { guideFor, splitForSpeech } from "./pageGuide";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 
@@ -163,7 +163,7 @@ export default function VoiceAssistant() {
         }
         const done = speakDoneRef.current;
         speakDoneRef.current = null;
-        done?.();
+        done?.(true);
     }, []);
 
     const unlockAudio = useCallback(() => {
@@ -175,22 +175,20 @@ export default function VoiceAssistant() {
 
     // Аввал овози МУРОД аз сервер; агар нашавад — овози браузер.
     // Ваъда вақте иҷро мешавад, ки садо тамом шуд — то баъдаш гӯш сар шавад.
-    const speak = useCallback((text) => new Promise((resolve) => {
-        if (!text) {
-            resolve();
-            return;
-        }
+    // Ваъда бо true иҷро мешавад, агар садо қатъ шуда бошад (стоп ё хато) —
+    // он гоҳ ҷумлаҳои боқимонда гуфта намешаванд.
+    const speakOne = useCallback((text) => new Promise((resolve) => {
         stopAudio();
         setState("speaking");
         startPulse();
 
         let settled = false;
-        const finish = () => {
+        const finish = (interrupted = false) => {
             if (settled) return;
             settled = true;
             if (speakDoneRef.current === finish) speakDoneRef.current = null;
             stopPulse();
-            resolve();
+            resolve(interrupted);
         };
         speakDoneRef.current = finish;
         // Овози браузер русист ва тоҷикиро вайрон мехонад —
@@ -198,20 +196,38 @@ export default function VoiceAssistant() {
         const fallback = () => {
             if (settled) return;
             setVoiceWarning(true);
-            finish();
+            finish(true);
         };
 
         const player = playerRef.current || new Audio();
         playerRef.current = player;
-        player.onended = finish;
+        player.onended = () => finish(false);
         player.onerror = fallback;
         player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&v=${VOICE_VERSION}`;
         player.play().then(() => setVoiceWarning(false)).catch(fallback);
 
         // Суғурта: агар садо ба ягон сабаб на тамом шавад, на хато диҳад,
         // ёвар набояд то абад интизор монад. 25 сония — аз ҳар ҷумла дарозтар.
-        setTimeout(finish, 25000);
+        setTimeout(() => finish(false), 25000);
     }), [startPulse, stopAudio, stopPulse]);
+
+    // Матни дарозро ҷумла-ҷумла мегӯем: ҷумлаи аввал зуд тайёр мешавад ва
+    // дар вақти гуфтанаш сервер ҷумлаи навбатиро месозад — интизорӣ нест.
+    const speak = useCallback(async (text) => {
+        if (!text) return;
+        const chunks = splitForSpeech(text);
+        const prefetch = (chunk) => fetch(`${API}/voice/speak?text=${encodeURIComponent(chunk)}&v=${VOICE_VERSION}`)
+            .then((response) => response.arrayBuffer())
+            .catch(() => { });
+
+        let next = null;
+        for (let index = 0; index < chunks.length; index += 1) {
+            if (next) await next;
+            next = chunks[index + 1] ? prefetch(chunks[index + 1]) : null;
+            const interrupted = await speakOne(chunks[index]);
+            if (interrupted) return;
+        }
+    }, [speakOne]);
 
     // Номи ихтисоси кушодашуда, то «инро захира кун» маъно дошта бошад.
     const currentCareerName = useCallback(async () => {
@@ -224,6 +240,21 @@ export default function VoiceAssistant() {
             return undefined;
         }
     }, [location.pathname]);
+
+    // Муаррифии ихтисос аз база (~20 мс). Ҳар ихтисос дар сессия як бор;
+    // агар саҳифа ихтисос набошад ё аллакай гуфта шуда бошад — null.
+    const careerBrief = useCallback(async (path) => {
+        const match = path.match(/^\/info\/([^/]+)$/);
+        const id = match && `career:${match[1]}`;
+        if (!id || spokenGuidesRef.current.has(id)) return null;
+        spokenGuidesRef.current.add(id);
+        try {
+            const { data } = await axios.get(`${API}/careers/${match[1]}/brief`, { timeout: 5000 });
+            return data?.text || null;
+        } catch {
+            return null;
+        }
+    }, []);
 
     const runAction = useCallback(async (action, params) => {
         switch (action) {
@@ -501,6 +532,12 @@ export default function VoiceAssistant() {
                     spokenGuidesRef.current.add(guide.id);
                     reply = guide.text;
                     setSaid(reply);
+                } else {
+                    const brief = await careerBrief(window.location.pathname);
+                    if (brief) {
+                        reply = brief;
+                        setSaid(reply);
+                    }
                 }
             }
         } catch {
@@ -512,7 +549,7 @@ export default function VoiceAssistant() {
         busyRef.current = false;
         setState("idle");
         if (handsFreeRef.current) startListening();
-    }, [currentCareerName, lang, runAction, speak, startListening, t, token]);
+    }, [careerBrief, currentCareerName, lang, runAction, speak, startListening, t, token]);
 
     // Муаррифии саҳифа: пеш аз гап задан микрофонро мебандем, вагарна ёвар
     // садои худашро мешунавад ва онро ҳамчун гапи корбар мефаҳмад.
@@ -536,6 +573,20 @@ export default function VoiceAssistant() {
     useEffect(() => {
         if (!open || !started) return undefined;
         const guide = guideFor(location.pathname, location.hash, !token);
+
+        if (!guide && /^\/info\//.test(location.pathname)) {
+            let cancelled = false;
+            const timer = setTimeout(async () => {
+                if (busyRef.current || cancelled) return;
+                const brief = await careerBrief(location.pathname);
+                if (brief && !cancelled && !busyRef.current) speakGuideRef.current?.(brief);
+            }, 700);
+            return () => {
+                cancelled = true;
+                clearTimeout(timer);
+            };
+        }
+
         if (!guide || spokenGuidesRef.current.has(guide.id)) return undefined;
 
         const timer = setTimeout(() => {
@@ -544,7 +595,7 @@ export default function VoiceAssistant() {
             speakGuideRef.current?.(guide.text);
         }, 700);
         return () => clearTimeout(timer);
-    }, [location.pathname, location.hash, open, started, token]);
+    }, [careerBrief, location.pathname, location.hash, open, started, token]);
 
     useEffect(() => {
         sendRef.current = send;

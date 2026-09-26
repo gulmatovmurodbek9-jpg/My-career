@@ -47,12 +47,14 @@ async function warm(text) {
 
 (async () => {
     // Муаррифии саҳифаҳо — аз худи frontend, то матн ҳамеша якхела бошад.
+    let split = (text) => [text];
     try {
         const guideUrl = require('url').pathToFileURL(
             require('path').join(__dirname, '../../Front/src/components/voice/pageGuide.js'),
         ).href;
-        const { allGuideTexts } = await import(guideUrl);
+        const { allGuideTexts, splitForSpeech } = await import(guideUrl);
         PHRASES.push(...allGuideTexts());
+        split = splitForSpeech;
     } catch (error) {
         console.log('муаррифиҳо хонда нашуданд:', String(error).slice(0, 120));
     }
@@ -75,7 +77,9 @@ async function warm(text) {
     let fresh = 0;
     let cached = 0;
 
-    for (const text of PHRASES) {
+    // Ёвар матнро ҷумла-ҷумла мегӯяд, пас кеш ҳам бояд ҷумла-ҷумла бошад.
+    const pieces = [...new Set(PHRASES.flatMap((text) => split(text)))];
+    for (const text of pieces) {
         const result = await warm(text);
         if (!result.ok) {
             console.log(`НЕ   ${result.status}  ${text.slice(0, 50)}`);
@@ -85,5 +89,5 @@ async function warm(text) {
         console.log(`OK  ${result.source.padEnd(6)} ${result.seconds}s  ${text.slice(0, 50)}`);
     }
 
-    console.log(`\nНав сохта шуд: ${fresh}   Аллакай дар кеш: ${cached}   Ҳамагӣ: ${PHRASES.length}`);
+    console.log(`\nНав сохта шуд: ${fresh}   Аллакай дар кеш: ${cached}   Ҳамагӣ: ${pieces.length}`);
 })();

@@ -76,6 +76,42 @@ export const guideFor = (path, hash = "", isGuest = false) => {
     return { id: guide.id, text: isGuest && guide.guestText ? guide.guestText : guide.text };
 };
 
+// Ҷумлаҳо; нуқта дар дохили «» (масалан «Таърих. Ҳуқуқ») ҷумларо намебурад.
+const sentencesOf = (text) => {
+    const result = [];
+    let depth = 0;
+    let start = 0;
+    const value = String(text || "");
+    for (let index = 0; index < value.length; index += 1) {
+        const char = value[index];
+        if (char === "«") depth += 1;
+        else if (char === "»") depth = Math.max(0, depth - 1);
+        else if (depth === 0 && ".!?".includes(char) && /\s/.test(value[index + 1] || " ")) {
+            result.push(value.slice(start, index + 1).trim());
+            start = index + 1;
+        }
+    }
+    result.push(value.slice(start).trim());
+    return result.filter(Boolean);
+};
+
+// Матнро ба қисмҳо барои гуфтан тақсим мекунад. Қисми аввал хурд — то садо
+// зуд сар шавад; ҳар қисми навбатӣ то 2.5 баробари пешина калон мешавад:
+// модел ~3 баробар тезтар аз садо месозад, пас қисми навбатӣ ҳамеша
+// пеш аз тамом шудани гуфтаи ҷорӣ тайёр аст ва хомӯшӣ намешавад.
+// prewarm-voice.js низ ҳаминро истифода мебарад, то кеш мувофиқ ояд.
+export const splitForSpeech = (text) => {
+    const chunks = [];
+    for (const sentence of sentencesOf(text)) {
+        const last = chunks[chunks.length - 1];
+        const previous = chunks[chunks.length - 2];
+        const limit = previous ? Math.min(200, previous.length * 2.5) : 60;
+        if (last && last.length + sentence.length < Math.max(limit, 60)) chunks[chunks.length - 1] = `${last} ${sentence}`;
+        else chunks.push(sentence);
+    }
+    return chunks;
+};
+
 // Ҳамаи матнҳо — барои пешакӣ сохтани садо.
 export const allGuideTexts = () =>
     PAGE_GUIDES.flatMap((guide) => [guide.text, guide.guestText].filter(Boolean));

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, BadRequestException, Query, UseGuards, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, BadRequestException, Query, UseGuards, Request, UseInterceptors, UploadedFile, ParseUUIDPipe } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CareerService } from './career.service';
 import { CreateCareerDto } from './dto/create-career.dto';
@@ -154,6 +154,12 @@ export class CareerController {
     @ApiOperation({ summary: 'Балҳои гузариши расмии НМТ аз рӯи солҳо' })
     async scores(@Param('id') id: string) {
         return this.careerService.admissionScores(id);
+    }
+
+    @Get(':id/brief')
+    @ApiOperation({ summary: 'Муаррифии кӯтоҳи ихтисос барои ёвари овозӣ' })
+    async brief(@Param('id', ParseUUIDPipe) id: string) {
+        return this.careerService.careerBrief(id);
     }
 
     @Post('assistant')

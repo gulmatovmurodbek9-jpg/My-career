@@ -1076,6 +1076,76 @@ export class CareerService {
         return { code, source: NTC_SOURCE, lastYear, years, universities };
     }
 
+    // Муаррифии шифоҳии ихтисос — аз база, на аз AI: зуд (~50 мс) ва
+    // рақамҳо (бал, маош) воқеӣ мемонанд, на бофта.
+    async careerBrief(careerId: string): Promise<{ text: string }> {
+        const career = await this.careerRepository.findOne({ where: { id: careerId } });
+        if (!career) throw new NotFoundException('Ихтисос ёфт нашуд');
+
+        const list = (value: unknown): string[] =>
+            (Array.isArray(value) ? value : String(value || '').split(','))
+                .map((item) => String(item).trim())
+                .filter(Boolean);
+        const firstSentence = (value: unknown): string => {
+            const text = String(value || '').trim();
+            // Нуқтаи дохили «» (номи ихтисос «Таърих. Ҳуқуқ») охири ҷумла нест.
+            const quoteEnd = text.startsWith('«') ? text.indexOf('»') : -1;
+            const end = text.slice(quoteEnd + 1).search(/[.!?](\s|$)/);
+            return end >= 0 ? text.slice(0, quoteEnd + 1 + end + 1) : text;
+        };
+        const join = (items: string[]): string =>
+            items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} ва ${items[items.length - 1]}`;
+
+        const parts: string[] = [];
+        // Агар тавсиф худ бо номи ихтисос сар шавад, номро такрор намекунем.
+        const about = firstSentence(career.description || career.purpose);
+        const plain = (value: string) => value.toLowerCase().replace(/[«»"]/g, '').trim();
+        parts.push(about && plain(about).startsWith(plain(career.name)) ? about
+            : about ? `${career.name}. ${about}` : `${career.name}.`);
+
+        const work = list(career.careerOpportunities).slice(0, 3)
+            .map((item) => item.charAt(0).toLowerCase() + item.slice(1));
+        if (work.length) parts.push(`Бо ин ихтисос дар ${join(work)} кор карда метавонед.`);
+
+        const techs = list(career.technologies).slice(0, 4);
+        if (techs.length) parts.push(`Шумо ${join(techs)}-ро меомӯзед.`);
+
+        const salary = (career.salaryAndMarket as any)?.junior;
+        // «2 500» → «2500», вагарна рақамҳо ҷудо-ҷудо хонда мешаванд.
+        if (salary) parts.push(`Маоши аввал ${String(salary).replace(/(\d)\s+(?=\d{3}(?!\d))/g, '$1').replace(/\s*[–—-]\s*/, ' то ')}.`);
+
+        // Бали гузаришро то адади бутун мегардонем: «шашсаду ёздаҳ», на «…ёздаҳ.як».
+        const code = career.code ? String(career.code).trim() : '';
+        if (code) {
+            const rows: Array<{ year: number; lo: number; hi: number }> = await this.careerRepository.manager.query(
+                `SELECT year, min(score) AS lo, max(score) AS hi FROM admission_scores
+                 WHERE code = $1 AND score > 0
+                 GROUP BY year ORDER BY year DESC LIMIT 1`,
+                [code],
+            );
+            if (rows[0]) {
+                const lo = Math.round(Number(rows[0].lo));
+                const hi = Math.round(Number(rows[0].hi));
+                parts.push(lo === hi
+                    ? `Соли ${rows[0].year} бали гузариш ${lo} буд.`
+                    : `Соли ${rows[0].year} бали гузариш аз ${lo} то ${hi} буд.`);
+            }
+        }
+
+        const unis: Array<{ n: number }> = await this.careerRepository.manager.query(
+            'SELECT count(*)::int AS n FROM career_universities WHERE "careerId" = $1',
+            [career.id],
+        );
+        if (unis[0]?.n) parts.push(`Онро ${unis[0].n} донишгоҳ таълим медиҳад.`);
+
+        const similar = [...new Set(list(career.relatedSpecializations))]
+            .filter((item) => item !== career.name).slice(0, 2);
+        if (similar.length) parts.push(`Ихтисосҳои монанд: ${join(similar)}.`);
+
+        parts.push('Мехоҳед захира кунам ё бо дигараш муқоиса кунем?');
+        return { text: parts.join(' ') };
+    }
+
     findOne(id: string): Promise<Career | null> {
         return this.careerRepository.findOne({ where: { id }, relations: ['cluster', 'universities'] });
     }

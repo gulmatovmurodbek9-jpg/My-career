@@ -9,6 +9,17 @@ import { VoiceService } from './voice.service';
 export class VoiceController {
     constructor(private readonly voiceService: VoiceService) { }
 
+    // Ташхиси микрофон дар браузери корбар: ҳодисаҳо ба voice-debug.log.
+    // Танҳо бо VOICE_DEBUG=1 (дар компютери таҳиягар); дар сервер хомӯш.
+    @Post('debug')
+    debug(@Body() body: { events?: unknown[] }) {
+        if (process.env.VOICE_DEBUG !== '1') return { ok: false };
+        const events = Array.isArray(body?.events) ? body.events.slice(0, 50) : [];
+        const lines = events.map((event) => JSON.stringify(event).slice(0, 400)).join('\n');
+        if (lines) require('fs').appendFileSync('voice-debug.log', `${lines}\n`);
+        return { ok: true };
+    }
+
     @Get('status')
     @ApiOperation({ summary: 'Ҳолати овоз: модел, кеш, шинохти нутқ' })
     status() {

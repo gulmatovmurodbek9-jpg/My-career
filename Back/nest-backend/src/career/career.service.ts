@@ -649,11 +649,32 @@ export class CareerService {
 
         // Калимаҳои умумӣ («кори», «духтури») ба якчанд самт мувофиқанд — онҳоро намешуморем.
         const common = new Set(['кори', 'мехохам', 'ихтисос', 'ихтисоси', 'хамон', 'хамин', 'кушо']);
-        const said = text.split(' ').filter((word) => word.length >= 4 && !common.has(word));
+        const ownWords = options.map((option) =>
+            foldTajik(`${option.label || ''} ${option.name}`).split(/[^a-zа-яё0-9]+/i).filter((word) => word.length >= 4));
+        // Шинохти нутқ ҳарфҳоро иваз мекунад («дандон» → «дамдор»): то 2 ҳарф фарқ мебахшем.
+        const distance = (a: string, b: string) => {
+            const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+            for (let i = 1; i <= a.length; i += 1) {
+                let previous = row[0];
+                row[0] = i;
+                for (let j = 1; j <= b.length; j += 1) {
+                    const saved = row[j];
+                    row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
+                    previous = saved;
+                }
+            }
+            return row[b.length];
+        };
+        const matches = (own: string[], word: string) => own.some((item) =>
+            item.slice(0, 5) === word.slice(0, 5)
+            || (word.length >= 5 && distance(word.slice(0, 7), item.slice(0, 7)) <= 2));
+        // Калимае, ки дар ду самт ҳаст («духтур» дар «духтури кӯдакон» ва «духтури
+        // дандон»), интихоб нест: «духтур шудан мехоҳам»-и такрорӣ Педиатрияро мекушод.
+        const said = text.split(' ').filter((word) =>
+            word.length >= 4 && !common.has(word) && ownWords.filter((own) => matches(own, word)).length === 1);
         let best: { option: (typeof options)[number]; score: number } | null = null;
-        for (const option of options) {
-            const own = foldTajik(`${option.label || ''} ${option.name}`).split(/[^a-zа-яё0-9]+/i).filter((word) => word.length >= 4);
-            const score = said.filter((word) => own.some((item) => item.slice(0, 5) === word.slice(0, 5))).length;
+        for (const [index, option] of options.entries()) {
+            const score = said.filter((word) => matches(ownWords[index], word)).length;
             if (score > 0 && (!best || score > best.score)) best = { option, score };
         }
         return best?.option || null;

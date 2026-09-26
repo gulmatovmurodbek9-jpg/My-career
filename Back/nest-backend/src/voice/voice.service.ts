@@ -88,7 +88,17 @@ export class VoiceService implements OnModuleInit {
 
     // Кушодани файли 110 МБ 20 сония мегирад — онро дар оғоз мекунем,
     // то дархости аввали корбар фаврӣ бошад.
+    private sttClient: any = null;
+
     onModuleInit(): void {
+        // Токени аввал 8 сония мегирифт (бор кардани SDK + TLS-и аввал) —
+        // ҳамаашро дар оғоз мекунем, то микрофони корбар интизор намонад.
+        if (this.sttKey) {
+            const started = Date.now();
+            void this.sttToken()
+                .then(() => this.logger.log(`Шинохти нутқ тайёр — ${Date.now() - started} мс`))
+                .catch(() => undefined);
+        }
         if (this.ttsUrl) {
             this.logger.log(`Овоз аз сервери Python — ${this.ttsUrl}`);
         }
@@ -228,9 +238,11 @@ export class VoiceService implements OnModuleInit {
     async sttToken(): Promise<{ token: string }> {
         if (!this.sttKey) throw new ServiceUnavailableException('ELEVENLABS_API_KEY дар .env нест');
         try {
-            const { ElevenLabsClient } = require('@elevenlabs/elevenlabs-js');
-            const client = new ElevenLabsClient({ apiKey: this.sttKey });
-            const created: any = await client.tokens.singleUse.create('realtime_scribe');
+            if (!this.sttClient) {
+                const { ElevenLabsClient } = require('@elevenlabs/elevenlabs-js');
+                this.sttClient = new ElevenLabsClient({ apiKey: this.sttKey });
+            }
+            const created: any = await this.sttClient.tokens.singleUse.create('realtime_scribe');
             const token = created?.token || created;
             if (typeof token !== 'string') throw new Error('токен нодуруст');
             return { token };

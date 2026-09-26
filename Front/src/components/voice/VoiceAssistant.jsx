@@ -4,7 +4,8 @@ import { Keyboard, Mic, Send, Square, X } from "lucide-react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
-import { RealtimeStt } from "./realtimeStt";
+import { prefetchSttToken, RealtimeStt } from "./realtimeStt";
+import { voiceLog } from "./voiceLog";
 import { guideFor, splitForSpeech } from "./pageGuide";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
@@ -51,6 +52,9 @@ export default function VoiceAssistant() {
     const [input, setInput] = useState("");
     const [showKeyboard, setShowKeyboard] = useState(false);
     const [state, setState] = useState("idle");
+    useEffect(() => {
+        voiceLog("state", { state });
+    }, [state]);
     const [voiceWarning, setVoiceWarning] = useState(false);
 
     const playerRef = useRef(null);
@@ -209,6 +213,8 @@ export default function VoiceAssistant() {
         playerRef.current = player;
         player.onended = () => finish(false);
         player.onerror = fallback;
+        const asked = Date.now();
+        player.onplaying = () => voiceLog("play", { wait: Date.now() - asked, text: text.slice(0, 40) });
         player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&v=${VOICE_VERSION}`;
         player.play().then(() => setVoiceWarning(false)).catch(fallback);
 
@@ -354,6 +360,12 @@ export default function VoiceAssistant() {
         streamRef.current = null;
     }, []);
 
+    // Ҳангоми гапи ёвар: пайвасти ҷараёниро дар таваққуф мегузорем, сабтро мебандем.
+    const pauseMic = useCallback(() => {
+        if (sttRef.current?.active) sttRef.current.pause();
+        else releaseMic();
+    }, [releaseMic]);
+
     // Садоро ба сервер мефиристем — Scribe тоҷикиро мешиносад,
     // барои ҳамин аз шинохти браузер даст кашидем.
     const transcribe = useCallback(async (blob) => {
@@ -497,8 +509,7 @@ export default function VoiceAssistant() {
                     onLevel: (rms) => setOrbLevel(Math.min(1, rms * 7)),
                     onFinal: (text) => {
                         if (!text || busyRef.current || !handsFreeRef.current) return;
-                        stt.stop();
-                        sttRef.current = null;
+                        stt.pause();
                         setOrbLevel(0);
                         sendRef.current?.(text);
                     },
@@ -530,6 +541,7 @@ export default function VoiceAssistant() {
                 return;
             } catch (error) {
                 console.warn("Realtime STT:", error?.message || error);
+                voiceLog("realtime-fail", { error: String(error?.message || error) });
                 realtimeFailedRef.current = Date.now();
                 sttRef.current = null;
             }
@@ -539,7 +551,23 @@ export default function VoiceAssistant() {
     }, [lang, setOrbLevel, startRecording, stopAudio, t]);
 
     const startListening = useCallback(async () => {
-        if (busyRef.current || sttRef.current?.active || recorderRef.current || startingRef.current) return;
+        // Пайваст кушода ва дар таваққуф аст — фавран идома медиҳем.
+        if (!busyRef.current && sttRef.current?.active && sttRef.current.paused) {
+            sttRef.current.resume();
+            setHeard("");
+            setState("listening");
+            voiceLog("resume");
+            return;
+        }
+        if (busyRef.current || sttRef.current?.active || recorderRef.current || startingRef.current) {
+            voiceLog("listen-skip", {
+                busy: busyRef.current,
+                active: !!sttRef.current?.active,
+                recorder: !!recorderRef.current,
+                starting: startingRef.current,
+            });
+            return;
+        }
         // Дар вақти гирифтани токен sttRef ҳанӯз холист — бе ин қуфл
         // watchdog ва onError якҷоя ду пайвасти ҷудо мекушоданд.
         startingRef.current = true;
@@ -554,11 +582,15 @@ export default function VoiceAssistant() {
         const text = String(rawText || "").trim();
         if (!text || busyRef.current) return;
         busyRef.current = true;
+        // Матни навишташуда ҳам: то ёвар гап занад, микрофон набояд шунавад.
+        pauseMic();
         setInput("");
         setHeard(text);
         setState("thinking");
 
         let reply = "";
+        const asked = Date.now();
+        voiceLog("send", { text: text.slice(0, 80) });
         try {
             const careerName = await currentCareerName();
             const { data } = await axios.post(
@@ -566,6 +598,7 @@ export default function VoiceAssistant() {
                 { message: text, lang, careerName, options: optionsRef.current },
                 { timeout: 30000 },
             );
+            voiceLog("reply", { ms: Date.now() - asked, action: data?.action });
             reply = data?.reply || t("assistant.no_reply", "Мебахшед, нафаҳмидам. Бори дигар бигӯед.");
             setSaid(reply);
 
@@ -598,20 +631,20 @@ export default function VoiceAssistant() {
         busyRef.current = false;
         setState("idle");
         if (handsFreeRef.current) startListening();
-    }, [careerBrief, currentCareerName, lang, runAction, speak, startListening, t, token]);
+    }, [careerBrief, currentCareerName, lang, pauseMic, runAction, speak, startListening, t, token]);
 
     // Муаррифии саҳифа: пеш аз гап задан микрофонро мебандем, вагарна ёвар
     // садои худашро мешунавад ва онро ҳамчун гапи корбар мефаҳмад.
     const speakGuide = useCallback(async (text) => {
         busyRef.current = true;
-        releaseMic();
+        pauseMic();
         setSaid(text);
         setHeard("");
         await speak(text);
         busyRef.current = false;
         setState("idle");
         if (handsFreeRef.current) startListening();
-    }, [releaseMic, speak, startListening]);
+    }, [pauseMic, speak, startListening]);
 
     useEffect(() => {
         speakGuideRef.current = speakGuide;
@@ -654,6 +687,8 @@ export default function VoiceAssistant() {
     // Як пахш — баъд ҳама чиз бо овоз меравад.
     const startConversation = useCallback(async () => {
         unlockAudio();
+        // То салом тамом шавад, токен тайёр аст — микрофон фавран мекушояд.
+        prefetchSttToken();
         setStarted(true);
         handsFreeRef.current = true; setHandsFree(true);
         setSaid(greeting);
@@ -679,6 +714,7 @@ export default function VoiceAssistant() {
 
     const resumeConversation = useCallback(() => {
         unlockAudio();
+        prefetchSttToken();
         // «Давом додан» ҳамеша бояд кор кунад: ҳар ҳолати кӯҳнаро тоза мекунем,
         // ҳатто агар ягон дархости пешина ҳанӯз овезон бошад.
         stopAudio();

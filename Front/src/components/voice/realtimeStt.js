@@ -1,4 +1,5 @@
 import { API } from "../../lib/config";
+import { voiceLog } from "./voiceLog";
 
 // Шинохти ҷараёнии нутқ: садо ҳангоми гап задан пора-пора фиристода мешавад
 // ва матн ҳамон лаҳза бармегардад. Пештар мо интизор мешудем, то корбар
@@ -45,6 +46,43 @@ const toPcm16 = (samples) => {
     return new Uint8Array(out.buffer);
 };
 
+// Токен пешакӣ гирифта мешавад (панел кушода шуд, ёвар салом медиҳад), то
+// лаҳзаи гӯш кардан интизорӣ набошад. Токен якбора аст ва 15 дақиқа эътибор
+// дорад — мо онро то 10 дақиқа нигоҳ медорем.
+let spare = null;
+
+const fetchToken = async () => {
+    const asked = Date.now();
+    const response = await fetch(`${API}/voice/stt-token`);
+    voiceLog("token", { status: response.status, ms: Date.now() - asked });
+    if (!response.ok) throw new Error(`токен нашуд (${response.status})`);
+    const { token } = await response.json();
+    return token;
+};
+
+export const prefetchSttToken = () => {
+    if (spare && Date.now() - spare.at < 10 * 60 * 1000) return;
+    const at = Date.now();
+    const promise = fetchToken();
+    spare = { at, promise };
+    promise.catch(() => {
+        if (spare?.promise === promise) spare = null;
+    });
+};
+
+const takeToken = async () => {
+    const ready = spare && Date.now() - spare.at < 10 * 60 * 1000 ? spare.promise : null;
+    spare = null;
+    if (ready) {
+        try {
+            return await ready;
+        } catch {
+            /* пешакӣ нашуд — ҳозир мегирем */
+        }
+    }
+    return fetchToken();
+};
+
 export class RealtimeStt {
     constructor({ lang = "tj", onPartial, onFinal, onLevel, onError } = {}) {
         this.lang = lang;
@@ -59,6 +97,17 @@ export class RealtimeStt {
         this.stopped = false;
     }
 
+    // Ҳангоми гапи ёвар пайвастро намебандем — танҳо хомӯширо мефиристем,
+    // то сервер пайвастро набандад ва садои ёвар ҳамчун гапи корбар наояд.
+    // Баъд аз гап resume() фаврӣ аст: на токени нав, на микрофони нав (~1 с сарфа).
+    pause() {
+        this.paused = true;
+    }
+
+    resume() {
+        this.paused = false;
+    }
+
     get active() {
         return !!this.ws && this.ws.readyState === WebSocket.OPEN;
     }
@@ -66,9 +115,7 @@ export class RealtimeStt {
     async start() {
         this.stopped = false;
 
-        const response = await fetch(`${API}/voice/stt-token`);
-        if (!response.ok) throw new Error(`токен нашуд (${response.status})`);
-        const { token } = await response.json();
+        const token = await takeToken();
 
         const url = new URL(WS_URL);
         url.searchParams.set("token", token);
@@ -76,7 +123,7 @@ export class RealtimeStt {
         url.searchParams.set("language_code", LANG[this.lang] || LANG.tj);
         url.searchParams.set("audio_format", `pcm_${SAMPLE_RATE}`);
         url.searchParams.set("commit_strategy", "vad");
-        url.searchParams.set("vad_silence_threshold_secs", "0.6");
+        url.searchParams.set("vad_silence_threshold_secs", "0.5");
         // Сервер танҳо такрори параметрро қабул мекунад, на рӯйхати JSON.
         KEYTERMS.forEach((word) => url.searchParams.append("keyterms", word));
 
@@ -86,6 +133,7 @@ export class RealtimeStt {
             const timer = setTimeout(() => reject(new Error("пайвастшавӣ дер кард")), 8000);
 
             ws.onopen = () => {
+                voiceLog("ws-open");
                 clearTimeout(timer);
                 resolve();
             };
@@ -94,8 +142,13 @@ export class RealtimeStt {
                 reject(new Error("WebSocket пайваст нашуд"));
             };
             ws.onclose = (event) => {
-                if (!this.stopped) console.warn("Scribe пайвастро баст:", event.code, event.reason || "");
-                if (!this.stopped) this.onError(new Error("пайваст қатъ шуд"));
+                voiceLog("ws-close", { code: event.code, reason: event.reason, stopped: this.stopped, level: this.peak });
+                if (this.stopped) return;
+                console.warn("Scribe пайвастро баст:", event.code, event.reason || "");
+                // Микрофон ва AudioContext-ро низ мебандем — вагарна ҳар пайвасти
+                // нав микрофони дигар мекушод ва кӯҳнаҳо кушода мемонданд.
+                this.stop();
+                this.onError(new Error("пайваст қатъ шуд"));
             };
             ws.onmessage = (event) => {
                 let data;
@@ -107,13 +160,18 @@ export class RealtimeStt {
                 const kind = data.message_type || data.type;
                 // Хатои сервер (квота, токен, формат) — дар консол нишон медиҳем,
                 // вагарна фақат «гӯш карда истодаам» мемонд ва сабаб номаълум буд.
+                if (kind === "committed_transcript" || (kind === "partial_transcript" && !this.heardAny)) {
+                    this.heardAny = true;
+                    voiceLog(kind, { text: String(data.text || "").slice(0, 80) });
+                }
                 if (kind && /error|invalid|quota|limit/i.test(kind)) {
+                    voiceLog("scribe-error", { kind, error: data.error || data.message || "" });
                     console.warn("Scribe:", kind, data.error || data.message || "");
                     return;
                 }
-                if (kind === "partial_transcript" && data.text) {
+                if (kind === "partial_transcript" && data.text && !this.paused) {
                     this.onPartial(data.text);
-                } else if (kind && kind.startsWith("committed") && data.text) {
+                } else if (kind && kind.startsWith("committed") && data.text && !this.paused) {
                     this.onFinal(data.text.trim());
                 }
             };
@@ -129,6 +187,22 @@ export class RealtimeStt {
 
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         this.context = new AudioCtx({ sampleRate: SAMPLE_RATE });
+        // Бе фаъолияти корбар баъзе браузерҳо AudioContext-ро «suspended» месозанд:
+        // он гоҳ садо ҳеҷ гоҳ фиристода намешавад, вале экран «гӯш карда истодаам».
+        if (this.context.state !== "running") await this.context.resume().catch(() => { });
+        const track = this.stream.getAudioTracks()[0];
+        voiceLog("mic-open", {
+            device: track?.label || "",
+            muted: track?.muted,
+            state: this.context.state,
+            rate: this.context.sampleRate,
+        });
+        this.peak = 0;
+        this.heardAny = false;
+        this.levelTimer = setInterval(() => {
+            voiceLog("mic-level", { peak: Number((this.peak || 0).toFixed(3)), state: this.context?.state, ws: this.ws?.readyState });
+            this.peak = 0;
+        }, 2000);
         const source = this.context.createMediaStreamSource(this.stream);
 
         // ScriptProcessor кӯҳна аст, вале дар ҳамаи браузерҳо кор мекунад
@@ -136,11 +210,15 @@ export class RealtimeStt {
         this.node = this.context.createScriptProcessor(CHUNK_SAMPLES, 1, 1);
         this.node.onaudioprocess = (event) => {
             if (!this.active) return;
-            const samples = event.inputBuffer.getChannelData(0);
+            const samples = this.paused
+                ? new Float32Array(event.inputBuffer.length)
+                : event.inputBuffer.getChannelData(0);
 
             let sum = 0;
             for (let index = 0; index < samples.length; index += 1) sum += samples[index] * samples[index];
-            this.onLevel(Math.sqrt(sum / samples.length));
+            const rms = Math.sqrt(sum / samples.length);
+            this.peak = Math.max(this.peak || 0, rms);
+            this.onLevel(rms);
 
             this.ws.send(JSON.stringify({
                 message_type: "input_audio_chunk",
@@ -161,6 +239,7 @@ export class RealtimeStt {
 
     stop() {
         this.stopped = true;
+        clearInterval(this.levelTimer);
         try {
             if (this.node) this.node.onaudioprocess = null;
             this.node?.disconnect();

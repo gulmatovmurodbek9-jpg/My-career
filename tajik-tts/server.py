@@ -136,6 +136,13 @@ def speak(body: SpeakRequest):
     with lock:
         wave = tts.speak(spoken, speed=speed)
 
+    # tts.speak ба охир 0.35 с хомӯшӣ илова мекунад (барои байни ҷумлаҳо). Дар охири
+    # садо он танҳо интизорӣ аст: плеер то тамом шуданаш пораи навбатӣ ё гӯш
+    # карданро сар намекунад. 0.08 с мегузорем, то садо ногаҳон набурад.
+    tail = int(tts.sr * 0.35) - int(tts.sr * 0.08)
+    if len(wave) > tail * 2:
+        wave = wave[:-tail]
+
     buffer = io.BytesIO()
     sf.write(buffer, wave, tts.sr, format="WAV", subtype="PCM_16")
     audio = buffer.getvalue()

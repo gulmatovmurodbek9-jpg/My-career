@@ -102,7 +102,18 @@ const sentencesOf = (text) => {
 // prewarm-voice.js низ ҳаминро истифода мебарад, то кеш мувофиқ ояд.
 export const splitForSpeech = (text) => {
     const chunks = [];
-    for (const sentence of sentencesOf(text)) {
+    const sentences = sentencesOf(text);
+    // Ҷумлаи аввали дароз дар вергул ё тире бурида мешавад: пораи хурд ~2 баробар
+    // тезтар сохта мешавад ва садо зудтар сар мешавад.
+    const first = sentences[0] || "";
+    if (first.length > 55) {
+        const cut = first.slice(15, 55).search(/(,| —|:) /);
+        if (cut >= 0) {
+            const at = 15 + cut + (first[15 + cut] === " " ? 2 : 1);
+            sentences.splice(0, 1, first.slice(0, at).trim(), first.slice(at).trim());
+        }
+    }
+    for (const sentence of sentences) {
         const last = chunks[chunks.length - 1];
         const previous = chunks[chunks.length - 2];
         const limit = previous ? Math.min(200, previous.length * 2.5) : 60;

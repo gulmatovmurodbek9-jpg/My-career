@@ -14,6 +14,22 @@ const BONES = [
 
 const lerp = (from, to, amount) => from + (to - from) * amount;
 
+// Ишораҳои гап задан. u = китф (x — ба пеш, z — ба паҳлӯ), f = оринҷ, h = панҷа.
+// Ҳар 1–2 сония яке интихоб мешавад, то ҳаракат такрорӣ нанамояд.
+const GESTURES = [
+    // Ҳарду даст кушода — «ана, бинед».
+    { ruX: -0.65, ruZ: -0.55, rfX: -1.05, rhZ: 0.35, luX: -0.65, luZ: 0.55, lfX: -1.05, lhZ: -0.35 },
+    // Дасти рост мефаҳмонад, чап поён.
+    { ruX: -0.95, ruZ: -0.25, rfX: -1.35, rhZ: 0.2, luX: -0.2, luZ: 0.12, lfX: -0.35, lhZ: 0 },
+    // Дасти чап мефаҳмонад, рост поён.
+    { ruX: -0.2, ruZ: -0.12, rfX: -0.35, rhZ: 0, luX: -0.95, luZ: 0.25, lfX: -1.35, lhZ: -0.2 },
+    // Ҳарду даст дар пеш — шумурдан, фаҳмондани тафсилот.
+    { ruX: -0.85, ruZ: -0.12, rfX: -1.5, rhZ: 0.1, luX: -0.85, luZ: 0.12, lfX: -1.5, lhZ: -0.1 },
+    // Як даст боло — таъкид.
+    { ruX: -1.2, ruZ: -0.35, rfX: -1.1, rhZ: 0.4, luX: -0.45, luZ: 0.2, lfX: -0.9, lhZ: 0 },
+];
+const REST_POSE = { ruX: 0, ruZ: 0, rfX: 0, rhZ: 0, luX: 0, luZ: 0, lfX: 0, lhZ: 0 };
+
 // Модел аниматсияи тайёр надорад — ҳаракатро худамон месозем.
 function Character({ state, levelRef }) {
     const { scene } = useGLTF(MODEL_URL);
@@ -21,7 +37,7 @@ function Character({ state, levelRef }) {
     const bones = useRef({});
     const rest = useRef({});
     const mouth = useRef(null);
-    const gesture = useRef({ phase: 0, amount: 0 });
+    const gesture = useRef({ phase: 0, amount: 0, pose: { ...REST_POSE }, target: REST_POSE, next: 0, index: -1 });
 
     // Нусхаи алоҳида: як модел дар ду ҷо истифода шуданаш мумкин аст.
     const model = useMemo(() => scene.clone(true), [scene]);
@@ -33,8 +49,11 @@ function Character({ state, levelRef }) {
         const center = box.getCenter(new THREE.Vector3());
         const height = size.y || 1;
 
-        model.position.set(-center.x, -box.min.y - height / 2, -center.z);
-        model.scale.setScalar(2 / height);
+        // Мавқеъ бояд бо ҳамон миқёс зарб шавад — вагарна модел аз -1…1
+        // мелағжад ва камераи «то камар» сарро мебурид.
+        const scale = 2 / height;
+        model.scale.setScalar(scale);
+        model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
 
         bones.current = {};
         rest.current = {};
@@ -65,14 +84,27 @@ function Character({ state, levelRef }) {
         // Нафаскашии доимӣ, то мурда нанамояд.
         node.position.y = Math.sin(time * 1.6) * 0.012;
 
-        // Ҳангоми гап задан дастҳо оҳиста ишора мекунанд.
+        // Ҳангоми гап задан дастҳо ишора мекунанд: ишораи нав ҳар 1–2 сония,
+        // бо зарбаҳои хурд аз рӯи баландии садо.
         const talking = state === "speaking";
-        gesture.current.amount = lerp(gesture.current.amount, talking ? 0.6 + level * 0.4 : 0, smooth);
-        gesture.current.phase += delta * (talking ? 2.6 : 1);
+        const g = gesture.current;
+        g.amount = lerp(g.amount, talking ? 1 : 0, Math.min(1, delta * 3));
+        g.phase += delta * (talking ? 3.2 : 1);
+        if (talking && time > g.next) {
+            let index = Math.floor(Math.random() * GESTURES.length);
+            if (index === g.index) index = (index + 1) % GESTURES.length;
+            g.index = index;
+            g.target = GESTURES[index];
+            g.next = time + 1 + Math.random() * 1.1;
+        }
+        if (!talking) g.target = REST_POSE;
+        const ease = Math.min(1, delta * 4);
+        for (const key of Object.keys(g.pose)) g.pose[key] = lerp(g.pose[key], g.target[key], ease);
 
-        const wave = Math.sin(gesture.current.phase);
-        const wave2 = Math.sin(gesture.current.phase * 0.7 + 1.1);
-        const amount = gesture.current.amount;
+        const wave = Math.sin(g.phase);
+        const wave2 = Math.sin(g.phase * 0.8 + 1.1);
+        const beat = talking ? 0.12 + level * 0.35 : 0;
+        const pose = g.pose;
 
         const apply = (name, dx, dy, dz) => {
             const target = bone[name];
@@ -83,11 +115,12 @@ function Character({ state, levelRef }) {
             target.rotation.z = lerp(target.rotation.z, start.z + dz, smooth);
         };
 
-        // Дастҳо: ҳангоми гап задан аз бадан дур мешаванд ва ишора мекунанд.
-        apply("UpperArm_R", -0.55 * amount + wave * 0.18 * amount, 0, -0.3 * amount);
-        apply("Forearm_R", -0.7 * amount - wave * 0.3 * amount, 0, 0);
-        apply("UpperArm_L", -0.45 * amount + wave2 * 0.16 * amount, 0, 0.28 * amount);
-        apply("Forearm_L", -0.6 * amount - wave2 * 0.26 * amount, 0, 0);
+        apply("UpperArm_R", pose.ruX + wave * beat * 0.4, 0, pose.ruZ);
+        apply("Forearm_R", pose.rfX - wave * beat, 0, 0);
+        apply("Hand_R", 0, 0, pose.rhZ + wave * beat * 0.5);
+        apply("UpperArm_L", pose.luX + wave2 * beat * 0.4, 0, pose.luZ);
+        apply("Forearm_L", pose.lfX - wave2 * beat, 0, 0);
+        apply("Hand_L", 0, 0, pose.lhZ - wave2 * beat * 0.5);
 
         // Вақте корбар гап мезанад, персонаж гӯш карда фикр мекунад:
         // сар каме хам ва ба паҳлӯ мегардад.
@@ -100,7 +133,7 @@ function Character({ state, levelRef }) {
             turn + Math.sin(time * 0.4) * 0.05,
             tilt);
         apply("Neck", pondering ? 0.08 : 0, turn * 0.4, tilt * 0.4);
-        apply("Chest", talking ? wave * 0.03 : 0, 0, 0);
+        apply("Chest", talking ? wave * 0.04 : 0, talking ? (pose.ruX - pose.luX) * 0.08 : 0, 0);
         apply("Spine", 0, Math.sin(time * 0.3) * 0.03, 0);
 
         // Даҳон ҳангоми гап задан кушода мешавад.
@@ -118,20 +151,6 @@ function Character({ state, levelRef }) {
     );
 }
 
-// Ҳалқаи ранга дар таги қадам — ҳолатро нишон медиҳад.
-function Glow({ color }) {
-    const mesh = useRef(null);
-    useFrame(() => {
-        if (mesh.current) mesh.current.rotation.z += 0.004;
-    });
-    return (
-        <mesh ref={mesh} position={[0, -1.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.62, 0.8, 48]} />
-            <meshBasicMaterial color={color} transparent opacity={0.45} side={THREE.DoubleSide} />
-        </mesh>
-    );
-}
-
 const STATE_COLOR = {
     idle: "#3b82f6",
     listening: "#38bdf8",
@@ -146,7 +165,9 @@ export default function Avatar3D({ state = "idle", levelRef }) {
     return (
         <Canvas
             dpr={[1, 1.75]}
-            camera={{ position: [0, 0.15, 3.1], fov: 35 }}
+            // То камар: камера ба нимаи болоии бадан (модел аз -1 то 1).
+            // rotation лозим аст: бе он R3F камераро ба (0,0,0), яъне ба камар, нигарон мекунад.
+            camera={{ position: [0, 0.5, 1.95], rotation: [0, 0, 0], fov: 35 }}
             gl={{ antialias: true, alpha: true }}
             style={{ width: "100%", height: "100%" }}
         >
@@ -156,7 +177,6 @@ export default function Avatar3D({ state = "idle", levelRef }) {
 
             <Suspense fallback={null}>
                 <Character state={state} levelRef={levelRef || fallbackLevel} />
-                <Glow color={color} />
             </Suspense>
         </Canvas>
     );

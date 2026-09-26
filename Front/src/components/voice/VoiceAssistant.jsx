@@ -52,6 +52,9 @@ export default function VoiceAssistant() {
     const recorderRef = useRef(null);
     const streamRef = useRef(null);
     const handsFreeRef = useRef(false);
+    // Тугма бояд аз ҳолати React хонад: тағйири ref экранро аз нав намекашад
+    // ва тугма «Истодан» нишон медод, вақте ёвар аслан кор намекард.
+    const [handsFree, setHandsFree] = useState(false);
     const busyRef = useRef(false);
     const sendRef = useRef(null);
     const orbRef = useRef(null);
@@ -200,6 +203,10 @@ export default function VoiceAssistant() {
         player.onerror = fallback;
         player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&v=${VOICE_VERSION}`;
         player.play().then(() => setVoiceWarning(false)).catch(fallback);
+
+        // Суғурта: агар садо ба ягон сабаб на тамом шавад, на хато диҳад,
+        // ёвар набояд то абад интизор монад. 25 сония — аз ҳар ҷумла дарозтар.
+        setTimeout(finish, 25000);
     }), [startPulse, stopAudio, stopPulse]);
 
     // Номи ихтисоси кушодашуда, то «инро захира кун» маъно дошта бошад.
@@ -411,7 +418,7 @@ export default function VoiceAssistant() {
             watchSilence(stream, recorder, meta);
         } catch {
             setState("idle");
-            handsFreeRef.current = false;
+            handsFreeRef.current = false; setHandsFree(false);
             setSaid(t("assistant.mic_denied", "Микрофон иҷозат надод. Дар браузер иҷозат диҳед ё матн нависед."));
             setShowKeyboard(true);
         }
@@ -439,6 +446,11 @@ export default function VoiceAssistant() {
                     onError: () => {
                         sttRef.current = null;
                         setState("idle");
+                        // Пайваст худ ба худ канда шуд (шабака, мӯҳлати токен) —
+                        // агар корбар ҳанӯз дар сӯҳбат бошад, аз нав мепайвандем.
+                        if (handsFreeRef.current && !busyRef.current) {
+                            setTimeout(() => listenRef.current?.(), 600);
+                        }
                     },
                 });
                 await stt.start();
@@ -493,7 +505,7 @@ export default function VoiceAssistant() {
     const startConversation = useCallback(async () => {
         unlockAudio();
         setStarted(true);
-        handsFreeRef.current = true;
+        handsFreeRef.current = true; setHandsFree(true);
         setSaid(greeting);
         if (!greetedAloudRef.current) {
             greetedAloudRef.current = true;
@@ -515,12 +527,30 @@ export default function VoiceAssistant() {
 
     const resumeConversation = useCallback(() => {
         unlockAudio();
-        handsFreeRef.current = true;
+        // «Давом додан» ҳамеша бояд кор кунад: ҳар ҳолати кӯҳнаро тоза мекунем,
+        // ҳатто агар ягон дархости пешина ҳанӯз овезон бошад.
+        stopAudio();
+        sttRef.current?.stop();
+        sttRef.current = null;
+        busyRef.current = false;
+        handsFreeRef.current = true; setHandsFree(true);
         startListening();
-    }, [startListening, unlockAudio]);
+    }, [startListening, stopAudio, unlockAudio]);
+
+    // Посбон: агар ёвар дар сӯҳбат бошад, вале ҳеҷ кор накунад — на гӯш,
+    // на фикр, на гап — пас ягон роҳ канда шудааст. Худаш аз нав гӯш мекунад.
+    useEffect(() => {
+        if (state !== "idle") return undefined;
+        const timer = setTimeout(() => {
+            if (handsFreeRef.current && !busyRef.current && !sttRef.current?.active && !recorderRef.current) {
+                listenRef.current?.();
+            }
+        }, 2500);
+        return () => clearTimeout(timer);
+    }, [state]);
 
     const stopConversation = useCallback(() => {
-        handsFreeRef.current = false;
+        handsFreeRef.current = false; setHandsFree(false);
         releaseMic();
         stopAudio();
         busyRef.current = false;
@@ -541,7 +571,7 @@ export default function VoiceAssistant() {
     }, [open]);
 
     useEffect(() => () => {
-        handsFreeRef.current = false;
+        handsFreeRef.current = false; setHandsFree(false);
         releaseMic();
         stopAudio();
         stopPulse();
@@ -624,7 +654,7 @@ export default function VoiceAssistant() {
                                             onClick={() => {
                                                 unlockAudio();
                                                 setStarted(true);
-                                                handsFreeRef.current = true;
+                                                handsFreeRef.current = true; setHandsFree(true);
                                                 send(t(`assistant.quick.${action.key}`, action.text));
                                             }}
                                             className="rounded-full border border-border px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground focus-ring"
@@ -638,14 +668,14 @@ export default function VoiceAssistant() {
                             <div className="mt-5 flex w-full items-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => (handsFreeRef.current ? stopConversation() : resumeConversation())}
+                                    onClick={() => (handsFree ? stopConversation() : resumeConversation())}
                                     className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[15px] font-bold focus-ring ${
-                                        handsFreeRef.current
+                                        handsFree
                                             ? "border border-border text-foreground"
                                             : "bg-primary text-primary-foreground"
                                     }`}
                                 >
-                                    {handsFreeRef.current
+                                    {handsFree
                                         ? <><Square className="h-4 w-4" aria-hidden />{t("assistant.stop", "Истодан")}</>
                                         : <><Mic className="h-4 w-4" aria-hidden />{t("assistant.resume", "Давом додан")}</>}
                                 </button>

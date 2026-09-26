@@ -91,8 +91,9 @@ export class VoiceService implements OnModuleInit {
     onModuleInit(): void {
         if (this.ttsUrl) {
             this.logger.log(`Овоз аз сервери Python — ${this.ttsUrl}`);
-            return;
         }
+        // ONNX-ро ҳамеша гарм мекунем, ҳатто вақте Python асосист: агар он
+        // афтад, бозгашт бояд фаврӣ бошад, на 21 сония — вагарна ёвар ях мезанад.
         if (!this.tajik.available) {
             this.logger.warn('Модели овоз дар voice-model/ нест');
             return;

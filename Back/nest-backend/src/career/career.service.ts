@@ -573,7 +573,14 @@ export class CareerService {
     private detectRole(message: string): string | null {
         const text = foldTajik(message).replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim();
         const words = text.split(' ');
-        const verb = words.findIndex((word) => /^(шудан|шуданро|шавам|шавем|стать)$/.test(word));
+        // Шинохти нутқ феълро вайрон мекунад: «шуланд», «шутан», «мешавам».
+        let verb = words.findIndex((word) => /^(шу[длт]ан|(ме)?шав[аеи]м|стать)/.test(word));
+        // «Нан духтур … мехоҳам» — феъл гум шуд, вале касби маълум ва «мехоҳам» ҳаст.
+        if (verb < 0 && words.includes('мехохам')) {
+            const known = words.findIndex((word) =>
+                CareerService.DIRECTIONS.some((entry) => entry.roles.some((stem) => word.startsWith(stem))));
+            if (known >= 0) verb = known + 1;
+        }
         if (verb < 0) return null;
         const around = words[verb] === 'стать' ? words.slice(verb + 1, verb + 3) : words.slice(Math.max(0, verb - 2), verb);
         // Ҳамон калимаҳоро аз матни аслӣ мегирем, то ёвар «ҳуқуқшинос» гӯяд, на «хукукшинос».

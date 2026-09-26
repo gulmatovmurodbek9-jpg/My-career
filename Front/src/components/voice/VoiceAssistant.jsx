@@ -74,6 +74,7 @@ export default function VoiceAssistant() {
     const spokenGuidesRef = useRef(new Set());
     const speakGuideRef = useRef(null);
     const realtimeFailedRef = useRef(0);
+    const startingRef = useRef(false);
     const quickDropsRef = useRef(0);
 
     const lang = i18n.language || "tj";
@@ -477,9 +478,7 @@ export default function VoiceAssistant() {
 
     // Шинохти ҷараёнӣ: матн ҳангоми гап задан меояд, на баъди он.
     // Агар нашавад, як бор қайд мекунем ва дигар кӯшиш намекунем.
-    const startListening = useCallback(async () => {
-        if (busyRef.current || sttRef.current?.active || recorderRef.current) return;
-
+    const openListening = useCallback(async () => {
         // Realtime як бор нашуд — 30 сония бо роҳи захиравӣ, баъд боз кӯшиш.
         if (realtimeFailedRef.current && Date.now() - realtimeFailedRef.current > 30000) {
             realtimeFailedRef.current = 0;
@@ -538,6 +537,18 @@ export default function VoiceAssistant() {
 
         await startRecording();
     }, [lang, setOrbLevel, startRecording, stopAudio, t]);
+
+    const startListening = useCallback(async () => {
+        if (busyRef.current || sttRef.current?.active || recorderRef.current || startingRef.current) return;
+        // Дар вақти гирифтани токен sttRef ҳанӯз холист — бе ин қуфл
+        // watchdog ва onError якҷоя ду пайвасти ҷудо мекушоданд.
+        startingRef.current = true;
+        try {
+            await openListening();
+        } finally {
+            startingRef.current = false;
+        }
+    }, [openListening]);
 
     const send = useCallback(async (rawText) => {
         const text = String(rawText || "").trim();

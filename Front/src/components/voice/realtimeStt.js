@@ -102,6 +102,12 @@ export class RealtimeStt {
                     return;
                 }
                 const kind = data.message_type || data.type;
+                // Хатои сервер (квота, токен, формат) — дар консол нишон медиҳем,
+                // вагарна фақат «гӯш карда истодаам» мемонд ва сабаб номаълум буд.
+                if (kind && /error/i.test(kind)) {
+                    console.warn("Scribe:", kind, data.error || data.message || "");
+                    return;
+                }
                 if (kind === "partial_transcript" && data.text) {
                     this.onPartial(data.text);
                 } else if (kind && kind.startsWith("committed") && data.text) {

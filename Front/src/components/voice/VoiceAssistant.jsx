@@ -43,6 +43,10 @@ export default function VoiceAssistant() {
     const [open, setOpen] = useState(false);
     const [started, setStarted] = useState(false);
     const [heard, setHeard] = useState("");
+    // Самтҳое, ки ёвар пешниҳод кард («духтури дандон», …) — ҷавоби навбатӣ
+    // аз байни инҳо интихоб мешавад.
+    const [options, setOptions] = useState([]);
+    const optionsRef = useRef([]);
     const [said, setSaid] = useState("");
     const [input, setInput] = useState("");
     const [showKeyboard, setShowKeyboard] = useState(false);
@@ -69,7 +73,8 @@ export default function VoiceAssistant() {
     // Кадом саҳифаҳо аллакай муаррифӣ шудаанд — ҳар кадомаш як бор.
     const spokenGuidesRef = useRef(new Set());
     const speakGuideRef = useRef(null);
-    const realtimeFailedRef = useRef(false);
+    const realtimeFailedRef = useRef(0);
+    const quickDropsRef = useRef(0);
 
     const lang = i18n.language || "tj";
     const greeting = t(
@@ -257,6 +262,9 @@ export default function VoiceAssistant() {
     }, []);
 
     const runAction = useCallback(async (action, params) => {
+        const offered = action === "choose_direction" && Array.isArray(params?.options) ? params.options : [];
+        optionsRef.current = offered;
+        setOptions(offered);
         switch (action) {
             case "search": {
                 const query = String(params?.query || "").trim();
@@ -358,8 +366,16 @@ export default function VoiceAssistant() {
                 sendRef.current?.(text);
                 return;
             }
-        } catch {
-            /* шинохт нашуд — боз гӯш мекунем */
+        } catch (error) {
+            // Лимит ё калид — боз гӯш кардан бефоида аст; ошкоро мегӯем.
+            if (error?.response?.status === 503) {
+                handsFreeRef.current = false;
+                setHandsFree(false);
+                setState("idle");
+                setSaid(error.response.data?.message || "Шинохти нутқ ҳозир кор намекунад. Матн нависед.");
+                setShowKeyboard(true);
+                return;
+            }
         }
         setState("idle");
         if (handsFreeRef.current) listenRef.current?.();
@@ -464,12 +480,21 @@ export default function VoiceAssistant() {
     const startListening = useCallback(async () => {
         if (busyRef.current || sttRef.current?.active || recorderRef.current) return;
 
+        // Realtime як бор нашуд — 30 сония бо роҳи захиравӣ, баъд боз кӯшиш.
+        if (realtimeFailedRef.current && Date.now() - realtimeFailedRef.current > 30000) {
+            realtimeFailedRef.current = 0;
+        }
+
         if (!realtimeFailedRef.current) {
             stopAudio();
             try {
+                const openedAt = Date.now();
                 const stt = new RealtimeStt({
                     lang,
-                    onPartial: (text) => setHeard(text),
+                    onPartial: (text) => {
+                        quickDropsRef.current = 0;
+                        setHeard(text);
+                    },
                     onLevel: (rms) => setOrbLevel(Math.min(1, rms * 7)),
                     onFinal: (text) => {
                         if (!text || busyRef.current || !handsFreeRef.current) return;
@@ -483,8 +508,20 @@ export default function VoiceAssistant() {
                         setState("idle");
                         // Пайваст худ ба худ канда шуд (шабака, мӯҳлати токен) —
                         // агар корбар ҳанӯз дар сӯҳбат бошад, аз нав мепайвандем.
+                        // Агар пайваст фавран канда шавад, ҳар дафъа дертар:
+                        // пештар ҳар 0.6 с токени нав мегирифт ва лимит дар чанд
+                        // сония тамом мешуд — микрофон «гӯш мекард», вале намешунид.
+                        if (Date.now() - openedAt < 4000) quickDropsRef.current += 1;
+                        else quickDropsRef.current = 0;
+                        if (quickDropsRef.current >= 4) {
+                            quickDropsRef.current = 0;
+                            handsFreeRef.current = false;
+                            setHandsFree(false);
+                            setSaid(t("assistant.mic_lost", "Пайвасти микрофон канда шуд. Тугмаи микрофонро боз пахш кунед."));
+                            return;
+                        }
                         if (handsFreeRef.current && !busyRef.current) {
-                            setTimeout(() => listenRef.current?.(), 600);
+                            setTimeout(() => listenRef.current?.(), 600 * 2 ** quickDropsRef.current);
                         }
                     },
                 });
@@ -493,13 +530,14 @@ export default function VoiceAssistant() {
                 setState("listening");
                 return;
             } catch (error) {
-                realtimeFailedRef.current = true;
+                console.warn("Realtime STT:", error?.message || error);
+                realtimeFailedRef.current = Date.now();
                 sttRef.current = null;
             }
         }
 
         await startRecording();
-    }, [lang, setOrbLevel, startRecording, stopAudio]);
+    }, [lang, setOrbLevel, startRecording, stopAudio, t]);
 
     const send = useCallback(async (rawText) => {
         const text = String(rawText || "").trim();
@@ -514,7 +552,7 @@ export default function VoiceAssistant() {
             const careerName = await currentCareerName();
             const { data } = await axios.post(
                 `${API}/careers/assistant`,
-                { message: text, lang, careerName },
+                { message: text, lang, careerName, options: optionsRef.current },
                 { timeout: 30000 },
             );
             reply = data?.reply || t("assistant.no_reply", "Мебахшед, нафаҳмидам. Бори дигар бигӯед.");
@@ -732,6 +770,28 @@ export default function VoiceAssistant() {
                         <p className="mt-2 min-h-[3.5rem] text-center text-[16px] leading-relaxed text-foreground">
                             {started ? said : greeting}
                         </p>
+
+                        {options.length > 0 && started && (
+                            <div className="mt-2 flex flex-wrap justify-center gap-2">
+                                {options.map((option) => (
+                                    <button
+                                        key={option.id}
+                                        type="button"
+                                        onClick={() => {
+                                            // Садоро қатъ мекунем ва рост мекушоем; муаррифии
+                                            // ихтисосро эффекти саҳифа худаш мегӯяд.
+                                            stopAudio();
+                                            optionsRef.current = [];
+                                            setOptions([]);
+                                            navigate(`/info/${option.id}`);
+                                        }}
+                                        className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-[13px] font-semibold text-foreground focus-ring"
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
                         {voiceWarning && (
                             <p className="mt-1 text-center text-[12px] text-muted-foreground">

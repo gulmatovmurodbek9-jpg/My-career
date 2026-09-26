@@ -164,9 +164,10 @@ export class CareerController {
 
     @Post('assistant')
     @ApiOperation({ summary: 'Voice assistant: turns a spoken request into one allowed app action' })
-    async assistant(@Body() body: { message: string; lang?: string; careerName?: string }) {
+    async assistant(@Body() body: { message: string; lang?: string; careerName?: string; options?: Array<{ id: string; name: string; label?: string }> }) {
         return this.careerService.assistant(body?.message, body?.lang, {
             careerName: body?.careerName,
+            options: body?.options,
         });
     }
 

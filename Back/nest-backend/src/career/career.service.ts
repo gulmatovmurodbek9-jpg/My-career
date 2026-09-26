@@ -544,8 +544,113 @@ export class CareerService {
         'search', 'open_career', 'compare', 'save_career',
         'start_quiz', 'open_universities', 'nearest_universities', 'open_cluster',
         'open_report', 'open_plan', 'open_chat', 'open_favorites', 'open_about',
-        'go_home', 'set_language', 'set_theme', 'answer',
+        'go_home', 'set_language', 'set_theme', 'answer', 'choose_direction',
     ];
+
+    // «Духтур шудан мехоҳам» — дар номи ихтисосҳо калимаи «духтур» нест,
+    // пас барои касбҳои маъмул самтҳоро дастӣ медиҳем. Барои дигар касбҳо
+    // рӯйхат аз ҷустуҷӯи база сохта мешавад.
+    private static readonly DIRECTIONS: Array<{ roles: string[]; say: string; options: Array<{ label: string; name: string }> }> = [
+        {
+            roles: ['духтур', 'табиб', 'доктор', 'врач', 'пизишк'],
+            say: 'духтур',
+            options: [
+                { label: 'Табиби умумӣ', name: 'Кори табобатӣ' },
+                { label: 'Духтури кӯдакон', name: 'Педиатрия' },
+                { label: 'Духтури дандон', name: 'Стоматология' },
+                { label: 'Дорусоз', name: 'Химия. Дорусозӣ' },
+                { label: 'Ҳамшираи шафқат', name: 'Кори ҳамширагӣ' },
+            ],
+        },
+    ];
+
+    // Калимаҳое, ки ҷузъи номи касб нестанд: «ман мехоҳам ки … шавам».
+    private static readonly ROLE_STOPWORDS = new Set([
+        'ман', 'мехохам', 'мехохем', 'ки', 'ба', 'хам', 'бояд', 'орзу', 'орзуи', 'дорам', 'як', 'хуб', 'дар', 'оянда',
+    ]);
+
+    // «Духтур шудан мехоҳам», «мехоҳам барномасоз шавам», «хочу стать врачом».
+    private detectRole(message: string): string | null {
+        const text = foldTajik(message).replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim();
+        const words = text.split(' ');
+        const verb = words.findIndex((word) => /^(шудан|шуданро|шавам|шавем|стать)$/.test(word));
+        if (verb < 0) return null;
+        const around = words[verb] === 'стать' ? words.slice(verb + 1, verb + 3) : words.slice(Math.max(0, verb - 2), verb);
+        // Ҳамон калимаҳоро аз матни аслӣ мегирем, то ёвар «ҳуқуқшинос» гӯяд, на «хукукшинос».
+        const original = message.toLowerCase().replace(/[^a-zа-яёғӣқӯҳҷ0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim().split(' ');
+        const start = words[verb] === 'стать' ? verb + 1 : Math.max(0, verb - 2);
+        const role = around
+            .map((word, index) => [word, original[start + index] || word])
+            .filter(([word]) => !CareerService.ROLE_STOPWORDS.has(word))
+            .map(([, spoken]) => spoken)
+            .join(' ')
+            .trim();
+        return role.length >= 3 ? role : null;
+    }
+
+    // Самтҳо барои касби гуфташуда: аввал рӯйхати дастӣ, баъд база.
+    private async directionsFor(role: string): Promise<{ say: string; options: Array<{ id: string; name: string; label: string }> }> {
+        const words = foldTajik(role).split(' ');
+        const curated = CareerService.DIRECTIONS.find((entry) =>
+            entry.roles.some((stem) => words.some((word) => word.startsWith(stem))));
+
+        if (curated) {
+            // Як ном чанд сатр дорад (коллеҷ, бакалавр) — онеро мегирем,
+            // ки донишгоҳҳояш бештар аст.
+            const rows: Array<{ id: string; name: string }> = await this.careerRepository.manager.query(
+                `SELECT DISTINCT ON (c.name) c.id, c.name
+                 FROM career c LEFT JOIN career_universities cu ON cu."careerId" = c.id
+                 WHERE c.name = ANY($1)
+                 GROUP BY c.id, c.name
+                 ORDER BY c.name, count(cu."universitiesId") DESC`,
+                [curated.options.map((option) => option.name)],
+            );
+            const options = curated.options
+                .map((option) => {
+                    const row = rows.find((item) => item.name === option.name);
+                    return row ? { id: row.id, name: row.name, label: option.label } : null;
+                })
+                .filter((option): option is { id: string; name: string; label: string } => !!option);
+            if (options.length) return { say: curated.say, options };
+        }
+
+        const found = await this.findRelevantCareers(role);
+        if ((found as any).isFallback) return { say: role, options: [] };
+        const seen = new Set<string>();
+        const options = found
+            .filter((career) => !seen.has(career.name) && seen.add(career.name))
+            .slice(0, 5)
+            // «(ФММТДМТБваДТТ)» — аббревиатураи дохилӣ, барои гуфтан нест.
+            .map((career) => ({ id: career.id, name: career.name, label: career.name.replace(/\s*\([^)]*\)/g, '').trim() }));
+        return { say: role, options };
+    }
+
+    // Корбар аз рӯйхати пешниҳодшуда интихоб мекунад: «дуюмаш», «охиринаш»,
+    // «духтури дандон» ё «стоматология». Агар ба ҳеҷ кадом монанд набошад — null.
+    private pickOption(message: string, options: Array<{ id: string; name: string; label?: string }>) {
+        const text = foldTajik(message).replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim();
+        if (!text || !options.length) return null;
+
+        const ORDINALS: Array<[RegExp, number]> = [
+            [/(^| )(якум|аввал|1)/, 0], [/(^| )(дуюм|дуввум|2)/, 1], [/(^| )(сеюм|севвум|3)/, 2],
+            [/(^| )(чорум|4)/, 3], [/(^| )(панчум|5)/, 4],
+        ];
+        for (const [pattern, index] of ORDINALS) {
+            if (pattern.test(text) && options[index]) return options[index];
+        }
+        if (/(^| )охирин/.test(text)) return options[options.length - 1];
+
+        // Калимаҳои умумӣ («кори», «духтури») ба якчанд самт мувофиқанд — онҳоро намешуморем.
+        const common = new Set(['кори', 'мехохам', 'ихтисос', 'ихтисоси', 'хамон', 'хамин', 'кушо']);
+        const said = text.split(' ').filter((word) => word.length >= 4 && !common.has(word));
+        let best: { option: (typeof options)[number]; score: number } | null = null;
+        for (const option of options) {
+            const own = foldTajik(`${option.label || ''} ${option.name}`).split(/[^a-zа-яё0-9]+/i).filter((word) => word.length >= 4);
+            const score = said.filter((word) => own.some((item) => item.slice(0, 5) === word.slice(0, 5))).length;
+            if (score > 0 && (!best || score > best.score)) best = { option, score };
+        }
+        return best?.option || null;
+    }
 
     // Ҷавоби собит барои ҳар амал: ҳамеша якхела — яъне садояш як бор сохта
     // мешавад ва баъд аз кеш меояд. AI танҳо барои сӯҳбати озод ҷавоб менависад.
@@ -768,11 +873,48 @@ export class CareerService {
         return ranked[0] || null;
     }
 
-    async assistant(rawMessage: string, lang = 'tj', context: { careerName?: string } = {}) {
+    async assistant(
+        rawMessage: string,
+        lang = 'tj',
+        context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }> } = {},
+    ) {
         const message = String(rawMessage || '').trim().slice(0, 400);
         const answerLang = ['tj', 'ru', 'en'].includes(lang) ? lang : 'tj';
         const langName = answerLang === 'ru' ? 'русӣ' : answerLang === 'en' ? 'англисӣ' : 'тоҷикӣ';
         if (!message) return { reply: '', action: 'answer', params: {}, answerLang };
+
+        // Ёвар қаблан самтҳо пешниҳод карда буд — ҷавоби корбар интихоб аст.
+        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const pending = (Array.isArray(context.options) ? context.options : [])
+            .filter((option) => option && uuid.test(String(option.id)) && typeof option.name === 'string')
+            .slice(0, 6);
+        const picked = this.pickOption(message, pending);
+        if (picked) {
+            return {
+                reply: CareerService.ASSISTANT_REPLIES[answerLang]?.open_career || '',
+                action: 'open_career',
+                params: { id: picked.id, name: picked.name },
+                answerLang,
+            };
+        }
+
+        // «Духтур шудан мехоҳам» — самтҳоро мегӯем ва мепурсем, кадомаш.
+        const role = this.detectRole(message);
+        if (role) {
+            const { say, options } = await this.directionsFor(role);
+            if (options.length) {
+                // Самтҳои дастӣ («духтури кӯдакон») дар миёни ҷумла бо ҳарфи хурд.
+                const labels = options.map((option) =>
+                    option.label === option.name ? option.label : option.label.charAt(0).toLowerCase() + option.label.slice(1));
+                const list = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} ва ${labels[labels.length - 1]}` : labels[0];
+                const reply = answerLang === 'ru'
+                    ? `Есть такие направления: ${labels.join(', ')}. Какое вам ближе?`
+                    : answerLang === 'en'
+                        ? `There are these directions: ${labels.join(', ')}. Which one do you like?`
+                        : `Барои ${say} шудан ин самтҳо ҳастанд: ${list}. Кадомаш ба шумо маъқул аст?`;
+                return { reply, action: 'choose_direction', params: { role: say, options }, answerLang };
+            }
+        }
 
         const readJson = (raw: string) => {
             let text = raw.trim();

@@ -18,7 +18,7 @@ export class VoiceController {
     @Get('stt-token')
     @ApiOperation({ summary: 'Токени якбора барои шинохти ҷараёнӣ дар браузер' })
     async sttToken(@Ip() ip: string) {
-        this.voiceService.guardSpend(ip);
+        this.voiceService.guardSpend(ip, 'token');
         return this.voiceService.sttToken();
     }
 

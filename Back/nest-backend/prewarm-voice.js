@@ -60,12 +60,13 @@ async function warm(text) {
     }
 
     // Шарҳи панҷ кластер низ садо мегирад — онҳо аз база меоянд.
-    for (let number = 1; number <= 5; number += 1) {
+    for (let number = 1; number <= 6; number += 1) {
         try {
             const response = await fetch(`${API}/careers/assistant`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: `кластери ${number}`, lang: 'tj' }),
+                // Рақами 6 — «духтур шудан мехоҳам»: рӯйхати самтҳо собит аст.
+            body: JSON.stringify({ message: number <= 5 ? `кластери ${number}` : 'духтур шудан мехоҳам', lang: 'tj' }),
             });
             const data = await response.json();
             if (data?.reply) PHRASES.push(data.reply);

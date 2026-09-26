@@ -286,9 +286,15 @@ export class VoiceService implements OnModuleInit {
     }
 
     // Танҳо шинохти нутқ пул мегирад — овоз акнун аз они худамон аст.
-    guardSpend(ip = 'unknown'): void {
-        const perIp = Number(this.configService.get<string>('VOICE_IP_LIMIT')) || 30;
-        const perDay = Number(this.configService.get<string>('VOICE_DAILY_LIMIT')) || 800;
+    // Токени ҷараёнӣ = як ибора дар сӯҳбат (баъди ҳар ҷавоб пайвасти нав),
+    // пас лимиташ бояд калон бошад: 30 дар 10 дақиқа дар миёнаи сӯҳбат тамом мешуд
+    // ва микрофон хомӯш мемонд. Пул барои сонияи садо аст, на барои токен.
+    guardSpend(ip = 'unknown', kind: 'token' | 'batch' = 'batch'): void {
+        const perIp = kind === 'token'
+            ? Number(this.configService.get<string>('VOICE_TOKEN_LIMIT')) || 200
+            : Number(this.configService.get<string>('VOICE_IP_LIMIT')) || 30;
+        const perDay = Number(this.configService.get<string>('VOICE_DAILY_LIMIT')) || 3000;
+        ip = `${kind}:${ip}`;
         const now = Date.now();
         const today = new Date().toISOString().slice(0, 10);
 

@@ -477,18 +477,6 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             />
           )}
 
-          {satellite && (
-            <TileLayer
-              key={isDark ? "labels-dark" : "labels-light"}
-              url={`https://basemaps.cartocdn.com/${
-                isDark ? "dark_only_labels" : "light_only_labels"
-              }/{z}/{x}/{y}.png`}
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/">CARTO</a>'
-              maxNativeZoom={18}
-              maxZoom={20}
-            />
-          )}
-
           <CityOverviewMap
             activeCity={activeCity}
             onViewportChange={setViewport}
@@ -653,7 +641,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           : t("career_page.m_find_me", "Маро ёб")}
       </button>
 
-      {(nearest.length > 0 || geoError) && (
+      {(nearest.length > 0 || geoError) && !(panelOpen && selectedUni) && (
         <div className="absolute left-5 top-5 z-[700] w-[min(20rem,calc(100%-2.5rem))] rounded-2xl border border-white/10 bg-black/70 p-4 text-white shadow-xl backdrop-blur-xl">
           {geoError ? (
             <p className="text-sm">{geoError}</p>
@@ -687,13 +675,15 @@ export default function TajikistanMap({ universities = [], focusResults = false 
       )}
 
       <AnimatePresence>
-        {viewport.zoom > CITY_OVERVIEW_ZOOM && currentCityGroup && panelOpen && selectedUni && (
+        {/* Пештар танҳо ҳангоми zoom-и наздик нишон дода мешуд — клик дар харитаи дур
+            ҳеҷ чиз намекушод. Инчунин дар тарафи чап, то зери панели ёвари овозӣ намонад. */}
+        {panelOpen && selectedUni && (
           <motion.div
-            initial={{ opacity: 0, x: 24 }}
+            initial={{ opacity: 0, x: -24 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 24 }}
+            exit={{ opacity: 0, x: -24 }}
             transition={{ duration: 0.22 }}
-            className="absolute inset-x-4 bottom-4 z-[700] md:left-auto md:right-6 md:top-6 md:bottom-6 md:w-[430px]"
+            className="absolute inset-x-4 bottom-4 z-[800] md:right-auto md:left-6 md:top-24 md:bottom-auto md:w-[430px]"
           >
             <div className="flex max-h-[58vh] flex-col overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-black/72 p-4 text-white shadow-[0_24px_64px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:max-h-[78vh] md:p-5">
               <div className="mb-4 flex items-start justify-between gap-3">

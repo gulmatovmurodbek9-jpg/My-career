@@ -39,11 +39,17 @@ if not os.path.exists("/content/finetune-hf-vits"):
     !pip -q install -r /content/finetune-hf-vits/requirements.txt
     %cd /content/finetune-hf-vits/monotonic_align
     !mkdir -p monotonic_align && python setup.py build_ext --inplace -q
+# finetune-hf-vits барои transformers 4.x навишта шудааст; Colab 5.x дорад
+# («pad_token_id», «send_example_telemetry»). Версияҳои мувофиқро маҷбур мекунем.
+!pip -q install "transformers==4.46.3" "huggingface_hub<1.0" "datasets>=2.19,<4"
 %cd /content/finetune-hf-vits
+import subprocess
+print("      transformers:", subprocess.run(["python", "-c", "import transformers; print(transformers.__version__)"], capture_output=True, text=True).stdout.strip())
 
 print("4/6  Модели асосӣ…")
 if not os.path.exists(f"/content/mms-{LANG}-train/config.json"):
     !python convert_original_discriminator_checkpoint.py --language_code {LANG} --pytorch_dump_folder_path /content/mms-{LANG}-train
+assert os.path.exists(f"/content/mms-{LANG}-train/config.json"), "Модели асосӣ сохта нашуд — хатои болоро ба ман фиристед."
 
 OUT = f"/content/drive/MyDrive/tajik-tts/model-{LANG}"
 config = {
@@ -67,6 +73,7 @@ json.dump(config, open(f"/content/finetune_{LANG}.json", "w"), ensure_ascii=Fals
 
 print("5/6  ОМӮЗИШ (~30 дақ) — саҳифаро напӯшед…")
 !accelerate launch run_vits_finetuning.py /content/finetune_{LANG}.json
+assert os.path.exists(f"{OUT}/model.safetensors") or os.path.exists(f"{OUT}/pytorch_model.bin"), "Омӯзиш тамом нашуд — хатои болоро ба ман фиристед."
 
 print("6/6  Гӯш кунед — ин овози шумост:")
 import IPython.display as ipd

@@ -60,7 +60,8 @@ config = {
     "full_generation_sample_text": SAMPLES[LANG][0],
     "max_duration_in_seconds": 20, "min_duration_in_seconds": 0.5, "max_tokens_length": 500,
     "model_name_or_path": f"/content/mms-{LANG}-train",
-    "preprocessing_num_workers": 2, "do_train": True, "num_train_epochs": 200,
+    # Як раванд: дар Python 3.13-и Colab num_proc=2 садҳо «BufferError» мебарорад.
+    "preprocessing_num_workers": None, "do_train": True, "num_train_epochs": 200,
     "gradient_accumulation_steps": 1, "gradient_checkpointing": False,
     "per_device_train_batch_size": 16, "learning_rate": 2e-5,
     "adam_beta1": 0.8, "adam_beta2": 0.99, "warmup_ratio": 0.01, "group_by_length": False,

@@ -22,6 +22,8 @@ const PASSWORD_RESET_TTL_MS = 15 * 60 * 1000;
 
 const MAX_RESET_ATTEMPTS = 5;
 
+const EMAIL_VERIFY_TTL_MS = 15 * 60 * 1000;
+
 export type PasswordResetResult = 'ok' | 'invalid' | 'expired' | 'too_many_attempts';
 
 const hashCode = (code: string) => createHash('sha256').update(code).digest('hex');
@@ -109,6 +111,70 @@ export class UsersService {
         return this.usersRepository.findOne({ where: { id }, relations: ['savedCareers', 'likedCareers'] });
     }
 
+    // Бақайдгирӣ: ҳисоб бе тасдиқ сохта мешавад ва код бармегардад (барои нома).
+    // Агар ҳамин почта аллакай сабт шуда, вале тасдиқ нашуда бошад, ном ва парол
+    // нав мешаванд — одам шояд кодро гум карда, аз нав сабт мешавад.
+    async registerUnverified(createUserDto: CreateUserDto): Promise<{ user: User; code: string }> {
+        const email = createUserDto.email.trim();
+        const existing = await this.usersRepository.findOne({ where: { email } });
+        if (existing?.emailVerified) {
+            throw new ConflictException('Бо ин почта ҳисоб аллакай ҳаст. Ворид шавед.');
+        }
+
+        const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+        const fields = {
+            name: createUserDto.name,
+            password: await bcrypt.hash(createUserDto.password, 10),
+            emailVerified: false,
+            verifyCodeHash: hashCode(code),
+            verifyExpiresAt: new Date(Date.now() + EMAIL_VERIFY_TTL_MS),
+            verifyAttempts: 0,
+        };
+
+        const user = existing
+            ? await this.usersRepository.save(Object.assign(existing, fields))
+            : await this.usersRepository.save(this.usersRepository.create({ ...createUserDto, email, ...fields }));
+        return { user, code };
+    }
+
+    // Коди нав барои ҳисоби тасдиқнашуда (дархости «боз фирист» ё кӯшиши ворид шудан).
+    async newVerifyCode(email: string): Promise<{ user: User; code: string } | null> {
+        const user = await this.usersRepository.findOne({ where: { email: email.trim() } });
+        if (!user || user.emailVerified) return null;
+        const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+        await this.usersRepository.update(user.id, {
+            verifyCodeHash: hashCode(code),
+            verifyExpiresAt: new Date(Date.now() + EMAIL_VERIFY_TTL_MS),
+            verifyAttempts: 0,
+        });
+        return { user, code };
+    }
+
+    async verifyEmail(email: string, code: string): Promise<{ result: PasswordResetResult; user?: User }> {
+        const user = await this.usersRepository.findOne({
+            where: { email: email.trim() },
+            select: ['id', 'email', 'emailVerified', 'verifyCodeHash', 'verifyExpiresAt', 'verifyAttempts'],
+        });
+        if (user?.emailVerified) return { result: 'ok', user };
+        if (!user?.verifyCodeHash || !user.verifyExpiresAt) return { result: 'invalid' };
+        if (user.verifyExpiresAt.getTime() < Date.now()) return { result: 'expired' };
+        if (user.verifyAttempts >= MAX_RESET_ATTEMPTS) {
+            await this.usersRepository.update(user.id, { verifyCodeHash: null, verifyExpiresAt: null });
+            return { result: 'too_many_attempts' };
+        }
+        if (hashCode(String(code).trim()) !== user.verifyCodeHash) {
+            await this.usersRepository.update(user.id, { verifyAttempts: user.verifyAttempts + 1 });
+            return { result: 'invalid' };
+        }
+        await this.usersRepository.update(user.id, {
+            emailVerified: true,
+            verifyCodeHash: null,
+            verifyExpiresAt: null,
+            verifyAttempts: 0,
+        });
+        return { result: 'ok', user };
+    }
+
     async create(createUserDto: CreateUserDto): Promise<User> {
         const existingUser = await this.findOne(createUserDto.email);
         if (existingUser) {
@@ -134,6 +200,11 @@ export class UsersService {
             }
             if (!existingUser.avatarUrl && profile.avatarUrl) {
                 existingUser.avatarUrl = profile.avatarUrl;
+                changed = true;
+            }
+            // Google почтаро худаш тасдиқ кардааст.
+            if (existingUser.emailVerified === false) {
+                existingUser.emailVerified = true;
                 changed = true;
             }
             return changed ? this.usersRepository.save(existingUser) : existingUser;

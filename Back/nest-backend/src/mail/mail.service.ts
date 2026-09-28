@@ -51,6 +51,41 @@ export class MailService {
         this.logger.log(`Нома ба ${options.to} фиристода шуд: ${options.subject}`);
     }
 
+    async sendVerificationCode(to: string, code: string, name?: string): Promise<void> {
+        const greeting = name ? `Салом, ${name}!` : 'Салом!';
+
+        const text = [
+            greeting,
+            '',
+            'Шумо дар «Ихтисоси ман» ҳисоб сохтед.',
+            `Коди тасдиқи почта: ${code}`,
+            '',
+            'Код 15 дақиқа эътибор дорад.',
+            'Агар шумо сабт нашуда бошед, ин номаро нодида гиред.',
+        ].join('\n');
+
+        const html = `
+<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#0f172a">
+  <h1 style="margin:0 0 8px;font-size:20px;font-weight:700">Тасдиқи почта</h1>
+  <p style="margin:0 0 24px;color:#475569;font-size:14px;line-height:1.6">
+    ${greeting} Барои фаъол кардани ҳисоб дар «Ихтисоси ман» ин кодро ворид кунед:
+  </p>
+  <div style="background:#f1f5f9;border-radius:14px;padding:20px;text-align:center">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:34px;font-weight:700;letter-spacing:10px;color:#003bb3">${code}</span>
+  </div>
+  <p style="margin:24px 0 0;color:#64748b;font-size:12px;line-height:1.6">
+    Код 15 дақиқа эътибор дорад. Агар шумо сабт нашуда бошед, номаро нодида гиред. Ин кодро ба касе нагӯед.
+  </p>
+</div>`.trim();
+
+        await this.send({
+            to,
+            subject: `${code} — коди тасдиқи «Ихтисоси ман»`,
+            text,
+            html,
+        });
+    }
+
     async sendPasswordResetCode(to: string, code: string, name?: string): Promise<void> {
         const greeting = name ? `Салом, ${name}!` : 'Салом!';
 

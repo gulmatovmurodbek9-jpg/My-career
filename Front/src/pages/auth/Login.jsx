@@ -6,6 +6,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "../../lib/config";
+import EmailCodeStep from "../../components/auth/EmailCodeStep";
 import { googleClientId, loadGoogleIdentity, loginWithGoogleToken } from "../../lib/googleAuth";
 
 const Login = () => {
@@ -16,6 +17,8 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState(null);
+    // Почта, ки ба он коди 6-рақама рафт — қадами тасдиқ нишон дода мешавад.
+    const [codeEmail, setCodeEmail] = useState(null);
     const googleButtonRef = useRef(null);
 
     const setAuth = useAuthStore((state) => state.setAuth);
@@ -68,11 +71,35 @@ const Login = () => {
             setAuth(data.user, data.access_token);
             navigate("/dashboard");
         } catch (err) {
+            // Ҳисоби тасдиқнашуда: сервер коди нав фиристод — қадами кодро нишон медиҳем.
+            if (err.response?.status === 403 && err.response?.data?.code === "EMAIL_NOT_VERIFIED") {
+                setCodeEmail(err.response.data.email || email);
+                return;
+            }
             setError(err.response?.data?.message || t("auth.login_error"));
         } finally {
             setLoading(false);
         }
     };
+
+    if (codeEmail) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-hero py-12 px-4">
+                <div className="w-full max-w-md">
+                    <div className="glass-card p-8 sm:p-10 border border-white/10 shadow-2xl">
+                        <EmailCodeStep
+                            email={codeEmail}
+                            onBack={() => setCodeEmail(null)}
+                            onVerified={(data) => {
+                                setAuth(data.user, data.access_token);
+                                navigate("/dashboard");
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-hero py-12 px-4">

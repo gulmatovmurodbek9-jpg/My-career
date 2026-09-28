@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -44,9 +44,51 @@ export class AuthService {
         };
     }
 
+    // Бақайдгирӣ токен намедиҳад: аввал коди 6-рақамаи почта лозим аст.
     async register(createUserDto: CreateUserDto) {
-        const user = await this.usersService.create(createUserDto);
+        const { user, code } = await this.usersService.registerUnverified(createUserDto);
+        this.markSent(`verify:${user.email}`);
+        await this.sendVerifyMail(user.email, code, user.name);
+        return { needsVerification: true, email: user.email };
+    }
+
+    async verifyEmail(email: string, code: string) {
+        const { result, user } = await this.usersService.verifyEmail(email, code);
+        if (result === 'expired') throw new BadRequestException('Мӯҳлати код гузашт. Коди навро дархост кунед.');
+        if (result === 'too_many_attempts') throw new BadRequestException('Кӯшишҳо аз ҳад зиёд шуданд. Коди навро дархост кунед.');
+        if (result === 'invalid' || !user) throw new BadRequestException('Код нодуруст аст. Онро аз нома санҷед.');
         return this.login(user);
+    }
+
+    // Як дақиқа танаффус байни номаҳо — то касе почтаи бегонаро пур накунад.
+    async resendVerifyCode(email: string): Promise<{ message: string; waitSeconds?: number }> {
+        const key = `verify:${String(email || '').trim()}`;
+        const last = this.recentResets.get(key);
+        if (last !== undefined && Date.now() - last < RESET_THROTTLE_MS) {
+            return { message: 'Каме сабр кунед', waitSeconds: Math.ceil((RESET_THROTTLE_MS - (Date.now() - last)) / 1000) };
+        }
+        const created = await this.usersService.newVerifyCode(email);
+        if (created) {
+            this.markSent(key);
+            await this.sendVerifyMail(created.user.email, created.code, created.user.name);
+        }
+        return { message: 'Агар ҳисоб тасдиқ нашуда бошад, коди нав фиристода шуд' };
+    }
+
+    // Ҳисоби тасдиқнашуда ворид шуда наметавонад; коди нав худкор меравад.
+    async assertVerified(user: any): Promise<void> {
+        if (user?.emailVerified !== false) return;
+        await this.resendVerifyCode(user.email).catch(() => undefined);
+        throw new ForbiddenException({ code: 'EMAIL_NOT_VERIFIED', email: user.email, message: 'Почтаи шумо тасдиқ нашудааст. Кодро аз нома ворид кунед.' });
+    }
+
+    private async sendVerifyMail(email: string, code: string, name?: string): Promise<void> {
+        try {
+            await this.mailService.sendVerificationCode(email, code, name);
+        } catch (err) {
+            this.logger.error(`Коди тасдиқ ба ${email} нарафт: ${err.message}`);
+            throw new BadRequestException('Нома фиристода нашуд. Почтаро санҷед ё баъдтар кӯшиш кунед.');
+        }
     }
 
     async forgotPassword(email: string): Promise<{ message: string }> {

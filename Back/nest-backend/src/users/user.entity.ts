@@ -37,6 +37,20 @@ export class User {
     @Column({ type: 'int', default: 0, select: false })
     resetAttempts: number;
 
+    // Тасдиқи почта: бақайдгирӣ бо коди 6-рақама аз нома фаъол мешавад.
+    // default true — корбарони пешина ва Google аллакай тасдиқшуда ҳисоб мешаванд.
+    @Column({ default: true })
+    emailVerified: boolean;
+
+    @Column({ nullable: true, select: false })
+    verifyCodeHash: string | null;
+
+    @Column({ type: 'timestamptz', nullable: true, select: false })
+    verifyExpiresAt: Date | null;
+
+    @Column({ type: 'int', default: 0, select: false })
+    verifyAttempts: number;
+
     @Column({
         type: 'enum',
         enum: UserRole,

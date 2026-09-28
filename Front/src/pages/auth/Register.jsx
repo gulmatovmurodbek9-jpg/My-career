@@ -6,6 +6,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "../../lib/config";
+import EmailCodeStep from "../../components/auth/EmailCodeStep";
 import { googleClientId, loadGoogleIdentity, loginWithGoogleToken } from "../../lib/googleAuth";
 
 const Register = () => {
@@ -17,6 +18,8 @@ const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState(null);
+    // Почта, ки ба он коди 6-рақама рафт — қадами тасдиқ нишон дода мешавад.
+    const [codeEmail, setCodeEmail] = useState(null);
     const googleButtonRef = useRef(null);
 
     const setAuth = useAuthStore((state) => state.setAuth);
@@ -66,15 +69,39 @@ const Register = () => {
         setError(null);
 
         try {
+            // Ҳисоб танҳо баъд аз коди почта фаъол мешавад.
             const { data } = await axios.post(`${API}/auth/register`, { name, email, password });
-            setAuth(data.user, data.access_token);
-            navigate("/quiz");
+            if (data?.access_token) {
+                setAuth(data.user, data.access_token);
+                navigate("/quiz");
+            } else {
+                setCodeEmail(data?.email || email);
+            }
         } catch (err) {
             setError(err.response?.data?.message || t("auth.register_error"));
         } finally {
             setLoading(false);
         }
     };
+
+    if (codeEmail) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-hero py-12 px-4">
+                <div className="w-full max-w-md">
+                    <div className="glass-card p-8 sm:p-10 border border-white/10 shadow-2xl">
+                        <EmailCodeStep
+                            email={codeEmail}
+                            onBack={() => setCodeEmail(null)}
+                            onVerified={(data) => {
+                                setAuth(data.user, data.access_token);
+                                navigate("/quiz");
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-hero py-12 px-4">

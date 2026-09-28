@@ -4,6 +4,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResendCodeDto, VerifyEmailDto } from './dto/verify-email.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
@@ -20,6 +21,7 @@ export class AuthController {
         if (!user) {
             throw new UnauthorizedException('Имейл ё рамз нодуруст аст');
         }
+        await this.authService.assertVerified(user);
         return this.authService.login(user);
     }
 
@@ -33,6 +35,20 @@ export class AuthController {
     @ApiOperation({ summary: 'Register new user' })
     async register(@Body() createUserDto: CreateUserDto) {
         return this.authService.register(createUserDto);
+    }
+
+    @Post('verify-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Тасдиқи почта бо коди 6-рақама → токен' })
+    async verifyEmail(@Body() dto: VerifyEmailDto) {
+        return this.authService.verifyEmail(dto.email, dto.code);
+    }
+
+    @Post('resend-code')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Коди нави тасдиқи почта (як бор дар як дақиқа)' })
+    async resendCode(@Body() dto: ResendCodeDto) {
+        return this.authService.resendVerifyCode(dto.email);
     }
 
     @Post('google')

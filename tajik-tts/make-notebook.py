@@ -47,7 +47,10 @@ from google.colab import files
 uploaded = files.upload()
 zip_name = next(iter(uploaded))
 assert f"ovoz-{LANG}" in zip_name, f"❌ Ин ZIP-и забони {LANG} нест: {zip_name}"
-!rm -rf /content/dataset && mkdir -p /content/dataset && unzip -q "/content/{zip_name}" -d /content/dataset
+# Агар файл аллакай бор шуда бошад, Colab онро «… (1).zip» номгузорӣ мекунад —
+# барои ҳамин худамон бо номи собит менависем.
+open("/content/sabtho.zip", "wb").write(uploaded[zip_name])
+!rm -rf /content/dataset && mkdir -p /content/dataset && unzip -q /content/sabtho.zip -d /content/dataset
 count = len(glob.glob("/content/dataset/wavs/*.wav"))
 assert count > 50, f"❌ Танҳо {count} сабт — ZIP-ро санҷед"
 print(f"✅ {count} сабт тайёр")

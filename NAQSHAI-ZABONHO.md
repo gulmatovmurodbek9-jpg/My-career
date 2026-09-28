@@ -31,7 +31,7 @@
 ## Корҳои роҳи Б — ИНТИХОБ ШУД (28.09)
 - [x] 191 ҷумлаи русӣ: ибораҳои воқеии ёвар + ҳамаи 33 ҳарф + рақамҳо бо калима — `tajik-tts/sabt/jumlaho-rus.js`
 - [x] Саҳифаи сабт: `tajik-tts/sabt/sabt.bat` → localhost:8765 (Пробел = сабт, нигоҳдорӣ дар браузер, ZIP барои Colab)
-- [x] Скрипти Colab: `tajik-tts/colab-rus-finetune.py` (finetune-hf-vits, language_code=rus)
+- [x] Скрипти Colab: `tajik-tts/colab-finetune.py` (finetune-hf-vits, language_code=rus)
 - [ ] **Шумо сабт мекунед** (~30–40 дақ, ҷои ором)
 - [ ] Colab: омӯзиш (~30 дақ дар T4) → санҷиш бо гӯш → `colab-onnx.py` → model.onnx
 - [ ] Backend: `speak(text, lang)` модели русиро интихоб мекунад; рақамҳо ба калимаи русӣ
@@ -41,3 +41,10 @@
 
 ## Литсензия
 Ҳамаи моделҳои MMS — **CC-BY-NC 4.0** (ғайритиҷоратӣ), мисли модели тоҷикӣ.
+
+## Навсозӣ 28.09 (шаб): як овоз — се забон
+Корбар қарор кард: ҳар се забонро аз нав бо як микрофон ва як оҳанг сабт мекунад.
+- Саҳифаи сабт: ҷадвалакҳои Тоҷикӣ (178) / Русӣ (191) / English (179), ZIP-и алоҳида
+- Colab: `tajik-tts/colab-finetune.py`, `LANG = "tgk" | "rus" | "eng"` — се омӯзиш
+- Натиҷа: `voice-model/` (tgk), `voice-model-rus/`, `voice-model-eng/` — backend аллакай тайёр
+- Як модел барои се забон — не: луғатҳои MMS ҷудоянд, иваз кардани онҳо то озмун хатарнок

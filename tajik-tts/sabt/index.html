@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Сабти овоз — русӣ</title>
+<title>Сабти овоз</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="jumlaho-tgk.js"></script>
 <script src="jumlaho-rus.js"></script>
+<script src="jumlaho-eng.js"></script>
 <style>
   :root { --bg:#0b1020; --card:#131a33; --line:#26304f; --text:#eef2ff; --muted:#8e9ac0; --accent:#3b82f6; --rec:#ef4444; --ok:#22c55e; --warn:#f59e0b; }
   * { box-sizing: border-box; }
@@ -34,6 +36,10 @@
   .grid button { padding: 7px 0; font-size: 12px; border-radius: 8px; }
   .grid button.done { background: rgba(34,197,94,.25); color: #bbf7d0; }
   .grid button.cur { outline: 2px solid var(--accent); }
+  .tabs { display:flex; gap:8px; margin-top: 16px; flex-wrap: wrap; }
+  .tabs button { padding: 9px 16px; border-radius: 99px; }
+  .tabs button.active { background: var(--accent); }
+  .tabs small { opacity: .75; font-weight: 600; margin-left: 6px; }
   .tips { margin-top: 22px; line-height: 1.7; }
   kbd { background: var(--line); border-radius:6px; padding: 1px 7px; font-size: 13px; }
 </style>
@@ -42,11 +48,12 @@
 <main>
   <header>
     <div>
-      <h1>🎙️ Сабти овоз — русӣ</h1>
+      <h1>🎙️ Сабти овоз — <span id="langName"></span></h1>
       <div class="muted" id="count"></div>
     </div>
     <button class="primary" id="export">⬇ ZIP барои Colab</button>
   </header>
+  <div class="tabs" id="tabs"></div>
   <div class="bar"><div id="progress"></div></div>
 
   <section class="card">
@@ -73,8 +80,17 @@
 </main>
 
 <script>
-const LANG = "rus";
-const SENTENCES = window.SENTENCES || [];
+// Се забон, як овоз: ҳар забон сабтҳо ва ZIP-и худро дорад (IndexedDB «ovoz-<забон>»).
+const LANGS = {
+  tgk: { name: "Тоҷикӣ", fix: (t) => t },
+  // Дар луғати mms-tts-rus «ё» нест — токенизатор онро мепартофт.
+  rus: { name: "Русӣ", fix: (t) => t.replace(/ё/g, "е").replace(/Ё/g, "Е") },
+  eng: { name: "English", fix: (t) => t },
+};
+const SETS = window.SENTENCE_SETS || {};
+let LANG = (() => { try { return localStorage.getItem("sabt-lang") || "tgk"; } catch { return "tgk"; } })();
+if (!SETS[LANG]) LANG = "tgk";
+let SENTENCES = SETS[LANG] || [];
 const $ = (id) => document.getElementById(id);
 let index = 0;
 let saved = {};          // index → { wav: Blob, seconds, peak }
@@ -82,12 +98,13 @@ let recording = null;    // { ctx, stream, node, chunks, rate }
 let player = null;
 
 // ── Нигоҳдорӣ дар IndexedDB: сабтҳо бо навсозии саҳифа гум намешаванд.
-const dbReady = new Promise((resolve, reject) => {
-  const open = indexedDB.open("ovoz-" + LANG, 1);
+const openDb = (lang) => new Promise((resolve, reject) => {
+  const open = indexedDB.open("ovoz-" + lang, 1);
   open.onupgradeneeded = () => open.result.createObjectStore("clips");
   open.onsuccess = () => resolve(open.result);
   open.onerror = () => reject(open.error);
 });
+let dbReady = openDb(LANG);
 const dbPut = async (key, value) => {
   const db = await dbReady;
   return new Promise((resolve, reject) => {
@@ -175,6 +192,7 @@ async function stopRec() {
   saved[index] = record;
   await dbPut(index, record);
   render();
+  renderTabs();
   if (peak > 0.98) status(`Садо хеле баланд (${seconds.toFixed(1)} с) — каме дуртар шавед ва боз сабт кунед.`, "warn");
   else if (peak < 0.08) status(`Садо хеле паст (${seconds.toFixed(1)} с) — наздиктар шавед ва боз сабт кунед.`, "warn");
   else status(`✓ Нигоҳ дошта шуд (${seconds.toFixed(1)} с). → навбатӣ`, "ok");
@@ -217,7 +235,7 @@ async function exportZip() {
     zip.file(name, record.wav);
     // Дар луғати mms-tts-rus «ё» нест — токенизатор онро мепартофт ва матн
     // бо садо мувофиқ намеомад. Барои омӯзиш «е» менависем (садо ҳамон аст).
-    const text = String(SENTENCES[i]).replace(/ё/g, "е").replace(/Ё/g, "Е");
+    const text = LANGS[LANG].fix(String(SENTENCES[i]));
     rows.push(`${name},"${text.replace(/"/g, '""')}"`);
     count++;
   }
@@ -244,17 +262,51 @@ document.addEventListener("keydown", (e) => {
   else if (e.key.toLowerCase() === "p" || e.key.toLowerCase() === "з") play();
 });
 
-SENTENCES.forEach((_, i) => {
-  const b = document.createElement("button");
-  b.textContent = i + 1; b.onclick = () => go(i);
-  $("grid").appendChild(b);
-});
-
-dbAll().then((all) => {
-  saved = all;
+// Иваз кардани забон: рӯйхат, сабтҳо ва тугмаҳои рақамдор аз нав.
+async function switchLang(lang) {
+  if (recording || !SETS[lang]) return;
+  LANG = lang;
+  try { localStorage.setItem("sabt-lang", lang); } catch { /* ҳеҷ */ }
+  SENTENCES = SETS[lang];
+  dbReady = openDb(lang);
+  saved = await dbAll();
+  $("langName").textContent = LANGS[lang].name;
+  document.documentElement.lang = lang === "tgk" ? "tg" : lang === "rus" ? "ru" : "en";
+  $("grid").innerHTML = "";
+  SENTENCES.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.textContent = i + 1; b.onclick = () => go(i);
+    $("grid").appendChild(b);
+  });
+  await renderTabs();
   const first = SENTENCES.findIndex((_, i) => !saved[i]);
   go(first === -1 ? 0 : first);
-});
+}
+
+// Ҷадвалакҳо бо шумораи сабтҳои ҳар забон.
+async function renderTabs() {
+  const tabs = $("tabs");
+  tabs.innerHTML = "";
+  for (const [lang, meta] of Object.entries(LANGS)) {
+    if (!SETS[lang]) continue;
+    let done = Object.keys(saved).length;
+    if (lang !== LANG) {
+      const db = await openDb(lang);
+      done = await new Promise((resolve) => {
+        const request = db.transaction("clips").objectStore("clips").count();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => resolve(0);
+      });
+    }
+    const b = document.createElement("button");
+    b.className = lang === LANG ? "active" : "";
+    b.innerHTML = `${meta.name}<small>${done}/${SETS[lang].length}</small>`;
+    b.onclick = () => switchLang(lang);
+    tabs.appendChild(b);
+  }
+}
+
+switchLang(LANG);
 </script>
 </body>
 </html>

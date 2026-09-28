@@ -61,13 +61,85 @@ export const numberToTajik = (value: number): string => {
 };
 
 // «то 4000 сомонӣ» → «то чор ҳазор сомонӣ». Фосилаи дарунирақамӣ низ гирифта мешавад.
-export const spellNumbers = (text: string): string =>
+// ── Русӣ: «2 тысячи», «5 тысяч»; ҳазор ҷинси занона дорад (одна, две).
+const RU_ONES = ['ноль', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
+const RU_TEENS = ['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
+const RU_TENS = ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
+const RU_HUNDREDS = ['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
+const ruForm = (value: number, forms: [string, string, string]): string => {
+    const last2 = value % 100;
+    const last = value % 10;
+    if (last2 >= 11 && last2 <= 14) return forms[2];
+    if (last === 1) return forms[0];
+    if (last >= 2 && last <= 4) return forms[1];
+    return forms[2];
+};
+const ruUnder1000 = (value: number, feminine = false): string => {
+    const parts: string[] = [RU_HUNDREDS[Math.floor(value / 100)]];
+    const rest = value % 100;
+    if (rest >= 10 && rest < 20) parts.push(RU_TEENS[rest - 10]);
+    else {
+        parts.push(RU_TENS[Math.floor(rest / 10)]);
+        const one = rest % 10;
+        if (one) parts.push(feminine && one === 1 ? 'одна' : feminine && one === 2 ? 'две' : RU_ONES[one]);
+    }
+    return parts.filter(Boolean).join(' ');
+};
+export const numberToRussian = (value: number): string => {
+    if (!Number.isFinite(value)) return '';
+    if (value < 0) return `минус ${numberToRussian(-value)}`;
+    if (value === 0) return RU_ONES[0];
+    const millions = Math.floor(value / 1_000_000);
+    const thousands = Math.floor((value % 1_000_000) / 1000);
+    const rest = value % 1000;
+    return [
+        millions ? `${ruUnder1000(millions)} ${ruForm(millions, ['миллион', 'миллиона', 'миллионов'])}` : '',
+        thousands ? `${ruUnder1000(thousands, true)} ${ruForm(thousands, ['тысяча', 'тысячи', 'тысяч'])}` : '',
+        rest ? ruUnder1000(rest) : '',
+    ].filter(Boolean).join(' ');
+};
+
+// ── Англисӣ.
+const EN_ONES = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+    'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const EN_TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+const enUnder1000 = (value: number): string => {
+    const parts: string[] = [];
+    if (value >= 100) parts.push(`${EN_ONES[Math.floor(value / 100)]} hundred`);
+    const rest = value % 100;
+    if (rest >= 20) parts.push(EN_TENS[Math.floor(rest / 10)] + (rest % 10 ? ` ${EN_ONES[rest % 10]}` : ''));
+    else if (rest > 0) parts.push(EN_ONES[rest]);
+    return parts.join(' ');
+};
+export const numberToEnglish = (value: number): string => {
+    if (!Number.isFinite(value)) return '';
+    if (value < 0) return `minus ${numberToEnglish(-value)}`;
+    if (value === 0) return EN_ONES[0];
+    const millions = Math.floor(value / 1_000_000);
+    const thousands = Math.floor((value % 1_000_000) / 1000);
+    const rest = value % 1000;
+    return [
+        millions ? `${enUnder1000(millions)} million` : '',
+        thousands ? `${enUnder1000(thousands)} thousand` : '',
+        rest ? enUnder1000(rest) : '',
+    ].filter(Boolean).join(' ');
+};
+
+export type VoiceLang = 'tj' | 'ru' | 'en';
+const NUMBER_WORDS: Record<VoiceLang, (value: number) => string> = {
+    tj: numberToTajik,
+    ru: numberToRussian,
+    en: numberToEnglish,
+};
+
+// «то 4000 сомонӣ» ба се забон.
+export const spellNumbers = (text: string, lang: VoiceLang = 'tj'): string =>
     text.replace(/\d[\d\s ]*/g, (match) => {
         const digits = match.replace(/[\s ]/g, '');
         const value = Number(digits);
         if (!Number.isFinite(value) || digits.length > 9) return match;
         const tail = /[\s ]$/.test(match) ? ' ' : '';
-        return numberToTajik(value) + tail;
+        return NUMBER_WORDS[lang](value) + tail;
     });
 
 @Injectable()
@@ -77,6 +149,11 @@ export class VoiceService implements OnModuleInit {
     // Овозҳои пешакӣ — агар ягон ҷумларо дастӣ сохта бошем.
     private readonly packDir = join(process.cwd(), 'voice-pack');
     private readonly tajik = new TajikTts();
+    // Русӣ ва англисӣ — моделҳои MMS-и Meta (на овози худамон), танҳо ONNX.
+    private readonly foreign: Record<'ru' | 'en', TajikTts> = {
+        ru: new TajikTts('voice-model-rus', 'русӣ'),
+        en: new TajikTts('voice-model-eng', 'англисӣ'),
+    };
 
     // Сервер 2 ядро дорад: ду синтези ҳамзамон онро мехобонад.
     private queue: Promise<unknown> = Promise.resolve();
@@ -114,6 +191,8 @@ export class VoiceService implements OnModuleInit {
             .then((ok) => {
                 if (ok) this.logger.log(`Модели овоз тайёр — ${Date.now() - started} мс`);
             })
+            // Русӣ ва англисӣ баъд аз тоҷикӣ — то оғози сервер суст нашавад.
+            .then(() => Promise.all(Object.values(this.foreign).filter((model) => model.available).map((model) => model.warmup())))
             .catch(() => undefined);
     }
 
@@ -141,6 +220,7 @@ export class VoiceService implements OnModuleInit {
             tts: this.ttsUrl ? 'python' : this.tajik.available ? 'onnx' : 'none',
             ttsUrl: this.ttsUrl,
             sampleRate: this.tajik.sampleRate,
+            languages: ['tj', ...Object.entries(this.foreign).filter(([, model]) => model.available).map(([lang]) => lang)],
             cached: count(this.cacheDir, '.wav'),
             packed: count(this.packDir, '.mp3'),
             speechToText: !!this.sttKey,
@@ -148,13 +228,15 @@ export class VoiceService implements OnModuleInit {
     }
 
     // ── Овоз ───────────────────────────────────────────────────────────
-    private prepare(rawText: string): string {
+    private prepare(rawText: string, lang: VoiceLang = 'tj'): string {
         const text = String(rawText || '').trim();
         if (!text) throw new BadRequestException('Матн холӣ аст');
         if (text.length > MAX_TEXT_LENGTH) {
             throw new BadRequestException(`Матн аз ${MAX_TEXT_LENGTH} ҳарф дароз аст`);
         }
-        return spellNumbers(text);
+        // Дар луғати mms-tts-rus ҳарфи «ё» нест — «е» мегузорем, вагарна ҳарф гум мешавад.
+        const spelled = spellNumbers(text, lang);
+        return lang === 'ru' ? spelled.replace(/ё/g, 'е').replace(/Ё/g, 'Е') : spelled;
     }
 
     async readPack(spoken: string): Promise<Buffer | null> {
@@ -195,7 +277,10 @@ export class VoiceService implements OnModuleInit {
         }
     }
 
-    async speak(rawText: string, speed?: number): Promise<{ audio: Buffer; cached: boolean }> {
+    async speak(rawText: string, speed?: number, rawLang?: string): Promise<{ audio: Buffer; cached: boolean }> {
+        const lang: VoiceLang = rawLang === 'ru' || rawLang === 'en' ? rawLang : 'tj';
+        if (lang !== 'tj') return this.speakForeign(rawText, lang);
+
         if (!this.ttsUrl && !this.tajik.available) {
             throw new ServiceUnavailableException('На TTS_URL монда шудааст, на модел дар voice-model/');
         }
@@ -229,6 +314,37 @@ export class VoiceService implements OnModuleInit {
             this.logger.warn(`Кеш нигоҳ дошта нашуд: ${error}`);
         }
 
+        return { audio, cached: false };
+    }
+
+    // Русӣ ва англисӣ: танҳо ONNX (сервери Python танҳо тоҷикиро медонад).
+    // Калиди кеш забонро дорад — ибораҳои забонҳои гуногун набояд омехта шаванд.
+    private async speakForeign(rawText: string, lang: 'ru' | 'en'): Promise<{ audio: Buffer; cached: boolean }> {
+        const model = this.foreign[lang];
+        if (!model.available) throw new ServiceUnavailableException(`Модели ${lang} дар сервер нест`);
+
+        const spoken = this.prepare(rawText, lang);
+        const hash = createHash('sha1').update(`${lang}|${spoken}`).digest('hex');
+        const file = join(this.cacheDir, `${hash}.wav`);
+        if (existsSync(file)) {
+            try {
+                return { audio: await readFile(file), cached: true };
+            } catch {
+                /* аз нав месозем */
+            }
+        }
+
+        const audio = await (this.queue = this.queue
+            .catch(() => undefined)
+            .then(() => model.speak(spoken))) as Buffer | null;
+        if (!audio) throw new ServiceUnavailableException('Овоз сохта нашуд');
+
+        try {
+            await mkdir(this.cacheDir, { recursive: true });
+            await writeFile(file, audio);
+        } catch (error) {
+            this.logger.warn(`Кеш нигоҳ дошта нашуд: ${error}`);
+        }
         return { audio, cached: false };
     }
 

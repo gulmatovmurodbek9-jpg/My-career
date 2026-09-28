@@ -86,3 +86,4 @@ tajik-tts/model/
 tajik-tts/*.wav
 tajik-tts/__pycache__/
 Back/nest-backend/voice-debug.log
+Back/nest-backend/voice-model-*/

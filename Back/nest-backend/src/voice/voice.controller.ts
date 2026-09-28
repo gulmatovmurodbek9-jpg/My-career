@@ -42,25 +42,26 @@ export class VoiceController {
     }
 
     @Get('speak')
-    @ApiOperation({ summary: 'Матн → овози тоҷикӣ (модели худамон)' })
+    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ ва англисӣ (MMS)' })
     async speakGet(
         @Query('text') text: string,
         @Query('speed') speed: string,
+        @Query('lang') lang: string,
         @Res() res: Response,
     ) {
-        await this.send(text, Number(speed) || undefined, res);
+        await this.send(text, Number(speed) || undefined, res, lang);
     }
 
     @Post('speak')
-    @ApiOperation({ summary: 'Матн → овози тоҷикӣ (модели худамон)' })
+    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ ва англисӣ (MMS)' })
     async speakPost(
-        @Body() body: { text: string; speed?: number },
+        @Body() body: { text: string; speed?: number; lang?: string },
         @Res() res: Response,
     ) {
-        await this.send(body?.text, Number(body?.speed) || undefined, res);
+        await this.send(body?.text, Number(body?.speed) || undefined, res, body?.lang);
     }
 
-    private async send(text: string, speed: number | undefined, res: Response) {
+    private async send(text: string, speed: number | undefined, res: Response, lang?: string) {
         // Як рӯз, на як сол: агар модели овоз иваз шавад, браузер садои нав мегирад.
         res.setHeader('Cache-Control', 'public, max-age=86400');
 
@@ -74,7 +75,7 @@ export class VoiceController {
             return;
         }
 
-        const { audio, cached } = await this.voiceService.speak(text, speed);
+        const { audio, cached } = await this.voiceService.speak(text, speed, lang);
         res.setHeader('Content-Type', 'audio/wav');
         res.setHeader('X-Voice-Source', cached ? 'cache' : 'model');
         res.setHeader('Content-Length', String(audio.length));

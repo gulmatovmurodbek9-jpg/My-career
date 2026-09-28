@@ -2,16 +2,10 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { Logger } from '@nestjs/common';
 
-// Модели VITS-и худамон (аз facebook/mms-tts-tgk омӯзонида шуд), ба ONNX табдил дода.
-// Бе Python, бе torch — танҳо onnxruntime дар худи Node.
-const MODEL_DIR = join(process.cwd(), 'voice-model');
-// Colab моделро ҳамчун onnx/model.onnx мебарорад; номи кӯҳна низ қабул мешавад.
-const MODEL_CANDIDATES = [
-    join(MODEL_DIR, 'onnx', 'model.onnx'),
-    join(MODEL_DIR, 'tajik-tts.onnx'),
-];
-const modelFile = (): string | null => MODEL_CANDIDATES.find((path) => existsSync(path)) || null;
-const META_FILE = join(MODEL_DIR, 'tajik-tts.json');
+// Модели VITS дар ONNX — бе Python, бе torch, танҳо onnxruntime дар худи Node.
+// Тоҷикӣ: модели худамон (аз facebook/mms-tts-tgk омӯзонида шуд) дар voice-model/.
+// Русӣ ва англисӣ: facebook/mms-tts-rus/-eng дар voice-model-rus/ ва voice-model-eng/
+// (tajik-tts/export-mms-onnx.py). Ҳамаашон як формат доранд, пас синф якест.
 
 // Ҷумлаи хеле дароз хотираро мехӯрад ва садояш якранг мешавад.
 const MAX_CHUNK = 160;
@@ -27,12 +21,25 @@ interface TtsMeta {
 
 export class TajikTts {
     private readonly logger = new Logger(TajikTts.name);
+    private readonly dir: string;
+    private readonly metaFile: string;
+
+    constructor(folder = 'voice-model', private readonly label = 'тоҷикӣ') {
+        this.dir = join(process.cwd(), folder);
+        this.metaFile = join(this.dir, 'tajik-tts.json');
+    }
+
+    // Colab моделро ҳамчун onnx/model.onnx мебарорад; номи кӯҳна низ қабул мешавад.
+    private modelFile(): string | null {
+        return [join(this.dir, 'onnx', 'model.onnx'), join(this.dir, 'tajik-tts.onnx')]
+            .find((path) => existsSync(path)) || null;
+    }
     private session: any = null;
     private meta: TtsMeta | null = null;
     private loading: Promise<boolean> | null = null;
 
     get available(): boolean {
-        return !!modelFile() && existsSync(META_FILE);
+        return !!this.modelFile() && existsSync(this.metaFile);
     }
 
     get sampleRate(): number {
@@ -53,15 +60,15 @@ export class TajikTts {
         this.loading = (async () => {
             try {
                 const ort = require('onnxruntime-node');
-                this.meta = JSON.parse(readFileSync(META_FILE, 'utf8'));
-                this.session = await ort.InferenceSession.create(modelFile() as string, {
+                this.meta = JSON.parse(readFileSync(this.metaFile, 'utf8'));
+                this.session = await ort.InferenceSession.create(this.modelFile() as string, {
                     executionProviders: ['cpu'],
                     graphOptimizationLevel: 'all',
                 });
-                this.logger.log(`Модели тоҷикӣ кушода шуд — ${this.sampleRate} Hz`);
+                this.logger.log(`Модели ${this.label} кушода шуд — ${this.sampleRate} Hz`);
                 return true;
             } catch (error) {
-                this.logger.error(`Модел кушода нашуд: ${error}`);
+                this.logger.error(`Модели ${this.label} кушода нашуд: ${error}`);
                 this.session = null;
                 return false;
             } finally {
@@ -75,7 +82,7 @@ export class TajikTts {
     // Токенизатори VitsTokenizer: хурдҳарфӣ, партофтани аломатҳои бегона,
     // ва гузоштани холӣ байни ҳарфҳо (add_blank).
     encodeText(text: string): number[] {
-        if (!this.meta) this.meta = JSON.parse(readFileSync(META_FILE, 'utf8'));
+        if (!this.meta) this.meta = JSON.parse(readFileSync(this.metaFile, 'utf8'));
         const meta = this.meta;
         const source = meta.normalize ? text.toLowerCase() : text;
         const ids: number[] = [];

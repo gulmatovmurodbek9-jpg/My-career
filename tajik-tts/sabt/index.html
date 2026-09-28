@@ -215,7 +215,10 @@ async function exportZip() {
   for (const [i, record] of Object.entries(saved)) {
     const name = `wavs/${LANG}_${String(Number(i) + 1).padStart(4, "0")}.wav`;
     zip.file(name, record.wav);
-    rows.push(`${name},"${String(SENTENCES[i]).replace(/"/g, '""')}"`);
+    // Дар луғати mms-tts-rus «ё» нест — токенизатор онро мепартофт ва матн
+    // бо садо мувофиқ намеомад. Барои омӯзиш «е» менависем (садо ҳамон аст).
+    const text = String(SENTENCES[i]).replace(/ё/g, "е").replace(/Ё/g, "Е");
+    rows.push(`${name},"${text.replace(/"/g, '""')}"`);
     count++;
   }
   if (!count) return status("Ҳанӯз ягон сабт нест.", "warn");

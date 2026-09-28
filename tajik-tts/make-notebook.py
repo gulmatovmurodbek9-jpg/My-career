@@ -40,17 +40,17 @@ version = subprocess.run(["python", "-c", "import transformers; print(transforme
 assert version == "4.46.3", f"❌ transformers {version} — ин қадамро боз иҷро кунед"
 print("✅ Абзорҳо тайёр, transformers", version)
 """),
-    md("## Қадами 3 — сабтҳо\nТугмаи **«Выбрать файлы»** пайдо мешавад → аз «Загрузки» ZIP-и ҳамон забонро интихоб кунед (масалан `ovoz-tgk-178.zip`)."),
+    md("## Қадами 3 — сабтҳо аз Google Drive\nZIP-и забон (масалан `ovoz-tgk-178.zip`) бояд дар **Google Drive** бошад — дар «Мой диск» ё дар папкаи `tajik-tts`.\nБори аввал тирезаи Google мебарояд — ҳисобро интихоб карда **иҷозат** диҳед."),
     code("""
 import glob
-from google.colab import files
-uploaded = files.upload()
-zip_name = next(iter(uploaded))
-assert f"ovoz-{LANG}" in zip_name, f"❌ Ин ZIP-и забони {LANG} нест: {zip_name}"
-# Агар файл аллакай бор шуда бошад, Colab онро «… (1).zip» номгузорӣ мекунад —
-# барои ҳамин худамон бо номи собит менависем.
-open("/content/sabtho.zip", "wb").write(uploaded[zip_name])
-!rm -rf /content/dataset && mkdir -p /content/dataset && unzip -q /content/sabtho.zip -d /content/dataset
+from google.colab import drive, files
+drive.mount("/content/drive")
+found = sorted(glob.glob(f"/content/drive/MyDrive/ovoz-{LANG}-*.zip") + glob.glob(f"/content/drive/MyDrive/tajik-tts/ovoz-{LANG}-*.zip"),
+               key=os.path.getmtime)
+assert found, f"❌ Дар Google Drive файли ovoz-{LANG}-….zip нест. Онро ба «Мой диск» бор кунед ва ин қадамро боз иҷро кунед."
+ZIP = found[-1]   # навтарин
+print("ZIP:", ZIP)
+!rm -rf /content/dataset && mkdir -p /content/dataset && unzip -q "{ZIP}" -d /content/dataset
 count = len(glob.glob("/content/dataset/wavs/*.wav"))
 assert count > 50, f"❌ Танҳо {count} сабт — ZIP-ро санҷед"
 print(f"✅ {count} сабт тайёр")

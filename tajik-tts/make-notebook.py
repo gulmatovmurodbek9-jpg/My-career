@@ -97,6 +97,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # Бе «accelerate launch»: дар як GPU лозим нест ва CLI-и он timm → torchvision-ро мехост.
 # datasets-ро аз torchvision.io.VideoReader (дар версияи нав нест) дур нигоҳ медорем.
 !grep -q "TORCHVISION_AVAILABLE = False" run_vits_finetuning.py || sed -i '1i import datasets.config; datasets.config.TORCHVISION_AVAILABLE = False' run_vits_finetuning.py
+# Як гӯянда: дар batch «speaker_id» нест — скрипт бояд None гирад, на KeyError.
+!sed -i 's/batch\\["speaker_id"\\]/batch.get("speaker_id")/g' run_vits_finetuning.py
 !python run_vits_finetuning.py /content/finetune_{LANG}.json 2>&1 | grep --line-buffered -v -E "BufferError|Exception ignored|_audit_fork_safety|tb_next|as_traceback|^\\s*def |^Traceback \\(most recent call last\\):$"
 assert os.path.exists(f"{OUT}/model.safetensors"), "❌ Омӯзиш тамом нашуд — 30 сатри охири ин катакро фиристед"
 print("✅ Омӯзиш тамом шуд!")

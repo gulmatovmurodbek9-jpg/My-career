@@ -35,6 +35,9 @@ if not os.path.exists("/content/finetune-hf-vits"):
     !mkdir -p monotonic_align && python setup.py build_ext --inplace -q 2>/dev/null
 # Абзор барои transformers 4.x навишта шудааст; Colab 5.x дорад.
 !pip -q install "transformers==4.46.3" "huggingface_hub<1.0" "datasets>=2.19,<4" 2>/dev/null
+# datasets 3.x torchvision.io.VideoReader-ро меҷӯяд, ки дар torchvision-и нав нест.
+# Барои садо torchvision лозим нест.
+!pip -q uninstall -y torchvision 2>/dev/null
 %cd /content/finetune-hf-vits
 version = subprocess.run(["python", "-c", "import transformers; print(transformers.__version__)"], capture_output=True, text=True).stdout.strip()
 assert version == "4.46.3", f"❌ transformers {version} — ин қадамро боз иҷро кунед"

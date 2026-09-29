@@ -18,6 +18,8 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Back", "n
 # Суръат ҳангоми табдил дар модел сабт мешавад (баъд иваз намешавад).
 # Тоҷикӣ 1.3 аст; моделҳои асосии MMS табиатан сусттаранд, 1.15 мувофиқ аст.
 MODELS = {
+    # Тоҷикӣ бо суръати 1.3 — мисли модели ҳозираи сайт (tajik-tts/server.py).
+    "tgk": {"speed": 1.0, "samples": ["Хуш омадед! Ман ёвари шумо ҳастам.", "Ана донишгоҳҳои наздиктарин.", "Соли гузашта бали гузариш аз сад то сесад буд."]},
     "rus": {"speed": 1.15, "samples": ["Добро пожаловать! Я ваш помощник.", "Вот университеты рядом с вами.", "Проходной балл был двести девяносто пять."]},
     "eng": {"speed": 1.15, "samples": ["Welcome! I am your assistant.", "Here are the universities near you.", "The passing score was two hundred ninety five."]},
 }

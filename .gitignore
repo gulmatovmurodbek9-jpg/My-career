@@ -88,3 +88,7 @@ tajik-tts/__pycache__/
 Back/nest-backend/voice-debug.log
 Back/nest-backend/voice-model-*/
 tajik-tts/trained/
+tajik-tts/model-kuhna/
+Back/nest-backend/voice-cache-kuhna/
+tajik-tts/model-nav/
+Back/nest-backend/voice-cache-nav/

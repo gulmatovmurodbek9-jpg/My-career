@@ -509,6 +509,11 @@ export default function VoiceAssistant() {
                     onLevel: (rms) => setOrbLevel(Math.min(1, rms * 7)),
                     onFinal: (text) => {
                         if (!text || busyRef.current || !handsFreeRef.current) return;
+                        // «.» ва садои бе калима фармон нест — идома медиҳем гӯш кардан.
+                        if (!/\p{L}{2,}/u.test(text)) {
+                            voiceLog("ignored", { text });
+                            return;
+                        }
                         stt.pause();
                         setOrbLevel(0);
                         sendRef.current?.(text);
@@ -537,6 +542,14 @@ export default function VoiceAssistant() {
                 });
                 await stt.start();
                 sttRef.current = stt;
+                // Дар вақти гирифтани токен ёвар шояд ба гап сар карда бошад (муаррифии
+                // саҳифа). Он гоҳ микрофон набояд шунавад — вагарна ёвар садои худашро
+                // ҳамчун фармон мегирад («Анъанавии ҳаёти ҳақиқӣ…»).
+                if (busyRef.current) {
+                    stt.pause();
+                    voiceLog("listen-paused-busy");
+                    return;
+                }
                 setState("listening");
                 return;
             } catch (error) {
@@ -652,31 +665,39 @@ export default function VoiceAssistant() {
 
     // Корбар худаш ба саҳифаи нав гузашт (тугма ё истинод) — муаррифӣ мекунем.
     // Агар ин кор аз ҷониби ёвар бошад, send() онро аллакай кардааст.
+    // Агар ёвар ҳоло гап занад ё фикр кунад, муаррифӣ гум намешавад — интизор
+    // мешавем (то 20 с), то ӯ озод шавад. Пештар дар ин ҳол муаррифӣ намешуд.
     useEffect(() => {
         if (!open || !started) return undefined;
         const guide = guideFor(location.pathname, location.hash, !token);
+        const isCareer = !guide && /^\/info\//.test(location.pathname);
+        if (!guide && !isCareer) return undefined;
+        if (guide && spokenGuidesRef.current.has(guide.id)) return undefined;
 
-        if (!guide && /^\/info\//.test(location.pathname)) {
-            let cancelled = false;
-            const timer = setTimeout(async () => {
-                if (busyRef.current || cancelled) return;
+        let cancelled = false;
+        let waited = 0;
+        let timer = null;
+        const attempt = async () => {
+            if (cancelled) return;
+            if (busyRef.current) {
+                waited += 400;
+                if (waited < 20000) timer = setTimeout(attempt, 400);
+                return;
+            }
+            if (isCareer) {
                 const brief = await careerBrief(location.pathname);
-                if (brief && !cancelled && !busyRef.current) speakGuideRef.current?.(brief);
-            }, 700);
-            return () => {
-                cancelled = true;
-                clearTimeout(timer);
-            };
-        }
-
-        if (!guide || spokenGuidesRef.current.has(guide.id)) return undefined;
-
-        const timer = setTimeout(() => {
-            if (busyRef.current || spokenGuidesRef.current.has(guide.id)) return;
+                if (brief && !cancelled) speakGuideRef.current?.(brief);
+                return;
+            }
+            if (spokenGuidesRef.current.has(guide.id)) return;
             spokenGuidesRef.current.add(guide.id);
             speakGuideRef.current?.(guide.text);
-        }, 700);
-        return () => clearTimeout(timer);
+        };
+        timer = setTimeout(attempt, 700);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [careerBrief, location.pathname, location.hash, open, started, token]);
 
     useEffect(() => {

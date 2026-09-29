@@ -19,7 +19,7 @@ cells = [
 """),
     md("## Қадами 1 — забон ва GPU\nАгар русӣ ё англисӣ бошад, `\"tgk\"`-ро ба `\"rus\"` ё `\"eng\"` иваз кунед."),
     code("""
-LANG = "tgk"   # "tgk" — тоҷикӣ, "rus" — русӣ, "eng" — англисӣ
+LANG = "rus"   # "tgk" — тоҷикӣ, "rus" — русӣ, "eng" — англисӣ
 
 import torch
 assert torch.cuda.is_available(), "❌ GPU нест! Среда выполнения → Сменить среду выполнения → T4 GPU → Сохранить. Баъд ин қадамро боз иҷро кунед."
@@ -68,7 +68,8 @@ print("✅ Модели асосӣ тайёр")
     md("## Қадами 5 — ОМӮЗИШ (~30 дақиқа)\nСаҳифаро напӯшед ва компютерро ба хоб надиҳед. Дар поён навори пешрафт (`Steps: …%`) пайдо мешавад."),
     code("""
 import json
-OUT = f"/content/model-{LANG}"
+# Мустақим ба Google Drive — агар Colab пайвастро канад, модел гум намешавад.
+OUT = f"/content/drive/MyDrive/tajik-tts/model-{LANG}"
 SAMPLES = {
     "tgk": ["Хуш омадед! Ман ёвари шумо ҳастам.", "Ана донишгоҳҳои наздиктарин.", "Мехоҳед захира кунам ё бо дигараш муқоиса кунем?"],
     "rus": ["Добро пожаловать! Я ваш помощник.", "Вот университеты рядом с вами.", "Хотите сохранить ее или сравнить с другой?"],
@@ -88,6 +89,7 @@ config = {
     "per_device_train_batch_size": 16, "learning_rate": 2e-5,
     "adam_beta1": 0.8, "adam_beta2": 0.99, "warmup_ratio": 0.01, "group_by_length": False,
     "do_eval": False,
+    "save_total_limit": 1,
     "do_step_schedule_per_epoch": True,
     "weight_disc": 3, "weight_fmaps": 1, "weight_gen": 1, "weight_kl": 1.5, "weight_duration": 1, "weight_mel": 35,
     "fp16": True, "seed": 456,
@@ -105,6 +107,18 @@ print("✅ Омӯзиш тамом шуд!")
 """),
     md("## Қадами 6 — гӯш кунед: ин овози шумост"),
     code("""
+import os, torch
+from google.colab import drive, files
+if "LANG" not in globals():
+    LANG = "tgk"   # ← агар сеанс аз нав оғоз шуда бошад, забонро ин ҷо нависед: "tgk" / "rus" / "eng"
+drive.mount("/content/drive")
+OUT = f"/content/drive/MyDrive/tajik-tts/model-{LANG}"
+assert os.path.exists(f"{OUT}/model.safetensors"), f"❌ Дар Drive модели {LANG} нест — қадами 5-ро иҷро кунед"
+SAMPLES = {
+    "tgk": ["Хуш омадед! Ман ёвари шумо ҳастам.", "Ана донишгоҳҳои наздиктарин.", "Мехоҳед захира кунам ё бо дигараш муқоиса кунем?"],
+    "rus": ["Добро пожаловать! Я ваш помощник.", "Вот университеты рядом с вами.", "Хотите сохранить ее или сравнить с другой?"],
+    "eng": ["Welcome! I am your assistant.", "Here are the universities near you.", "Would you like to save it or compare it with another one?"],
+}
 import IPython.display as ipd
 from transformers import VitsModel, AutoTokenizer
 model = VitsModel.from_pretrained(OUT).eval()
@@ -116,8 +130,20 @@ for text in SAMPLES[LANG]:
     print("🔊", text)
     ipd.display(ipd.Audio(wave, rate=model.config.sampling_rate))
 """),
-    md("## Қадами 7 — моделро ба компютер зеркашӣ кунед\nФайли `model-tgk.zip` ба «Загрузки» меафтад. Ба ман гӯед — ман онро ба сайт мегузорам."),
+    md("## Қадами 7 — моделро ба компютер зеркашӣ кунед\nФайли `model-<забон>.zip` ба «Загрузки» меафтад (модел аллакай дар Google Drive ҳам ҳаст). Ба ман гӯед — ман онро ба сайт мегузорам."),
     code("""
+import os, torch
+from google.colab import drive, files
+if "LANG" not in globals():
+    LANG = "tgk"   # ← агар сеанс аз нав оғоз шуда бошад, забонро ин ҷо нависед: "tgk" / "rus" / "eng"
+drive.mount("/content/drive")
+OUT = f"/content/drive/MyDrive/tajik-tts/model-{LANG}"
+assert os.path.exists(f"{OUT}/model.safetensors"), f"❌ Дар Drive модели {LANG} нест — қадами 5-ро иҷро кунед"
+SAMPLES = {
+    "tgk": ["Хуш омадед! Ман ёвари шумо ҳастам.", "Ана донишгоҳҳои наздиктарин.", "Мехоҳед захира кунам ё бо дигараш муқоиса кунем?"],
+    "rus": ["Добро пожаловать! Я ваш помощник.", "Вот университеты рядом с вами.", "Хотите сохранить ее или сравнить с другой?"],
+    "eng": ["Welcome! I am your assistant.", "Here are the universities near you.", "Would you like to save it or compare it with another one?"],
+}
 keep = ["config.json", "model.safetensors", "vocab.json", "tokenizer_config.json", "special_tokens_map.json", "added_tokens.json", "preprocessor_config.json"]
 !rm -rf /content/export && mkdir -p /content/export/model-{LANG}
 for name in keep:

@@ -81,10 +81,10 @@ import IPython.display as ipd
 from transformers import VitsModel, AutoTokenizer
 model = VitsModel.from_pretrained(OUT).eval()
 tok = AutoTokenizer.from_pretrained(OUT)
-model.speaking_rate = 1.3
+model.speaking_rate = 1.0   # 1.3 хеле тез буд
 for text in SAMPLES[LANG]:
     with torch.no_grad():
-        wave = model(**tok(text, return_tensors="pt")).waveform[0].numpy()
+        wave = model(**tok("— " + text, return_tensors="pt")).waveform[0].numpy()   # «— »: калимаи аввал гум намешавад
     print("   ", text)
     ipd.display(ipd.Audio(wave, rate=model.config.sampling_rate))
 print(f"\nТАЙЁР! Модел дар Drive: tajik-tts/model-{LANG} — ин папкаро ба ман диҳед.")

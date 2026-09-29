@@ -87,6 +87,14 @@ export class TajikTts {
         const source = meta.normalize ? text.toLowerCase() : text;
         const ids: number[] = [];
 
+        // Таваққуфи хурд («— ») пеш аз ҷумла: бе он модел калимаи аввалро фурӯ мебарад
+        // («Маоши…» → «Ваши…»). Санҷиш: калимаи аввал 3/6 → 6/6 (test-lead-pause.py).
+        const pause = ['—', '–', '-'].find((char) => typeof meta.vocab[char] === 'number');
+        if (pause) {
+            ids.push(meta.vocab[pause]);
+            if (typeof meta.vocab[' '] === 'number') ids.push(meta.vocab[' ']);
+        }
+
         for (const char of source) {
             const id = meta.vocab[char];
             if (typeof id === 'number') ids.push(id);

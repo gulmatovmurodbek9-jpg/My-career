@@ -134,7 +134,11 @@ def speak(body: SpeakRequest):
 
     started = time.time()
     with lock:
-        wave = tts.speak(spoken, speed=speed)
+        # Таваққуфи хурд («— ») пеш аз ҳар ҷумла: бе он модел калимаи аввалро
+        # фурӯ мебарад. tts.speak ҷумлаҳоро аз рӯи .!? мебурад, пас «— » дар
+        # аввали ҳар ҷумла мемонад. Санҷиш: test-lead-pause.py (4/6 → 5/6).
+        paused = " ".join(f"— {part}" for part in tts.split(spoken))
+        wave = tts.speak(paused, speed=speed)
 
     # tts.speak ба охир 0.35 с хомӯшӣ илова мекунад (барои байни ҷумлаҳо). Дар охири
     # садо он танҳо интизорӣ аст: плеер то тамом шуданаш пораи навбатӣ ё гӯш

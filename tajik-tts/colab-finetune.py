@@ -103,10 +103,10 @@ from transformers import VitsModel, AutoTokenizer
 MODEL = f"/content/drive/MyDrive/tajik-tts/model-{LANG}"
 model = VitsModel.from_pretrained(MODEL).eval()
 tok = AutoTokenizer.from_pretrained(MODEL)
-model.speaking_rate = 1.3
+model.speaking_rate = 1.0   # 1.3 хеле тез буд
 for text in TESTS[LANG]:
     with torch.no_grad():
-        wave = model(**tok(text, return_tensors="pt")).waveform[0].numpy()
+        wave = model(**tok("— " + text, return_tensors="pt")).waveform[0].numpy()   # «— »: калимаи аввал гум намешавад
     ipd.display(ipd.Audio(wave, rate=model.config.sampling_rate))
 
 # ── 8. Папкаи Drive-и model-<LANG>-ро зеркашӣ кунед ва ба ман гӯед —

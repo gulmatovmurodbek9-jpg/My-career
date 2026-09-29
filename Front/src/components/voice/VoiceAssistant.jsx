@@ -82,10 +82,13 @@ export default function VoiceAssistant() {
     const quickDropsRef = useRef(0);
 
     const lang = i18n.language || "tj";
-    const greeting = t(
-        "assistant.greeting",
-        "Хуш омадед! Ман ёвари шумо ҳастам. Чӣ кор кунем — ихтисос интихоб кунем, донишгоҳҳоро бинем, ё санҷиш гузарем?",
-    );
+    // Садо: тоҷикӣ ва русӣ — овози худамон; дигар забонҳо ҳоло модел надоранд.
+    const voiceLang = lang === "ru" ? "ru" : "tj";
+    const voiceLangRef = useRef(voiceLang);
+    voiceLangRef.current = voiceLang;
+    const greeting = voiceLang === "ru"
+        ? "Добро пожаловать! Я ваш помощник. Чем займёмся — выберем специальность, посмотрим университеты или пройдём тест?"
+        : "Хуш омадед! Ман ёвари шумо ҳастам. Чӣ кор кунем — ихтисос интихоб кунем, донишгоҳҳоро бинем, ё санҷиш гузарем?";
 
     // Бори аввал худаш кушода мешавад. Садо то пахши аввали корбар
     // намебарояд — ин қоидаи худи браузер аст.
@@ -215,7 +218,7 @@ export default function VoiceAssistant() {
         player.onerror = fallback;
         const asked = Date.now();
         player.onplaying = () => voiceLog("play", { wait: Date.now() - asked, text: text.slice(0, 40) });
-        player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&v=${VOICE_VERSION}`;
+        player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${voiceLangRef.current}&v=${VOICE_VERSION}`;
         player.play().then(() => setVoiceWarning(false)).catch(fallback);
 
         // Суғурта: агар садо ба ягон сабаб на тамом шавад, на хато диҳад,
@@ -228,7 +231,7 @@ export default function VoiceAssistant() {
     const speak = useCallback(async (text) => {
         if (!text) return;
         const chunks = splitForSpeech(text);
-        const prefetch = (chunk) => fetch(`${API}/voice/speak?text=${encodeURIComponent(chunk)}&v=${VOICE_VERSION}`)
+        const prefetch = (chunk) => fetch(`${API}/voice/speak?text=${encodeURIComponent(chunk)}&lang=${voiceLangRef.current}&v=${VOICE_VERSION}`)
             .then((response) => response.arrayBuffer())
             .catch(() => { });
 
@@ -622,7 +625,7 @@ export default function VoiceAssistant() {
             // Амал ба саҳифаи нав бурд — «Ана донишгоҳҳо»-и кӯтоҳ ба ҷои
             // муаррифии пурраи ҳамон саҳифа. Ду бор гап задан лозим нест.
             if (window.location.pathname + window.location.hash !== before) {
-                const guide = guideFor(window.location.pathname, window.location.hash, !token);
+                const guide = guideFor(window.location.pathname, window.location.hash, !token, voiceLangRef.current);
                 if (guide && !spokenGuidesRef.current.has(guide.id)) {
                     spokenGuidesRef.current.add(guide.id);
                     reply = guide.text;
@@ -669,8 +672,9 @@ export default function VoiceAssistant() {
     // мешавем (то 20 с), то ӯ озод шавад. Пештар дар ин ҳол муаррифӣ намешуд.
     useEffect(() => {
         if (!open || !started) return undefined;
-        const guide = guideFor(location.pathname, location.hash, !token);
-        const isCareer = !guide && /^\/info\//.test(location.pathname);
+        const guide = guideFor(location.pathname, location.hash, !token, voiceLang);
+        // Муаррифии ихтисос аз база танҳо тоҷикӣ аст (матни база тоҷикӣ).
+        const isCareer = !guide && voiceLang === "tj" && /^\/info\//.test(location.pathname);
         if (!guide && !isCareer) return undefined;
         if (guide && spokenGuidesRef.current.has(guide.id)) return undefined;
 
@@ -698,7 +702,7 @@ export default function VoiceAssistant() {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [careerBrief, location.pathname, location.hash, open, started, token]);
+    }, [careerBrief, location.pathname, location.hash, open, started, token, voiceLang]);
 
     useEffect(() => {
         sendRef.current = send;
@@ -715,7 +719,7 @@ export default function VoiceAssistant() {
         setSaid(greeting);
         if (!greetedAloudRef.current) {
             greetedAloudRef.current = true;
-            spokenGuidesRef.current.add("home");
+            spokenGuidesRef.current.add(`home:${voiceLangRef.current}`);
             await speak(greeting);
         }
         startListening();
@@ -727,7 +731,7 @@ export default function VoiceAssistant() {
         greetRef.current = () => {
             if (greetedAloudRef.current || handsFreeRef.current) return;
             greetedAloudRef.current = true;
-            spokenGuidesRef.current.add("home");
+            spokenGuidesRef.current.add(`home:${voiceLangRef.current}`);
             unlockAudio();
             speak(greeting).then(() => setState("idle"));
         };

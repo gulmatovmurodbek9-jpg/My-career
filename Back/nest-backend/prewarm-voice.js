@@ -33,9 +33,20 @@ const PHRASES = [
     'Мебахшед, нафаҳмидам. Бори дигар бигӯед.',
 ];
 
-async function warm(text) {
+// Ибораҳои русии ёвар (career.service.ts → ASSISTANT_REPLIES.ru + салом).
+// Танҳо вақте садо мегиранд, ки модели русӣ дар voice-model-rus/ бошад.
+const PHRASES_RU = [
+    'Добро пожаловать! Я ваш помощник. Чем займёмся — выберем специальность, посмотрим университеты или пройдём тест?',
+    'Вот эти специальности.', 'Открыл.', 'Сравнение готово.', 'Сохранено.', 'Начинаю тест.',
+    'Вот университеты.', 'Открыл ваш отчёт.', 'Вот план подачи документов.', 'Ищу ближайшие университеты.',
+    'Вот этот кластер.', 'Открыл чат.', 'Вот ваши сохранённые.', 'О нас.', 'На главную.',
+    'Язык изменён.', 'Тема изменена.',
+    'Извините, сейчас не могу ответить. Повторите, пожалуйста.',
+];
+
+async function warm(text, lang = 'tj') {
     const started = Date.now();
-    const response = await fetch(`${API}/voice/speak?text=${encodeURIComponent(text)}`);
+    const response = await fetch(`${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}`);
     if (!response.ok) return { ok: false, status: response.status };
     await response.arrayBuffer();
     return {
@@ -54,6 +65,7 @@ async function warm(text) {
         ).href;
         const { allGuideTexts, splitForSpeech } = await import(guideUrl);
         PHRASES.push(...allGuideTexts());
+        PHRASES_RU.push(...allGuideTexts('ru'));
         split = splitForSpeech;
     } catch (error) {
         console.log('муаррифиҳо хонда нашуданд:', String(error).slice(0, 120));
@@ -91,4 +103,23 @@ async function warm(text) {
     }
 
     console.log(`\nНав сохта шуд: ${fresh}   Аллакай дар кеш: ${cached}   Ҳамагӣ: ${pieces.length}`);
+
+    // Русӣ: агар модел набошад, сервер 503 медиҳад — як бор хабар дода мегузарем.
+    const status = await (await fetch(`${API}/voice/status`)).json().catch(() => ({}));
+    if (!(status.languages || []).includes('ru')) {
+        console.log('\nМодели русӣ нест (voice-model-rus/) — ибораҳои русӣ гузаронида шуданд.');
+        return;
+    }
+    const piecesRu = [...new Set(PHRASES_RU.flatMap((text) => split(text)))];
+    let freshRu = 0;
+    for (const text of piecesRu) {
+        const result = await warm(text, 'ru');
+        if (!result.ok) {
+            console.log(`НЕ   ${result.status}  ${text.slice(0, 50)}`);
+            continue;
+        }
+        if (result.source === 'model') freshRu += 1;
+        console.log(`RU  ${result.source.padEnd(6)} ${result.seconds}s  ${text.slice(0, 50)}`);
+    }
+    console.log(`Русӣ: нав ${freshRu}, ҳамагӣ ${piecesRu.length}`);
 })();

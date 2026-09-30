@@ -7,6 +7,9 @@ import { University } from '../university/university.entity';
 
 const ORIGIN = process.env.PUBLIC_ORIGIN || 'https://ikhtisosiman.qobus.tj';
 
+// 35: lastmod ҳар рӯз иваз намешавад — санаи охирин навсозии маълумот (оғози сервер баъди deploy).
+const CONTENT_DATE = process.env.CONTENT_DATE || new Date().toISOString().slice(0, 10);
+
 const STATIC_PAGES: Array<{ path: string; priority: string; changefreq: string }> = [
     { path: '/', priority: '1.0', changefreq: 'weekly' },
     { path: '/careers', priority: '0.9', changefreq: 'weekly' },
@@ -41,7 +44,7 @@ export class SitemapController {
             this.universityRepository.find({ select: ['id', 'updatedAt'] }),
         ]);
 
-        const today = new Date().toISOString().slice(0, 10);
+        const today = CONTENT_DATE;
 
         const entry = (
             path: string,

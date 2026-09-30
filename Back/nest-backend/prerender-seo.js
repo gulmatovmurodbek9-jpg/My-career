@@ -147,14 +147,14 @@ const links = (items) => `<ul>${items.map(([href, text]) => `<li><a href="${esc(
         route: '/careers',
         title: `Ҳамаи ${careers.length} ихтисоси ММТ-и Тоҷикистон | ${SITE}`,
         description: `Рӯйхати пурраи ${careers.length} ихтисоси Маркази миллии тестӣ бо коди расмӣ, кластер, донишгоҳҳо, маош ва балҳои гузариш.`,
-        body: nav + `<h1>Ихтисосҳои ММТ — ${careers.length} ихтисос</h1>` + [...clusters].map(([name, items]) =>
+        body: nav + `<h1>Ихтисосҳои Тоҷикистон</h1><p>${careers.length} ихтисоси расмии ММТ</p>` + [...clusters].map(([name, items]) =>
             `<h2>${esc(name)} (${items.length})</h2>${links(items.map((c) => [`/info/${c.id}`, `${c.name}${c.code ? ` (${c.code})` : ''}`]))}`).join(''),
     });
     page({
         route: '/universities',
         title: `Донишгоҳҳои Тоҷикистон — ${universities.length} муассиса дар харита | ${SITE}`,
         description: `${universities.length} донишгоҳ ва коллеҷи Тоҷикистон: шаҳр, ихтисосҳо, нархи таҳсил ва ҷойҳои ройгон.`,
-        body: nav + `<h1>Донишгоҳҳои Тоҷикистон</h1>` + links(universities.map((u) => [`/universities/${u.id}`, `${u.name}${u.city ? ` — ${u.city}` : ''}`])),
+        body: nav + `<h1>Донишгоҳҳои Тоҷикистон дар як харита</h1>` + links(universities.map((u) => [`/universities/${u.id}`, `${u.name}${u.city ? ` — ${u.city}` : ''}`])),
     });
     page({
         route: '/about',

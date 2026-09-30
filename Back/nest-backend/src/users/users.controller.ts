@@ -15,7 +15,21 @@ export class UsersController {
     @Get('specialists')
     @ApiOperation({ summary: 'Get active career specialists' })
     async getSpecialists() {
-        return this.usersService.findSpecialists(true);
+        // Бе вуруд: танҳо майдонҳои ҷамъиятӣ. Пештар email, телефон, lastSeenAt ва
+        // натиҷаи тестҳо ба ҳама дода мешуд.
+        const specialists = await this.usersService.findSpecialists(true);
+        return specialists.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            specialization: s.specialization,
+            bio: s.bio,
+            meetingLocation: s.meetingLocation,
+            ratingAverage: s.ratingAverage,
+            ratingCount: s.ratingCount,
+            avatarUrl: s.avatarUrl,
+            weeklyAvailability: s.weeklyAvailability,
+            isActive: s.isActive,
+        }));
     }
 
     @Get('admin/activity')

@@ -50,6 +50,10 @@ export class AppointmentController {
     @Get('stats/:type')
     @ApiOperation({ summary: 'Get queue statistics' })
     async getQueueStats(@Param('type') type: AppointmentType) {
+        // Намуди нодуруст (масалан «day») пештар 500 медод.
+        if (!Object.values(AppointmentType).includes(type)) {
+            throw new BadRequestException('Намуди нодуруст');
+        }
         return this.appointmentService.getQueueStats(type);
     }
 

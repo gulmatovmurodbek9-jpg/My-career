@@ -11,7 +11,9 @@ import { useAuthStore } from './store/authStore'
 
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
 
-installMockInterceptor();
+// Маълумоти қалбакӣ танҳо дар таҳия: дар production ҳангоми хатои сервер
+// корбар маълумоти сохта медид (ҳатто воридшавӣ).
+if (import.meta.env.DEV) installMockInterceptor();
 
 const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/quiz', '/profile', '/settings', '/favorites'];
 let handlingExpiredSession = false;

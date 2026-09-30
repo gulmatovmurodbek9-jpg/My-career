@@ -417,6 +417,25 @@ export class VoiceService implements OnModuleInit {
     // Токени ҷараёнӣ = як ибора дар сӯҳбат (баъди ҳар ҷавоб пайвасти нав),
     // пас лимиташ бояд калон бошад: 30 дар 10 дақиқа дар миёнаи сӯҳбат тамом мешуд
     // ва микрофон хомӯш мемонд. Пул барои сонияи садо аст, на барои токен.
+    // Лимити садо барои як IP: корбари муқаррарӣ дар як саҳифа 5–10 ибора мешунавад,
+    // пас 400 дар 10 дақиқа хеле зиёд аст — танҳо «TTS-и ройгон барои ҳама»-ро манъ мекунад.
+    private speakByIp = new Map<string, number[]>();
+    guardSpeak(ip = 'unknown'): void {
+        if (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1') return;
+        const now = Date.now();
+        const recent = (this.speakByIp.get(ip) || []).filter((at) => now - at < IP_WINDOW_MS);
+        if (recent.length >= (Number(this.configService.get<string>('VOICE_SPEAK_LIMIT')) || 400)) {
+            throw new ServiceUnavailableException('Дархостҳо аз ҳад зиёд — каме интизор шавед');
+        }
+        recent.push(now);
+        this.speakByIp.set(ip, recent);
+        if (this.speakByIp.size > 2000) {
+            for (const [key, times] of this.speakByIp) {
+                if (!times.some((at) => now - at < IP_WINDOW_MS)) this.speakByIp.delete(key);
+            }
+        }
+    }
+
     guardSpend(ip = 'unknown', kind: 'token' | 'batch' = 'batch'): void {
         const perIp = kind === 'token'
             ? Number(this.configService.get<string>('VOICE_TOKEN_LIMIT')) || 200

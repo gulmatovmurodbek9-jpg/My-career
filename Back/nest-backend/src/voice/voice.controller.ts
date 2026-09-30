@@ -1,8 +1,25 @@
-import { Body, Controller, Get, Ip, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Ip, Post, Query, Req, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { VoiceService } from './voice.service';
+
+// Дархостҳои худи сервер (prewarm-voice.js) ва сайти мо.
+const LOCAL_IPS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+const SITE_HOSTS = new Set(['ikhtisosiman.qobus.tj', 'localhost', '127.0.0.1']);
+const isProduction = () => process.env.NODE_ENV === 'production';
+
+// Хизматҳои пулакӣ (ElevenLabs) ва синтез танҳо барои сайти мо: пештар ҳар кас
+// бо curl токен мегирифт ва TTS-и ройгон дошт. Браузер Origin ё Referer мефиристад.
+function fromOurSite(req: Request, ip: string): boolean {
+    if (!isProduction() || LOCAL_IPS.has(ip)) return true;
+    const source = String(req.headers.origin || req.headers.referer || '');
+    try {
+        return SITE_HOSTS.has(new URL(source).hostname);
+    } catch {
+        return false;
+    }
+}
 
 @ApiTags('voice')
 @Controller('voice')
@@ -22,13 +39,19 @@ export class VoiceController {
 
     @Get('status')
     @ApiOperation({ summary: 'Ҳолати овоз: модел, кеш, шинохти нутқ' })
-    status() {
-        return this.voiceService.status();
+    status(@Ip() ip: string) {
+        const status = this.voiceService.status();
+        // Танзимоти дохилӣ (ttsUrl, кеш) танҳо барои худи сервер.
+        if (isProduction() && !LOCAL_IPS.has(ip)) {
+            return { speechToText: status.speechToText, languages: status.languages };
+        }
+        return status;
     }
 
     @Get('stt-token')
     @ApiOperation({ summary: 'Токени якбора барои шинохти ҷараёнӣ дар браузер' })
-    async sttToken(@Ip() ip: string) {
+    async sttToken(@Ip() ip: string, @Req() req: Request) {
+        if (!fromOurSite(req, ip)) throw new ForbiddenException();
         this.voiceService.guardSpend(ip, 'token');
         return this.voiceService.sttToken();
     }
@@ -36,7 +59,8 @@ export class VoiceController {
     @Post('stt')
     @UseInterceptors(FileInterceptor('audio', { limits: { fileSize: 8 * 1024 * 1024 } }))
     @ApiOperation({ summary: 'Садо → матни тоҷикӣ' })
-    async stt(@UploadedFile() audio: Express.Multer.File, @Ip() ip: string) {
+    async stt(@UploadedFile() audio: Express.Multer.File, @Ip() ip: string, @Req() req: Request) {
+        if (!fromOurSite(req, ip)) throw new ForbiddenException();
         this.voiceService.guardSpend(ip);
         return this.voiceService.transcribe(audio?.buffer, audio?.mimetype);
     }
@@ -47,8 +71,12 @@ export class VoiceController {
         @Query('text') text: string,
         @Query('speed') speed: string,
         @Query('lang') lang: string,
+        @Ip() ip: string,
+        @Req() req: Request,
         @Res() res: Response,
     ) {
+        if (!fromOurSite(req, ip)) throw new ForbiddenException();
+        this.voiceService.guardSpeak(ip);
         await this.send(text, Number(speed) || undefined, res, lang);
     }
 
@@ -56,8 +84,12 @@ export class VoiceController {
     @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ ва англисӣ (MMS)' })
     async speakPost(
         @Body() body: { text: string; speed?: number; lang?: string },
+        @Ip() ip: string,
+        @Req() req: Request,
         @Res() res: Response,
     ) {
+        if (!fromOurSite(req, ip)) throw new ForbiddenException();
+        this.voiceService.guardSpeak(ip);
         await this.send(body?.text, Number(body?.speed) || undefined, res, body?.lang);
     }
 

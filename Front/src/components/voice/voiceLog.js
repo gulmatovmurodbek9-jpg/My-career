@@ -19,6 +19,8 @@ const flush = () => {
 };
 
 export const voiceLog = (event, data = {}) => {
+    // Дар production ҳеҷ чиз намефиристем: пештар ҳар саҳифа POST /api/voice/debug мекард.
+    if (!import.meta.env.DEV) return;
     queue.push({ t: ((Date.now() - started) / 1000).toFixed(2), event, ...data });
     if (!timer) timer = setTimeout(flush, 1500);
 };

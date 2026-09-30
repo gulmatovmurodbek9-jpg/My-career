@@ -144,7 +144,7 @@ const ApplicationPlan = () => {
                     item.isFree
                         ? "—"
                         : money(item.tuitionFee)
-                            ? `${money(item.tuitionFee)} сом.`
+                            ? `${money(item.tuitionFee)} сомонӣ`
                             : "—",
                 ]),
                 styles: { font: "DejaVu", fontSize: 9, cellPadding: 5, valign: "middle" },

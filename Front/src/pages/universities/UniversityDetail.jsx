@@ -96,11 +96,39 @@ export default function UniversityDetail() {
 
   const clusters = Array.from(new Set(specialties.map(s => s.cluster?.clusterId))).filter(Boolean).sort();
 
-  const filteredSpecialties = specialties.filter(s => {
+  // 21/97, 75: як ихтисос як бор (ном + рамз) ва бо тартиби алифбо.
+  const uniqueSpecialties = React.useMemo(() => {
+    const seen = new Set();
+    return specialties
+      .filter((s) => {
+        const key = `${(s.name || "").trim().toLowerCase()}|${s.code || ""}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => (a.name || "").localeCompare(b.name || "", "ru"));
+  }, [specialties]);
+
+  const query = searchQuery.trim().toLowerCase();
+  const filteredSpecialties = uniqueSpecialties.filter(s => {
     const matchesCluster = activeCluster ? s.cluster?.clusterId === activeCluster : true;
-    const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (s.name || "").toLowerCase().includes(query);
     return matchesCluster && matchesSearch;
   });
+
+  // 10: агар аз «Рӯйхат» омада бошад — ба рӯйхат, на ба харита.
+  const goBack = () => {
+    if (window.history.state?.idx > 0) navigate(-1);
+    else navigate("/universities");
+  };
+
+  // 23: «Душанбе, Душанбе» — вилоят танҳо вақте ки аз шаҳр фарқ дорад.
+  const place = university
+    ? [university.city, university.region]
+      .filter(Boolean)
+      .filter((v, i, arr) => arr.findIndex((x) => x.trim().toLowerCase() === v.trim().toLowerCase()) === i)
+      .join(", ")
+    : "";
 
   if (loading) {
     return (
@@ -125,8 +153,8 @@ export default function UniversityDetail() {
     <div className="min-h-screen pt-24 pb-24 bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         
-        <button 
-          onClick={() => navigate("/universities")}
+        <button
+          onClick={goBack}
           className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-bold group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -160,8 +188,14 @@ export default function UniversityDetail() {
                 <div className="flex flex-wrap gap-3">
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-xs font-bold text-muted-foreground border border-white/5">
                     <MapPin className="w-3.5 h-3.5" />
-                    {[university.city, university.region].filter(Boolean).join(", ")}
+                    {place}
                   </span>
+
+                  {university.address && (
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-xs font-bold text-muted-foreground border border-white/5">
+                      {university.address}
+                    </span>
+                  )}
 
                   {university.institutionType && (
                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-xs font-bold text-muted-foreground border border-white/5">
@@ -191,7 +225,7 @@ export default function UniversityDetail() {
               <div className="flex gap-8 pt-4 border-t border-white/5">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_specialties")}</p>
-                  <p className="text-xl font-bold text-foreground">{specialties.length}</p>
+                  <p className="text-xl font-bold text-foreground">{uniqueSpecialties.length}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_clusters")}</p>

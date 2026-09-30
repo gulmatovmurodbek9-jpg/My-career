@@ -386,7 +386,10 @@ const Info = () => {
   const certs = career.certification || [];
   const unis = career.universities || [];
   const resources = career.learningResources;
-  const related = career.relatedSpecializations || [];
+  // 76/77: бе такрор ва бе худи ҳамин ихтисос.
+  const ownNames = [career.name, career.nameTranslated].filter(Boolean).map((n) => n.trim().toLowerCase());
+  const related = [...new Set((career.relatedSpecializations || []).map((s) => String(s).trim()).filter(Boolean))]
+    .filter((s) => !ownNames.includes(s.toLowerCase()));
 
   return (
     <div>

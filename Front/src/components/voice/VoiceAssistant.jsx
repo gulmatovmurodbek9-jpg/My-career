@@ -100,11 +100,14 @@ export default function VoiceAssistant() {
         try {
             // sessionStorage, на localStorage: ҳар кушодани нави браузер
             // боз салом медиҳад. Дар рӯзи намоиш ин муҳим аст.
-            greeted = sessionStorage.getItem(GREETED_KEY) === "1";
+            greeted = localStorage.getItem(GREETED_KEY) === "1";
         } catch {
             greeted = false;
         }
         if (greeted) return undefined;
+        // Дар телефон панел қариб тамоми экранро мепӯшонд (ҷустуҷӯ, меню) ва дар
+        // саҳифаҳои дигар ҳисобкунакҳоро — худкор танҳо дар саҳифаи асосӣ ва калон.
+        if (window.location.pathname !== "/" || window.innerWidth < 768) return undefined;
         // Браузер садоро то пахши корбар манъ мекунад. Пас бо пахши аввал
         // дар ҳар ҷои саҳифа салом медиҳем — ба ҷуз худи панел, ки тугмаи
         // худашро дорад.
@@ -121,7 +124,7 @@ export default function VoiceAssistant() {
         const timer = setTimeout(() => {
             setOpen(true);
             try {
-                sessionStorage.setItem(GREETED_KEY, "1");
+                localStorage.setItem(GREETED_KEY, "1");
             } catch {
                 /* режими пинҳонӣ */
             }
@@ -833,7 +836,7 @@ export default function VoiceAssistant() {
     return (
         <>
             {open && (
-                <div data-voice-panel className="fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
+                <div data-voice-panel className="fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
                     <button
                         type="button"
                         onClick={close}
@@ -844,7 +847,7 @@ export default function VoiceAssistant() {
                     </button>
 
                     <div className="flex flex-col items-center px-6 pb-6 pt-9">
-                        <div className="relative h-[15rem] w-full">
+                        <div className="relative h-[10rem] w-full sm:h-[15rem]">
                             <span
                                 ref={orbRef}
                                 className={`pointer-events-none absolute inset-x-8 bottom-2 top-10 rounded-full bg-gradient-to-br ${glow} opacity-30 blur-3xl`}
@@ -967,7 +970,12 @@ export default function VoiceAssistant() {
 
                         {showKeyboard && (
                             <form
-                                onSubmit={(event) => { event.preventDefault(); send(input); }}
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    unlockAudio();
+                                    setStarted(true);
+                                    send(input);
+                                }}
                                 className="mt-3 flex w-full items-center gap-2"
                             >
                                 <input

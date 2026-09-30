@@ -134,7 +134,7 @@ const Quiz = () => {
     }, [showResults, results]);
 
     const handleSaveCareer = async (career) => {
-        if (!token) { navigate("/login"); return; }
+        if (!token) { navigate(`/login?next=${encodeURIComponent("/quiz")}`); return; }
         if (savingId) return;
         setSavingId(career.id);
         try {

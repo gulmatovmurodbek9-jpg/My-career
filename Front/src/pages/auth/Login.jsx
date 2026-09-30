@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "../../lib/config";
 import EmailCodeStep from "../../components/auth/EmailCodeStep";
+import { nextPath } from "../../components/RouteGuards";
 import { googleClientId, loadGoogleIdentity, loginWithGoogleToken } from "../../lib/googleAuth";
 
 const Login = () => {
@@ -41,6 +42,7 @@ const Login = () => {
                                 API,
                                 setAuth,
                                 navigate,
+                                redirectTo: nextPath(window.location.search),
                             });
                         } catch (err) {
                             setError(err.response?.data?.message || err.message || "Google login failed");
@@ -69,7 +71,7 @@ const Login = () => {
         try {
             const { data } = await axios.post(`${API}/auth/login`, { email, password });
             setAuth(data.user, data.access_token);
-            navigate("/dashboard");
+            navigate(nextPath(window.location.search));
         } catch (err) {
             // Ҳисоби тасдиқнашуда: сервер коди нав фиристод — қадами кодро нишон медиҳем.
             if (err.response?.status === 403 && err.response?.data?.code === "EMAIL_NOT_VERIFIED") {
@@ -92,7 +94,7 @@ const Login = () => {
                             onBack={() => setCodeEmail(null)}
                             onVerified={(data) => {
                                 setAuth(data.user, data.access_token);
-                                navigate("/dashboard");
+                                navigate(nextPath(window.location.search));
                             }}
                         />
                     </div>

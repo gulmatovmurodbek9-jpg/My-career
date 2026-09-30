@@ -934,6 +934,20 @@ i18n
             },
             ru: {
                 translation: {
+                    assistant: {
+                        title: "Голосовой помощник", close: "Закрыть", start: "Начать разговор",
+                        stop: "Остановить", resume: "Продолжить", keyboard: "Написать текстом",
+                        placeholder: "Напишите…", send: "Отправить", tap_to_listen: "Прослушать",
+                        state_idle: "Готов", state_listening: "Слушаю", state_thinking: "Думаю", state_speaking: "Говорю",
+                        voice_off: "Звук не дошёл — прочитайте текст",
+                        no_reply: "Извините, я не понял. Скажите ещё раз.",
+                        failed: "Нет связи с сервером. Попробуйте позже.",
+                        mic_denied: "Нет доступа к микрофону. Разрешите его в браузере или напишите текстом.",
+                        mic_lost: "Связь с микрофоном прервалась. Нажмите кнопку микрофона ещё раз.",
+                        no_mic: "Ваш браузер не поддерживает микрофон. Напишите текстом.",
+                        login_first: "Для теста сначала войдите в аккаунт.",
+                        quick: { careers: "Выбрать специальность", universities: "Университеты", quiz: "Тест" },
+                    },
                     not_found: {
                         title: "Страница не найдена",
                         text: "Такой страницы нет или она была перемещена. Продолжите отсюда:",
@@ -1849,6 +1863,20 @@ i18n
             },
             en: {
                 translation: {
+                    assistant: {
+                        title: "Voice assistant", close: "Close", start: "Start conversation",
+                        stop: "Stop", resume: "Continue", keyboard: "Type instead",
+                        placeholder: "Type…", send: "Send", tap_to_listen: "Listen",
+                        state_idle: "Ready", state_listening: "Listening", state_thinking: "Thinking", state_speaking: "Speaking",
+                        voice_off: "No sound — please read the text",
+                        no_reply: "Sorry, I didn't understand. Please say it again.",
+                        failed: "No connection to the server. Please try later.",
+                        mic_denied: "No microphone access. Allow it in the browser or type instead.",
+                        mic_lost: "Microphone connection was lost. Press the microphone button again.",
+                        no_mic: "Your browser does not support the microphone. Please type.",
+                        login_first: "Please sign in first to take the test.",
+                        quick: { careers: "Choose a specialty", universities: "Universities", quiz: "Test" },
+                    },
                     not_found: {
                         title: "Page not found",
                         text: "This page does not exist or has moved. Continue from here:",

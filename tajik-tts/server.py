@@ -33,7 +33,7 @@ MODEL_DIR = os.path.join(HERE, "model")
 PORT = int(os.environ.get("TTS_PORT", "8123"))
 MAX_TEXT = 2000
 # Суръати гап. 1.0 — суст, 1.3 — табиӣ, 1.6 — тез.
-DEFAULT_SPEED = float(os.environ.get("TTS_SPEED", "1.3"))
+DEFAULT_SPEED = float(os.environ.get("TTS_SPEED", "1.15"))
 
 # ── Рақамҳо ────────────────────────────────────────────────────────────
 # Модел рақамро намехонад: «4000» бояд «чор ҳазор» шавад.

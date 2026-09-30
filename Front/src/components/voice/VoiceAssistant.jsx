@@ -56,6 +56,9 @@ export default function VoiceAssistant() {
         voiceLog("state", { state });
     }, [state]);
     const [voiceWarning, setVoiceWarning] = useState(false);
+    // Браузер садоро бе клик манъ кард — тугмаи «Гӯш кардан» ва амали он.
+    const [needTap, setNeedTap] = useState(false);
+    const tapPlayRef = useRef(null);
 
     const playerRef = useRef(null);
     const recorderRef = useRef(null);
@@ -219,7 +222,30 @@ export default function VoiceAssistant() {
         const asked = Date.now();
         player.onplaying = () => voiceLog("play", { wait: Date.now() - asked, text: text.slice(0, 40) });
         player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${voiceLangRef.current}&v=${VOICE_VERSION}`;
-        player.play().then(() => setVoiceWarning(false)).catch(fallback);
+        const started = () => {
+            setVoiceWarning(false);
+            setNeedTap(false);
+        };
+        player.play().then(started).catch((error) => {
+            if (settled) return;
+            voiceLog("play-error", { name: error?.name, message: String(error?.message || "").slice(0, 80) });
+            // AbortError: садои дигар ин play()-ро қатъ кард — хато нест, як бори дигар.
+            // Пештар ин ёварро то охири гап хомӯш мегузошт.
+            if (error?.name === "AbortError") {
+                setTimeout(() => {
+                    if (!settled && playerRef.current === player) player.play().then(started).catch(fallback);
+                }, 150);
+                return;
+            }
+            // Браузер бе клики нав садо намедиҳад (Safari, телефонҳо, баъди навсозӣ) —
+            // тугмаи «🔊 Гӯш кардан» нишон медиҳем; клик ҳамин садоро бозӣ мекунад.
+            if (error?.name === "NotAllowedError") {
+                tapPlayRef.current = () => player.play().then(started).catch(fallback);
+                setNeedTap(true);
+                return;
+            }
+            fallback();
+        });
 
         // Суғурта: агар садо ба ягон сабаб на тамом шавад, на хато диҳад,
         // ёвар набояд то абад интизор монад. 25 сония — аз ҳар ҷумла дарозтар.
@@ -863,6 +889,20 @@ export default function VoiceAssistant() {
                                     </button>
                                 ))}
                             </div>
+                        )}
+
+                        {needTap && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setNeedTap(false);
+                                    tapPlayRef.current?.();
+                                    tapPlayRef.current = null;
+                                }}
+                                className="mt-2 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25"
+                            >
+                                🔊 {t("assistant.tap_to_listen", "Гӯш кардан")}
+                            </button>
                         )}
 
                         {voiceWarning && (

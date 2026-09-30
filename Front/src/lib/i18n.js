@@ -196,7 +196,7 @@ i18n
                         chat_login: "Барои пурсидан дар бораи ин ихтисос ба ҳисоби худ ворид шавед.",
                         chat_disclaimer: "Ҷавобҳо аз маълумоти базаи мо сохта мешаванд. Барои қарори ниҳоӣ маълумоти расмии донишгоҳро тафтиш кунед.",
                         shown: "Нишон дода шуд: {{count}} ихтисос",
-                        cluster_short: "Класстери {{id}}",
+                        cluster_short: "Кластери {{id}}",
                         years: "{{count}} сол",
                         bachelor: "Бакалавр",
                         per_year: "{{price}} сом./сол",
@@ -467,7 +467,7 @@ i18n
                         platform: "Платформа",
                         contact: "Тамос",
                         location: "Душанбе, Тоҷикистон",
-                        copyright: "© 2025 Ихтисоси ман. Сохташуда бо",
+                        copyright: "Ихтисоси ман. Сохташуда бо",
                         copyright_2: "дар Тоҷикистон."
                     },
                     favorites: {
@@ -1318,7 +1318,7 @@ i18n
                         platform: "Платформа",
                         contact: "Контакты",
                         location: "Душанбе, Таджикистан",
-                        copyright: "© 2025 Моя профессия. Сделано с",
+                        copyright: "Моя профессия. Сделано с",
                         copyright_2: "в Таджикистане."
                     },
                     favorites: {
@@ -2233,7 +2233,7 @@ i18n
                         platform: "Platform",
                         contact: "Contact",
                         location: "Dushanbe, Tajikistan",
-                        copyright: "© 2025 My Career. Made with",
+                        copyright: "My Career. Made with",
                         copyright_2: "in Tajikistan."
                     },
                     favorites: {

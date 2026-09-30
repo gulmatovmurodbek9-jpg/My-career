@@ -355,7 +355,7 @@ const Layout = () => {
                     {t("nav.about_desc", "Platform for students and young professionals to explore better career paths in Tajikistan.")}
                   </p>
                   <div className="flex gap-4">
-                    {socialLinks.map((social, i) => (
+                    {socialLinks.filter((social) => social.href && social.href !== "#").map((social, i) => (
                       <a key={i} href={social.href} className="w-12 h-12 rounded-2xl glass-card !p-0 flex items-center justify-center text-muted-foreground hover:text-primary transition-all">
                         <social.icon className="h-5 w-5" />
                       </a>
@@ -369,7 +369,7 @@ const Layout = () => {
                       {t("footer.platform", "Platform")}
                     </h4>
                     <ul className="space-y-4">
-                      {navLinks.slice(0, 3).map((link, i) => (
+                      {navLinks.map((link, i) => (
                         <li key={i}>
                           <Link to={link.to} className="text-sm font-bold text-muted-foreground hover:text-primary transition-all">
                             {link.label}
@@ -388,10 +388,6 @@ const Layout = () => {
                         <MapPin className="h-4 w-4 text-primary" />
                         {t("footer.location", "Dushanbe, Tajikistan")}
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Phone className="h-4 w-4 text-primary" />
-                        +992 123 456 789
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -399,7 +395,7 @@ const Layout = () => {
 
               <div className="mt-10 md:mt-20 pt-6 md:pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.22em] md:tracking-widest leading-relaxed text-center md:text-left">
-                  {t("footer.copyright", "© 2025 Ikhtisosiman. Built with")} <span className="text-rose-500 animate-pulse">❤</span>{" "}
+                  © {new Date().getFullYear()} {t("footer.copyright", "Ikhtisosiman. Built with")} <span className="text-rose-500 animate-pulse">❤</span>{" "}
                   {t("footer.copyright_2", "in Tajikistan.")}
                 </p>
               </div>

@@ -1203,6 +1203,12 @@ export class CareerService {
         });
         if (!rows.length) return { code, source: NTC_SOURCE, years: [], universities: [] };
 
+        // Бали 0 дар ҷадвали НМТ маънои «қабул набуд / маълумот нест»-ро дорад, на
+        // бали воқеиро — 4424 сатр. Пештар саҳифа «0 – 313.6» нишон медод.
+        for (const row of rows) {
+            if (typeof row.score === 'number' && row.score <= 0) row.score = null;
+        }
+
         // Ҷамъбаст аз рӯи сол: аз кадом бал то кадом бал қабул карданд.
         const byYear = new Map<number, any[]>();
         for (const row of rows) {

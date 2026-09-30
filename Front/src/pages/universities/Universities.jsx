@@ -62,6 +62,27 @@ function inferCity(uni) {
   return COORDINATE_CITY_FALLBACKS[key] || null;
 }
 
+// Ҷустуҷӯи «бахшанда»: ҳарфҳои тоҷикӣ ва русӣ ба як шакл, фосилаҳои зиёдатӣ нест.
+// «Хучанд» → «Хуҷанд», «Рудаки» → «Рӯдакӣ», «  ду   калима » → «ду калима».
+const FOLD = { "ҷ": "ч", "ӯ": "у", "ӣ": "и", "ҳ": "х", "қ": "к", "ғ": "г", "ё": "е", "й": "и" };
+const foldText = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/[ҷӯӣҳқғёй]/g, (char) => FOLD[char])
+    .replace(/[«»"'`().,-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// Ҳамаи номҳо ва шаҳрҳо — тоҷикӣ, русӣ ва англисӣ (аз тарҷумаҳо).
+const searchText = (uni) =>
+  foldText(
+    [
+      uni.name, uni.nameTranslated, uni.shortName, uni.city, uni.region,
+      uni.translations?.ru?.name, uni.translations?.ru?.city,
+      uni.translations?.en?.name, uni.translations?.en?.city,
+    ].filter(Boolean).join(" | "),
+  );
+
 export default function Universities() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -71,12 +92,22 @@ export default function Universities() {
   const [searchQuery, setSearchQuery] = useState(
     () => new URLSearchParams(window.location.search).get("q") ?? "",
   );
+  // 9: реҷаи «Рӯйхат» ва ҷустуҷӯ баъд аз F5 гум намешаванд — дар URL нигоҳ медорем.
+  const [viewMode, setViewMode] = useState(
+    () => (new URLSearchParams(window.location.search).get("view") === "list" ? "list" : "map"),
+  );
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (searchQuery.trim()) params.set("q", searchQuery.trim()); else params.delete("q");
+    if (viewMode === "list") params.set("view", "list"); else params.delete("view");
+    const query = params.toString();
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+  }, [searchQuery, viewMode]);
 
   useEffect(() => {
     const asked = new URLSearchParams(window.location.search).get("q");
     if (asked) setSearchQuery(asked);
   }, [location.search]);
-  const [viewMode, setViewMode] = useState("map");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -96,16 +127,15 @@ export default function Universities() {
     fetchUniversities();
   }, []);
 
-  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const normalizedQuery = foldText(searchQuery);
 
   const filteredUnis = useMemo(
     () =>
       universities.filter((uni) => {
         if (!normalizedQuery) return true;
-
-        return [uni.name, uni.nameTranslated, uni.city, uni.shortName]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(normalizedQuery));
+        // Ҳар калимаи ҷустуҷӯ бояд дар ягон ном бошад («миллии душанбе» ҳам кор мекунад).
+        const haystack = searchText(uni);
+        return normalizedQuery.split(" ").every((word) => haystack.includes(word));
       }),
     [normalizedQuery, universities]
   );
@@ -146,7 +176,7 @@ export default function Universities() {
 
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: t("career_page.u_stat_institutions"), value: universities.length },
+                  { label: t("career_page.u_stat_institutions"), value: filteredUnis.length },
                   { label: t("career_page.u_stat_cities"), value: cityCount },
                   { label: t("career_page.u_stat_programs"), value: totalPrograms },
                 ].map((stat) => (
@@ -170,12 +200,24 @@ export default function Universities() {
             <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 transition-colors focus-within:border-primary/50">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
-                type="text"
+                type="search"
+                maxLength={100}
+                aria-label={t("career_page.u_search")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("career_page.u_search")}
-                className="w-full bg-transparent text-sm font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
+                className="w-full bg-transparent text-sm font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Тоза кардан"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  ×
+                </button>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">

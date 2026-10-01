@@ -19,7 +19,6 @@ const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
 const AiChat = lazy(() => import("./pages/dashboard/AiChat"));
 const CareerAdvisorReport = lazy(() => import("./pages/dashboard/CareerAdvisorReport"));
 const CareerCompare = lazy(() => import("./pages/dashboard/CareerCompare"));
-const AppointmentPanel = lazy(() => import("./pages/dashboard/AppointmentPanel"));
 const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
 const Favorites = lazy(() => import("./pages/favorites/Favorites"));
 
@@ -28,7 +27,6 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminCareers = lazy(() => import("./pages/admin/AdminCareers"));
 const AdminClusters = lazy(() => import("./pages/admin/AdminClusters"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
-const AdminSpecialists = lazy(() => import("./pages/admin/AdminSpecialists"));
 
 const RouteFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -57,7 +55,7 @@ const App = () => {
                 <Route path="/dashboard/ai-chat" element={<AiChat />} />
                 <Route path="/dashboard/ai-advisor" element={<CareerAdvisorReport />} />
                 <Route path="/dashboard/compare" element={<CareerCompare />} />
-                <Route path="/dashboard/appointments" element={<AppointmentPanel />} />
+                <Route path="/dashboard/appointments" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard/plan" element={<ApplicationPlan />} />
                 <Route path="/favorites" element={<Favorites />} />
               </Route>
@@ -68,7 +66,7 @@ const App = () => {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/careers" element={<AdminCareers />} />
                 <Route path="/admin/clusters" element={<AdminClusters />} />
-                <Route path="/admin/specialists" element={<AdminSpecialists />} />
+                <Route path="/admin/specialists" element={<Navigate to="/admin" replace />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
               </Route>
             </Route>

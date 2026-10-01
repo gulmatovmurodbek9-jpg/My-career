@@ -6,7 +6,6 @@ import {
   Briefcase,
   FolderKanban,
   Users,
-  UserRoundCheck,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -31,7 +30,6 @@ const AdminLayout = () => {
     { path: "/admin", label: t("admin.nav.dashboard"), icon: LayoutDashboard, end: true },
     { path: "/admin/careers", label: t("admin.nav.careers"), icon: Briefcase },
     { path: "/admin/clusters", label: t("admin.nav.clusters"), icon: FolderKanban },
-    { path: "/admin/specialists", label: t("admin.nav.specialists"), icon: UserRoundCheck },
     { path: "/admin/users", label: t("admin.nav.users"), icon: Users },
   ];
 

@@ -146,7 +146,6 @@ const Layout = () => {
   const accountLinks = isAuthenticated
     ? [
         { to: "/dashboard", label: t("nav.dashboard", "Панел") },
-        { to: "/dashboard/appointments", label: t("nav.appointments", "Машваратҳо") },
       ]
     : [];
 

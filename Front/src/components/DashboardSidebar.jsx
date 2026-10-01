@@ -6,7 +6,6 @@ import {
     MessageCircle,
     Scale,
     FileCheck,
-    CalendarDays,
     Bookmark,
     ChevronRight,
     ShieldCheck
@@ -26,7 +25,6 @@ const DashboardSidebar = () => {
         { icon: MessageCircle, label: t('nav.ai_advisor'), to: '/dashboard/ai-chat' },
         { icon: Scale, label: t('nav.compare'), to: '/dashboard/compare' },
         { icon: FileCheck, label: t('nav.plan'), to: '/dashboard/plan' },
-        { icon: CalendarDays, label: t('nav.appointments'), to: '/dashboard/appointments' },
         { icon: Bookmark, label: t('nav.favorites'), to: '/favorites' },
         ...(user?.role === 'admin'
             ? [{ icon: ShieldCheck, label: t('nav.admin', 'Панели админ'), to: '/admin' }]

@@ -9,8 +9,10 @@ from transformers import VitsModel, AutoTokenizer
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "Back", "nest-backend")
-SRC = os.path.join(HERE, "model")
-SPEED = 1.15  # ҳамон суръати сайт
+# Модели дигар: SRC=model-eng PREFIX=voice-model-eng- .venv\Scripts\python.exe export-noise-variants.py n20-d30
+SRC = os.path.join(HERE, os.environ.get("SRC", "model"))
+PREFIX = os.environ.get("PREFIX", "voice-model-")
+SPEED = float(os.environ.get("SPEED", "1.15"))  # ҳамон суръати сайт
 
 VARIANTS = {
     "n667-d80": (0.667, 0.8),   # ҳозира (пешфарзи MMS)
@@ -38,9 +40,9 @@ for name, (noise, noise_dur) in VARIANTS.items():
     model.speaking_rate = SPEED
     model.noise_scale = noise
     model.noise_scale_duration = noise_dur
-    out = os.path.join(ROOT, f"voice-model-{name}")
+    out = os.path.join(ROOT, f"{PREFIX}{name}")
     os.makedirs(os.path.join(out, "onnx"), exist_ok=True)
-    sample = tok("Хуш омадед! Ман ёвари шумо ҳастам.", return_tensors="pt")
+    sample = tok(os.environ.get("SAMPLE", "Хуш омадед! Ман ёвари шумо ҳастам."), return_tensors="pt")
     started = time.time()
     torch.onnx.export(
         Wrapper(model), (sample["input_ids"], sample["attention_mask"]), os.path.join(out, "onnx", "model.onnx"),
@@ -52,7 +54,7 @@ for name, (noise, noise_dur) in VARIANTS.items():
     meta = {
         "vocab": tok.get_vocab(), "addBlank": bool(tok.add_blank), "normalize": bool(tok.normalize),
         "padToken": tok.pad_token, "samplingRate": model.config.sampling_rate, "speed": SPEED,
-        "noiseScale": noise, "noiseScaleDuration": noise_dur, "source": "tajik-tts/model",
+        "noiseScale": noise, "noiseScaleDuration": noise_dur, "source": f"tajik-tts/{os.path.basename(SRC)}",
     }
     json.dump(meta, open(os.path.join(out, "tajik-tts.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"{name}: noise {noise}, duration {noise_dur} → {out} ({time.time() - started:.0f} с)")

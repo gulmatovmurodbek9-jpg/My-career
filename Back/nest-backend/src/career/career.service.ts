@@ -1450,24 +1450,28 @@ export class CareerService {
             select: ['id', 'name', 'description', 'purpose', 'skills', 'likesCount'],
         });
 
-        const keywords: string[] = (userScores?.specialtyKeywords || [])
-            .map((k: string) => k.toLowerCase())
-            .filter(Boolean);
+        // Калидвожа танҳо аз аввали калима: пештар «ай» (AI) дар «ҳайвон», «тайёр»
+        // ҳам ёфт мешуд ва ихтисосҳои тасодуфӣ мебаромаданд.
+        const keywords: string[] = [...new Set<string>((userScores?.specialtyKeywords || [])
+            .map((k: string) => String(k).toLowerCase().trim())
+            .filter((k: string) => k.length >= 3))];
+        const words = (text: string): string[] => text.toLowerCase().split(/[^0-9a-zа-яёӣӯқғҳҷ]+/i).filter(Boolean);
+        const hits = (list: string[], keyword: string): boolean => list.some((word) => word.startsWith(keyword));
 
         const scoreOf = (career: Career): number => {
             if (!keywords.length) return 0;
 
-            const name = (career.name || '').toLowerCase();
-            const body = [
+            const name = words(career.name || '');
+            const body = words([
                 career.description || '',
                 career.purpose || '',
                 ...(career.skills?.technical || []),
                 ...(career.skills?.soft || []),
-            ].join(' ').toLowerCase();
+            ].join(' '));
 
             return keywords.reduce((total, keyword) => {
-                if (name.includes(keyword)) return total + 3;
-                if (body.includes(keyword)) return total + 1;
+                if (hits(name, keyword)) return total + 4;
+                if (hits(body, keyword)) return total + 1;
                 return total;
             }, 0);
         };

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -24,6 +24,15 @@ export class QuizController {
     getSpecialtyQuestions(@Req() req: any) {
         const clusterNumber = req.query.clusterNumber;
         return this.quizService.getSpecialtyQuestions(clusterNumber);
+    }
+
+    // Байни қадами 1 ва 2: танҳо холҳо, бе AI ва бе база — ҷавоб фавран.
+    // Пештар дар ин ҷо «submit»-и пурра (бо маслиҳати AI) чанд сония интизор мекард.
+    @Post('score')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Холҳои кластерҳо барои ҷавобҳои то ин дам (бе AI)' })
+    score(@Body() dto: SubmitQuizDto) {
+        return { scores: this.quizService.calculateScores(dto) };
     }
 
     @Post('submit')

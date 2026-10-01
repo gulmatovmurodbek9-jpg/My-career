@@ -40,6 +40,22 @@ const LogoMark = ({ className = "" }) => (
     <img src="/logo.png" alt="" aria-hidden="true" className={`object-contain ${className}`} />
 );
 
+// Тартиби ҷавобҳо барои ҳар корбар омехта (ҷои ҷавоб ба самт ишора накунад),
+// вале дар давоми як сессия барои ҳамон савол собит.
+const SHUFFLE_SEED = Math.floor(Math.random() * 1e9);
+const shuffledOrder = (id, count) => {
+    let h = SHUFFLE_SEED;
+    for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const order = Array.from({ length: count }, (_, i) => i);
+    for (let i = count - 1; i > 0; i--) {
+        h = (h * 1103515245 + 12345) >>> 0;
+        const j = h % (i + 1);
+        [order[i], order[j]] = [order[j], order[i]];
+    }
+    return order;
+};
+const STAGE2_COUNT = 5;
+
 const Quiz = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -63,6 +79,7 @@ const Quiz = () => {
     const [clusterLastPage, setClusterLastPage] = useState(1);
     const [refreshingCareers, setRefreshingCareers] = useState(false);
     const [specOffset, setSpecOffset] = useState(0);
+    const [showAllMatched, setShowAllMatched] = useState(false);
 
     useEffect(() => {
         if (user?.savedCareers) {
@@ -127,11 +144,6 @@ const Quiz = () => {
         }
     };
 
-    useEffect(() => {
-        if (showResults && results?.topCluster?.id && clusterCareers.length === 0) {
-            fetchClusterCareers();
-        }
-    }, [showResults, results]);
 
     const handleSaveCareer = async (career) => {
         if (!token) { navigate(`/login?next=${encodeURIComponent("/quiz")}`); return; }
@@ -166,13 +178,16 @@ const Quiz = () => {
     // Ҳолати охирин: тугмаҳои саволи қаблӣ ҳангоми аниматсияи гузариш ҳанӯз дар экран
     // ҳастанд ва бо маълумоти кӯҳна кор мекарданд (қадами 2 такрор илова мешуд).
     const latest = useRef({});
-    latest.current = { questions, currentStep, quizStage, answers };
+    latest.current = { questions, currentStep, quizStage, answers, idle: !showResults && !isAnalyzing && !askRetake && !loading };
 
     const handleAnswer = async (selectedValue, clickedQuestionId) => {
         if (busyRef.current) return;
         const { questions, currentStep, quizStage, answers } = latest.current;
         const questionId = questions[currentStep]?.id;
         if (!questionId || (clickedQuestionId && clickedQuestionId !== questionId)) return;
+        if (questionId === "tiebreak") {
+            selectedValue = questions[currentStep].options[Number(selectedValue)]?.value ?? selectedValue;
+        }
         const newAnswers = [
             ...answers.filter((answer) => answer.questionId !== questionId),
             { questionId, selectedValue },
@@ -182,24 +197,42 @@ const Quiz = () => {
         if (currentStep < questions.length - 1) {
             setCurrentStep(currentStep + 1);
             latest.current.currentStep = currentStep + 1;
-        } else if (quizStage === 1) {
+        } else if (quizStage === 1 || quizStage === "tiebreak") {
             busyRef.current = true;
             setStageLoading(true);
             try {
-                const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
-                const { data: stage1Result } = await axios.post(
-                    url,
-                    { answers: newAnswers, lang: i18n.language },
-                    { headers }
-                );
-                const clusterNumber =
-                    stage1Result.topCluster?.clusterNumber ||
-                    stage1Result.topType?.replace(/[^0-9]/g, '') ||
-                    '1';
+                let clusterKey;
+                if (quizStage === "tiebreak") {
+                    clusterKey = String(selectedValue);
+                } else {
+                    // Танҳо холҳо (бе AI) — ҷавоб фавран.
+                    const { data } = await axios.post(`${API}/quiz/score`, { answers: newAnswers });
+                    const ranked = Object.entries(data?.scores?.mmtClusters || {})
+                        .sort((a, b) => b[1] - a[1]);
+                    const [first, second] = ranked;
+                    // Ду самт қариб баробар — аз худи корбар мепурсем, на тасодуфан интихоб.
+                    if (first && second && first[1] - second[1] < 0.15 * Math.max(first[1], 1)) {
+                        const tiebreak = {
+                            id: "tiebreak",
+                            part: "tiebreak",
+                            type: "refinement",
+                            question: {
+                                tj: "Ду самт ба шумо баробар наздик баромад. Кадомаш ба дилатон наздиктар аст?",
+                                ru: "Два направления вам одинаково близки. Какое ближе вашему сердцу?",
+                                en: "Two directions suit you equally. Which one is closer to your heart?",
+                            },
+                            options: [first, second].map(([key]) => ({ value: key, cluster: key })),
+                        };
+                        setQuestions((prev) => [...prev.filter((q) => q.id !== "tiebreak"), tiebreak]);
+                        setQuizStage("tiebreak");
+                        setCurrentStep((prev) => prev + 1);
+                        return;
+                    }
+                    clusterKey = first?.[0] || "c1";
+                }
                 const { data: stage2Qs } = await axios.get(
                     `${API}/quiz/specialty-questions`,
-                    { params: { clusterNumber } }
+                    { params: { clusterNumber: clusterKey.replace(/\D/g, "") || "1" } }
                 );
                 if (stage2Qs?.length > 0) {
                     setQuestions(prev => {
@@ -209,10 +242,12 @@ const Quiz = () => {
                     setQuizStage(2);
                     setCurrentStep(prev => prev + 1);
                 } else {
+                    busyRef.current = false;
                     submitQuiz(newAnswers);
                 }
             } catch (err) {
                 console.error('Stage 1 error:', err);
+                busyRef.current = false;
                 submitQuiz(newAnswers);
             } finally {
                 setStageLoading(false);
@@ -222,6 +257,27 @@ const Quiz = () => {
             submitQuiz(newAnswers);
         }
     };
+
+    // Клавиатура: A–E ё 1–5 ҷавобро интихоб мекунад (ба ҳамон тартибе, ки дар экран аст).
+    const answerRef = useRef(handleAnswer);
+    answerRef.current = handleAnswer;
+    useEffect(() => {
+        const onKey = (event) => {
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
+            if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName || "")) return;
+            const { questions: list, currentStep: step, idle } = latest.current;
+            if (!idle) return;
+            const question = list?.[step];
+            if (!question?.options?.length) return;
+            const key = event.key.toLowerCase();
+            const position = /^[1-9]$/.test(key) ? Number(key) - 1 : "abcde".indexOf(key);
+            if (position < 0 || position >= question.options.length) return;
+            const idx = shuffledOrder(question.id, question.options.length)[position];
+            answerRef.current(idx, question.id);
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
 
     // Ҷавобҳо бо матни савол ва интихоб — барои саҳифаи натиҷа ва ёвар.
     const enrich = (data, finalAnswers) => {
@@ -314,7 +370,8 @@ const Quiz = () => {
         setShowResults(true);
     };
 
-    const progress = questions.length > 0 ? ((currentStep + 1) / questions.length) * 100 : 0;
+    const totalExpected = quizStage === 2 ? questions.length : questions.filter((q) => q.id !== "tiebreak").length + STAGE2_COUNT;
+    const progress = totalExpected > 0 ? Math.min(100, ((currentStep + 1) / totalExpected) * 100) : 0;
     const answeredCount = answers.length;
     const stageLabel = quizStage === 1 ? t('misc.quiz_stage_1') : t('misc.quiz_stage_2');
 
@@ -430,298 +487,163 @@ const Quiz = () => {
 
     if (showResults && results) {
         const topCluster = results.topCluster;
-        const uniqueSpecs = (topCluster?.specializations || []).filter(
+        // Ихтисосҳое, ки аз рӯи ҷавобҳои қадами 2 интихоб шудаанд (на рӯйхати умумии кластер).
+        const matched = (topCluster?.specializations || []).filter(
             (spec, index, list) => list.findIndex((other) => other.name === spec.name) === index,
         );
-        const visibleSpecs = uniqueSpecs.length > SPEC_WINDOW
-            ? Array.from({ length: SPEC_WINDOW }, (_, k) => uniqueSpecs[(specOffset + k) % uniqueSpecs.length])
-            : uniqueSpecs;
-        const personalityDesc = results.personality || "";
+        const visibleMatched = showAllMatched ? matched : matched.slice(0, 6);
         const aiAdvice = results.aiAdvice || "";
+        // Холҳо дар миқёси 0–40 (сервер ба ин миқёс мувофиқ мекунад).
         const rankedClusters = Object.entries(results.scores?.mmtClusters || {})
             .map(([key, score]) => ({
                 key,
+                number: Number(key.replace(/\D/g, "")),
                 label: mmtClusterLabel(key),
                 raw: Number(score) || 0,
-                percent: Math.min(100, Math.round(((Number(score) || 0) / 40) * 100)),
+                percent: Math.max(0, Math.min(100, Math.round(((Number(score) || 0) / 40) * 100))),
             }))
             .sort((a, b) => b.raw - a.raw);
-        // Пештар баробарии се самт (30/30/30) ҳам «50%» нишон медод. Акнун: пешсафӣ
-        // нисбат ба самти дуюм; агар баробар бошанд — рақам нест, матни фаҳмо.
-        const lead = rankedClusters.length > 1
-            ? rankedClusters[0].raw - rankedClusters[1].raw
-            : rankedClusters[0]?.raw || 0;
-        const isTie = rankedClusters.length > 1 && lead <= 0;
-        const confidence = rankedClusters[0]?.raw
-            ? Math.max(5, Math.min(95, Math.round((lead / rankedClusters[0].raw) * 100)))
-            : 0;
-        const strongestTraits = rankedClusters.slice(0, 3);
+        const [first, second] = rankedClusters;
+        const isClose = first && second && first.raw - second.raw < 0.15 * Math.max(first.raw, 1);
 
         return (
-            <div className="max-w-4xl mx-auto py-8 px-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+            <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
+                <motion.section
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-card glass-card-glow p-8 text-center space-y-10"
+                    className="rounded-[2rem] border border-border bg-card p-6 sm:p-8 text-center"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
-                        <Trophy className="w-4 h-4" />
-                        {t('quiz.analysis_success', "ТАҲЛИЛИ ПСИХОЛОГӢ БО МУВАФФАҚИЯТ АНҶОМ ЁФТ")}
+                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary">
+                        <Trophy className="w-4 h-4" aria-hidden="true" />
+                        {t('quiz.analysis_success')}
                     </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase leading-[0.9]">
-                            {t('quiz.your_results_title', "Натиҷаҳои Шумо")}
-                        </h2>
-                        <p className="text-muted-foreground max-w-lg mx-auto text-sm font-medium">
-                            {t('quiz.your_results_desc', "Профили шумо муайян карда шуд. Дар асоси хоҳишҳо ва қобилиятҳои шумо, касби идеалии шумо дар соҳаи зерин аст:")}
+                    <p className="mt-5 text-sm font-semibold text-muted-foreground">{t('quiz.your_direction', 'Самти ба шумо мувофиқ')}</p>
+                    <h1 className="mt-1 text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+                        {topCluster ? clusterLabel(t, topCluster) : t('quiz.cluster_not_defined')}
+                    </h1>
+                    {topCluster && (
+                        <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+                            {clusterDescription(t, topCluster, "")}
                         </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-                        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-2">
-                            <div className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary">
-                                <Shield className="w-4 h-4" />
-                                {t('quiz.confidence_label', 'Эътимоднокӣ')}
-                            </div>
-                            <div className="text-3xl font-black text-foreground">{isTie ? "=" : `${confidence}%`}</div>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                {isTie
-                                    ? t('quiz.confidence_tie')
-                                    : t('quiz.confidence_desc', 'Ин нишон медиҳад, ки натиҷаи аввалини шумо аз дуюм чанд қадар пеш аст.')}
-                            </p>
-                        </div>
-                        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-2 md:col-span-2">
-                            <div className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary">
-                                <TrendingUp className="w-4 h-4" />
-                                {t('quiz.top_matches_label', 'Беҳтарин мувофиқат')}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {strongestTraits.map((cluster) => (
-                                    <span
-                                        key={cluster.key}
-                                        className="px-3 py-2 rounded-2xl bg-primary/10 border border-primary/20 text-xs font-black uppercase tracking-wider text-primary"
-                                    >
-                                        {cluster.label} · {cluster.percent}%
-                                    </span>
-                                ))}
-                            </div>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                {t('quiz.top_matches_desc', 'Инҳо самтҳоеанд, ки аз рӯи ҷавобҳои шумо бештар қавӣ баромаданд.')}
-                            </p>
-                        </div>
-                    </div>
-
-                    {aiAdvice && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="p-8 rounded-3xl bg-primary/10 border border-primary/20 text-left space-y-4 relative overflow-hidden"
-                        >
-                            <div className="absolute -right-10 -top-10 opacity-10">
-                                <Sparkles size={160} className="text-primary" />
-                            </div>
-                            <div className="inline-flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest relative z-10">
-                                <Sparkles className="w-4 h-4" />
-                                {t('quiz.ai_advice_title', "Маслиҳати AI (MyCareer AI)")}
-                            </div>
-                            <p className="text-sm leading-relaxed font-medium text-foreground/90 relative z-10 whitespace-pre-line">
-                                {aiAdvice}
-                            </p>
-                        </motion.div>
                     )}
+                    {isClose && second && (
+                        <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
+                            {t('quiz.close_second', { defaultValue: 'Самти «{{name}}» низ ба шумо хеле наздик аст — бо ихтисосҳои он ҳам шинос шавед.', name: second.label })}
+                        </p>
+                    )}
+                </motion.section>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                        <div className="p-8 rounded-3xl bg-primary/5 border border-primary/20 space-y-4 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
-                                <Award size={80} className="text-primary" />
-                            </div>
-                            <div className="inline-flex items-center gap-2 text-primary text-[9px] font-black uppercase tracking-widest">
-                                <Target className="w-4 h-4" />
-                                {t('quiz.suggested_cluster', "Кластери Тавсияшуда")}
-                            </div>
-                            {topCluster ? (
-                                <>
-                                    <h3 className="text-2xl font-black uppercase leading-tight">{clusterLabel(t, topCluster)}</h3>
-                                    <p className="text-sm opacity-70 leading-relaxed italic">
-                                        "{clusterDescription(t, topCluster, t('quiz.cluster_reason', "Ин кластер дар асоси профили RIASEC-и шумо интихоб шудааст."))}"
-                                    </p>
-                                    <div className="pt-4 space-y-2">
-                                        <div className="text-[9px] font-black uppercase tracking-widest opacity-40">
-                                            {t('quiz.suggested_specializations', "Ихтисосҳои Пешниҳодшуда:")}
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {visibleSpecs.map((spec) => (
-                                                <Link key={spec.id || spec.name} to={spec.id ? `/info/${spec.id}` : '#'}>
-                                                    <span className="block cursor-pointer rounded-full bg-primary px-3 py-1.5 text-[13px] font-semibold leading-snug text-white">
-                                                        {spec.name}
-                                                    </span>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-sm opacity-50 italic">{t('quiz.cluster_not_defined', "Кластер ҳанӯз муайян нашудааст.")}</div>
-                            )}
-                        </div>
-
-                        <div className="p-8 rounded-3xl bg-secondary/5 border border-secondary/20 space-y-4 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
-                                <Users size={80} className="text-secondary" />
-                            </div>
-                            <div className="inline-flex items-center gap-2 text-secondary text-[9px] font-black uppercase tracking-widest">
-                                <LogoMark className="w-4 h-4" />
-                                {t('quiz.personality_type', "Навъи Шаксият")}: {results.topType}
-                            </div>
-                            <p className="text-sm leading-relaxed font-medium">
-                                {personalityDesc}
-                            </p>
-                            <div className="pt-4 p-3 rounded-2xl bg-white/5 border border-white/5 space-y-1">
-                                <div className="text-[8px] font-black uppercase tracking-widest opacity-40">
-                                    {t('quiz.reasoning_title', "Чаро ин касб? (Reasoning)")}
+                <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
+                    <h2 className="text-lg font-black text-foreground">{t('quiz.all_directions', 'Ҳамаи панҷ самт')}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{t('quiz.all_directions_hint', 'Чӣ қадар ҷавобҳои шумо ба ҳар самт мувофиқ омаданд.')}</p>
+                    <ul className="mt-5 space-y-3.5">
+                        {rankedClusters.map((cluster, index) => (
+                            <li key={cluster.key}>
+                                <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                                    <span className={`font-bold ${index === 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                                        {cluster.number}. {cluster.label}
+                                    </span>
+                                    <span className="font-black tabular-nums text-foreground">{cluster.percent}%</span>
                                 </div>
-                                <p className="text-[10px] italic leading-tight opacity-70">
-                                    "{t('quiz.analysis_match', { defaultValue: "Интихоби шумо дар асоси мувофиқати {{type}} ва талаботи кластери {{cluster}} анҷом дода шудааст.", type: results.topType, cluster: clusterLabel(t, topCluster) })}"
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 py-4">
-                        {results.scores?.mmtClusters && Object.entries(results.scores.mmtClusters).map(([cat, score], i) => (
-                            <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5 text-center group hover:bg-white/10 transition-colors">
-                                <div className="text-[7px] font-black uppercase tracking-widest text-primary mb-1">{t('misc2.cluster_num', { number: cat.replace('c', '') })}</div>
-                                <div className="text-xl font-black">{Math.round((score / 12) * 100)}%</div>
-                                <div className="mt-1.5 h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted" role="presentation">
                                     <motion.div
                                         initial={{ width: 0 }}
-                                        animate={{ width: `${Math.min(100, (score / 12) * 100)}%` }}
-                                        className="h-full bg-primary"
+                                        animate={{ width: `${cluster.percent}%` }}
+                                        transition={{ duration: 0.6, delay: index * 0.06 }}
+                                        className={`h-full rounded-full ${index === 0 ? "bg-primary" : "bg-primary/35"}`}
                                     />
                                 </div>
-                            </div>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
+                </section>
 
-                    {clusterCareers.length > 0 && (
-                        <div className="pt-4 space-y-6 text-left">
-                            <div className="rounded-[2rem] border border-primary/15 bg-primary/5 p-6 space-y-5">
-                                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                                    <div>
-                                        <div className="text-[9px] font-black uppercase tracking-[0.25em] text-primary mb-1">
-                                            {t('quiz.your_cluster_careers', "Ихтисосҳои тавсияшуда")}
-                                        </div>
-                                        <h3 className="text-xl font-black text-foreground uppercase tracking-tighter">
-                                            {clusterLabel(t, topCluster)}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            {t('quiz.results_based', "Натиҷаҳо дар асоси 15 савол (Кластер + Ихтисос) муайян шудаанд.")}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => fetchClusterCareers(true)}
-                                            disabled={refreshingCareers}
-                                            aria-busy={refreshingCareers}
-                                            className="w-10 h-10 rounded-xl border border-border bg-card flex items-center justify-center hover:bg-muted disabled:cursor-wait cursor-pointer"
-                                            title={t("misc.quiz_refresh")}
-                                            aria-label={t("misc.quiz_refresh")}
-                                        >
-                                            {refreshingCareers
-                                                ? <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                                                : <Zap className="w-5 h-5 text-primary" />}
-                                        </button>
-                                        {savedIds.size > 0 && (
-                                            <motion.button
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                onClick={() => navigate("/favorites")}
-                                                className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary text-white text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity shadow-lg shadow-secondary/20 cursor-pointer"
-                                            >
-                                                <CheckCircle className="w-4 h-4" />
-                                                {t('quiz.my_saves', "Захираҳои ман")} ({savedIds.size})
-                                            </motion.button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {clusterCareers.slice(0, 12).map((career, idx) => {
-                                        const isSaved = savedIds.has(career.id);
-                                        return (
-                                            <motion.div
-                                                key={career.id}
-                                                initial={{ opacity: 0, y: 16 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: idx * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                                                className="p-5 flex flex-col gap-3 rounded-[1.75rem] border border-white/10 bg-white/6 shadow-xl relative overflow-hidden group/card hover:bg-white/10 transition-colors"
-                                            >
-                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-transparent pointer-events-none opacity-50 group-hover/card:opacity-100 transition-opacity" />
-
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover/card:scale-110 transition-transform">
-                                                        <Briefcase className="w-5 h-5 text-primary" />
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleSaveCareer(career)}
-                                                        disabled={savingId === career.id}
-                                                        className={"w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer flex-shrink-0 " + (isSaved ? "bg-secondary/20 text-secondary border border-secondary/30" : "bg-white/5 text-muted-foreground border border-white/10 hover:bg-secondary/10 hover:text-secondary hover:border-secondary/30")}
-                                                    >
-                                                        <Bookmark className={"w-4 h-4 " + (isSaved ? "fill-current" : "")} />
-                                                    </button>
-                                                </div>
-
-                                                <div>
-                                                    <h4 className="font-extrabold text-sm text-foreground leading-tight line-clamp-2">
-                                                        {career.name}
-                                                    </h4>
-                                                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed opacity-70">
-                                                        {career.description || career.purpose || ""}
-                                                    </p>
-                                                    <div className="mt-3 flex flex-wrap gap-2 items-center">
-                                                        {career.tuitionFee ? (
-                                                            <span className="px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-wider">
-                                                                {t('misc2.per_year_long', { price: career.tuitionFee.toLocaleString('ru-RU') })}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-wider">
-                                                                {t('quiz.no_price', 'Нархнома: Муайян нест')}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <Link
-                                                    to={"/info/" + career.id}
-                                                    className="mt-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary/80 hover:text-primary transition-colors group/link pt-2"
-                                                >
-                                                    {t('common.read_more', "Маълумоти бештар")}
-                                                    <ArrowRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
-                                                </Link>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                {aiAdvice && (
+                    <section className="rounded-[2rem] border border-primary/25 bg-primary/5 p-6 sm:p-8">
+                        <div className="flex items-center gap-2 text-sm font-black text-primary">
+                            <Sparkles className="w-4 h-4" aria-hidden="true" />
+                            {t('quiz.ai_advice_title')}
                         </div>
+                        <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">{aiAdvice}</p>
+                    </section>
+                )}
+
+                {matched.length > 0 && (
+                    <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
+                        <h2 className="text-lg font-black text-foreground">{t('quiz.matched_careers', 'Ихтисосҳое, ки ба ҷавобҳои шумо мувофиқанд')}</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('quiz.matched_hint', 'Аз рӯи ҷавобҳои қисми дуюм интихоб шуданд — аввал мувофиқтаринҳо.')}</p>
+                        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {visibleMatched.map((career, index) => {
+                                const isSaved = savedIds.has(career.id);
+                                return (
+                                    <article key={career.id || career.name} className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/30 p-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex items-start gap-3 min-w-0">
+                                                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-black text-primary">{index + 1}</span>
+                                                <h3 className="text-[15px] font-bold leading-snug text-foreground">
+                                                    <Link to={`/info/${career.id}`} className="hover:text-primary hover:underline">{career.name}</Link>
+                                                </h3>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSaveCareer(career)}
+                                                disabled={savingId === career.id}
+                                                aria-pressed={isSaved}
+                                                aria-label={t('career_page.save')}
+                                                title={t('career_page.save')}
+                                                className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border transition-colors cursor-pointer ${isSaved ? "border-secondary/40 bg-secondary/15 text-secondary" : "border-border text-muted-foreground hover:text-secondary"}`}
+                                            >
+                                                <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
+                                            </button>
+                                        </div>
+                                        {(career.description || career.purpose) && (
+                                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{career.description || career.purpose}</p>
+                                        )}
+                                        <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+                                            <span className="text-xs font-bold text-muted-foreground">
+                                                {career.tuitionFee
+                                                    ? t('misc2.per_year_long', { price: career.tuitionFee.toLocaleString('ru-RU') })
+                                                    : ""}
+                                            </span>
+                                            <Link to={`/info/${career.id}`} className="inline-flex items-center gap-1 text-xs font-black text-primary-strong hover:underline">
+                                                {t('common.read_more')}
+                                                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                                            </Link>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                        {matched.length > 6 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowAllMatched((v) => !v)}
+                                className="mt-4 w-full rounded-xl border border-border py-3 text-sm font-bold text-foreground hover:bg-muted cursor-pointer"
+                            >
+                                {showAllMatched ? t('quiz.show_less', 'Камтар нишон диҳед') : t('quiz.show_more', { defaultValue: 'Боз {{count}} ихтисос', count: matched.length - 6 })}
+                            </button>
+                        )}
+                    </section>
+                )}
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                    {topCluster?.id && (
+                        <Link to={`/careers?clusterId=${topCluster.id}`} className="btn-primary flex-1 justify-center !py-4 text-sm">
+                            {t('quiz.more_in_cluster', 'Ҳамаи ихтисосҳои ин самт')}
+                            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                        </Link>
                     )}
-                    
-                    <div className="pt-4 flex flex-col md:flex-row gap-4 justify-center">
-                        <Link to="/careers" className="w-full md:w-auto">
-                            <button className="btn-primary w-full !px-10 !py-4 font-jakarta text-sm cursor-pointer shadow-[0_20px_40px_rgba(99,102,241,0.2)]">
-                                {t('quiz.view_careers', "ДИДАНИ ИХТИСОСҲО")}
-                                <ArrowRight className="w-4 h-4" />
-                            </button>
-                        </Link>
-                        <Link to="/dashboard" className="w-full md:w-auto">
-                            <button className="glass-card !p-4 !px-10 w-full hover:bg-white/5 transition-colors text-sm font-black uppercase tracking-widest cursor-pointer">
-                                {t('quiz.dashboard_btn', "ПАНЕЛИ ШАХСӢ")}
-                            </button>
-                        </Link>
-                    </div>
-                </motion.div>
+                    <Link to="/dashboard" className="flex-1 rounded-xl border border-border bg-card py-4 text-center text-sm font-bold text-foreground hover:bg-muted">
+                        {t('quiz.dashboard_btn')}
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={handleRetake}
+                        className="flex-1 rounded-xl border border-border bg-card py-4 text-sm font-bold text-foreground hover:bg-muted cursor-pointer"
+                    >
+                        {t('quiz.retake')}
+                    </button>
+                </div>
             </div>
         );
     }
@@ -776,17 +698,16 @@ const Quiz = () => {
                         <div className="w-px h-8 bg-border" />
                         <div className="text-center">
                             <div className="text-lg font-black text-foreground leading-none">
-                                {currentStep + 1}<span className="text-sm font-bold text-muted-foreground">/{questions.length}</span>
+                                {currentStep + 1}<span className="text-sm font-bold text-muted-foreground">/{totalExpected}</span>
                             </div>
                             <div className="mt-1 text-[11px] font-semibold text-muted-foreground">{t('quiz.question')}</div>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 text-sm font-semibold text-muted-foreground">
-                    <span>{t('quiz.answered_of', { done: answeredCount, total: questions.length })}</span>
-                    {typeLabel && <span>{typeLabel}</span>}
-                </div>
+                {typeLabel && (
+                    <div className="text-sm font-semibold text-muted-foreground">{typeLabel}</div>
+                )}
 
                 <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                     <motion.div
@@ -828,11 +749,14 @@ const Quiz = () => {
                             </div>
 
                             <div className="grid grid-cols-1 gap-2.5">
-                                {currentQuestion.options.map((option, idx) => {
-                                    const selected = currentAnswer === idx;
-                                    const optionText = typeof option.text === "string"
-                                        ? option.text
-                                        : option.text?.[activeLang] || option.text?.tj || "";
+                                {shuffledOrder(currentQuestion.id, currentQuestion.options.length).map((idx, position) => {
+                                    const option = currentQuestion.options[idx];
+                                    const selected = currentAnswer === (option.value ?? idx);
+                                    const optionText = option.cluster
+                                        ? clusterLabel(t, { clusterId: Number(String(option.cluster).replace(/\D/g, "")) })
+                                        : typeof option.text === "string"
+                                            ? option.text
+                                            : option.text?.[activeLang] || option.text?.tj || "";
                                     return (
                                         <button
                                             key={idx}
@@ -852,7 +776,7 @@ const Quiz = () => {
                                                         : "bg-background border border-border text-muted-foreground"
                                                 }`}
                                             >
-                                                {selected ? <Check className="w-4 h-4" /> : String.fromCharCode(65 + idx)}
+                                                {selected ? <Check className="w-4 h-4" /> : String.fromCharCode(65 + position)}
                                             </span>
                                             <span className="flex-1">{optionText}</span>
                                         </button>

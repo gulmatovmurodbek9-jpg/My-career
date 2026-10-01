@@ -60,7 +60,23 @@ export class QuizService {
             specialtyKeywords: []
         };
 
+        // Холҳои хом ва ҳадди имконпазир барои ҳар кластер — баъд ба миқёси 0–40.
+        const CLUSTERS = ['c1', 'c2', 'c3', 'c4', 'c5'] as const;
+        const raw: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+        const max: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+        let tiebreak: string | null = null;
+        const seen = new Set<string>();
+
         for (const answer of dto.answers) {
+            // Саволи «кадоме аз ин ду самт наздиктар?» — вақте ки ду самт баробар баромаданд.
+            if (answer.questionId === 'tiebreak') {
+                const value = String(answer.selectedValue);
+                if ((CLUSTERS as readonly string[]).includes(value)) tiebreak = value;
+                continue;
+            }
+            if (seen.has(answer.questionId)) continue;
+            seen.add(answer.questionId);
+
             const question = QUIZ_QUESTIONS.find((q) => q.id === answer.questionId);
             if (!question) continue;
 
@@ -68,10 +84,9 @@ export class QuizService {
             const selectedOption = question.options[optionIndex];
 
             if (question.part === QuizPart.MMT && selectedOption) {
-                for (const [type, points] of Object.entries(selectedOption.scores)) {
-                    if (type in scores.mmtClusters) {
-                        (scores.mmtClusters as any)[type] += Number(points);
-                    }
+                for (const key of CLUSTERS) {
+                    max[key] += Math.max(0, ...question.options.map((o) => Number(o.scores?.[key]) || 0));
+                    raw[key] += Number(selectedOption.scores?.[key]) || 0;
                 }
             } else if (question.part === QuizPart.MOTIVATION) {
                 const optText = selectedOption?.text?.en || answer.selectedValue;
@@ -81,6 +96,13 @@ export class QuizService {
                     scores.specialtyKeywords.push(...selectedOption.keywords);
                 }
             }
+        }
+
+        for (const key of CLUSTERS) {
+            scores.mmtClusters[key] = max[key] > 0 ? Math.round((raw[key] / max[key]) * 400) / 10 : 0;
+        }
+        if (tiebreak) {
+            scores.mmtClusters[tiebreak as keyof MMTScores] = Math.min(40, scores.mmtClusters[tiebreak as keyof MMTScores] + 3);
         }
 
         return scores;

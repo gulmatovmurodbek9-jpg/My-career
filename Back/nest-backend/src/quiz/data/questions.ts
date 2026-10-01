@@ -29,6 +29,8 @@ export interface QuizQuestion {
     targetCluster?: 'c1' | 'c2' | 'c3' | 'c4' | 'c5';
 }
 
+import { MMT_QUESTIONS } from './questions-mmt';
+
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
     {
         "id": "sp_c1_1",
@@ -49,11 +51,9 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 },
                 "keywords": [
                     "барном",
-                    "ай",
-                    "информ",
+                                        "информ",
                     "кибер",
-                    "ai",
-                    "программ"
+                                        "программ"
                 ]
             },
             {
@@ -318,7 +318,11 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 },
                 "keywords": [
                     "ихтироъ",
-                    "механик"
+                    "механик",
+                    "механика",
+                    "конструкт",
+                    "мошинсоз",
+                    "дастгоҳ"
                 ]
             },
             {
@@ -501,7 +505,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "истеъмол",
                     "маркет",
-                    "псих"
+                    "псих",
+                    "реклам",
+                    "сервис",
+                    "тиҷорат"
                 ]
             },
             {
@@ -512,7 +519,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 },
                 "keywords": [
                     "савдо",
-                    "логист"
+                    "логист",
+                    "тиҷорат",
+                    "гумрук",
+                    "бозор"
                 ]
             }
         ]
@@ -610,7 +620,12 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "муштарӣ",
                     "фурӯш",
-                    "коммуникатсия"
+                    "коммуникатсия",
+                    "сервис",
+                    "маркет",
+                    "реклам",
+                    "хизмат",
+                    "тиҷорат"
                 ]
             },
             {
@@ -722,7 +737,11 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "сухан",
                     "оратор",
-                    "журналист"
+                    "журналист",
+                    "рӯзноманиг",
+                    "актёр",
+                    "радио",
+                    "телевиз"
                 ]
             },
             {
@@ -746,7 +765,13 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "расм",
                     "видео",
-                    "режиссёр"
+                    "режиссёр",
+                    "телеоператор",
+                    "режисс",
+                    "санъат",
+                    "ороиш",
+                    "дизайн",
+                    "графика"
                 ]
             },
             {
@@ -794,7 +819,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "телевизион",
                     "радио",
-                    "медиа"
+                    "медиа",
+                    "телеоператор",
+                    "режисс",
+                    "рӯзноманиг"
                 ]
             },
             {
@@ -867,7 +895,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "мусоҳиба",
                     "таҳрир",
-                    "журналист"
+                    "журналист",
+                    "рӯзноманиг",
+                    "нашриёт",
+                    "китоб"
                 ]
             },
             {
@@ -916,7 +947,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "муаллим",
                     "мурабб",
-                    "равон"
+                    "равон",
+                    "педагог",
+                    "таҳсилот",
+                    "таълим",
+                    "омӯзгор",
+                    "олигофрен",
+                    "сурдопедагог",
+                    "психолог"
                 ]
             },
             {
@@ -940,7 +978,12 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "хабар",
                     "блог",
-                    "медиа"
+                    "медиа",
+                    "рӯзноманиг",
+                    "радио",
+                    "телевиз",
+                    "журналист",
+                    "web"
                 ]
             }
         ]
@@ -1003,7 +1046,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                     "амният",
                     "гумрук",
                     "мудофиа",
-                    "полис"
+                    "полис",
+                    "ҳифзи",
+                    "суд",
+                    "прокурор"
                 ]
             }
         ]
@@ -1040,7 +1086,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "дипломат",
                     "сотсиолог",
-                    "сулҳ"
+                    "сулҳ",
+                    "муносибат",
+                    "консул",
+                    "минтақа"
                 ]
             },
             {
@@ -1101,7 +1150,9 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "иҷтимо",
                     "ёрӣ",
-                    "социал"
+                    "социал",
+                    "психолог",
+                    "оилав"
                 ]
             },
             {
@@ -1125,7 +1176,13 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "тафтиш",
                     "ҷиноят",
-                    "криминал"
+                    "криминал",
+                    "суд",
+                    "прокурор",
+                    "муфаттиш",
+                    "ҳифзи",
+                    "киберҷиноят",
+                    "санҷиш"
                 ]
             }
         ]
@@ -1162,7 +1219,9 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "пурсиш",
                     "сотсиолог",
-                    "омор"
+                    "омор",
+                    "иҷтимо",
+                    "психолог"
                 ]
             },
             {
@@ -1360,7 +1419,23 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                     "наботот",
                     "ҳайвон",
                     "зоолог",
-                    "табиат"
+                    "табиат",
+                    "агроном",
+                    "зоотех",
+                    "байтор",
+                    "биолог",
+                    "дендролог",
+                    "эколог",
+                    "паррандапарвар",
+                    "меваю",
+                    "ҷангал",
+                    "энтомолог",
+                    "растан",
+                    "марғзор",
+                    "занбӯр",
+                    "харгӯш",
+                    "селексия",
+                    "биоэколог"
                 ]
             },
             {
@@ -1372,7 +1447,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "варзиш",
                     "толор",
-                    "солим"
+                    "солим",
+                    "ҷисм"
                 ]
             }
         ]
@@ -1397,7 +1473,15 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "ҷарроҳ",
                     "хун",
-                    "анатом"
+                    "анатом",
+                    "табобат",
+                    "стоматолог",
+                    "дандон",
+                    "педиатр",
+                    "момодо",
+                    "ҳамшира",
+                    "тиббию",
+                    "тиббӣ"
                 ]
             },
             {
@@ -1421,7 +1505,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "микроскоп",
                     "вирус",
-                    "бактери"
+                    "бактери",
+                    "биохим",
+                    "биофиз",
+                    "биотехнолог",
+                    "ташхис",
+                    "лаборат",
+                    "микробиолог",
+                    "биологӣ"
                 ]
             },
             {
@@ -1433,7 +1524,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "варзиш",
                     "фитнес",
-                    "саломат"
+                    "саломат",
+                    "ҷисм",
+                    "офият",
+                    "профилакт"
                 ]
             }
         ]
@@ -1520,7 +1614,15 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "анатом",
                     "физиолог",
-                    "инсон"
+                    "инсон",
+                    "табобат",
+                    "стоматолог",
+                    "дандон",
+                    "педиатр",
+                    "момодо",
+                    "ҳамшира",
+                    "тиббию",
+                    "тиббӣ"
                 ]
             },
             {
@@ -1544,7 +1646,23 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 "keywords": [
                     "ботаника",
                     "зоолог",
-                    "табиат"
+                    "табиат",
+                    "агроном",
+                    "зоотех",
+                    "байтор",
+                    "биолог",
+                    "дендролог",
+                    "эколог",
+                    "паррандапарвар",
+                    "меваю",
+                    "ҷангал",
+                    "энтомолог",
+                    "растан",
+                    "марғзор",
+                    "занбӯр",
+                    "харгӯш",
+                    "селексия",
+                    "биоэколог"
                 ]
             },
             {
@@ -1555,160 +1673,13 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
                 },
                 "keywords": [
                     "варзиш",
-                    "физкультур"
+                    "физкультур",
+                    "ҷисм"
                 ]
             }
         ]
     }
-,
-    {
-        id: 'mmt1', part: QuizPart.MMT, type: 'scenario',
-        question: {
-            tj: 'Рӯзи истироҳат аст. Бо кадом кор вақт зуд мегузарад?',
-            ru: 'Выходной день. За каким занятием время летит быстрее всего?',
-            en: 'It is a day off. Which activity makes time fly for you?',
-        },
-        options: [
-            { text: { tj: 'Китоб мехонам, менависам ё сурат мекашам', ru: 'Читаю, пишу или рисую', en: 'Reading, writing or drawing' }, scores: { c3: 4 } },
-            { text: { tj: 'Чизе месозам ё дар компютер меозмоям', ru: 'Что-то собираю или пробую на компьютере', en: 'Building something or tinkering on a computer' }, scores: { c1: 4 } },
-            { text: { tj: 'Варзиш мекунам ё дар бораи бадани инсон мехонам', ru: 'Занимаюсь спортом или читаю о теле человека', en: 'Doing sport or reading about the human body' }, scores: { c5: 4 } },
-            { text: { tj: 'Ҳисоб мекунам: чӣ харам, чӣ фурӯшам', ru: 'Считаю: что купить, что продать', en: 'Working out what to buy and what to sell' }, scores: { c2: 4 } },
-            { text: { tj: 'Бо одамон баҳс мекунам ва ҳақиқатро меёбам', ru: 'Спорю с людьми и ищу правду', en: 'Debating with people and finding the truth' }, scores: { c4: 4 } },
-        ],
-    },
-    {
-        id: 'mmt2', part: QuizPart.MMT, type: 'environment',
-        question: {
-            tj: 'Дар мактаб кадом дарс барои шумо зуд мегузарад?',
-            ru: 'Какой урок в школе для вас проходит быстрее всего?',
-            en: 'Which school lesson goes by fastest for you?',
-        },
-        options: [
-            { text: { tj: 'География ва иқтисод', ru: 'География и экономика', en: 'Geography and economics' }, scores: { c2: 4 } },
-            { text: { tj: 'Биология, химия, тарбияи ҷисмонӣ', ru: 'Биология, химия, физкультура', en: 'Biology, chemistry, PE' }, scores: { c5: 4 } },
-            { text: { tj: 'Математика, физика, информатика', ru: 'Математика, физика, информатика', en: 'Maths, physics, computing' }, scores: { c1: 4 } },
-            { text: { tj: 'Таърих ва ҷомеашиносӣ', ru: 'История и обществознание', en: 'History and social studies' }, scores: { c4: 4 } },
-            { text: { tj: 'Забон, адабиёт ва санъат', ru: 'Язык, литература и искусство', en: 'Language, literature and art' }, scores: { c3: 4 } },
-        ],
-    },
-    {
-        id: 'mmt3', part: QuizPart.MMT, type: 'motivation',
-        question: {
-            tj: 'Дӯстатон ба мушкилӣ афтод. Шумо аввал чӣ мекунед?',
-            ru: 'У друга беда. Что вы сделаете первым делом?',
-            en: 'A friend is in trouble. What do you do first?',
-        },
-        options: [
-            { text: { tj: 'Роҳи амалии ҳалро пешниҳод мекунам', ru: 'Предложу практическое решение', en: 'Offer a practical solution' }, scores: { c1: 4 } },
-            { text: { tj: 'Ҳимояш мекунам ва ҳаққашро металабам', ru: 'Защищу его и буду добиваться справедливости', en: 'Stand up for them and demand fairness' }, scores: { c4: 4 } },
-            { text: { tj: 'Гӯш мекунам ва рӯҳашро мебардорам', ru: 'Выслушаю и поддержу', en: 'Listen and lift their spirits' }, scores: { c3: 4 } },
-            { text: { tj: 'Аввал мепурсам, ки саломатиаш чӣ хел аст', ru: 'Сначала спрошу о здоровье', en: 'First ask how they are feeling' }, scores: { c5: 4 } },
-            { text: { tj: 'Ҳисоб мекунам, чӣ қадар маблағ лозим аст', ru: 'Посчитаю, сколько нужно денег', en: 'Work out how much money is needed' }, scores: { c2: 4 } },
-        ],
-    },
-    {
-        id: 'mmt4', part: QuizPart.MMT, type: 'motivation',
-        question: {
-            tj: 'Кадом видеоро дар интернет то охир мебинед?',
-            ru: 'Какое видео в интернете вы досмотрите до конца?',
-            en: 'Which kind of video do you watch to the end?',
-        },
-        options: [
-            { text: { tj: 'Дар бораи бадани инсон, ҳайвонот ё варзиш', ru: 'О теле человека, животных или спорте', en: 'About the human body, animals or sport' }, scores: { c5: 4 } },
-            { text: { tj: 'Дар бораи филм, мусиқӣ ё таърихи фарҳанг', ru: 'О кино, музыке или истории культуры', en: 'About film, music or cultural history' }, scores: { c3: 4 } },
-            { text: { tj: 'Дар бораи техника, робот ё барномасозӣ', ru: 'О технике, роботах или программировании', en: 'About tech, robots or programming' }, scores: { c1: 4 } },
-            { text: { tj: 'Дар бораи пул, бизнес ва савдо', ru: 'О деньгах, бизнесе и торговле', en: 'About money, business and trade' }, scores: { c2: 4 } },
-            { text: { tj: 'Дар бораи қонун, ҷомеа ва воқеаҳои дунё', ru: 'О законе, обществе и событиях в мире', en: 'About law, society and world events' }, scores: { c4: 4 } },
-        ],
-    },
-    {
-        id: 'mmt5', part: QuizPart.MMT, type: 'scenario',
-        question: {
-            tj: 'Фикри худро чӣ тавр беҳтар мефаҳмонед?',
-            ru: 'Как вам проще всего объяснить свою мысль?',
-            en: 'How do you explain your idea best?',
-        },
-        options: [
-            { text: { tj: 'Далел меорам ва исбот мекунам', ru: 'Привожу аргументы и доказываю', en: 'Give arguments and prove the point' }, scores: { c4: 4 } },
-            { text: { tj: 'Нақша мекашам ё бо рақам нишон медиҳам', ru: 'Черчу схему или показываю цифрами', en: 'Draw a diagram or show it with numbers' }, scores: { c1: 4 } },
-            { text: { tj: 'Менависам ё бо сухан мефаҳмонам', ru: 'Пишу или объясняю словами', en: 'Write it down or explain it in words' }, scores: { c3: 4 } },
-            { text: { tj: 'Ҷадвал ва ҳисоб нишон медиҳам', ru: 'Показываю таблицу и расчёт', en: 'Show a table and the maths' }, scores: { c2: 4 } },
-            { text: { tj: 'Бо мисоли зинда ва таҷриба нишон медиҳам', ru: 'Показываю на живом примере и опыте', en: 'Show it with a live example or experiment' }, scores: { c5: 4 } },
-        ],
-    },
-    {
-        id: 'mmt6', part: QuizPart.MMT, type: 'motivation',
-        question: {
-            tj: 'Агар як мушкили Тоҷикистонро ҳал карда метавонистед, кадомашро?',
-            ru: 'Если бы вы могли решить одну проблему Таджикистана — какую?',
-            en: 'If you could solve one problem in Tajikistan, which one?',
-        },
-        options: [
-            { text: { tj: 'Бекорӣ ва камбизоатӣ', ru: 'Безработицу и бедность', en: 'Unemployment and poverty' }, scores: { c2: 4 } },
-            { text: { tj: 'Барқ, роҳ ва технологияи кӯҳна', ru: 'Электричество, дороги и устаревшие технологии', en: 'Power, roads and outdated technology' }, scores: { c1: 4 } },
-            { text: { tj: 'Бемориҳо ва саломатии мардум', ru: 'Болезни и здоровье людей', en: 'Illness and public health' }, scores: { c5: 4 } },
-            { text: { tj: 'Беадолатӣ ва вайронкунии қонун', ru: 'Несправедливость и нарушение закона', en: 'Injustice and broken laws' }, scores: { c4: 4 } },
-            { text: { tj: 'Гум шудани забон ва фарҳанги мо', ru: 'Утрату нашего языка и культуры', en: 'The loss of our language and culture' }, scores: { c3: 4 } },
-        ],
-    },
-    {
-        id: 'mmt7', part: QuizPart.MMT, type: 'scenario',
-        question: {
-            tj: 'Кадом бозӣ ба шумо бештар маъқул аст?',
-            ru: 'Какая игра вам больше нравится?',
-            en: 'Which kind of game do you enjoy most?',
-        },
-        options: [
-            { text: { tj: 'Муаммоҳои мантиқӣ ва рақамӣ', ru: 'Логические и числовые головоломки', en: 'Logic and number puzzles' }, scores: { c1: 4 } },
-            { text: { tj: 'Бозиҳои ҳаракатӣ ва варзишӣ', ru: 'Подвижные и спортивные игры', en: 'Active and sporting games' }, scores: { c5: 4 } },
-            { text: { tj: 'Бозиҳое, ки дар онҳо шаҳр ё ширкат месозед', ru: 'Игры, где строишь город или компанию', en: 'Games where you build a city or a company' }, scores: { c2: 4 } },
-            { text: { tj: 'Бозиҳои калимавӣ ва ҳикоявӣ', ru: 'Словесные и сюжетные игры', en: 'Word and story games' }, scores: { c3: 4 } },
-            { text: { tj: 'Бозиҳои детективӣ — кӣ гунаҳкор аст?', ru: 'Детективные игры — кто виноват?', en: 'Detective games — who is guilty?' }, scores: { c4: 4 } },
-        ],
-    },
-    {
-        id: 'mmt8', part: QuizPart.MMT, type: 'environment',
-        question: {
-            tj: 'Дар кори гурӯҳӣ шумо одатан кӣ мешавед?',
-            ru: 'Кем вы обычно становитесь в командной работе?',
-            en: 'What role do you usually take in a team?',
-        },
-        options: [
-            { text: { tj: 'Он ки матн менависад ва зебо мекунад', ru: 'Тем, кто пишет текст и делает красиво', en: 'The one who writes the text and makes it look good' }, scores: { c3: 4 } },
-            { text: { tj: 'Он ки гурӯҳро ҷамъ мекунад ва роҳбарӣ мекунад', ru: 'Тем, кто собирает команду и ведёт её', en: 'The one who gathers the team and leads' }, scores: { c4: 4 } },
-            { text: { tj: 'Он ки худи корро месозад', ru: 'Тем, кто делает саму работу', en: 'The one who actually builds it' }, scores: { c1: 4 } },
-            { text: { tj: 'Он ки ҳисоб ва нақшаро мебарад', ru: 'Тем, кто ведёт расчёты и план', en: 'The one who runs the numbers and the plan' }, scores: { c2: 4 } },
-            { text: { tj: 'Он ки маълумот меҷӯяд ва месанҷад', ru: 'Тем, кто ищет и проверяет данные', en: 'The one who finds and checks the facts' }, scores: { c5: 4 } },
-        ],
-    },
-    {
-        id: 'mmt9', part: QuizPart.MMT, type: 'motivation',
-        question: {
-            tj: 'Кадом хислати худро бештар қадр мекунед?',
-            ru: 'Какое своё качество вы цените больше всего?',
-            en: 'Which of your own traits do you value most?',
-        },
-        options: [
-            { text: { tj: 'Меҳрубонӣ ва диққат ба ҷузъиёт', ru: 'Доброту и внимание к деталям', en: 'Kindness and attention to detail' }, scores: { c5: 4 } },
-            { text: { tj: 'Ақли мантиқӣ ва дасти моҳир', ru: 'Логику и умелые руки', en: 'Logical thinking and skilled hands' }, scores: { c1: 4 } },
-            { text: { tj: 'Хаёли бой ва эҷодкорӣ', ru: 'Богатое воображение и творчество', en: 'Imagination and creativity' }, scores: { c3: 4 } },
-            { text: { tj: 'Ҳисобкорӣ ва дурандешӣ', ru: 'Расчётливость и дальновидность', en: 'Being calculating and far-sighted' }, scores: { c2: 4 } },
-            { text: { tj: 'Ростқавлӣ ва ҷасорат', ru: 'Честность и смелость', en: 'Honesty and courage' }, scores: { c4: 4 } },
-        ],
-    },
-    {
-        id: 'mmt10', part: QuizPart.MMT, type: 'motivation',
-        question: {
-            tj: 'Баъди 10 сол дар бораи шумо чӣ гӯянд?',
-            ru: 'Что скажут о вас через 10 лет?',
-            en: 'What will people say about you in 10 years?',
-        },
-        options: [
-            { text: { tj: '«Ӯ кори худро кушод ва одамонро ба кор гирифт»', ru: '«Он открыл своё дело и дал людям работу»', en: '"They started a business and gave people jobs"' }, scores: { c2: 4 } },
-            { text: { tj: '«Ӯ чизе сохт, ки одамон то ҳол мехонанд ва мебинанд»', ru: '«Он создал то, что люди читают и смотрят до сих пор»', en: '"They made something people still read and watch"' }, scores: { c3: 4 } },
-            { text: { tj: '«Ӯ чизе сохт, ки кори ҳамаро осон кард»', ru: '«Он сделал то, что упростило жизнь всем»', en: '"They built something that made life easier"' }, scores: { c1: 4 } },
-            { text: { tj: '«Ӯ ба одамон дар ёфтани ҳақиқат кӯмак кард»', ru: '«Он помог людям добиться правды»', en: '"They helped people find justice"' }, scores: { c4: 4 } },
-            { text: { tj: '«Ӯ ҳаёти одамонро наҷот дод»', ru: '«Он спасал жизни»', en: '"They saved lives"' }, scores: { c5: 4 } },
-        ],
-    }
 ];
+
+// Қадами 1 — саволҳои нав (01.10.2026), алоҳида дар questions-mmt.ts.
+QUIZ_QUESTIONS.push(...MMT_QUESTIONS);

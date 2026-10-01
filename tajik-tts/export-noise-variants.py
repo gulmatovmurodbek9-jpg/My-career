@@ -17,6 +17,7 @@ VARIANTS = {
     "n50-d60": (0.5, 0.6),
     "n35-d45": (0.35, 0.45),
     "n20-d30": (0.2, 0.3),
+    "n10-d20": (0.1, 0.2),
 }
 if len(sys.argv) > 1:
     VARIANTS = {k: v for k, v in VARIANTS.items() if k in sys.argv[1:]}

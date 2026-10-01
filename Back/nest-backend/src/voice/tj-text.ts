@@ -81,8 +81,11 @@ const SYMBOLS: Array<[RegExp, string]> = [
 // Ҳарфҳои русӣ, ки дар модел нестанд.
 const CYRILLIC_FIX: Array<[RegExp, string]> = [[/ы/g, 'и'], [/Ы/g, 'И'], [/щ/g, 'ш'], [/Щ/g, 'Ш']];
 
+// Рамзҳои дохилии база дар қавс («(ФМДМТбоДДБ)») — барои гуфтан нестанд.
+const CODE_IN_PARENS = /\s*\((?=[^)]*[A-ZА-ЯЁҶҲҚҒӮӢ]{3})[A-Za-zА-Яа-яЁёҶҷҲҳҚқҒғӮӯӢӣ]{5,}\)/g;
+
 export function prepareTajikText(text: string): string {
-    let out = String(text || '');
+    let out = String(text || '').replace(CODE_IN_PARENS, '');
     for (const [pattern, value] of SYMBOLS) out = out.replace(pattern, value);
     // Калимаҳои лотинӣ (бо рақамҳои дохилӣ, масалан «1C», «H2O» намешавад — ҳарфҳо бояд бошанд).
     out = out.replace(/[A-Za-z][A-Za-z0-9'’.-]*[A-Za-z0-9]|[A-Za-z]/g, (match) => {
@@ -105,7 +108,7 @@ const CYR_TO_LAT: Record<string, string> = {
 };
 
 export function prepareEnglishText(text: string): string {
-    let out = String(text || '')
+    let out = String(text || '').replace(CODE_IN_PARENS, '')
         .replace(/(\d)\s*%/g, '$1 percent').replace(/%/g, ' percent')
         .replace(/(\d)\s*\+/g, '$1 and more')
         .replace(/(\d)\s*[-–—]\s*(\d)/g, '$1 to $2')

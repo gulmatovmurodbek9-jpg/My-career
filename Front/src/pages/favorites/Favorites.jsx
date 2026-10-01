@@ -14,6 +14,7 @@ import axios from "axios";
 import { API } from "../../lib/config";
 import { useTranslation } from "react-i18next";
 import { clusterLabel } from "../../lib/clusterLabel";
+import { displayName } from "../../lib/careerName";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -60,7 +61,7 @@ const CareerCard = ({ career, onUnlike, onUnsave, type }) => {
                 </div>
                 <div>
                     <h3 className="font-extrabold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
-                        {career.name}
+                        {displayName(career.name)}
                     </h3>
                     <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
                         {career.description || career.purpose || t('favorites.default_desc', "Ихтисоси ҷолиб барои оянда.")}

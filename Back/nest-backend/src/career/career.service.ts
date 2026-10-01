@@ -550,47 +550,47 @@ export class CareerService {
     // «Духтур шудан мехоҳам» — дар номи ихтисосҳо калимаи «духтур» нест,
     // пас барои касбҳои маъмул самтҳоро дастӣ медиҳем. Барои дигар касбҳо
     // рӯйхат аз ҷустуҷӯи база сохта мешавад.
-    private static readonly DIRECTIONS: Array<{ roles: string[]; say: string; options: Array<{ label: string; name: string }> }> = [
+    private static readonly DIRECTIONS: Array<{ roles: string[]; say: string; sayRu?: string; sayEn?: string; options: Array<{ label: string; name: string; ru?: string; en?: string }> }> = [
         {
-            roles: ['духтур', 'табиб', 'доктор', 'врач', 'пизишк'],
-            say: 'духтур',
+            roles: ['духтур', 'табиб', 'доктор', 'врач', 'пизишк', 'doctor', 'physician', 'medic'],
+            say: 'духтур', sayRu: 'врачом', sayEn: 'a doctor',
             options: [
-                { label: 'Табиби умумӣ', name: 'Кори табобатӣ' },
-                { label: 'Духтури кӯдакон', name: 'Педиатрия' },
-                { label: 'Духтури дандон', name: 'Стоматология' },
-                { label: 'Дорусоз', name: 'Химия. Дорусозӣ' },
-                { label: 'Ҳамшираи шафқат', name: 'Кори ҳамширагӣ' },
+                { label: 'Табиби умумӣ', name: 'Кори табобатӣ', ru: 'Врач общей практики', en: 'General doctor' },
+                { label: 'Духтури кӯдакон', name: 'Педиатрия', ru: 'Детский врач', en: 'Pediatrician' },
+                { label: 'Духтури дандон', name: 'Стоматология', ru: 'Стоматолог', en: 'Dentist' },
+                { label: 'Дорусоз', name: 'Химия. Дорусозӣ', ru: 'Фармацевт', en: 'Pharmacist' },
+                { label: 'Ҳамшираи шафқат', name: 'Кори ҳамширагӣ', ru: 'Медсестра', en: 'Nurse' },
             ],
         },
         {
-            roles: ['хукукшинос', 'адвокат', 'юрист', 'прокурор', 'судя'],
-            say: 'ҳуқуқшинос',
+            roles: ['хукукшинос', 'адвокат', 'юрист', 'прокурор', 'судя', 'lawyer', 'attorney', 'judge'],
+            say: 'ҳуқуқшинос', sayRu: 'юристом', sayEn: 'a lawyer',
             options: [
-                { label: 'Ҳимояи ҳуқуқ', name: 'Фаъолияти ҳифзи ҳуқуқ' },
-                { label: 'Суд, прокуратура ва тафтишот', name: 'Фаъолияти судӣ-прокурорӣ-муфаттишӣ' },
-                { label: 'Ҳуқуқи байналмилалӣ', name: 'Ҳуқуқи байналмилалӣ' },
-                { label: 'Ҳуқуқи иқтисодӣ', name: 'Ҳуқуқи иқтисодӣ' },
-                { label: 'Ҳуқуқи гумрукӣ', name: 'Ҳуқуқи гумрукӣ' },
+                { label: 'Ҳимояи ҳуқуқ', name: 'Фаъолияти ҳифзи ҳуқуқ', ru: 'Правоохранительная деятельность', en: 'Law enforcement' },
+                { label: 'Суд, прокуратура ва тафтишот', name: 'Фаъолияти судӣ-прокурорӣ-муфаттишӣ', ru: 'Суд, прокуратура и следствие', en: 'Court, prosecution and investigation' },
+                { label: 'Ҳуқуқи байналмилалӣ', name: 'Ҳуқуқи байналмилалӣ', ru: 'Международное право', en: 'International law' },
+                { label: 'Ҳуқуқи иқтисодӣ', name: 'Ҳуқуқи иқтисодӣ', ru: 'Экономическое право', en: 'Economic law' },
+                { label: 'Ҳуқуқи гумрукӣ', name: 'Ҳуқуқи гумрукӣ', ru: 'Таможенное право', en: 'Customs law' },
             ],
         },
         {
-            roles: ['барномасоз', 'программист', 'айти', 'it'],
-            say: 'барномасоз',
+            roles: ['барномасоз', 'программист', 'разработчик', 'айти', 'programmer', 'developer', 'coder', 'software'],
+            say: 'барномасоз', sayRu: 'программистом', sayEn: 'a programmer',
             options: [
-                { label: 'Муҳандисии барномавӣ', name: 'Муҳандисии барномавӣ' },
-                { label: 'Амнияти киберӣ', name: 'Амнияти киберӣ' },
-                { label: 'Веб-дизайн', name: 'WEB-дизайн ва графикаи компютерӣ' },
-                { label: 'Информатика', name: 'Информатика' },
+                { label: 'Муҳандисии барномавӣ', name: 'Муҳандисии барномавӣ', ru: 'Программная инженерия', en: 'Software engineering' },
+                { label: 'Амнияти киберӣ', name: 'Амнияти киберӣ', ru: 'Кибербезопасность', en: 'Cyber security' },
+                { label: 'Веб-дизайн', name: 'WEB-дизайн ва графикаи компютерӣ', ru: 'Веб-дизайн', en: 'Web design' },
+                { label: 'Информатика', name: 'Информатика', ru: 'Информатика', en: 'Computer science' },
             ],
         },
         {
-            roles: ['муаллим', 'омузгор', 'учител'],
-            say: 'омӯзгор',
+            roles: ['муаллим', 'омузгор', 'учител', 'педагог', 'teacher'],
+            say: 'омӯзгор', sayRu: 'учителем', sayEn: 'a teacher',
             options: [
-                { label: 'Омӯзгори синфҳои ибтидоӣ', name: 'Таҳсилоти ибтидоӣ' },
-                { label: 'Тарбиячии боғча', name: 'Таҳсилоти томактабӣ' },
-                { label: 'Забон ва адабиёти тоҷик', name: 'Забон ва адабиёти тоҷик' },
-                { label: 'Математика', name: 'Математика' },
+                { label: 'Омӯзгори синфҳои ибтидоӣ', name: 'Таҳсилоти ибтидоӣ', ru: 'Учитель начальных классов', en: 'Primary school teacher' },
+                { label: 'Тарбиячии боғча', name: 'Таҳсилоти томактабӣ', ru: 'Воспитатель детского сада', en: 'Kindergarten teacher' },
+                { label: 'Забон ва адабиёти тоҷик', name: 'Забон ва адабиёти тоҷик', ru: 'Таджикский язык и литература', en: 'Tajik language and literature' },
+                { label: 'Математика', name: 'Математика', ru: 'Математика', en: 'Mathematics' },
             ],
         },
     ];
@@ -598,6 +598,7 @@ export class CareerService {
     // Калимаҳое, ки ҷузъи номи касб нестанд: «ман мехоҳам ки … шавам».
     private static readonly ROLE_STOPWORDS = new Set([
         'ман', 'мехохам', 'мехохем', 'ки', 'ба', 'хам', 'бояд', 'орзу', 'орзуи', 'дорам', 'як', 'хуб', 'дар', 'оянда',
+        'a', 'an', 'the', 'good', 'хорошим',
     ]);
 
     // «Духтур шудан мехоҳам», «мехоҳам барномасоз шавам», «хочу стать врачом».
@@ -605,7 +606,8 @@ export class CareerService {
         const text = foldTajik(message).replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim();
         const words = text.split(' ');
         // Шинохти нутқ феълро вайрон мекунад: «шуланд», «шутан», «мешавам».
-        let verb = words.findIndex((word) => /^(шу[длт]ан|(ме)?шав[аеи]м|стать)/.test(word));
+        let verb = words.findIndex((word, index) => /^(шу[длт]ан|(ме)?шав[аеи]м|стать)/.test(word)
+            || word === 'become' || (word === 'be' && words[index - 1] === 'to'));
         // «Нан духтур … мехоҳам» — феъл гум шуд, вале касби маълум ва «мехоҳам» ҳаст.
         if (verb < 0 && words.includes('мехохам')) {
             const known = words.findIndex((word) =>
@@ -613,10 +615,11 @@ export class CareerService {
             if (known >= 0) verb = known + 1;
         }
         if (verb < 0) return null;
-        const around = words[verb] === 'стать' ? words.slice(verb + 1, verb + 3) : words.slice(Math.max(0, verb - 2), verb);
+        const after = ['стать', 'become', 'be'].includes(words[verb]);
+        const around = after ? words.slice(verb + 1, verb + 3) : words.slice(Math.max(0, verb - 2), verb);
         // Ҳамон калимаҳоро аз матни аслӣ мегирем, то ёвар «ҳуқуқшинос» гӯяд, на «хукукшинос».
         const original = message.toLowerCase().replace(/[^a-zа-яёғӣқӯҳҷ0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim().split(' ');
-        const start = words[verb] === 'стать' ? verb + 1 : Math.max(0, verb - 2);
+        const start = after ? verb + 1 : Math.max(0, verb - 2);
         const role = around
             .map((word, index) => [word, original[start + index] || word])
             .filter(([word]) => !CareerService.ROLE_STOPWORDS.has(word))
@@ -627,7 +630,7 @@ export class CareerService {
     }
 
     // Самтҳо барои касби гуфташуда: аввал рӯйхати дастӣ, баъд база.
-    private async directionsFor(role: string): Promise<{ say: string; options: Array<{ id: string; name: string; label: string }> }> {
+    private async directionsFor(role: string, lang = 'tj'): Promise<{ say: string; options: Array<{ id: string; name: string; label: string }> }> {
         const words = foldTajik(role).split(' ');
         const curated = CareerService.DIRECTIONS.find((entry) =>
             entry.roles.some((stem) => words.some((word) => word.startsWith(stem))));
@@ -646,10 +649,12 @@ export class CareerService {
             const options = curated.options
                 .map((option) => {
                     const row = rows.find((item) => item.name === option.name);
-                    return row ? { id: row.id, name: row.name, label: option.label } : null;
+                    const label = (lang === 'ru' && option.ru) || (lang === 'en' && option.en) || option.label;
+                    return row ? { id: row.id, name: row.name, label } : null;
                 })
                 .filter((option): option is { id: string; name: string; label: string } => !!option);
-            if (options.length) return { say: curated.say, options };
+            const say = (lang === 'ru' && curated.sayRu) || (lang === 'en' && curated.sayEn) || curated.say;
+            if (options.length) return { say, options };
         }
 
         const found = await this.findRelevantCareers(role);
@@ -773,7 +778,7 @@ export class CareerService {
     // Фармонҳои маъмулӣ AI-ро лозим надоранд: «санҷишро сар кун» ҳамеша
     // як маъно дорад. Инҳоро дар як миллисония мешиносем; танҳо чизҳои
     // номаълум ва номҳо (ихтисос, донишгоҳ) ба AI мераванд.
-    private quickRoute(message: string): { action: string; params: any; reply?: string } | null {
+    private quickRoute(message: string, lang = 'tj'): { action: string; params: any; reply?: string } | null {
         const text = foldTajik(message)
             .replace(/[^a-zа-яё0-9\s]/gi, ' ')
             .replace(/\s+/g, ' ')
@@ -781,7 +786,38 @@ export class CareerService {
         if (!text) return null;
         const has = (...words: string[]) => words.some((word) => text.includes(word));
 
-        const cluster = text.match(/кластер\S*\s*(\d)/);
+        const words0 = text.split(' ');
+        // Англисӣ ва русӣ: фармонҳои маъмул бе AI — тез ва бехато.
+        const IDENTITY: Record<string, string> = {
+            tj: 'Ман ёвари овозии «Ихтисоси ман» ҳастам. Ихтисос меёбам, донишгоҳҳоро нишон медиҳам ва санҷиш мегузаронам.',
+            ru: 'Я голосовой помощник «Моя специальность». Нахожу специальности, показываю университеты и провожу тест.',
+            en: 'I am the voice assistant of My Career. I find specialties, show universities and run the career test.',
+        };
+        const GREET: Record<string, string> = {
+            tj: 'Салом! Ихтисос интихоб кунем, донишгоҳҳоро бинем ё санҷиш гузарем?',
+            ru: 'Здравствуйте! Выберем специальность, посмотрим университеты или пройдём тест?',
+            en: 'Hello! Shall we choose a specialty, look at universities or take the test?',
+        };
+        if (has('who are you', 'what can you do', 'кто ты', 'кто вы', 'что ты умеешь', 'что вы умеете', 'ту киста', 'ту кисти', 'шумо киста', 'шумо кисти', 'чи кор карда метавони', 'чи кор карда метавонед')) {
+            return { action: 'answer', params: {}, reply: IDENTITY[lang] || IDENTITY.tj };
+        }
+        if (words0.length <= 3 && has('салом', 'ассалом', 'хуш омадед', 'hello', 'привет', 'здравствуй')) {
+            return { action: 'answer', params: {}, reply: GREET[lang] || GREET.tj };
+        }
+        if (words0.length <= 5) {
+            if (has('report', 'отчет', 'отчёт')) return { action: 'open_report', params: {} };
+            if (has('application plan', 'my plan', 'план подачи', 'план документ')) return { action: 'open_plan', params: {} };
+            if (has('saved', 'favorites', 'favourites', 'сохранен', 'сохранён', 'избран')) return { action: 'open_favorites', params: {} };
+            if (has('dark theme', 'dark mode', 'темн', 'тёмн')) return { action: 'set_theme', params: { theme: 'dark' } };
+            if (has('light theme', 'light mode', 'светл')) return { action: 'set_theme', params: { theme: 'light' } };
+            if (has('home page', 'go home', 'главн')) return { action: 'go_home', params: {} };
+            if (/(^| )(chat|чат)( |$)/.test(text)) return { action: 'open_chat', params: {} };
+            if (has('free', 'бесплат', 'бюджет')) return { action: 'search', params: { query: 'ихтисосҳои ройгон', trusted: true } };
+            if (has('nearest', 'closest', 'near me', 'ближайш', 'рядом')) return { action: 'nearest_universities', params: {} };
+            if ((has('test', 'quiz', 'тест') && has('start', 'take', 'begin', 'нач', 'пройд', 'пройти'))) return { action: 'start_quiz', params: {} };
+        }
+
+        const cluster = text.match(/(?:кластер|cluster)\S*\s*(\d)/);
         if (cluster) return { action: 'open_cluster', params: { number: Number(cluster[1]) } };
 
         if (has('наздиктарин', 'наздик') && has('донишгох')) {
@@ -845,25 +881,29 @@ export class CareerService {
         // Салом, раҳмат ва «ту кистӣ» — ҷавоби тайёр, бе AI.
         // «Салом» аввалин калимаи ҳар сӯҳбат аст ва пештар то 8 сония мегирифт.
         const words = text.split(' ');
-        if (has('ту киста', 'ту кисти', 'шумо киста', 'шумо кисти', 'чи кор карда метавони', 'чи кор карда метавонед')) {
-            return {
-                action: 'answer',
-                params: {},
-                reply: 'Ман ёвари овозии «Ихтисоси ман» ҳастам. Ихтисос меёбам, донишгоҳҳоро нишон медиҳам ва санҷиш мегузаронам.',
-            };
-        }
-        if (words.length <= 3 && has('салом', 'ассалом', 'хуш омадед')) {
-            return {
-                action: 'answer',
-                params: {},
-                reply: 'Салом! Ихтисос интихоб кунем, донишгоҳҳоро бинем ё санҷиш гузарем?',
-            };
-        }
         if (words.length <= 3 && has('рахмат', 'ташаккур')) {
             return { action: 'answer', params: {}, reply: 'Марҳамат! Боз чӣ кӯмак кунам?' };
         }
 
         return null;
+    }
+
+    // «Худжанд», «Khujand» → «Хуҷанд»: дар база номҳо тоҷикӣ ҳастанд.
+    private static readonly CITY_NAMES: Array<[string, string[]]> = [
+        ['Душанбе', ['dushanbe', 'душанбе']], ['Хуҷанд', ['khujand', 'khudzhand', 'худжанд', 'хучанд']],
+        ['Бохтар', ['bokhtar', 'bohtar', 'бохтар']], ['Кӯлоб', ['kulob', 'kulyab', 'куляб', 'кулоб']],
+        ['Хоруғ', ['khorog', 'khorugh', 'хорог', 'хоруг']], ['Истаравшан', ['istaravshan', 'истаравшан']],
+        ['Панҷакент', ['panjakent', 'penjikent', 'пенджикент', 'панчакент']], ['Ваҳдат', ['vahdat', 'вахдат']],
+        ['Турсунзода', ['tursunzoda', 'tursunzade', 'турсунзаде', 'турсунзода']], ['Ҳисор', ['hisor', 'hissar', 'гиссар', 'хисор']],
+        ['Исфара', ['isfara', 'исфара']], ['Данғара', ['dangara', 'дангара']], ['Конибодом', ['konibodom', 'kanibadam', 'канибадам', 'конибодом']],
+        ['Роғун', ['rogun', 'рогун']], ['Норак', ['norak', 'nurek', 'нурек', 'норак']],
+    ];
+
+    static cityToTajik(raw: string): string {
+        const folded = foldTajik(raw).toLowerCase();
+        if (!folded) return '';
+        const hit = CareerService.CITY_NAMES.find(([, aliases]) => aliases.some((alias) => folded.includes(alias.slice(0, Math.max(5, alias.length - 2)))));
+        return hit ? hit[0] : raw;
     }
 
     private clusterCache: Cluster[] | null = null;
@@ -969,16 +1009,16 @@ export class CareerService {
         // «Духтур шудан мехоҳам» — самтҳоро мегӯем ва мепурсем, кадомаш.
         const role = this.detectRole(message);
         if (role) {
-            const { say, options } = await this.directionsFor(role);
+            const { say, options } = await this.directionsFor(role, answerLang);
             if (options.length) {
                 // Самтҳои дастӣ («духтури кӯдакон») дар миёни ҷумла бо ҳарфи хурд.
                 const labels = options.map((option) =>
-                    option.label === option.name ? option.label : option.label.charAt(0).toLowerCase() + option.label.slice(1));
+                    answerLang !== 'tj' || option.label === option.name ? option.label : option.label.charAt(0).toLowerCase() + option.label.slice(1));
                 const list = labels.length > 1 ? `${labels.slice(0, -1).join(', ')} ва ${labels[labels.length - 1]}` : labels[0];
                 const reply = answerLang === 'ru'
-                    ? `Есть такие направления: ${labels.join(', ')}. Какое вам ближе?`
+                    ? `Чтобы стать ${say}, есть такие направления: ${labels.join(', ')}. Какое вам ближе?`
                     : answerLang === 'en'
-                        ? `There are these directions: ${labels.join(', ')}. Which one do you like?`
+                        ? `To become ${say}, there are these directions: ${labels.join(', ')}. Which one do you like?`
                         : `Барои ${say} шудан ин самтҳо ҳастанд: ${list}. Кадомаш ба шумо маъқул аст?`;
                 return { reply, action: 'choose_direction', params: { role: say, options }, answerLang };
             }
@@ -1011,11 +1051,13 @@ export class CareerService {
             '',
             'АМАЛҲОИ ИҶОЗАТДОДАШУДА:',
             '- search — ҷустуҷӯи ихтисос («барномасозиро нишон деҳ», «то 4000 сомонӣ»). params: {"query": "матни ҷустуҷӯ"}',
+            '  МУҲИМ: номҳои ихтисос дар база ТОҶИКӢ ҳастанд — "query"-ро ҲАМЕША бо тоҷикӣ нависед, ҳатто агар корбар русӣ ё англисӣ гӯяд:',
+            '  «programming» → «барномасозӣ», «AI / искусственный интеллект» → «зеҳни сунъӣ», «medicine» → «тиб», «law» → «ҳуқуқ».',
             '- open_career — кушодани як ихтисоси мушаххас. params: {"name": "номи ихтисос"}',
             '- compare — муқоисаи ду ё зиёда ихтисос. params: {"names": ["ном1", "ном2"]}',
             '- save_career — захира кардани ихтисос. params: {"name": "номи ихтисос"}',
             '- start_quiz — оғози санҷиши касбӣ. params: {}',
-            '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "номи донишгоҳ", "city": "шаҳр"}',
+            '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "номи донишгоҳ", "city": "шаҳр"} — ном ва шаҳр бо тоҷикӣ («Худжанд» → «Хуҷанд», «medical» → «тиббӣ»)',
             '- open_report — ҳисоботи AI аз рӯи санҷиш. params: {}',
             '- open_plan — рӯйхати ҳуҷҷатсупорӣ. params: {}',
             '- nearest_universities — «донишгоҳи наздиктарин», «дар наздикии ман». params: {}',
@@ -1052,7 +1094,7 @@ export class CareerService {
         ].filter(Boolean).join(String.fromCharCode(10));
 
         // Аввал роутери тез: фармони маълумро бе AI иҷро мекунем.
-        let parsed: any = this.quickRoute(message);
+        let parsed: any = this.quickRoute(message, answerLang);
         if (!parsed) try {
             // Сӯҳбати зинда: ҳадди 6 сония, бе хобидан ҳангоми 429.
             // Gemini аввал: Vertex квотаашро тамом кардааст (429) ва ҳар дархостро
@@ -1087,7 +1129,13 @@ export class CareerService {
         }
 
         if (action === 'search') {
-            const rawQuery = String(given.query || message).trim().slice(0, 200);
+            // Ихтисорҳои кӯтоҳ («AI», «IT») пештар ҳамчун «холӣ» ҳисоб мешуданд ва ҳамаи 884 мебаромад.
+            const ACRONYMS: Record<string, string> = {
+                ai: 'зеҳни сунъӣ', ии: 'зеҳни сунъӣ', it: 'технологияи иттилоотӣ', ит: 'технологияи иттилоотӣ',
+            };
+            const given0 = String(given.query || '').trim();
+            const expanded = ACRONYMS[given0.toLowerCase()] || given0.replace(/\b(AI|IT)\b/g, (m) => ACRONYMS[m.toLowerCase()]);
+            const rawQuery = String(expanded || message).trim().slice(0, 200);
 
             // «Дар бораи ихтисосҳо гӯй» — калимаи умумӣ филтр нест, онро мебарорем.
             const generic = /ихтисос[а-яёғӣқӯҳҷ]*|касб[а-яёғӣқӯҳҷ]*|профессия[а-я]*|специальност[а-я]*|специалност[а-я]*/gi;
@@ -1211,7 +1259,7 @@ export class CareerService {
             }
 
             if (!params.id) {
-                const city = String(given.city || '').trim();
+                const city = CareerService.cityToTajik(String(given.city || '').trim());
                 if (city) {
                     const rows: Array<{ city: string }> = await this.careerRepository.manager.query(
                         `SELECT DISTINCT city FROM universities WHERE ${TAJIK_FOLD('city')} LIKE $1 LIMIT 1`,
@@ -1224,7 +1272,7 @@ export class CareerService {
 
         // Барои амалҳо ҷумлаи собит мегирем — садояш ҳамеша аз кеш меояд.
         // Кластерро на танҳо мекушоем — кӯтоҳ шарҳ ҳам медиҳем.
-        if (action === 'open_cluster' && params.number) {
+        if (action === 'open_cluster' && params.number && answerLang === 'tj') {
             const cluster = clusters.find((item) => item.clusterId === params.number);
             const about = (cluster?.description || '').split('—')[1] || cluster?.description || '';
             if (about) {
@@ -1264,8 +1312,8 @@ export class CareerService {
     private async careerFact(careerId: string, message: string, lang: string): Promise<string | null> {
         const text = foldTajik(message);
         const asks = {
-            salary: /маош|музд|даромад|зарплат|salary|сколько получа/.test(text),
-            price: /нарх|пули тахсил|контракт|стоимост|цена|price|tuition/.test(text),
+            salary: /маош|музд|даромад|зарплат|salary|earn|сколько получа|доход/.test(text),
+            price: /нарх|пули тахсил|контракт|стоимост|стоит|цена|price|tuition|cost/.test(text),
             free: /ройгон|бепул|грант|бюджет|free/.test(text),
         };
         if (!asks.salary && !asks.price && !asks.free) return null;
@@ -1293,7 +1341,10 @@ export class CareerService {
         }
         if (!parts.length) return null;
         const tail = lang === 'ru' ? 'Подробности на странице.' : lang === 'en' ? 'Details are on the page.' : 'Тафсилот дар саҳифа.';
-        return `${career.name}: ${parts.join(' ')} ${tail}`.slice(0, 300);
+        // Ном ва асъор бо забони корбар («Кори табобатӣ» → «General Medicine», «сомонӣ» → «somoni»).
+        const name = (lang !== 'tj' && (career as any).translations?.[lang]?.name) || career.name;
+        const currency = lang === 'en' ? 'somoni' : lang === 'ru' ? 'сомони' : 'сомонӣ';
+        return `${name}: ${parts.join(' ')} ${tail}`.replace(/сомонӣ/g, currency).slice(0, 300);
     }
 
     // Балҳои гузариши расмии НМТ аз рӯи коди ихтисос.

@@ -13,6 +13,7 @@ import {
   Bookmark,
 
 } from "lucide-react";
+import { displayName } from "../lib/careerName";
 
 export function formatTuition(specialty, t) {
   const min = specialty.minTuitionFee ?? specialty.tuitionFee;
@@ -172,14 +173,14 @@ export default function SpecialtyCard({ specialty }) {
         <div className="space-y-4 flex-1">
           <div>
             <h3 className="font-extrabold text-xl sm:text-2xl text-foreground leading-tight">
-              {specialty.nameTranslated || specialty.name}
+              {displayName(specialty.nameTranslated || specialty.name)}
             </h3>
             {specialty.nameTranslated && (
-              <p className="mt-1 text-sm text-muted-foreground">{specialty.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{displayName(specialty.name)}</p>
             )}
           </div>
           <p className="text-sm text-muted-foreground font-medium leading-relaxed line-clamp-3">
-            {specialty.description || specialty.purpose || t('common.default_desc', "Ин ихтисоси ҷолиб ояндаи шуморо пурра тағйир дода метавонад.")}
+            {displayName(specialty.description || specialty.purpose) || t('common.default_desc', "Ин ихтисоси ҷолиб ояндаи шуморо пурра тағйир дода метавонад.")}
           </p>
         </div>
 
@@ -264,10 +265,10 @@ export function SpecialtyCardList({ specialty }) {
               ? clusterLabelNumbered(t, specialty.cluster)
               : t('common.course', "Курси таълимӣ")}</span>
             <h3 className="font-black text-lg text-foreground leading-tight">
-              {specialty.nameTranslated || specialty.name}
+              {displayName(specialty.nameTranslated || specialty.name)}
               {specialty.nameTranslated && (
                 <span className="mt-1 block text-sm font-medium text-muted-foreground">
-                  {specialty.name}
+                  {displayName(specialty.name)}
                 </span>
               )}
             </h3>
@@ -284,7 +285,7 @@ export function SpecialtyCardList({ specialty }) {
         </div>
 
         <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2 mb-4">
-          {specialty.description || specialty.purpose || t('common.career_desc_short', "Ихтисоси ояндадор барои донишҷӯён.")}
+          {displayName(specialty.description || specialty.purpose) || t('common.career_desc_short', "Ихтисоси ояндадор барои донишҷӯён.")}
         </p>
 
         <div className="mb-6">

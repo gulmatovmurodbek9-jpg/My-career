@@ -30,6 +30,7 @@ import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../components/toast/ToastProvider";
 import { MMT_CLUSTERS } from "../../lib/mmtClusters";
+import { displayName } from "../../lib/careerName";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
 
@@ -581,7 +582,7 @@ const Quiz = () => {
                                             <div className="flex items-start gap-3 min-w-0">
                                                 <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-black text-primary">{index + 1}</span>
                                                 <h3 className="text-[15px] font-bold leading-snug text-foreground">
-                                                    <Link to={`/info/${career.id}`} className="hover:text-primary hover:underline">{career.name}</Link>
+                                                    <Link to={`/info/${career.id}`} className="hover:text-primary hover:underline">{displayName(career.name)}</Link>
                                                 </h3>
                                             </div>
                                             <button
@@ -597,7 +598,7 @@ const Quiz = () => {
                                             </button>
                                         </div>
                                         {(career.description || career.purpose) && (
-                                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{career.description || career.purpose}</p>
+                                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{displayName(career.description || career.purpose)}</p>
                                         )}
                                         <div className="mt-auto flex items-center justify-between gap-3 pt-1">
                                             <span className="text-xs font-bold text-muted-foreground">

@@ -18,13 +18,14 @@ import { Card, CardContent } from "./card";
 import { Badge } from "./badge";
 import { Button } from "./button";
 import { Tabs, TabsList, TabsTrigger } from "./tabs";
+import { displayName } from "../lib/careerName";
 
 export function SpecialtyCardList({ specialty }) {
   return (
     <Link to={`/info/${specialty.id}`}>
       <div className="glass-card p-5 group h-full flex flex-col">
         <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors mb-1.5 truncate">
-          {specialty.name}
+          {displayName(specialty.name)}
         </h3>
         <p className="text-xs text-muted-foreground line-clamp-2 mb-3 flex-1">
           {specialty.description || specialty.purpose}
@@ -53,7 +54,7 @@ export default function SpecialtyCard({ specialty }) {
         <div className="flex items-start justify-between gap-4 mb-3">
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-lg text-foreground mb-1 truncate">
-              {specialty.name}
+              {displayName(specialty.name)}
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
               {specialty.description || specialty.purpose}

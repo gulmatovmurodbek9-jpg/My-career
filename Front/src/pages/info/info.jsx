@@ -44,6 +44,7 @@ import { clusterLabel } from "../../lib/clusterLabel";
 import { studyFormLabel, paymentTypeLabel, languageLabel } from "../../lib/offeringLabels";
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
+import { displayName } from "../../lib/careerName";
 
 const fadeIn = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
 
@@ -479,16 +480,16 @@ const Info = () => {
                   )}
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight">
-                  {career.nameTranslated || career.name}
+                  {displayName(career.nameTranslated || career.name)}
                 </h1>
                 {career.nameTranslated && (
-                  <p className="mt-2 text-base text-muted-foreground">{career.name}</p>
+                  <p className="mt-2 text-base text-muted-foreground">{displayName(career.name)}</p>
                 )}
               </div>
             </div>
 
             <p className="text-muted-foreground max-w-3xl leading-relaxed text-base sm:text-lg">
-              {career.description || career.purpose}
+              {displayName(career.description || career.purpose)}
             </p>
 
             <div className="flex flex-wrap gap-3">

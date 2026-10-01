@@ -11,6 +11,7 @@ import {
   GraduationCap, Info, Search, Filter, ShieldCheck 
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { displayName } from "../../lib/careerName";
 
 const CLUSTER_COLORS = {
   1: { bg: "#FAEEDA", text: "#633806" },
@@ -318,7 +319,7 @@ export default function UniversityDetail() {
                   </div>
                   
                   <h3 className="text-lg font-bold text-foreground leading-snug mb-4 line-clamp-2 min-h-[3.5rem] max-h-[3.5rem] overflow-hidden">
-                    {spec.name}
+                    {displayName(spec.name)}
                   </h3>
                   
                   <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">

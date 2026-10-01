@@ -28,6 +28,7 @@ import axios from "axios";
 import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { MMT_CLUSTERS, MMT_MAX } from "../../lib/mmtClusters";
+import { displayName } from "../../lib/careerName";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -533,7 +534,7 @@ const CareerAdvisorReport = () => {
                                         <GraduationCap className="w-5 h-5 text-blue-400" />
                                     </div>
                                     <h4 className="font-black text-foreground text-base uppercase tracking-tight">
-                                        {career.name}
+                                        {displayName(career.name)}
                                     </h4>
                                     <p className="text-muted-foreground text-sm leading-relaxed">
                                         {career.shortDescription}

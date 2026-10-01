@@ -129,6 +129,17 @@ export const splitForSpeech = (text) => {
         if (cut >= 0) {
             const at = 15 + cut + (first[15 + cut] === " " ? 2 : 1);
             sentences.splice(0, 1, first.slice(0, at).trim(), first.slice(at).trim());
+        } else if (first.length > 75) {
+            // Бе вергул: дар фосилаи байни калимаҳо (~30–50 ҳарф) — садо ~1 сония пештар сар мешавад.
+            // Беҳтар пеш аз «ва / ки / то / барои»; ҳеҷ гоҳ пас аз калимаи «…у»
+            // («ҳаштоду | чор» — рақамро намебурем).
+            const spaces = [];
+            for (let at = first.indexOf(" ", 30); at > 0 && at < 55; at = first.indexOf(" ", at + 1)) spaces.push(at);
+            const before = (at) => first.slice(0, at).split(" ").pop();
+            const after = (at) => first.slice(at + 1).split(" ")[0];
+            const space = spaces.find((at) => /^(ва|ки|то|барои|аммо|вале)$/i.test(after(at)))
+                ?? spaces.find((at) => !/у$/i.test(before(at)) && !/^(ва|ки|то|барои|аммо|вале|дар|ба|аз)$/i.test(before(at)));
+            if (space) sentences.splice(0, 1, first.slice(0, space).trim(), first.slice(space).trim());
         }
     }
     for (const sentence of sentences) {

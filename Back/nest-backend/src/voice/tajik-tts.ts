@@ -10,6 +10,7 @@ import { Logger } from '@nestjs/common';
 // Ҷумлаи хеле дароз хотираро мехӯрад ва садояш якранг мешавад.
 const MAX_CHUNK = 160;
 const PAUSE_SECONDS = 0.35;
+const COMMA_PAUSE_SECONDS = 0.14;
 
 interface TtsMeta {
     vocab: Record<string, number>;
@@ -177,6 +178,20 @@ export class TajikTts {
         return output[this.session.outputNames[0]].data as Float32Array;
     }
 
+    // Дар луғати модел вергул нест — бе ин ҳамаи ҷумла бе нафас якҷоя хонда мешуд.
+    // Ҷумла аз рӯи «, ; :» ба қисмҳо ҷудо мешавад ва байнашон таваққуфи кӯтоҳ.
+    // Қисмҳои хеле кӯтоҳ («Салом,») ба қисми навбатӣ ҳамроҳ мешаванд.
+    static phrases(sentence: string): string[] {
+        const parts = sentence.split(/(?<=[,;:])\s+/).map((part) => part.trim()).filter(Boolean);
+        const out: string[] = [];
+        for (const part of parts) {
+            const last = out[out.length - 1];
+            if (last !== undefined && (last.length < 14 || part.length < 8)) out[out.length - 1] = `${last} ${part}`;
+            else out.push(part);
+        }
+        return out;
+    }
+
     async speak(text: string, speed = 1): Promise<Buffer | null> {
         if (!(await this.load())) return null;
 
@@ -184,14 +199,19 @@ export class TajikTts {
         if (!chunks.length) return null;
 
         const gap = Math.round(this.sampleRate * PAUSE_SECONDS);
+        const commaGap = Math.round(this.sampleRate * COMMA_PAUSE_SECONDS);
         const pieces: Float32Array[] = [];
 
         try {
-            for (const chunk of chunks) {
-                const wave = await this.synthesize(chunk);
-                if (!wave?.length) continue;
-                pieces.push(wave);
-                if (chunks.length > 1) pieces.push(new Float32Array(gap));
+            for (const [index, chunk] of chunks.entries()) {
+                const phrases = TajikTts.phrases(chunk);
+                for (const [phraseIndex, phrase] of phrases.entries()) {
+                    const wave = await this.synthesize(phrase);
+                    if (!wave?.length) continue;
+                    pieces.push(wave);
+                    if (phraseIndex < phrases.length - 1) pieces.push(new Float32Array(commaGap));
+                }
+                if (index < chunks.length - 1) pieces.push(new Float32Array(gap));
             }
         } catch (error) {
             this.logger.error(`Синтез нашуд: ${error}`);

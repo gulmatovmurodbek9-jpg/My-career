@@ -11,6 +11,7 @@ import { existsSync, readdirSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { TajikTts } from './tajik-tts';
+import { prepareTajikText } from './tj-text';
 
 const MAX_TEXT_LENGTH = 2000;
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
@@ -235,7 +236,8 @@ export class VoiceService implements OnModuleInit {
             throw new BadRequestException(`Матн аз ${MAX_TEXT_LENGTH} ҳарф дароз аст`);
         }
         // Дар луғати mms-tts-rus ҳарфи «ё» нест — «е» мегузорем, вагарна ҳарф гум мешавад.
-        const spelled = spellNumbers(text, lang);
+        // Тоҷикӣ: лотинӣ (AutoCAD, SCADA), %, «ы/щ» — ба шакле, ки модел мехонад.
+        const spelled = spellNumbers(lang === 'tj' ? prepareTajikText(text) : text, lang);
         return lang === 'ru' ? spelled.replace(/ё/g, 'е').replace(/Ё/g, 'Е') : spelled;
     }
 

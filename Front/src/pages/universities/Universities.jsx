@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import {
@@ -16,6 +16,7 @@ import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
 import { useTranslation } from "react-i18next";
+import { autoDescription } from "../../lib/uniText";
 
 const CITY_KEYWORDS = [
   "Душанбе",
@@ -85,7 +86,6 @@ const searchText = (uni) =>
 
 export default function Universities() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
   // Ёвари овозӣ шаҳрро бо ?q= мефиристад.
@@ -212,7 +212,7 @@ export default function Universities() {
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  aria-label="Тоза кардан"
+                  aria-label={t("career_page.u_clear_filters")}
                   className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   ×
@@ -220,7 +220,7 @@ export default function Universities() {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" aria-live="polite">
               <span className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-[13px] font-bold text-muted-foreground">
                 {t("career_page.u_results", { count: filteredUnis.length })}
               </span>
@@ -232,6 +232,8 @@ export default function Universities() {
 
           <div className="inline-flex shrink-0 rounded-2xl border border-border bg-muted/40 p-1">
             <button
+              type="button"
+              aria-pressed={viewMode === "map"}
               onClick={() => setViewMode("map")}
               className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
                 viewMode === "map"
@@ -243,9 +245,11 @@ export default function Universities() {
               {t("career_page.u_view_map")}
             </button>
             <button
-              onClick={() => setViewMode("grid")}
+              type="button"
+              aria-pressed={viewMode === "list"}
+              onClick={() => setViewMode("list")}
               className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-                viewMode === "grid"
+                viewMode === "list"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
@@ -297,10 +301,10 @@ export default function Universities() {
                 className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
               >
                 {filteredUnis.map((uni) => (
-                  <article
+                  <Link
                     key={uni.id}
-                    onClick={() => navigate(`/universities/${uni.id}`)}
-                    className="group flex cursor-pointer flex-col justify-between rounded-[1.75rem] border border-border bg-card/70 p-6 shadow-xl transition duration-300 hover:-translate-y-1.5 hover:border-primary/20 hover:shadow-2xl"
+                    to={`/universities/${uni.id}`}
+                    className="focus-ring group flex cursor-pointer flex-col justify-between rounded-[1.75rem] border border-border bg-card/70 p-6 shadow-xl transition duration-300 hover:-translate-y-1.5 hover:border-primary/20 hover:shadow-2xl"
                   >
                     <div>
                       <div className="mb-5 flex items-start justify-between gap-4">
@@ -318,28 +322,31 @@ export default function Universities() {
                         </span>
                       </div>
 
-                      <h3 className="text-xl font-black leading-snug text-foreground">
+                      <h2 className="text-xl font-black leading-snug text-foreground">
                         {uni.nameTranslated || uni.name}
-                      </h3>
+                      </h2>
                       {uni.nameTranslated && (
                         <p className="mt-1 text-xs leading-snug text-muted-foreground">{uni.name}</p>
                       )}
+                      <p className="mt-2 text-xs font-bold text-muted-foreground">
+                        {[uni.institutionType, uni.isState ? t("career_page.u_state_short") : t("career_page.u_private_short")].filter(Boolean).join(" · ")}
+                      </p>
                       <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-                        {uni.description || "Барои ин донишгоҳ маълумоти кӯтоҳ дар ҳоли ҳозир дастрас нест."}
+                        {uni.description || autoDescription(t, uni)}
                       </p>
                     </div>
 
                     <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
                       <div className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground">
                         <BookOpen className="h-4 w-4" />
-                        {uni.careerCount || 0} ихтисос
+                        {t("career_page.u_programs", { count: uni.careerCount || 0 })}
                       </div>
-                      <span className="inline-flex items-center gap-2 text-sm font-black text-primary transition group-hover:translate-x-1">
-                        Муфассал
+                      <span className="inline-flex items-center gap-2 text-sm font-black text-primary-strong transition group-hover:translate-x-1">
+                        {t("misc2.detail")}
                         <ArrowRight className="h-4 w-4" />
                       </span>
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </motion.div>
             )}

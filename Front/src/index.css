@@ -13,6 +13,8 @@
 
   --primary: 220 100% 35%;
   --primary-foreground: 0 0% 100%;
+  /* 59: матни ранги асосӣ дар заминаи корт — контраст ≥ 4.5:1 */
+  --primary-strong: 220 100% 35%;
 
   --accent-blue: 217 91% 60%;
 
@@ -39,6 +41,7 @@
 
   --primary: 221 83% 53%;
   --primary-foreground: 0 0% 100%;
+  --primary-strong: 213 94% 72%;
 
   --accent-blue: 213 94% 68%;
 
@@ -64,6 +67,7 @@
   --color-card-foreground: hsl(var(--card-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-strong: hsl(var(--primary-strong));
   --color-accent-blue: hsl(var(--accent-blue));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
@@ -1014,3 +1018,32 @@
 .legend-dot--institute  { background: linear-gradient(135deg, #0f766e, #2dd4bf); }
 .legend-dot--college    { background: linear-gradient(135deg, #b45309, #f59e0b); }
 .legend-dot--branch     { background: linear-gradient(135deg, #475569, #94a3b8); }
+
+/* 108: корбаре, ки ҳаракатро хомӯш кардааст — аниматсия ва гузаришҳо нест. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 116, 117: чоп — заминаи сафед, матни сиёҳ, бе тугмаҳо ва идоракунии харита. */
+@media print {
+  :root, .dark {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 25%;
+    --border: 0 0% 80%;
+    --primary-strong: 220 100% 30%;
+  }
+  body { background: #fff !important; color: #000 !important; }
+  header, footer, nav, .no-print, .leaflet-control-container, [data-voice-assistant] { display: none !important; }
+  * { box-shadow: none !important; text-shadow: none !important; backdrop-filter: none !important; }
+  [class*="blur-"] { display: none !important; }
+  a { color: inherit !important; }
+}

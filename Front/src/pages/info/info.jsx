@@ -28,7 +28,8 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, Link } from "react-router";
+import { useParams, Link, useNavigate } from "react-router";
+import { loginUrl } from "../../components/RouteGuards";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/authStore";
 import PsychologicalProfile from "../../components/PsychologicalProfile";
@@ -71,6 +72,10 @@ function ResourceItem({ name }) {
   );
 }
 
+// 155: то 4 ном пурра, зиёдтар — 3 ном ва «+N».
+const shortList = (names) =>
+  names.length <= 4 ? names.join(", ") : `${names.slice(0, 3).join(", ")} +${names.length - 3}`;
+
 function ChoosingHelp({ offerings }) {
   const { t } = useTranslation();
   if (offerings.length < 2) return null;
@@ -89,7 +94,7 @@ function ChoosingHelp({ offerings }) {
     free.length && {
       label: t("career_page.free_seats"),
       value: t("career_page.offers_count", { count: free.length }),
-      hint: [...new Set(free.map((o) => o.university?.name))].slice(0, 2).join(", "),
+      hint: shortList([...new Set(free.map((o) => o.university?.nameTranslated || o.university?.name).filter(Boolean))]),
     },
     cheapest && {
       label: t("career_page.cheapest_paid"),
@@ -99,7 +104,7 @@ function ChoosingHelp({ offerings }) {
     cities.length && {
       label: t("career_page.cities"),
       value: cities.length > 1 ? t("career_page.cities_count", { count: cities.length }) : cities[0],
-      hint: cities.length > 1 ? cities.slice(0, 3).join(", ") : null,
+      hint: cities.length > 1 ? cities.join(", ") : null,
     },
     totalSeats > 0 && { label: t("career_page.total_seats"), value: String(totalSeats), hint: null },
   ].filter(Boolean);
@@ -130,6 +135,7 @@ const Info = () => {
   const { t, i18n } = useTranslation();
   const { user, token, updateUser, refreshProfile } = useAuthStore();
   const { error: showError, success: showSuccess } = useToast();
+  const navigate = useNavigate();
   const [career, setCareer] = useState(null);
   const [offerings, setOfferings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -154,7 +160,7 @@ const Info = () => {
 
   const togglePlan = async (offeringId) => {
     if (!token) {
-      showError(t("career_page.login_first"));
+      askLogin();
       return;
     }
     setPlanBusyId(offeringId);
@@ -272,8 +278,15 @@ const Info = () => {
       : undefined,
   });
 
+  const askLogin = () =>
+    showError(t("career_page.login_first"), 6000, {
+      label: t("nav.login", "Вуруд"),
+      href: loginUrl(window.location.pathname),
+    });
+
   const handleLike = async () => {
-    if (!token || isLiking) return;
+    if (!token) return askLogin();
+    if (isLiking) return;
     try {
       setIsLiking(true);
       const { data } = await axios.post(`${API}/careers/${id}/like`, {}, {
@@ -295,7 +308,8 @@ const Info = () => {
   };
 
   const handleSave = async () => {
-    if (!token || isSaving) return;
+    if (!token) return askLogin();
+    if (isSaving) return;
     try {
       setIsSaving(true);
       const { data } = await axios.post(`${API}/users/save-career/${id}`, {}, {
@@ -400,12 +414,25 @@ const Info = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-5">
 
             <div className="flex items-center justify-between">
-              <Link to="/careers" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group">
+              <Link
+                to="/careers"
+                onClick={(e) => {
+                  if (window.history.state?.idx > 0) {
+                    e.preventDefault();
+                    navigate(-1);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              >
                 <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> {t("career_page.back_to_list")}
               </Link>
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
+                  aria-label={`${t("career_page.like", "Писанд")}: ${likesCount}`}
+                  title={t("career_page.like", "Писанд")}
+                  aria-pressed={isLiked}
                   onClick={handleLike}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-sm ${isLiked ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" : "glass-card-sm text-muted-foreground hover:text-rose-400"
                     }`}
@@ -414,6 +441,10 @@ const Info = () => {
                   {likesCount}
                 </button>
                 <button
+                  type="button"
+                  aria-label={t("career_page.save", "Захира")}
+                  title={t("career_page.save", "Захира")}
+                  aria-pressed={isSaved}
                   onClick={handleSave}
                   className={`p-2.5 rounded-xl transition-all ${isSaved ? "bg-secondary/20 text-secondary border border-secondary/30 shadow-lg shadow-secondary/10" : "glass-card-sm text-muted-foreground hover:text-secondary"
                     }`}
@@ -692,24 +723,32 @@ const Info = () => {
             >
               <ChoosingHelp offerings={offerings} />
 
+              <p className="mb-2 text-xs text-muted-foreground sm:hidden" aria-hidden="true">← {t("career_page.scroll_hint", "Ҷадвалро ба паҳлӯ кашед")} →</p>
               <div className="overflow-x-auto -mx-2 px-2">
                 <table className="w-full min-w-[720px] text-sm border-separate border-spacing-y-1.5">
+                  <caption className="sr-only">{t("career_page.where_title")}</caption>
                   <thead>
                     <tr className="text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      <th className="px-4 py-2">{t("career_page.th_institution")}</th>
-                      <th className="px-4 py-2">{t("career_page.th_city")}</th>
-                      <th className="px-4 py-2">{t("career_page.th_form")}</th>
-                      <th className="px-4 py-2">{t("career_page.th_language")}</th>
-                      <th className="px-4 py-2 text-center">{t("career_page.th_seats")}</th>
-                      <th className="px-4 py-2 text-right">{t("career_page.th_price")}</th>
-                      <th className="px-4 py-2 text-right">{t("career_page.th_choose")}</th>
+                      <th scope="col" className="px-4 py-2">{t("career_page.th_institution")}</th>
+                      <th scope="col" className="px-4 py-2">{t("career_page.th_city")}</th>
+                      <th scope="col" className="px-4 py-2">{t("career_page.th_form")}</th>
+                      <th scope="col" className="px-4 py-2">{t("career_page.th_language")}</th>
+                      <th scope="col" className="px-4 py-2 text-center">{t("career_page.th_seats")}</th>
+                      <th scope="col" className="px-4 py-2 text-right">{t("career_page.th_price")}</th>
+                      <th scope="col" className="px-4 py-2 text-right">{t("career_page.th_choose")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {offerings.map((offering) => (
                       <tr key={offering.id} className="glass-card-sm">
                         <td className="px-4 py-3 rounded-l-xl">
-                          <div className="font-semibold text-foreground leading-snug">{offering.university?.nameTranslated || offering.university?.name}</div>
+                          {offering.university?.id ? (
+                            <Link to={`/universities/${offering.university.id}`} className="font-semibold text-foreground leading-snug hover:text-primary hover:underline">
+                              {offering.university?.nameTranslated || offering.university?.name}
+                            </Link>
+                          ) : (
+                            <div className="font-semibold text-foreground leading-snug">{offering.university?.nameTranslated || offering.university?.name}</div>
+                          )}
                           {offering.university?.isState === false && (
                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">{t("career_page.non_state")}</span>
                           )}

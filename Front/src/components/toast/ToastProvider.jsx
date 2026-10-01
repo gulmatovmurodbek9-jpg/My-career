@@ -15,9 +15,9 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info', duration = 5000) => {
+  const addToast = useCallback((message, type = 'info', duration = 5000, action = null) => {
     const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
+    setToasts((prev) => [...prev, { id, message, type, duration, action }]);
 
     if (duration > 0) {
       setTimeout(() => {
@@ -32,10 +32,10 @@ export const ToastProvider = ({ children }) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const success = useCallback((message, duration) => addToast(message, 'success', duration), [addToast]);
-  const error = useCallback((message, duration) => addToast(message, 'error', duration), [addToast]);
-  const warning = useCallback((message, duration) => addToast(message, 'warning', duration), [addToast]);
-  const info = useCallback((message, duration) => addToast(message, 'info', duration), [addToast]);
+  const success = useCallback((message, duration, action) => addToast(message, 'success', duration, action), [addToast]);
+  const error = useCallback((message, duration, action) => addToast(message, 'error', duration, action), [addToast]);
+  const warning = useCallback((message, duration, action) => addToast(message, 'warning', duration, action), [addToast]);
+  const info = useCallback((message, duration, action) => addToast(message, 'info', duration, action), [addToast]);
 
   useEffect(() => {
     window.__TOAST_ERROR__ = error;
@@ -59,7 +59,7 @@ export const ToastProvider = ({ children }) => {
     <ToastContext.Provider value={{ success, error, warning, info, addToast, removeToast }}>
       {children}
 
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+      <div role="status" aria-live="polite" className="fixed top-20 right-4 left-4 sm:left-auto z-50 flex flex-col gap-3 sm:max-w-sm sm:w-full pointer-events-none">
         <AnimatePresence mode="popLayout">
           {toasts.map((toast) => {
             const Icon = icons[toast.type];
@@ -73,8 +73,20 @@ export const ToastProvider = ({ children }) => {
                 className={`glass-card border ${colors[toast.type]} p-4 pointer-events-auto flex items-start gap-3 shadow-lg`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <p className="flex-1 text-sm font-medium leading-relaxed">{toast.message}</p>
+                <div className="flex-1">
+                  <p className="text-sm font-medium leading-relaxed">{toast.message}</p>
+                  {toast.action && (
+                    <a
+                      href={toast.action.href}
+                      className="mt-2 inline-flex rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+                    >
+                      {toast.action.label}
+                    </a>
+                  )}
+                </div>
                 <button
+                  type="button"
+                  aria-label="×"
                   onClick={() => removeToast(toast.id)}
                   className="flex-shrink-0 p-1 hover:bg-white/5 rounded-lg transition-colors"
                 >

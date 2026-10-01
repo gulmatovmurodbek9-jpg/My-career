@@ -122,7 +122,7 @@ const links = (items) => `<ul>${items.map(([href, text]) => `<li><a href="${esc(
         page({
             route: `/universities/${university.id}`,
             title: `${university.name}${university.city ? ` — ${university.city}` : ''}: ихтисосҳо ва нарх | ${SITE}`,
-            description: cut(`${university.name}${ru ? ` (${ru})` : ''}${university.city ? `, ${university.city}` : ''}. ${offered.length} ихтисос, нархи таҳсил ва ҷойҳои ройгон.`, 158),
+            description: cut(`${university.name}${ru ? ` (${ru})` : ''}${university.city ? `, ${university.city}` : ''}. ${university.institutionType ? `${university.institutionType}, ` : ''}${university.isState ? 'давлатӣ' : 'ғайридавлатӣ'}. ${offered.length} ихтисос.`, 158),
             body: [
                 nav,
                 `<h1>${esc(university.name)}</h1>`,
@@ -153,7 +153,7 @@ const links = (items) => `<ul>${items.map(([href, text]) => `<li><a href="${esc(
     page({
         route: '/universities',
         title: `Донишгоҳҳои Тоҷикистон — ${universities.length} муассиса дар харита | ${SITE}`,
-        description: `${universities.length} донишгоҳ ва коллеҷи Тоҷикистон: шаҳр, ихтисосҳо, нархи таҳсил ва ҷойҳои ройгон.`,
+        description: `${universities.length} донишгоҳ ва коллеҷи Тоҷикистон дар харита: шаҳр, навъи муассиса ва ихтисосҳо.`,
         body: nav + `<h1>Донишгоҳҳои Тоҷикистон дар як харита</h1>` + links(universities.map((u) => [`/universities/${u.id}`, `${u.name}${u.city ? ` — ${u.city}` : ''}`])),
     });
     page({

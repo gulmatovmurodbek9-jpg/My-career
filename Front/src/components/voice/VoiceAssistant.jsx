@@ -836,7 +836,7 @@ export default function VoiceAssistant() {
     return (
         <>
             {open && (
-                <div data-voice-panel className="fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
+                <div data-voice-panel className="no-print fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
                     <button
                         type="button"
                         onClick={close}
@@ -1005,7 +1005,7 @@ export default function VoiceAssistant() {
                 onClick={() => (open ? close() : setOpen(true))}
                 aria-label={t("assistant.title", "Ёвари овозӣ")}
                 data-voice-panel
-                className="fixed bottom-6 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring"
+                className="no-print fixed bottom-6 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring"
             >
                 {open ? <X className="h-6 w-6" aria-hidden /> : <Mic className="h-6 w-6" aria-hidden />}
             </button>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { Link, useParams, useNavigate } from "react-router";
+import { autoDescription } from "../../lib/uniText";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { API } from "../../lib/config";
@@ -54,16 +55,10 @@ export default function UniversityDetail() {
 
   usePageMeta({
     ready: !!university,
-    title: university ? `${university.name}${university.city ? ` — ${university.city}` : ""}` : undefined,
+    title: university ? `${university.nameTranslated || university.name}${university.city ? ` — ${university.city}` : ""}` : undefined,
     description: university
-      ? [
-        university.description,
-        specialties.length ? t("career_page.u_specialties_meta", { count: specialties.length }) : null,
-      ].filter(Boolean).join(" ") ||
-      t("career_page.u_meta_fallback", {
-        name: university.nameTranslated || university.name,
-        city: university.city ? `, ${university.city}` : "",
-      })
+      ? university.description ||
+        autoDescription(t, { ...university, careerCount: specialties.length })
       : undefined,
     path: `/universities/${id}`,
     image: university?.logo || undefined,
@@ -179,7 +174,7 @@ export default function UniversityDetail() {
             
             <div className="flex-1 space-y-4">
               <div className="space-y-2">
-                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold break-words text-foreground leading-tight">
                   {university.nameTranslated || university.name}
                 </h1>
                 {university.nameTranslated && (
@@ -206,7 +201,7 @@ export default function UniversityDetail() {
                   <span
                     className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
                       university.isState
-                        ? "bg-primary/10 text-primary border-primary/20"
+                        ? "bg-primary/10 text-primary-strong border-primary/20"
                         : "bg-secondary/10 text-secondary border-secondary/20"
                     }`}
                   >
@@ -216,11 +211,9 @@ export default function UniversityDetail() {
                 </div>
               </div>
 
-              {university.description && (
-                <p className="text-muted-foreground font-medium leading-relaxed max-w-3xl">
-                  {university.description}
-                </p>
-              )}
+              <p className="text-muted-foreground font-medium leading-relaxed max-w-3xl">
+                {university.description || autoDescription(t, { ...university, careerCount: uniqueSpecialties.length })}
+              </p>
 
               <div className="flex gap-8 pt-4 border-t border-white/5">
                 <div>
@@ -246,7 +239,9 @@ export default function UniversityDetail() {
             <div className="w-full md:w-80 relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input 
-                type="text" 
+                type="search" 
+                maxLength={100}
+                aria-label={t("career_page.u_search_specialty")}
                 placeholder={t("career_page.u_search_specialty")}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:outline-none focus:border-primary/40 focus:bg-white/10 transition-all"
                 value={searchQuery}
@@ -257,6 +252,8 @@ export default function UniversityDetail() {
 
           <div className="flex flex-wrap gap-2">
             <button 
+              type="button"
+              aria-pressed={activeCluster === null}
               onClick={() => setActiveCluster(null)}
               className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
                 activeCluster === null 
@@ -269,6 +266,8 @@ export default function UniversityDetail() {
             {clusters.map(cId => (
               <button 
                 key={cId}
+                type="button"
+                aria-pressed={activeCluster === cId}
                 onClick={() => setActiveCluster(cId)}
                 className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
                   activeCluster === cId 
@@ -286,7 +285,7 @@ export default function UniversityDetail() {
             ))}
           </div>
 
-          <p className="text-sm font-bold text-muted-foreground">
+          <p className="text-sm font-bold text-muted-foreground" aria-live="polite">
             {t("misc.shown", { count: filteredSpecialties.length })}
           </p>
         </section>
@@ -303,8 +302,10 @@ export default function UniversityDetail() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.2, delay: idx * 0.02 }}
-                  className="glass-card p-6 rounded-3xl border border-white/5 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all group cursor-pointer"
-                  onClick={() => navigate(`/info/${spec.id}`)}
+                >
+                <Link
+                  to={`/info/${spec.id}`}
+                  className="focus-ring flex h-full flex-col glass-card p-6 rounded-3xl border border-white/5 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all group cursor-pointer"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div 
@@ -313,12 +314,10 @@ export default function UniversityDetail() {
                     >
                       {t("misc.cluster_short", { id: spec.cluster?.clusterId })}
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all">
-                      <Clock className="w-4 h-4" />
-                    </div>
+                    <GraduationCap aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
                   </div>
                   
-                  <h3 className="text-lg font-bold text-foreground leading-snug mb-4 line-clamp-2 min-h-[3.5rem]">
+                  <h3 className="text-lg font-bold text-foreground leading-snug mb-4 line-clamp-2 min-h-[3.5rem] max-h-[3.5rem] overflow-hidden">
                     {spec.name}
                   </h3>
                   
@@ -333,10 +332,11 @@ export default function UniversityDetail() {
                         {spec.degreeType || t("misc.bachelor")}
                       </div>
                     </div>
-                    <div className="text-xs font-black uppercase text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="text-xs font-black uppercase text-primary-strong opacity-70 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
                       {t("misc2.detail")}
                     </div>
                   </div>
+                </Link>
                 </motion.div>
               );
             })}

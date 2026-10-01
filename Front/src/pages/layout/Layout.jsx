@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router";
 import VoiceAssistant from "../../components/voice/VoiceAssistant";
 import {
@@ -59,8 +59,8 @@ const Layout = () => {
   ];
 
   const languages = [
-    { code: "tj", label: "TJ", name: "Tojiki" },
-    { code: "ru", label: "RU", name: "Russkiy" },
+    { code: "tj", label: "TG", name: "Тоҷикӣ" },
+    { code: "ru", label: "RU", name: "Русский" },
     { code: "en", label: "EN", name: "English" },
   ];
 
@@ -70,6 +70,49 @@ const Layout = () => {
     : i18n.language?.startsWith("en")
       ? "en"
       : "tj";
+
+  // 30, 51, 171, 173: номҳо барои скринридер бо забони сайт.
+  const A11Y = {
+    tj: { lang: "Забон", theme: "Мавзӯи торик", menu: "Меню", logout: "Баромад", home: "Ихтисоси ман — саҳифаи асосӣ" },
+    ru: { lang: "Язык", theme: "Тёмная тема", menu: "Меню", logout: "Выйти", home: "Ихтисоси ман — главная" },
+    en: { lang: "Language", theme: "Dark theme", menu: "Menu", logout: "Log out", home: "Ikhtisosi man — home" },
+  }[currentLang];
+
+  // 51, 169, 180: Escape менюҳоро мепӯшад, клик берун аз менюи забон — низ;
+  // ҳангоми менюи мобилии кушода саҳифа зери он намеғелад.
+  const langRef = useRef(null);
+  useEffect(() => {
+    if (!langOpen && !isOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setLangOpen(false);
+        setIsOpen(false);
+      }
+    };
+    const onDown = (e) => {
+      if (langOpen && langRef.current && !langRef.current.contains(e.target)) setLangOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [langOpen, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    setIsOpen(false);
+    setLangOpen(false);
+  }, [location.pathname]);
 
   const localizedNav = {
     tj: {
@@ -125,7 +168,7 @@ const Layout = () => {
         <nav className={`transition-all duration-500 ${scrolled ? "nav-glass-scrolled py-2" : "nav-glass py-3 md:py-4"}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14 md:h-16 gap-3 lg:gap-5">
-              <Link to="/" className="flex shrink-0 items-center gap-2 lg:gap-3 group text-decoration-none">
+              <Link to="/" aria-label={A11Y.home} className="flex shrink-0 items-center gap-2 lg:gap-3 group text-decoration-none">
                 <img
                   src="/logo.png"
                   alt=""
@@ -149,6 +192,7 @@ const Layout = () => {
                     <Link
                       key={link.to}
                       to={link.to}
+                      aria-current={isActive ? "page" : undefined}
                       className={`relative whitespace-nowrap rounded-lg px-2.5 lg:px-3 py-2 text-[13px] xl:text-sm font-semibold transition-colors duration-200 focus-ring ${
                         isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -166,8 +210,12 @@ const Layout = () => {
               </div>
 
               <div className="hidden md:flex shrink-0 items-center gap-1.5 lg:gap-2">
-                <div className="relative">
+                <div className="relative" ref={langRef}>
                   <button
+                    type="button"
+                    aria-label={A11Y.lang}
+                    aria-haspopup="true"
+                    aria-expanded={langOpen}
                     onClick={() => setLangOpen(!langOpen)}
                     className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all cursor-pointer"
                   >
@@ -179,14 +227,17 @@ const Layout = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-40 glass-card p-2 shadow-2xl z-[60]"
+                        className="absolute right-0 top-full mt-2 w-40 glass-card p-2 shadow-2xl z-[60]"
                       >
                         {languages.map((lang) => (
                           <button
                             key={lang.code}
+                            type="button"
+                            lang={lang.code === "tj" ? "tg" : lang.code}
+                            aria-pressed={currentLang === lang.code}
                             onClick={() => changeLanguage(lang.code)}
                             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                              i18n.language === lang.code ? "bg-primary/10 text-primary" : "hover:bg-muted text-muted-foreground"
+                              currentLang === lang.code ? "bg-primary/10 text-primary" : "hover:bg-muted text-muted-foreground"
                             }`}
                           >
                             <span>{lang.name}</span>
@@ -198,7 +249,7 @@ const Layout = () => {
                   </AnimatePresence>
                 </div>
 
-                <button onClick={toggleTheme} className="theme-toggle w-9 h-9 xl:w-10 xl:h-10 rounded-xl cursor-pointer" aria-label="Toggle theme">
+                <button onClick={toggleTheme} className="theme-toggle w-9 h-9 xl:w-10 xl:h-10 rounded-xl cursor-pointer" aria-label={A11Y.theme} aria-pressed={theme === "dark"}>
                   {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                 </button>
 
@@ -215,6 +266,9 @@ const Layout = () => {
                       <span className="truncate">{userLabel}</span>
                     </Link>
                     <button
+                      type="button"
+                      aria-label={A11Y.logout}
+                      title={A11Y.logout}
                       onClick={() => {
                         logout();
                         navigate("/");
@@ -225,23 +279,25 @@ const Layout = () => {
                     </button>
                   </div>
                 ) : (
-                  <Link to="/login">
-                    <button className="btn-primary !px-5 !py-2.5 !text-xs !rounded-xl cursor-pointer">
-                      {t("nav.login", "Login")}
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
+                  <Link to="/login" className="btn-primary !px-5 !py-2.5 !text-xs !rounded-xl cursor-pointer">
+                    {t("nav.login", "Login")}
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 )}
               </div>
 
               <div className="md:hidden flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => setLangOpen(!langOpen)} className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/50 text-muted-foreground">
+                <button type="button" aria-label={A11Y.lang} onClick={() => setIsOpen(true)} className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/50 text-muted-foreground">
                   <Languages className="w-4 h-4" />
                 </button>
-                <button onClick={toggleTheme} className="theme-toggle w-10 h-10 rounded-xl cursor-pointer" aria-label="Toggle theme">
+                <button onClick={toggleTheme} className="theme-toggle w-10 h-10 rounded-xl cursor-pointer" aria-label={A11Y.theme} aria-pressed={theme === "dark"}>
                   {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </button>
                 <button
+                  type="button"
+                  aria-label={A11Y.menu}
+                  aria-expanded={isOpen}
+                  aria-controls="mobile-menu"
                   onClick={() => setIsOpen(!isOpen)}
                   className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                 >
@@ -254,6 +310,7 @@ const Layout = () => {
           <AnimatePresence>
             {isOpen && (
               <motion.div
+                id="mobile-menu"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -264,6 +321,7 @@ const Layout = () => {
                     <Link
                       key={link.to}
                       to={link.to}
+                      aria-current={location.pathname === link.to ? "page" : undefined}
                       onClick={() => setIsOpen(false)}
                       className={`block px-5 py-3 rounded-xl text-sm font-bold transition-all ${
                         location.pathname === link.to ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
@@ -277,9 +335,12 @@ const Layout = () => {
                     {languages.map((lang) => (
                       <button
                         key={lang.code}
+                        type="button"
+                        aria-label={lang.name}
+                        aria-pressed={currentLang === lang.code}
                         onClick={() => changeLanguage(lang.code)}
                         className={`p-3 rounded-xl text-[10px] font-black cursor-pointer ${
-                          i18n.language === lang.code ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                          currentLang === lang.code ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                         }`}
                       >
                         {lang.label}

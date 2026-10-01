@@ -158,8 +158,8 @@ export class CareerController {
 
     @Get(':id/brief')
     @ApiOperation({ summary: 'Муаррифии кӯтоҳи ихтисос барои ёвари овозӣ' })
-    async brief(@Param('id', ParseUUIDPipe) id: string) {
-        return this.careerService.careerBrief(id);
+    async brief(@Param('id', ParseUUIDPipe) id: string, @Query('lang') lang?: string) {
+        return this.careerService.careerBrief(id, lang);
     }
 
     @Post('assistant')

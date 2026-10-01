@@ -1410,9 +1410,27 @@ export class CareerService {
 
     // Муаррифии шифоҳии ихтисос — аз база, на аз AI: зуд (~50 мс) ва
     // рақамҳо (бал, маош) воқеӣ мемонанд, на бофта.
-    async careerBrief(careerId: string): Promise<{ text: string }> {
-        const career = await this.careerRepository.findOne({ where: { id: careerId } });
-        if (!career) throw new NotFoundException('Ихтисос ёфт нашуд');
+    async careerBrief(careerId: string, rawLang = 'tj'): Promise<{ text: string }> {
+        const found = await this.careerRepository.findOne({ where: { id: careerId } });
+        if (!found) throw new NotFoundException('Ихтисос ёфт нашуд');
+        // Русӣ ва англисӣ: матнҳо аз тарҷумаҳои база (name, description, …), қолабҳо бо ҳамон забон.
+        const lang = rawLang === 'ru' || rawLang === 'en' ? rawLang : 'tj';
+        const tr = lang === 'tj' ? {} : ((found as any).translations?.[lang] || {});
+        const career: any = { ...found, ...Object.fromEntries(Object.entries(tr).filter(([key, value]) => key !== '_fields' && value)) };
+        const T = {
+            tj: { and: 'ва', work: (x: string) => `Бо ин ихтисос дар ${x} кор карда метавонед.`, learn: (x: string) => `Шумо ${x}-ро меомӯзед.`,
+                salary: (x: string) => `Маоши аввал ${x}.`, to: ' то ', score1: (y: number, a: number) => `Соли ${y} бали гузариш ${a} буд.`,
+                score2: (y: number, a: number, b: number) => `Соли ${y} бали гузариш аз ${a} то ${b} буд.`, unis: (n: number) => n === 1 ? 'Онро як муассиса таълим медиҳад.' : `Онро ${n} муассиса таълим медиҳад.`,
+                similar: (x: string) => `Ихтисосҳои монанд: ${x}.`, ask: 'Мехоҳед захира кунам ё бо дигараш муқоиса кунем?' },
+            ru: { and: 'и', work: (x: string) => `С этой специальностью можно работать: ${x}.`, learn: (x: string) => `Вы изучите ${x}.`,
+                salary: (x: string) => `Начальная зарплата от ${x}.`, to: ' до ', score1: (y: number, a: number) => `В ${y} году проходной балл был ${a}.`,
+                score2: (y: number, a: number, b: number) => `В ${y} году проходной балл был от ${a} до ${b}.`, unis: (n: number) => n === 1 ? 'Её преподают в одном учебном заведении.' : `Её преподают в ${n} учебных заведениях.`,
+                similar: (x: string) => `Похожие специальности: ${x}.`, ask: 'Сохранить её или сравнить с другой?' },
+            en: { and: 'and', work: (x: string) => `With this specialty you can work in ${x}.`, learn: (x: string) => `You will learn ${x}.`,
+                salary: (x: string) => `The starting salary is ${x}.`, to: ' to ', score1: (y: number, a: number) => `In ${y} the passing score was ${a}.`,
+                score2: (y: number, a: number, b: number) => `In ${y} the passing score was from ${a} to ${b}.`, unis: (n: number) => n === 1 ? 'It is taught at one institution.' : `It is taught at ${n} institutions.`,
+                similar: (x: string) => `Similar specialties: ${x}.`, ask: 'Shall I save it or compare it with another one?' },
+        }[lang];
 
         const list = (value: unknown): string[] =>
             (Array.isArray(value) ? value : String(value || '').split(','))
@@ -1426,7 +1444,7 @@ export class CareerService {
             return end >= 0 ? text.slice(0, quoteEnd + 1 + end + 1) : text;
         };
         const join = (items: string[]): string =>
-            items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} ва ${items[items.length - 1]}`;
+            items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} ${T.and} ${items[items.length - 1]}`;
 
         const parts: string[] = [];
         // Агар тавсиф худ бо номи ихтисос сар шавад, номро такрор намекунем.
@@ -1436,15 +1454,19 @@ export class CareerService {
             : about ? `${career.name}. ${about}` : `${career.name}.`);
 
         const work = list(career.careerOpportunities).slice(0, 3)
-            .map((item) => item.charAt(0).toLowerCase() + item.slice(1));
-        if (work.length) parts.push(`Бо ин ихтисос дар ${join(work)} кор карда метавонед.`);
+            // «IT-отделы» — ихтисорро хурд намекунем.
+            .map((item) => (/^[A-ZА-ЯЁ]{2}/.test(item) ? item : item.charAt(0).toLowerCase() + item.slice(1)));
+        if (work.length) parts.push(T.work(join(work)));
 
         const techs = list(career.technologies).slice(0, 4);
-        if (techs.length) parts.push(`Шумо ${join(techs)}-ро меомӯзед.`);
+        if (techs.length) parts.push(T.learn(join(techs)));
 
         const salary = (career.salaryAndMarket as any)?.junior;
         // «2 500» → «2500», вагарна рақамҳо ҷудо-ҷудо хонда мешаванд.
-        if (salary) parts.push(`Маоши аввал ${String(salary).replace(/(\d)\s+(?=\d{3}(?!\d))/g, '$1').replace(/\s*[–—-]\s*/, ' то ')}.`);
+        if (salary) {
+            const amount = String(salary).replace(/(\d)\s+(?=\d{3}(?!\d))/g, '$1').replace(/\s*[–—-]\s*/, T.to);
+            parts.push(T.salary(lang === 'en' ? amount.replace(/сомонӣ/g, 'somoni') : lang === 'ru' ? amount.replace(/сомонӣ/g, 'сомони') : amount));
+        }
 
         // Бали гузаришро то адади бутун мегардонем: «шашсаду ёздаҳ», на «…ёздаҳ.як».
         const code = career.code ? String(career.code).trim() : '';
@@ -1458,9 +1480,7 @@ export class CareerService {
             if (rows[0]) {
                 const lo = Math.round(Number(rows[0].lo));
                 const hi = Math.round(Number(rows[0].hi));
-                parts.push(lo === hi
-                    ? `Соли ${rows[0].year} бали гузариш ${lo} буд.`
-                    : `Соли ${rows[0].year} бали гузариш аз ${lo} то ${hi} буд.`);
+                parts.push(lo === hi ? T.score1(rows[0].year, lo) : T.score2(rows[0].year, lo, hi));
             }
         }
 
@@ -1468,13 +1488,13 @@ export class CareerService {
             'SELECT count(*)::int AS n FROM career_universities WHERE "careerId" = $1',
             [career.id],
         );
-        if (unis[0]?.n) parts.push(`Онро ${unis[0].n} донишгоҳ таълим медиҳад.`);
+        if (unis[0]?.n) parts.push(T.unis(unis[0].n));
 
         const similar = [...new Set(list(career.relatedSpecializations))]
             .filter((item) => item !== career.name).slice(0, 2);
-        if (similar.length) parts.push(`Ихтисосҳои монанд: ${join(similar)}.`);
+        if (similar.length) parts.push(T.similar(join(similar)));
 
-        parts.push('Мехоҳед захира кунам ё бо дигараш муқоиса кунем?');
+        parts.push(T.ask);
         return { text: parts.join(' ') };
     }
 

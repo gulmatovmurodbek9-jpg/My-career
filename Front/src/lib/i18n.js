@@ -1484,7 +1484,15 @@ i18n
                         top_matches_label: "Лучшие совпадения",
                         top_matches_desc: "Это направления, которые оказались наиболее сильными по вашим ответам."
                     },
+                    scores: {
+                        empty: "Для этой специальности проходной балл на портале НЦТ не опубликован.",
+                        last_year: "проходной балл в {{year}}", drift: "изменение с {{year}}",
+                        competition: "абитуриентов на место", seats_short: "мест",
+                        by_uni: "Учебные заведения в {{year}} году", th_uni: "Учебное заведение", th_score: "Балл",
+                        th_seats: "Места", th_pay: "Форма", source: "Источник: {{name}}",
+                    },
                     career_page: {
+                        scores_title: "Проходной балл", scores_sub: "Официальные данные Национального центра тестирования за последние пять лет",
                         of_degree_bachelor: "Бакалавр",
                         of_degree_vocational: "Среднее профессиональное",
                         of_day: "очная",
@@ -2461,7 +2469,15 @@ i18n
                         dashboard_btn: "PERSONAL DASHBOARD",
                         back: "Back"
                     },
+                    scores: {
+                        empty: "No passing score has been published for this specialty on the NTC portal.",
+                        last_year: "passing score in {{year}}", drift: "change since {{year}}",
+                        competition: "applicants per place", seats_short: "places",
+                        by_uni: "Institutions in {{year}}", th_uni: "Institution", th_score: "Score",
+                        th_seats: "Places", th_pay: "Form", source: "Source: {{name}}",
+                    },
                     career_page: {
+                        scores_title: "Passing score", scores_sub: "Official data of the National Testing Center for the last five years",
                         of_degree_bachelor: "Bachelor",
                         of_degree_vocational: "Vocational secondary",
                         of_day: "full-time",

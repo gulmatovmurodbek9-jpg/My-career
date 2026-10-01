@@ -292,11 +292,11 @@ export default function VoiceAssistant() {
     // агар саҳифа ихтисос набошад ё аллакай гуфта шуда бошад — null.
     const careerBrief = useCallback(async (path) => {
         const match = path.match(/^\/info\/([^/]+)$/);
-        const id = match && `career:${match[1]}`;
+        const id = match && `career:${match[1]}:${voiceLangRef.current}`;
         if (!id || spokenGuidesRef.current.has(id)) return null;
         spokenGuidesRef.current.add(id);
         try {
-            const { data } = await axios.get(`${API}/careers/${match[1]}/brief`, { timeout: 5000 });
+            const { data } = await axios.get(`${API}/careers/${match[1]}/brief`, { params: { lang: voiceLangRef.current }, timeout: 5000 });
             return data?.text || null;
         } catch {
             return null;
@@ -705,8 +705,8 @@ export default function VoiceAssistant() {
     useEffect(() => {
         if (!open || !started) return undefined;
         const guide = guideFor(location.pathname, location.hash, !token, voiceLang);
-        // Муаррифии ихтисос аз база танҳо тоҷикӣ аст (матни база тоҷикӣ).
-        const isCareer = !guide && voiceLang === "tj" && /^\/info\//.test(location.pathname);
+        // Муаррифии ихтисос аз база — бо се забон (тарҷумаҳои база).
+        const isCareer = !guide && /^\/info\//.test(location.pathname);
         if (!guide && !isCareer) return undefined;
         if (guide && spokenGuidesRef.current.has(guide.id)) return undefined;
 

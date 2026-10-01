@@ -91,9 +91,14 @@ export class TajikTts {
         // Таваққуфи хурд («— ») пеш аз ҷумла: бе он модел калимаи аввалро фурӯ мебарад
         // («Маоши…» → «Ваши…»). Санҷиш: калимаи аввал 3/6 → 6/6 (test-lead-pause.py).
         const pause = ['—', '–', '-'].find((char) => typeof meta.vocab[char] === 'number');
+        // Модели англисӣ калимаи аввалро бештар фурӯ мебарад — дар tajik-tts.json
+        // «leadPauses» (масалан 3) таваққуфи дарозтар медиҳад: 10/24 → 15/24.
+        const leadPauses = Math.max(1, Math.min(4, Number((meta as any).leadPauses) || 1));
         if (pause) {
-            ids.push(meta.vocab[pause]);
-            if (typeof meta.vocab[' '] === 'number') ids.push(meta.vocab[' ']);
+            for (let index = 0; index < leadPauses; index += 1) {
+                ids.push(meta.vocab[pause]);
+                if (typeof meta.vocab[' '] === 'number') ids.push(meta.vocab[' ']);
+            }
         }
 
         for (const char of source) {

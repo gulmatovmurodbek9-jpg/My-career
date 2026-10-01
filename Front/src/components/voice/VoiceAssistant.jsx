@@ -86,13 +86,15 @@ export default function VoiceAssistant() {
     const quickDropsRef = useRef(0);
 
     const lang = i18n.language || "tj";
-    // Садо: тоҷикӣ ва русӣ — овози худамон; дигар забонҳо ҳоло модел надоранд.
-    const voiceLang = lang === "ru" ? "ru" : "tj";
+    // Садо: тоҷикӣ, русӣ ва англисӣ — ҳар забон модели худашро дорад.
+    const voiceLang = lang === "ru" || lang === "en" ? lang : "tj";
     const voiceLangRef = useRef(voiceLang);
     voiceLangRef.current = voiceLang;
     const greeting = voiceLang === "ru"
         ? "Добро пожаловать! Я ваш помощник. Чем займёмся — выберем специальность, посмотрим университеты или пройдём тест?"
-        : "Хуш омадед! Ман ёвари шумо ҳастам. Чӣ кор кунем — ихтисос интихоб кунем, донишгоҳҳоро бинем, ё санҷиш гузарем?";
+        : voiceLang === "en"
+            ? "Hello! Welcome. I am your assistant. What shall we do: choose a specialty, look at universities, or take the test?"
+            : "Хуш омадед! Ман ёвари шумо ҳастам. Чӣ кор кунем — ихтисос интихоб кунем, донишгоҳҳоро бинем, ё санҷиш гузарем?";
 
     // Бори аввал худаш кушода мешавад. Садо то пахши аввали корбар
     // намебарояд — ин қоидаи худи браузер аст.

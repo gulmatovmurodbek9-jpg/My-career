@@ -44,6 +44,16 @@ const PHRASES_RU = [
     'Извините, сейчас не могу ответить. Повторите, пожалуйста.',
 ];
 
+// Ибораҳои англисии ёвар (ASSISTANT_REPLIES.en + салом) — модели voice-model-eng/.
+const PHRASES_EN = [
+    'Hello! Welcome. I am your assistant. What shall we do: choose a specialty, look at universities, or take the test?',
+    'Here are the specialties.', 'Opened.', 'The comparison is ready.', 'Saved.', 'Starting the test.',
+    'Here are the universities.', 'I opened your report.', 'Here is the application plan.', 'Looking for the nearest universities.',
+    'Here is that cluster.', 'Chat opened.', 'Here are your saved items.', 'About us.', 'Going home.',
+    'Language changed.', 'Theme changed.',
+    'Sorry, I cannot answer right now. Please say it again.',
+];
+
 async function warm(text, lang = 'tj') {
     const started = Date.now();
     const response = await fetch(`${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}`);
@@ -66,6 +76,7 @@ async function warm(text, lang = 'tj') {
         const { allGuideTexts, splitForSpeech } = await import(guideUrl);
         PHRASES.push(...allGuideTexts());
         PHRASES_RU.push(...allGuideTexts('ru'));
+        PHRASES_EN.push(...allGuideTexts('en'));
         split = splitForSpeech;
     } catch (error) {
         console.log('муаррифиҳо хонда нашуданд:', String(error).slice(0, 120));
@@ -104,22 +115,25 @@ async function warm(text, lang = 'tj') {
 
     console.log(`\nНав сохта шуд: ${fresh}   Аллакай дар кеш: ${cached}   Ҳамагӣ: ${pieces.length}`);
 
-    // Русӣ: агар модел набошад, сервер 503 медиҳад — як бор хабар дода мегузарем.
+    // Русӣ ва англисӣ: агар модел набошад, сервер 503 медиҳад — як бор хабар дода мегузарем.
     const status = await (await fetch(`${API}/voice/status`)).json().catch(() => ({}));
-    if (!(status.languages || []).includes('ru')) {
-        console.log('\nМодели русӣ нест (voice-model-rus/) — ибораҳои русӣ гузаронида шуданд.');
-        return;
-    }
-    const piecesRu = [...new Set(PHRASES_RU.flatMap((text) => split(text)))];
-    let freshRu = 0;
-    for (const text of piecesRu) {
-        const result = await warm(text, 'ru');
-        if (!result.ok) {
-            console.log(`НЕ   ${result.status}  ${text.slice(0, 50)}`);
+    for (const [lang, phrases, label] of [['ru', PHRASES_RU, 'Русӣ'], ['en', PHRASES_EN, 'Англисӣ']]) {
+        if (!(status.languages || []).includes(lang)) {
+            console.log(`
+${label}: модел нест (voice-model-${lang === 'ru' ? 'rus' : 'eng'}/) — гузаронида шуд.`);
             continue;
         }
-        if (result.source === 'model') freshRu += 1;
-        console.log(`RU  ${result.source.padEnd(6)} ${result.seconds}s  ${text.slice(0, 50)}`);
+        const list = [...new Set(phrases.flatMap((text) => split(text)))];
+        let made = 0;
+        for (const text of list) {
+            const result = await warm(text, lang);
+            if (!result.ok) {
+                console.log(`НЕ   ${result.status}  ${text.slice(0, 50)}`);
+                continue;
+            }
+            if (result.source === 'model') made += 1;
+            console.log(`${lang.toUpperCase()}  ${String(result.source).padEnd(6)} ${result.seconds}s  ${text.slice(0, 50)}`);
+        }
+        console.log(`${label}: нав ${made}, ҳамагӣ ${list.length}`);
     }
-    console.log(`Русӣ: нав ${freshRu}, ҳамагӣ ${piecesRu.length}`);
 })();

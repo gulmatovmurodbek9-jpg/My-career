@@ -95,3 +95,26 @@ export function prepareTajikText(text: string): string {
     for (const [pattern, value] of CYRILLIC_FIX) out = out.replace(pattern, value);
     return out.replace(/\s{2,}/g, ' ').trim();
 }
+
+// ── Англисӣ: модели англисӣ ҳарфҳои кириллиро намедонад — номҳои тоҷикӣ
+// («Кори табобатӣ», «Хуҷанд») бесадо гум мешуданд. Ба лотинӣ мегардонем.
+const CYR_TO_LAT: Record<string, string> = {
+    а: 'a', б: 'b', в: 'v', г: 'g', ғ: 'gh', д: 'd', е: 'e', ё: 'yo', ж: 'zh', з: 'z', и: 'i', ӣ: 'i', й: 'y',
+    к: 'k', қ: 'q', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ӯ: 'u', ф: 'f',
+    х: 'kh', ҳ: 'h', ц: 'ts', ч: 'ch', ҷ: 'j', ш: 'sh', щ: 'sh', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
+};
+
+export function prepareEnglishText(text: string): string {
+    let out = String(text || '')
+        .replace(/(\d)\s*%/g, '$1 percent').replace(/%/g, ' percent')
+        .replace(/(\d)\s*\+/g, '$1 and more')
+        .replace(/(\d)\s*[-–—]\s*(\d)/g, '$1 to $2')
+        .replace(/&/g, ' and ').replace(/\$/g, ' dollars');
+    out = out.replace(/[а-яёӣӯқғҳҷ]/gi, (ch) => {
+        const lower = ch.toLowerCase();
+        const lat = CYR_TO_LAT[lower] ?? '';
+        return ch === lower ? lat : lat.charAt(0).toUpperCase() + lat.slice(1);
+    });
+    // «сомонӣ» → «somoni» аллакай; «7, 8, 9» дар луғат нестанд — рақамҳоро баъд spellNumbers мехонад.
+    return out.replace(/\s{2,}/g, ' ').trim();
+}

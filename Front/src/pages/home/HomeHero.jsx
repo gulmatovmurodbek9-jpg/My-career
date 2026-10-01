@@ -14,6 +14,7 @@ export default function HomeHero() {
       title={opening.title}
       lead={opening.lead}
       titleSize="clamp(2.25rem, 5.4vw, 4.25rem)"
+      headingLevel="h1"
       ctaPrimary={opening.ctaPrimary}
       ctaSecondary={opening.ctaSecondary}
     />

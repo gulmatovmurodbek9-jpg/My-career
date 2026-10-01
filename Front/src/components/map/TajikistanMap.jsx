@@ -217,11 +217,32 @@ function buildDisplayUniversities(universities) {
     stacks.get(key).push(uni);
   });
 
-  const spread = exact.map((uni) => ({
-    ...uni,
-    displayLat: uni.anchorLat,
-    displayLng: uni.anchorLng,
-  }));
+  // 66: муассисаҳое, ки координатаи айнан якхела доранд, болои ҳам меафтоданд ва
+  // клик намешуданд — онҳоро ~50 м аз ҳамдигар ҷудо мекунем (ҷои воқеӣ қариб ҳамон).
+  const exactStacks = new Map();
+  exact.forEach((uni) => {
+    const key = `${uni.anchorLat.toFixed(5)},${uni.anchorLng.toFixed(5)}`;
+    if (!exactStacks.has(key)) exactStacks.set(key, []);
+    exactStacks.get(key).push(uni);
+  });
+  const spread = [];
+  exactStacks.forEach((group) => {
+    group.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    group.forEach((uni, index) => {
+      if (group.length === 1) {
+        spread.push({ ...uni, displayLat: uni.anchorLat, displayLng: uni.anchorLng });
+        return;
+      }
+      const radius = 0.00045 * Math.sqrt(index + 1);
+      const angle = index * GOLDEN_ANGLE;
+      const lngScale = Math.cos((uni.anchorLat * Math.PI) / 180) || 1;
+      spread.push({
+        ...uni,
+        displayLat: uni.anchorLat + Math.sin(angle) * radius,
+        displayLng: uni.anchorLng + (Math.cos(angle) * radius) / lngScale,
+      });
+    });
+  });
 
   stacks.forEach((group) => {
     if (group.length === 1) {
@@ -622,7 +643,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
 
       {cityGroups.length > 0 && (
         <details
-          open
+          open={typeof window === "undefined" || window.innerWidth >= 1024}
           className="absolute bottom-[4.75rem] left-5 z-[600] max-w-[calc(100%-2.5rem)] rounded-2xl border border-white/10 bg-black/70 text-white shadow-xl backdrop-blur-md [&[open]>summary]:mb-2"
         >
           <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/70">

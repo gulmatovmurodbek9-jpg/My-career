@@ -142,13 +142,15 @@ const Login = () => {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.email")}</label>
+                            <label htmlFor="login-email" className="text-sm font-medium text-muted-foreground ml-1">{t("auth.email")}</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
+                                    id="login-email"
                                     type="email"
                                     required
-                                    placeholder="nom@tjk.com"
+                                    autoComplete="email"
+                                    placeholder="nom@gmail.com"
                                     className="w-full bg-muted/20 border border-border/50 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:bg-muted/30 transition-all text-foreground"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -158,12 +160,13 @@ const Login = () => {
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center ml-1">
-                                <label className="text-sm font-medium text-muted-foreground">{t("auth.password")}</label>
-                                <Link to="/forgot-password" size="sm" className="text-xs text-primary hover:underline font-medium">{t("auth.forgot_link")}</Link>
+                                <label htmlFor="login-password" className="text-sm font-medium text-muted-foreground">{t("auth.password")}</label>
+                                <Link to="/forgot-password" className="text-xs text-primary hover:underline font-medium">{t("auth.forgot_link")}</Link>
                             </div>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
+                                    id="login-password"
                                     type={showPassword ? "text" : "password"}
                                     required
                                     autoComplete="current-password"
@@ -217,7 +220,7 @@ const Login = () => {
                     <div className="mt-8 text-center border-t border-border/50 pt-8">
                         <p className="text-muted-foreground text-sm">
                             {t("auth.no_account")}{" "}
-                            <Link to="/register" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+                            <Link to={`/register${window.location.search}`} className="text-primary font-bold hover:underline inline-flex items-center gap-1">
                                 {t("auth.register")} <UserPlus className="w-4 h-4" />
                             </Link>
                         </p>

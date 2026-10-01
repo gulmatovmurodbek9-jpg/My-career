@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -9,11 +9,43 @@ import { MailService } from '../mail/mail.service';
 
 const RESET_THROTTLE_MS = 60 * 1000;
 
+// Ҳадди кӯшишҳои нодурусти вуруд: 10 бор дар 15 дақиқа барои як почта ё як IP.
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_FAILS = 10;
+
 @Injectable()
 export class AuthService {
     private readonly logger = new Logger(AuthService.name);
 
     private readonly recentResets = new Map<string, number>();
+    private readonly loginFails = new Map<string, { count: number; first: number }>();
+
+    assertLoginAllowed(keys: string[]): void {
+        const now = Date.now();
+        for (const key of keys) {
+            const entry = this.loginFails.get(key);
+            if (entry && now - entry.first < LOGIN_WINDOW_MS && entry.count >= LOGIN_MAX_FAILS) {
+                const minutes = Math.ceil((LOGIN_WINDOW_MS - (now - entry.first)) / 60000);
+                throw new HttpException(`Кӯшишҳо зиёд шуданд. Баъд аз ${minutes} дақиқа боз кӯшиш кунед ё паролро барқарор кунед.`, HttpStatus.TOO_MANY_REQUESTS);
+            }
+        }
+    }
+
+    recordLoginFail(keys: string[]): void {
+        const now = Date.now();
+        if (this.loginFails.size > 10000) {
+            for (const [key, entry] of this.loginFails) if (now - entry.first >= LOGIN_WINDOW_MS) this.loginFails.delete(key);
+        }
+        for (const key of keys) {
+            const entry = this.loginFails.get(key);
+            if (!entry || now - entry.first >= LOGIN_WINDOW_MS) this.loginFails.set(key, { count: 1, first: now });
+            else entry.count += 1;
+        }
+    }
+
+    clearLoginFails(keys: string[]): void {
+        for (const key of keys) this.loginFails.delete(key);
+    }
 
     constructor(
         private usersService: UsersService,
@@ -62,7 +94,7 @@ export class AuthService {
 
     // Як дақиқа танаффус байни номаҳо — то касе почтаи бегонаро пур накунад.
     async resendVerifyCode(email: string): Promise<{ message: string; waitSeconds?: number }> {
-        const key = `verify:${String(email || '').trim()}`;
+        const key = `verify:${UsersService.normEmail(email)}`;
         const last = this.recentResets.get(key);
         if (last !== undefined && Date.now() - last < RESET_THROTTLE_MS) {
             return { message: 'Каме сабр кунед', waitSeconds: Math.ceil((RESET_THROTTLE_MS - (Date.now() - last)) / 1000) };
@@ -94,7 +126,7 @@ export class AuthService {
     async forgotPassword(email: string): Promise<{ message: string }> {
         const message = 'Агар чунин ҳисоб бошад, дастур ба почтаи шумо фиристода шуд';
 
-        const key = email.trim().toLowerCase();
+        const key = UsersService.normEmail(email);
         if (this.isThrottled(key)) {
             return { message };
         }
@@ -126,6 +158,7 @@ export class AuthService {
             throw new BadRequestException('Код нодуруст аст. Онро аз нома санҷед.');
         }
 
+        this.clearLoginFails([`e:${UsersService.normEmail(email)}`]);
         return { message: 'Парол иваз шуд. Акнун бо пароли нав ворид шавед.' };
     }
 

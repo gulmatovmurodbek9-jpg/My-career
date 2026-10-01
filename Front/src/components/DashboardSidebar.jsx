@@ -4,8 +4,10 @@ import {
     LayoutDashboard,
     ClipboardCheck,
     MessageCircle,
-    Settings,
-    User,
+    Scale,
+    FileCheck,
+    CalendarDays,
+    Bookmark,
     ChevronRight,
     ShieldCheck
 } from 'lucide-react';
@@ -22,13 +24,17 @@ const DashboardSidebar = () => {
         { icon: LayoutDashboard, label: t('nav.dashboard'), to: '/dashboard' },
         { icon: ClipboardCheck, label: t('nav.quiz'), to: '/quiz' },
         { icon: MessageCircle, label: t('nav.ai_advisor'), to: '/dashboard/ai-chat' },
+        { icon: Scale, label: t('nav.compare'), to: '/dashboard/compare' },
+        { icon: FileCheck, label: t('nav.plan'), to: '/dashboard/plan' },
+        { icon: CalendarDays, label: t('nav.appointments'), to: '/dashboard/appointments' },
+        { icon: Bookmark, label: t('nav.favorites'), to: '/favorites' },
         ...(user?.role === 'admin'
             ? [{ icon: ShieldCheck, label: t('nav.admin', 'Панели админ'), to: '/admin' }]
             : []),
     ];
 
     return (
-        <aside className="w-full md:w-20 lg:w-64 xl:w-72 md:h-[calc(100vh-136px)] md:sticky md:top-[112px] mb-2 md:mb-0 flex md:flex-col sidebar-glass rounded-[1.5rem] p-2 md:p-4 lg:p-5 xl:p-6 overflow-x-auto md:overflow-hidden shrink-0">
+        <aside className="w-full md:w-20 lg:w-64 xl:w-72 md:h-[calc(100vh-136px)] md:sticky md:top-[112px] mb-2 md:mb-0 flex md:flex-col sidebar-glass rounded-[1.5rem] p-2 md:p-4 lg:p-5 xl:p-6 overflow-x-auto md:overflow-y-auto shrink-0">
             <div className="flex md:flex-col flex-1 gap-2 md:gap-2">
                 {menuItems.map((item, idx) => {
                     const isActive = location.pathname === item.to;
@@ -36,6 +42,8 @@ const DashboardSidebar = () => {
                         <Link
                             key={idx}
                             to={item.to}
+                            aria-current={isActive ? 'page' : undefined}
+                            title={item.label}
                             className={`group flex min-w-fit items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl transition-all duration-300 ${isActive
                                 ? 'bg-primary/10 text-primary'
                                 : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
@@ -56,22 +64,6 @@ const DashboardSidebar = () => {
                 })}
             </div>
 
-            <div className="hidden lg:block mt-8 pt-8 border-t border-white/5 space-y-2">
-                <Link
-                    to="/profile"
-                    className="group flex items-center gap-4 p-4 rounded-2xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all"
-                >
-                    <User className="w-6 h-6" />
-                    <span className="font-bold text-sm tracking-tight">{t('nav.profile')}</span>
-                </Link>
-                <Link
-                    to="/settings"
-                    className="group flex items-center gap-4 p-4 rounded-2xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all"
-                >
-                    <Settings className="w-6 h-6" />
-                    <span className="font-bold text-sm tracking-tight">{t('nav.settings')}</span>
-                </Link>
-            </div>
         </aside>
     );
 };

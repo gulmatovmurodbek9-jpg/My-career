@@ -11,6 +11,7 @@ export default function StoryScene({
   title,
   lead,
   titleSize,
+  headingLevel = "h2",
   ctaPrimary,
   ctaSecondary,
 }) {
@@ -25,7 +26,7 @@ export default function StoryScene({
         </Reveal>
 
         <Reveal
-          as="h2"
+          as={headingLevel}
           delay={0.06}
           className="mt-12 max-w-[20ch] font-semibold leading-[1.1] tracking-[-0.02em] text-foreground"
           style={{ fontSize: titleSize ?? "clamp(2.125rem, 4.6vw, 3.5rem)" }}

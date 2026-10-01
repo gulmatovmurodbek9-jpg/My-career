@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "../../lib/config";
 import EmailCodeStep from "../../components/auth/EmailCodeStep";
+import { nextPath } from "../../components/RouteGuards";
 import { googleClientId, loadGoogleIdentity, loginWithGoogleToken } from "../../lib/googleAuth";
 
 const Register = () => {
@@ -42,7 +43,7 @@ const Register = () => {
                                 API,
                                 setAuth,
                                 navigate,
-                                redirectTo: "/quiz",
+                                redirectTo: nextPath(window.location.search, "/quiz"),
                             });
                         } catch (err) {
                             setError(err.response?.data?.message || err.message || "Google login failed");
@@ -73,7 +74,7 @@ const Register = () => {
             const { data } = await axios.post(`${API}/auth/register`, { name, email, password });
             if (data?.access_token) {
                 setAuth(data.user, data.access_token);
-                navigate("/quiz");
+                navigate(nextPath(window.location.search, "/quiz"));
             } else {
                 setCodeEmail(data?.email || email);
             }
@@ -94,7 +95,7 @@ const Register = () => {
                             onBack={() => setCodeEmail(null)}
                             onVerified={(data) => {
                                 setAuth(data.user, data.access_token);
-                                navigate("/quiz");
+                                navigate(nextPath(window.location.search, "/quiz"));
                             }}
                         />
                     </div>
@@ -142,12 +143,15 @@ const Register = () => {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.full_name")}</label>
+                            <label htmlFor="reg-name" className="text-sm font-medium text-muted-foreground ml-1">{t("auth.full_name")}</label>
                             <div className="relative group">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
+                                    id="reg-name"
                                     type="text"
                                     required
+                                    maxLength={80}
+                                    autoComplete="name"
                                     placeholder={t("auth.name_placeholder")}
                                     className="w-full bg-muted/20 border border-border/50 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:bg-muted/30 transition-all text-foreground"
                                     value={name}
@@ -157,13 +161,15 @@ const Register = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.email")}</label>
+                            <label htmlFor="reg-email" className="text-sm font-medium text-muted-foreground ml-1">{t("auth.email")}</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
+                                    id="reg-email"
                                     type="email"
                                     required
-                                    placeholder="nom@tjk.com"
+                                    autoComplete="email"
+                                    placeholder="nom@gmail.com"
                                     className="w-full bg-muted/20 border border-border/50 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:bg-muted/30 transition-all text-foreground"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -172,12 +178,14 @@ const Register = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground ml-1">{t("auth.password")}</label>
+                            <label htmlFor="reg-password" className="text-sm font-medium text-muted-foreground ml-1">{t("auth.password")}</label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
+                                    id="reg-password"
                                     type={showPassword ? "text" : "password"}
                                     required
+                                    minLength={6}
                                     autoComplete="new-password"
                                     placeholder="••••••••"
                                     className="w-full bg-muted/20 border border-border/50 rounded-xl py-3.5 pl-12 pr-12 focus:outline-none focus:border-primary/50 focus:bg-muted/30 transition-all text-foreground"
@@ -229,7 +237,7 @@ const Register = () => {
                     <div className="mt-8 text-center border-t border-border/50 pt-8">
                         <p className="text-muted-foreground text-sm">
                             {t("auth.have_account")}{" "}
-                            <Link to="/login" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+                            <Link to={`/login${window.location.search}`} className="text-primary font-bold hover:underline inline-flex items-center gap-1">
                                 {t("auth.login_btn")} <LogIn className="w-4 h-4" />
                             </Link>
                         </p>

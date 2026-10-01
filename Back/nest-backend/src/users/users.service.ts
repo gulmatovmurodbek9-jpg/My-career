@@ -73,8 +73,13 @@ export class UsersService {
         private offeringRepository: Repository<CareerOffering>,
     ) { }
 
+    // Почта ҳамеша бо ҳарфҳои хурд ва бе фосила: «Murod@Gmail.com » = «murod@gmail.com».
+    static normEmail(email: string): string {
+        return String(email || '').trim().toLowerCase();
+    }
+
     async findOne(email: string): Promise<User | undefined> {
-        return this.usersRepository.findOne({ where: { email } });
+        return this.usersRepository.findOne({ where: { email: UsersService.normEmail(email) } });
     }
 
     async findAll(): Promise<Partial<User>[]> {
@@ -115,7 +120,7 @@ export class UsersService {
     // Агар ҳамин почта аллакай сабт шуда, вале тасдиқ нашуда бошад, ном ва парол
     // нав мешаванд — одам шояд кодро гум карда, аз нав сабт мешавад.
     async registerUnverified(createUserDto: CreateUserDto): Promise<{ user: User; code: string }> {
-        const email = createUserDto.email.trim();
+        const email = UsersService.normEmail(createUserDto.email);
         const existing = await this.usersRepository.findOne({ where: { email } });
         if (existing?.emailVerified) {
             throw new ConflictException('Бо ин почта ҳисоб аллакай ҳаст. Ворид шавед.');
@@ -139,7 +144,7 @@ export class UsersService {
 
     // Коди нав барои ҳисоби тасдиқнашуда (дархости «боз фирист» ё кӯшиши ворид шудан).
     async newVerifyCode(email: string): Promise<{ user: User; code: string } | null> {
-        const user = await this.usersRepository.findOne({ where: { email: email.trim() } });
+        const user = await this.usersRepository.findOne({ where: { email: UsersService.normEmail(email) } });
         if (!user || user.emailVerified) return null;
         const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
         await this.usersRepository.update(user.id, {
@@ -152,7 +157,7 @@ export class UsersService {
 
     async verifyEmail(email: string, code: string): Promise<{ result: PasswordResetResult; user?: User }> {
         const user = await this.usersRepository.findOne({
-            where: { email: email.trim() },
+            where: { email: UsersService.normEmail(email) },
             select: ['id', 'email', 'emailVerified', 'verifyCodeHash', 'verifyExpiresAt', 'verifyAttempts'],
         });
         if (user?.emailVerified) return { result: 'ok', user };
@@ -184,6 +189,7 @@ export class UsersService {
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
         const user = this.usersRepository.create({
             ...createUserDto,
+            email: UsersService.normEmail(createUserDto.email),
             password: hashedPassword,
         });
 
@@ -202,16 +208,18 @@ export class UsersService {
                 existingUser.avatarUrl = profile.avatarUrl;
                 changed = true;
             }
-            // Google почтаро худаш тасдиқ кардааст.
+            // Google почтаро худаш тасдиқ кардааст. Пароли ҳисоби тасдиқнашударо
+            // тоза мекунем: онро касе гузошта метавонист, ки соҳиби почта нест.
             if (existingUser.emailVerified === false) {
                 existingUser.emailVerified = true;
+                existingUser.password = null;
                 changed = true;
             }
             return changed ? this.usersRepository.save(existingUser) : existingUser;
         }
 
         const user = this.usersRepository.create({
-            email: profile.email,
+            email: UsersService.normEmail(profile.email),
             name: profile.name || profile.email.split('@')[0],
             avatarUrl: profile.avatarUrl,
             password: null,
@@ -244,6 +252,7 @@ export class UsersService {
         const hashedPassword = await bcrypt.hash(dto.password, 10);
         const specialist = this.usersRepository.create({
             ...dto,
+            email: UsersService.normEmail(dto.email),
             password: hashedPassword,
             role: UserRole.SPECIALIST,
             isActive: dto.isActive ?? true,
@@ -323,7 +332,7 @@ export class UsersService {
         newPassword: string,
     ): Promise<PasswordResetResult> {
         const user = await this.usersRepository.findOne({
-            where: { email },
+            where: { email: UsersService.normEmail(email) },
             select: ['id', 'resetTokenHash', 'resetTokenExpiresAt', 'resetAttempts'],
         });
 
@@ -345,6 +354,7 @@ export class UsersService {
 
         await this.usersRepository.update(user.id, {
             password: await bcrypt.hash(newPassword, 10),
+            emailVerified: true,
             resetTokenHash: null,
             resetTokenExpiresAt: null,
             resetAttempts: 0,

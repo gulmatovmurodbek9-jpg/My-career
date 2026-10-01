@@ -2,7 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import axios from 'axios'
 import './index.css'
-import './lib/i18n'
+import i18n from './lib/i18n'
+import { loginUrl } from './components/RouteGuards'
 import { installMockInterceptor } from './lib/mockApi'
 import { REQUEST_TIMEOUT_MS } from './lib/config'
 import App from './App.jsx'
@@ -21,6 +22,18 @@ let handlingExpiredSession = false;
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Хатои валидатсияи сервер массив аст (["Почта нодуруст аст", …]) — ба як матн.
+    const data = error?.response?.data;
+    if (data && Array.isArray(data.message)) data.message = data.message.join('. ');
+    // Сервер дастнорас ё вақт гузашт: ба ҷои «Network Error» матни фаҳмо.
+    if (!error?.response && error?.code !== 'ERR_CANCELED') {
+      const lang = i18n.language;
+      error.message = lang === 'ru'
+        ? 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.'
+        : lang === 'en'
+          ? 'No connection to the server. Check your internet and try again.'
+          : 'Пайваст бо сервер нашуд. Интернетро санҷед ва боз кӯшиш кунед.';
+    }
     const headers = error?.config?.headers;
     const authHeader = headers?.get?.('Authorization') ?? headers?.Authorization ?? headers?.authorization ?? '';
     const sentToken = /^Bearer\s+\S+/.test(String(authHeader));
@@ -29,7 +42,7 @@ axios.interceptors.response.use(
       useAuthStore.getState().logout();
       const path = window.location.pathname;
       if (PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix))) {
-        window.location.assign('/login');
+        window.location.assign(loginUrl(path + window.location.search));
       } else {
         handlingExpiredSession = false;
       }

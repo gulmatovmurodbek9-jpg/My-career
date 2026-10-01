@@ -1,4 +1,6 @@
-import { Controller, Post, Body, UnauthorizedException, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, HttpCode, HttpStatus, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -16,19 +18,24 @@ export class AuthController {
     @ApiOperation({ summary: 'Login user' })
     @ApiResponse({ status: 200, description: 'Success' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
-    async login(@Body() loginDto: LoginDto) {
+    async login(@Body() loginDto: LoginDto, @Req() req?: Request) {
+        // Ҳимоя аз тахмини парол: ҳам барои почта, ҳам барои IP.
+        const keys = [`e:${UsersService.normEmail(loginDto.email)}`, `ip:${req?.ip || 'unknown'}`];
+        this.authService.assertLoginAllowed(keys);
         const user = await this.authService.validateUser(loginDto.email, loginDto.password);
         if (!user) {
+            this.authService.recordLoginFail(keys);
             throw new UnauthorizedException('Имейл ё рамз нодуруст аст');
         }
+        this.authService.clearLoginFails([keys[0]]);
         await this.authService.assertVerified(user);
         return this.authService.login(user);
     }
 
     @Post('signin')
     @ApiOperation({ summary: 'Login user (alternative)' })
-    async signin(@Body() loginDto: LoginDto) {
-        return this.login(loginDto);
+    async signin(@Body() loginDto: LoginDto, @Req() req: Request) {
+        return this.login(loginDto, req);
     }
 
     @Post('register')

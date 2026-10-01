@@ -1,9 +1,11 @@
+import { Transform } from 'class-transformer';
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
     @ApiProperty({ example: 'user@example.com' })
     @IsEmail({}, { message: 'Имейл нодуруст аст' })
+    @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
     email: string;
 
     @ApiProperty({ example: 'password123' })

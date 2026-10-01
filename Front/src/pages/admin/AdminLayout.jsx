@@ -188,7 +188,7 @@ const AdminLayout = () => {
       <motion.main
         animate={{ marginLeft: collapsed ? 72 : 260 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="flex-1 min-h-screen"
+        className="flex-1 min-w-0 min-h-screen"
       >
         <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
           <Outlet />

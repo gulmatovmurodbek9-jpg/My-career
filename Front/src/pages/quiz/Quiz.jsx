@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Award,
@@ -155,14 +155,24 @@ const Quiz = () => {
             updateUser({ savedCareers: updatedSaved });
         } catch (err) {
             console.error("Save career error:", err);
-            alert("Error saving career: " + (err.response?.data?.message || err.message));
+            showError(err.response?.data?.message || err.message || t("career_page.failed"));
         } finally {
             setSavingId(null);
         }
     };
 
-    const handleAnswer = async (selectedValue) => {
-        const questionId = questions[currentStep].id;
+    // Клики дубора ҳангоми боркунӣ саволҳои қадами 2-ро чанд бор илова мекард (15 → 570 савол).
+    const busyRef = useRef(false);
+    // Ҳолати охирин: тугмаҳои саволи қаблӣ ҳангоми аниматсияи гузариш ҳанӯз дар экран
+    // ҳастанд ва бо маълумоти кӯҳна кор мекарданд (қадами 2 такрор илова мешуд).
+    const latest = useRef({});
+    latest.current = { questions, currentStep, quizStage, answers };
+
+    const handleAnswer = async (selectedValue, clickedQuestionId) => {
+        if (busyRef.current) return;
+        const { questions, currentStep, quizStage, answers } = latest.current;
+        const questionId = questions[currentStep]?.id;
+        if (!questionId || (clickedQuestionId && clickedQuestionId !== questionId)) return;
         const newAnswers = [
             ...answers.filter((answer) => answer.questionId !== questionId),
             { questionId, selectedValue },
@@ -171,7 +181,9 @@ const Quiz = () => {
 
         if (currentStep < questions.length - 1) {
             setCurrentStep(currentStep + 1);
+            latest.current.currentStep = currentStep + 1;
         } else if (quizStage === 1) {
+            busyRef.current = true;
             setStageLoading(true);
             try {
                 const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
@@ -190,7 +202,10 @@ const Quiz = () => {
                     { params: { clusterNumber } }
                 );
                 if (stage2Qs?.length > 0) {
-                    setQuestions(prev => [...prev, ...stage2Qs]);
+                    setQuestions(prev => {
+                        const known = new Set(prev.map((q) => q.id));
+                        return [...prev, ...stage2Qs.filter((q) => !known.has(q.id))];
+                    });
                     setQuizStage(2);
                     setCurrentStep(prev => prev + 1);
                 } else {
@@ -201,93 +216,81 @@ const Quiz = () => {
                 submitQuiz(newAnswers);
             } finally {
                 setStageLoading(false);
+                busyRef.current = false;
             }
         } else {
             submitQuiz(newAnswers);
         }
     };
 
+    // Ҷавобҳо бо матни савол ва интихоб — барои саҳифаи натиҷа ва ёвар.
+    const enrich = (data, finalAnswers) => {
+        const activeLang = i18n.language || "tj";
+        const answeredQuestions = finalAnswers.map((answer) => {
+            const question = questions.find((q) => q.id === answer.questionId);
+            const selectedOption = question?.options?.[Number(answer.selectedValue)];
+            return {
+                questionId: answer.questionId,
+                type: question?.type,
+                part: question?.part,
+                targetCluster: question?.targetCluster,
+                question: question?.question?.[activeLang] || question?.question?.tj || question?.question?.en || "",
+                selectedValue: answer.selectedValue,
+                selectedText: selectedOption?.text?.[activeLang] || selectedOption?.text?.tj || selectedOption?.text?.en || "",
+                scores: selectedOption?.scores || null,
+                keywords: selectedOption?.keywords || [],
+            };
+        });
+        return {
+            ...data,
+            answers: answeredQuestions,
+            rawAnswers: finalAnswers,
+            answeredAt: new Date().toISOString(),
+            quizLang: activeLang,
+        };
+    };
+
+    const showQuizResults = (data, finalAnswers) => {
+        const enrichedData = enrich(data, finalAnswers);
+        setResults(enrichedData);
+        try {
+            localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(enrichedData));
+        } catch {
+            /* хотираи браузер пур ё баста — натиҷа дар экран мемонад */
+        }
+        busyRef.current = false;
+        setIsAnalyzing(false);
+        setShowResults(true);
+    };
+
     const submitQuiz = async (finalAnswers) => {
+        if (busyRef.current) return;
+        busyRef.current = true;
         setIsAnalyzing(true);
+        const body = { answers: finalAnswers, lang: i18n.language };
         try {
             const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
-            const { data } = await axios.post(url, { answers: finalAnswers, lang: i18n.language }, { headers });
-            const answeredQuestions = finalAnswers.map((answer) => {
-                const question = questions.find((q) => q.id === answer.questionId);
-                const selectedOption = question?.options?.[Number(answer.selectedValue)];
-                const activeLang = i18n.language || "tj";
-                return {
-                    questionId: answer.questionId,
-                    type: question?.type,
-                    part: question?.part,
-                    targetCluster: question?.targetCluster,
-                    question: question?.question?.[activeLang] || question?.question?.tj || question?.question?.en || "",
-                    selectedValue: answer.selectedValue,
-                    selectedText: selectedOption?.text?.[activeLang] || selectedOption?.text?.tj || selectedOption?.text?.en || "",
-                    scores: selectedOption?.scores || null,
-                    keywords: selectedOption?.keywords || [],
-                };
-            });
-            const enrichedData = {
-                ...data,
-                answers: answeredQuestions,
-                rawAnswers: finalAnswers,
-                answeredAt: new Date().toISOString(),
-                quizLang: i18n.language || "tj",
-            };
-
-            setResults(enrichedData);
-            localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(enrichedData));
-            
-            if (token) {
-                updateUser({ quizResults: data.scores });
-            }
-            
-            setIsAnalyzing(false);
-            setShowResults(true);
+            const { data } = await axios.post(url, body, { headers });
+            if (token) updateUser({ quizResults: data.scores });
+            showQuizResults(data, finalAnswers);
         } catch (err) {
             console.error("Submit quiz error:", err);
-
+            // Сессия гузашт — натиҷаро ҳамчун меҳмон ҳисоб мекунем, то ҷавобҳо гум нашаванд.
             if (err.response?.status === 401 && token) {
-                console.warn("Token expired, retrying as guest...");
                 logout();
                 try {
-                    const { data } = await axios.post(`${API}/quiz/submit`, { answers: finalAnswers, lang: i18n.language });
-                    const answeredQuestions = finalAnswers.map((answer) => {
-                        const question = questions.find((q) => q.id === answer.questionId);
-                        const selectedOption = question?.options?.[Number(answer.selectedValue)];
-                        const activeLang = i18n.language || "tj";
-                        return {
-                            questionId: answer.questionId,
-                            type: question?.type,
-                            part: question?.part,
-                            targetCluster: question?.targetCluster,
-                            question: question?.question?.[activeLang] || question?.question?.tj || question?.question?.en || "",
-                            selectedValue: answer.selectedValue,
-                            selectedText: selectedOption?.text?.[activeLang] || selectedOption?.text?.tj || selectedOption?.text?.en || "",
-                            scores: selectedOption?.scores || null,
-                            keywords: selectedOption?.keywords || [],
-                        };
-                    });
-                    const enrichedData = {
-                        ...data,
-                        answers: answeredQuestions,
-                        rawAnswers: finalAnswers,
-                        answeredAt: new Date().toISOString(),
-                        quizLang: i18n.language || "tj",
-                    };
-                    setResults(enrichedData);
-                    localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(enrichedData));
-                    setIsAnalyzing(false);
-                    setShowResults(true);
+                    const { data } = await axios.post(`${API}/quiz/submit`, body);
+                    showQuizResults(data, finalAnswers);
                     return;
                 } catch (retryErr) {
                     console.error("Retry submission failed:", retryErr);
                 }
             }
-
+            busyRef.current = false;
             setIsAnalyzing(false);
+            // Пештар хато хомӯш буд: корбар намедонист, ки чӣ шуд. Ҷавобҳо мемонанд — метавон боз фиристод.
+            showError(err.response?.data?.message || err.message || t("career_page.failed"));
         }
     };
 
@@ -443,9 +446,15 @@ const Quiz = () => {
                 percent: Math.min(100, Math.round(((Number(score) || 0) / 40) * 100)),
             }))
             .sort((a, b) => b.raw - a.raw);
-        const confidence = rankedClusters.length > 1
-            ? Math.max(5, Math.min(95, 50 + (rankedClusters[0].percent - rankedClusters[1].percent)))
-            : rankedClusters[0]?.percent || 0;
+        // Пештар баробарии се самт (30/30/30) ҳам «50%» нишон медод. Акнун: пешсафӣ
+        // нисбат ба самти дуюм; агар баробар бошанд — рақам нест, матни фаҳмо.
+        const lead = rankedClusters.length > 1
+            ? rankedClusters[0].raw - rankedClusters[1].raw
+            : rankedClusters[0]?.raw || 0;
+        const isTie = rankedClusters.length > 1 && lead <= 0;
+        const confidence = rankedClusters[0]?.raw
+            ? Math.max(5, Math.min(95, Math.round((lead / rankedClusters[0].raw) * 100)))
+            : 0;
         const strongestTraits = rankedClusters.slice(0, 3);
 
         return (
@@ -475,9 +484,11 @@ const Quiz = () => {
                                 <Shield className="w-4 h-4" />
                                 {t('quiz.confidence_label', 'Эътимоднокӣ')}
                             </div>
-                            <div className="text-3xl font-black text-foreground">{confidence}%</div>
+                            <div className="text-3xl font-black text-foreground">{isTie ? "=" : `${confidence}%`}</div>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                {t('quiz.confidence_desc', 'Ин нишон медиҳад, ки натиҷаи аввалини шумо аз дуюм чанд қадар пеш аст.')}
+                                {isTie
+                                    ? t('quiz.confidence_tie')
+                                    : t('quiz.confidence_desc', 'Ин нишон медиҳад, ки натиҷаи аввалини шумо аз дуюм чанд қадар пеш аст.')}
                             </p>
                         </div>
                         <div className="rounded-3xl border border-white/10 bg-white/5 p-5 space-y-2 md:col-span-2">
@@ -826,7 +837,7 @@ const Quiz = () => {
                                         <button
                                             key={idx}
                                             type="button"
-                                            onClick={() => handleAnswer(idx)}
+                                            onClick={() => handleAnswer(idx, currentQuestion?.id)}
                                             aria-pressed={selected}
                                             className={`w-full flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border text-left text-[15px] sm:text-base font-semibold leading-snug text-foreground cursor-pointer ${
                                                 selected

@@ -710,7 +710,7 @@ const CareerCompare = () => {
 
                 <motion.header variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div className="space-y-1.5">
-                        <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition text-xs font-bold mb-2">
+                        <Link to="/dashboard" className="flex w-fit items-center gap-1.5 text-muted-foreground hover:text-foreground transition text-xs font-bold mb-2">
                             <ArrowLeft className="w-3.5 h-3.5" />
                             {t.back}
                         </Link>

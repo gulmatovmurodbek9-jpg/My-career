@@ -190,18 +190,22 @@ const Favorites = () => {
             </section>
 
             <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-8">
-                <div className="flex items-center gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/5 w-fit">
+                <div role="group" className="grid w-full grid-cols-2 gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/5 sm:flex sm:w-fit sm:items-center">
                     <button
+                        type="button"
+                        aria-pressed={activeTab === "liked"}
                         onClick={() => setActiveTab("liked")}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "liked" ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide sm:tracking-widest transition-all ${activeTab === "liked" ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"
                             }`}
                     >
                         <Heart className={`w-4 h-4 ${activeTab === "liked" ? "fill-white" : ""}`} />
                         {t('favorites.liked', "Лайкшуда")} ({likedCareers.length})
                     </button>
                     <button
+                        type="button"
+                        aria-pressed={activeTab === "saved"}
                         onClick={() => setActiveTab("saved")}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "saved" ? "bg-secondary text-white shadow-lg shadow-secondary/20" : "text-muted-foreground hover:text-foreground"
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide sm:tracking-widest transition-all ${activeTab === "saved" ? "bg-secondary text-white shadow-lg shadow-secondary/20" : "text-muted-foreground hover:text-foreground"
                             }`}
                     >
                         <Bookmark className={`w-4 h-4 ${activeTab === "saved" ? "fill-white" : ""}`} />

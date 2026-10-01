@@ -152,8 +152,8 @@ export class CareerController {
 
     @Get(':id/scores')
     @ApiOperation({ summary: 'Балҳои гузариши расмии НМТ аз рӯи солҳо' })
-    async scores(@Param('id') id: string) {
-        return this.careerService.admissionScores(id);
+    async scores(@Param('id') id: string, @Query('lang') lang?: string) {
+        return this.careerService.admissionScores(id, lang);
     }
 
     @Get(':id/brief')

@@ -1348,7 +1348,7 @@ export class CareerService {
     }
 
     // Балҳои гузариши расмии НМТ аз рӯи коди ихтисос.
-    async admissionScores(careerId: string) {
+    async admissionScores(careerId: string, lang?: string) {
         const career = await this.careerRepository.findOne({ where: { id: careerId } });
         const code = career?.code ? String(career.code).trim() : '';
         if (!code) return { code: null, source: NTC_SOURCE, years: [], universities: [] };
@@ -1393,10 +1393,20 @@ export class CareerService {
 
         // Соли охирин аз рӯи донишгоҳ — то корбар бубинад, куҷо осонтар аст.
         const lastYear = years[years.length - 1]?.year;
+        // Номи донишгоҳ дар ҷадвали НМТ тоҷикӣ аст — бо забони корбар аз тарҷумаҳои ҳамон донишгоҳ.
+        const translated = new Map<string, string>();
+        if (lang === 'ru' || lang === 'en') {
+            const names = [...new Set(rows.filter((row) => row.year === lastYear).map((row) => row.university))];
+            if (names.length) {
+                const found: Array<{ name: string; tr: string | null }> = await this.careerRepository.manager.query(
+                    `SELECT name, translations->$2->>'name' AS tr FROM universities WHERE name = ANY($1)`, [names, lang]);
+                for (const row of found) if (row.tr) translated.set(row.name, row.tr);
+            }
+        }
         const universities = rows
             .filter((row) => row.year === lastYear)
             .map((row) => ({
-                university: row.university,
+                university: translated.get(row.university) || row.university,
                 studyForm: row.studyForm,
                 paymentType: row.paymentType,
                 seats: row.seats,

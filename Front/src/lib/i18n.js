@@ -1489,7 +1489,7 @@ i18n
                         last_year: "проходной балл в {{year}}", drift: "изменение с {{year}}",
                         competition: "абитуриентов на место", seats_short: "мест",
                         by_uni: "Учебные заведения в {{year}} году", th_uni: "Учебное заведение", th_score: "Балл",
-                        th_seats: "Места", th_pay: "Форма", source: "Источник: {{name}}",
+                        th_seats: "Места", th_pay: "Форма", source: "Источник: {{name}}", ntc: "Национальный центр тестирования",
                     },
                     career_page: {
                         scores_title: "Проходной балл", scores_sub: "Официальные данные Национального центра тестирования за последние пять лет",
@@ -2474,7 +2474,7 @@ i18n
                         last_year: "passing score in {{year}}", drift: "change since {{year}}",
                         competition: "applicants per place", seats_short: "places",
                         by_uni: "Institutions in {{year}}", th_uni: "Institution", th_score: "Score",
-                        th_seats: "Places", th_pay: "Form", source: "Source: {{name}}",
+                        th_seats: "Places", th_pay: "Form", source: "Source: {{name}}", ntc: "National Testing Center",
                     },
                     career_page: {
                         scores_title: "Passing score", scores_sub: "Official data of the National Testing Center for the last five years",

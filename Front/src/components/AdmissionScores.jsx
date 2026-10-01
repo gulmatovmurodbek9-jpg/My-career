@@ -3,10 +3,12 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, TrendingUp } from "lucide-react";
 import { API } from "../lib/config";
+import { withLang } from "../lib/apiLang";
+import { paymentTypeLabel } from "../lib/offeringLabels";
 
 // Балҳои гузариши расмии Маркази миллии тестӣ — панҷ соли охир.
 export default function AdmissionScores({ careerId }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -15,12 +17,12 @@ export default function AdmissionScores({ careerId }) {
         let alive = true;
         setLoading(true);
         axios
-            .get(`${API}/careers/${careerId}/scores`, { timeout: 15000 })
+            .get(`${API}/careers/${careerId}/scores`, { params: withLang(), timeout: 15000 })
             .then((response) => { if (alive) setData(response.data); })
             .catch(() => { if (alive) setData(null); })
             .finally(() => { if (alive) setLoading(false); });
         return () => { alive = false; };
-    }, [careerId]);
+    }, [careerId, i18n.language]);
 
     if (loading) {
         return <div className="h-32 animate-pulse rounded-xl bg-muted/50" />;
@@ -126,7 +128,7 @@ export default function AdmissionScores({ careerId }) {
                                             {row.seats ?? "—"}
                                         </td>
                                         <td className="hidden px-3 py-2 text-right text-muted-foreground sm:table-cell">
-                                            {row.paymentType ?? "—"}
+                                            {paymentTypeLabel(t, row.paymentType) ?? "—"}
                                         </td>
                                     </tr>
                                 ))}
@@ -142,7 +144,7 @@ export default function AdmissionScores({ careerId }) {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground underline-offset-2 hover:underline focus-ring"
             >
-                {t("scores.source", "Манбаъ: {{name}}", { name: data.source?.name || "Маркази миллии тестӣ" })}
+                {t("scores.source", "Манбаъ: {{name}}", { name: t("scores.ntc", "Маркази миллии тестӣ") })}
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>
         </div>

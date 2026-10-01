@@ -1047,3 +1047,12 @@
   [class*="blur-"] { display: none !important; }
   a { color: inherit !important; }
 }
+
+/* 88: дар телефон тугмаҳои харита ва пӯшидан — на хурдтар аз 44×44. */
+@media (pointer: coarse) {
+  .leaflet-control-zoom a {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+  }
+}

@@ -28,9 +28,10 @@ export class UniversityService {
     ) {}
 
     async findAll(lang?: string) {
-        const universities = await this.universityRepo.find({
-            relations: ['careers'],
-        });
+        const universities = await this.universityRepo
+            .createQueryBuilder('uni')
+            .loadRelationCountAndMap('uni.careerCount', 'uni.careers')
+            .getMany();
 
         return universities
             .map(uni => localizeUniversity({
@@ -49,7 +50,7 @@ export class UniversityService {
                 latitude: uni.latitude,
                 longitude: uni.longitude,
                 hasExactLocation: uni.hasExactLocation,
-                careerCount: uni.careers?.length || 0
+                careerCount: (uni as any).careerCount || 0
             }, lang))
             .sort((a, b) => b.careerCount - a.careerCount);
     }
@@ -92,20 +93,40 @@ export class UniversityService {
     }
 
     async findOne(id: string, lang?: string) {
-        const uni = await this.universityRepo.findOne({
-            where: { id },
-            relations: ['careers', 'careers.cluster'],
-        });
+        const uni = await this.universityRepo
+            .createQueryBuilder('uni')
+            .where('uni.id = :id', { id })
+            .loadRelationCountAndMap('uni.careerCount', 'uni.careers')
+            .getOne();
         if (!uni) throw new NotFoundException('University not found');
         return localizeUniversity(uni as any, lang);
     }
 
-    async findSpecialties(id: string) {
-        const uni = await this.universityRepo.findOne({
-            where: { id },
-            relations: ['careers', 'careers.cluster'],
+    async findSpecialties(id: string, lang?: string) {
+        const exists = await this.universityRepo.exists({ where: { id } });
+        if (!exists) throw new NotFoundException('University not found');
+
+        const careers = await this.universityRepo.manager
+            .createQueryBuilder()
+            .select(['career.id', 'career.code', 'career.name', 'career.translations'])
+            .addSelect(['cluster.id', 'cluster.clusterId', 'cluster.clusterName'])
+            .from('career', 'career')
+            .innerJoin('career_universities', 'cu', 'cu."careerId" = career.id AND cu."universitiesId" = :id', { id })
+            .leftJoin('cluster', 'cluster', 'cluster.id = career."clusterId"')
+            .getRawMany();
+
+        const useLang = lang && lang !== 'tj' ? lang : null;
+        return careers.map((row) => {
+            const tr = useLang ? row.career_translations?.[useLang] : null;
+            return {
+                id: row.career_id,
+                code: row.career_code,
+                name: tr?.name || row.career_name,
+                nameOriginal: row.career_name,
+                cluster: row.cluster_id
+                    ? { id: row.cluster_id, clusterId: row.cluster_clusterId, clusterName: row.cluster_clusterName }
+                    : null,
+            };
         });
-        if (!uni) throw new NotFoundException('University not found');
-        return uni.careers || [];
     }
 }

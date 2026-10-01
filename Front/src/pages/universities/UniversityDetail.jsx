@@ -7,7 +7,7 @@ import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
 import { 
-  Building2, MapPin, ArrowLeft, BookOpen, Clock, 
+  Building2, MapPin, ArrowLeft, BookOpen, 
   GraduationCap, Info, Search, Filter, ShieldCheck 
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -312,7 +312,7 @@ export default function UniversityDetail() {
                       className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
                       style={{ backgroundColor: cData?.bg || "var(--primary/10)", color: cData?.text || "var(--primary)" }}
                     >
-                      {t("misc.cluster_short", { id: spec.cluster?.clusterId })}
+                      {clusterName(t, spec.cluster?.clusterId)}
                     </div>
                     <GraduationCap aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
                   </div>
@@ -322,15 +322,9 @@ export default function UniversityDetail() {
                   </h3>
                   
                   <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                        <Clock className="w-3.5 h-3.5" />
-                        {t("misc.years", { count: spec.durationYears || 4 })}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                        <GraduationCap className="w-3.5 h-3.5" />
-                        {spec.degreeType || t("misc.bachelor")}
-                      </div>
+                    {/* 22, 98, 99: мӯҳлат ва дараҷа дар база нест — «4 сол, Бакалавр»-и тахминиро нишон намедиҳем. */}
+                    <div className="text-xs font-bold tabular-nums text-muted-foreground">
+                      {spec.code ? `#${spec.code}` : ""}
                     </div>
                     <div className="text-xs font-black uppercase text-primary-strong opacity-70 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
                       {t("misc2.detail")}

@@ -11,12 +11,12 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useTheme } from "../../hooks/useTheme";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Building2,
-  ExternalLink,
+  ArrowRight,
   LocateFixed,
   MapPin,
   Navigation,
@@ -47,10 +47,32 @@ function createMeIcon() {
 }
 
 // Харитаро ба нуқтаи додашуда мебарад.
+// 106: чархаки муш саҳифаро меғелонад; харита танҳо баъди клик (фокус) зум мешавад.
+function WheelZoomOnFocus() {
+  const map = useMap();
+  useEffect(() => {
+    const on = () => map.scrollWheelZoom.enable();
+    const off = () => map.scrollWheelZoom.disable();
+    map.on("click focus", on);
+    map.on("mouseout blur", off);
+    return () => {
+      map.off("click focus", on);
+      map.off("mouseout blur", off);
+    };
+  }, [map]);
+  return null;
+}
+
+// 107: харитаро аз Тоҷикистон дур кашидан намешавад.
+const TJ_BOUNDS = [[35.8, 66.2], [41.6, 76.0]];
+const inTajikistan = (lat, lng) =>
+  lat >= TJ_BOUNDS[0][0] && lat <= TJ_BOUNDS[1][0] && lng >= TJ_BOUNDS[0][1] && lng <= TJ_BOUNDS[1][1];
+
 function FlyToPoint({ point }) {
   const map = useMap();
   useEffect(() => {
-    if (point) map.flyTo([point.lat, point.lng], 13, { duration: 1.1 });
+    // 167: агар корбар берун аз Тоҷикистон бошад — ба он ҷо намеравем.
+    if (point && inTajikistan(point.lat, point.lng)) map.flyTo([point.lat, point.lng], 13, { duration: 1.1 });
   }, [point, map]);
   return null;
 }
@@ -291,7 +313,7 @@ function FitToResults({ points, enabled }) {
 }
 
 export default function TajikistanMap({ universities = [], focusResults = false }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -323,25 +345,42 @@ export default function TajikistanMap({ universities = [], focusResults = false 
   );
 
   // Браузер ҷойгиршавиро танҳо бо иҷозати корбар медиҳад.
+  const numberLocale = i18n.language === "en" ? "en-US" : "ru-RU";
+
+  // 50: Escape панели муассисаро мепӯшад.
+  useEffect(() => {
+    if (!selectedUni) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") setSelectedUni(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [selectedUni]);
+
   const locateMe = () => {
     if (!navigator.geolocation) {
-      setGeoError(t("career_page.m_geo_unsupported", "Браузери шумо ҷойгиршавиро дастгирӣ намекунад"));
+      setGeoError(t("career_page.m_geo_unsupported"));
       return;
     }
     setLocating(true);
     setGeoError("");
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        setLocating(false);
+        if (!inTajikistan(position.coords.latitude, position.coords.longitude)) {
+          setMyLocation(null);
+          setGeoError(t("career_page.m_geo_outside"));
+          return;
+        }
         setMyLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
           accuracy: position.coords.accuracy,
         });
-        setLocating(false);
       },
       () => {
         setLocating(false);
-        setGeoError(t("career_page.m_geo_denied", "Ҷойгиршавӣ дастрас нашуд. Дар браузер иҷозат диҳед."));
+        setGeoError(t("career_page.m_geo_denied"));
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
     );
@@ -455,8 +494,11 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           center={[CITY_CENTERS[DEFAULT_CITY].lat, CITY_CENTERS[DEFAULT_CITY].lng]}
           zoom={DEFAULT_ZOOM}
           maxZoom={20}
+          minZoom={6}
+          maxBounds={TJ_BOUNDS}
+          maxBoundsViscosity={0.9}
           zoomControl={true}
-          scrollWheelZoom={true}
+          scrollWheelZoom={false}
           className="university-map h-full w-full"
         >
           {satellite ? (
@@ -477,6 +519,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             />
           )}
 
+          <WheelZoomOnFocus />
+
           <CityOverviewMap
             activeCity={activeCity}
             onViewportChange={setViewport}
@@ -491,6 +535,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             overviewSingles.map((uni) => (
               <Marker
                 key={"overview-" + uni.id}
+                title={uni.nameTranslated || uni.name}
+                alt={uni.nameTranslated || uni.name}
                 position={[uni.displayLat, uni.displayLng]}
                 icon={createDotIcon(selectedUni?.id === uni.id, uni)}
                 eventHandlers={{
@@ -517,6 +563,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             overviewClusters.map((group) => (
               <Marker
                 key={group.city}
+                title={`${group.city}: ${t("career_page.m_count", { count: group.count })}`}
+                alt={group.city}
                 position={[group.lat, group.lng]}
                 icon={createClusterIcon({ count: group.count, isActive: group.city === activeCity })}
                 eventHandlers={{
@@ -543,6 +591,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             visibleUniversities.map((uni) => (
               <Marker
                 key={uni.id}
+                title={uni.nameTranslated || uni.name}
+                alt={uni.nameTranslated || uni.name}
                 position={[uni.displayLat, uni.displayLng]}
                 icon={createDotIcon(selectedUni?.id === uni.id, uni)}
                 eventHandlers={{
@@ -563,7 +613,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                 pathOptions={{ color: "#2563eb", weight: 1, fillOpacity: 0.12 }}
               />
               <Marker position={[myLocation.lat, myLocation.lng]} icon={createMeIcon()}>
-                <Popup>{t("career_page.m_you_are_here", "Шумо дар ин ҷоед")}</Popup>
+                <Popup>{t("career_page.m_you_are_here")}</Popup>
               </Marker>
             </>
           )}
@@ -637,8 +687,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
       >
         <Navigation className="h-4 w-4" />
         {locating
-          ? t("career_page.m_locating", "Меҷӯям…")
-          : t("career_page.m_find_me", "Маро ёб")}
+          ? t("career_page.m_locating")
+          : t("career_page.m_find_me")}
       </button>
 
       {(nearest.length > 0 || geoError) && !(panelOpen && selectedUni) && (
@@ -648,7 +698,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
           ) : (
             <>
               <h4 className="mb-3 text-sm font-bold">
-                {t("career_page.m_nearest", "Наздиктарин донишгоҳҳо")}
+                {t("career_page.m_nearest")}
               </h4>
               <ul className="space-y-2">
                 {nearest.map(({ uni, km }) => (
@@ -663,7 +713,9 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                     >
                       <span className="min-w-0 flex-1 truncate">{uni.shortName || uni.name}</span>
                       <span className="shrink-0 font-semibold tabular-nums">
-                        {km < 1 ? `${Math.round(km * 1000)} м` : `${km.toFixed(1)} км`}
+                        {km < 1
+                          ? `${Math.round(km * 1000)} ${t("career_page.m_unit_m")}`
+                          : `${km.toLocaleString(numberLocale, { maximumFractionDigits: 1 })} ${t("career_page.m_unit_km")}`}
                       </span>
                     </button>
                   </li>
@@ -742,13 +794,13 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                   {selectedUni.description || t("career_page.m_no_short")}
                 </p>
 
-                <button
-                  onClick={() => navigate(`/universities/${selectedUni.id}`)}
+                <Link
+                  to={`/universities/${selectedUni.id}`}
                   className="mt-4 inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:shadow-primary/40 md:mt-5"
                 >
                   {t("career_page.m_details")}
-                  <ExternalLink className="h-4 w-4" />
-                </button>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </motion.div>

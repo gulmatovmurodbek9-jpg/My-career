@@ -182,10 +182,10 @@ export default function Universities() {
                 ].map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-2xl border border-border bg-muted/40 p-4 text-center sm:text-left"
+                    className="min-w-0 rounded-2xl border border-border bg-muted/40 p-3 text-center sm:p-4 sm:text-left"
                   >
-                    <p className="text-3xl font-bold tabular-nums text-foreground">{stat.value}</p>
-                    <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-bold tabular-nums text-foreground sm:text-3xl">{stat.value}</p>
+                    <p className="mt-1 break-words text-[12px] leading-snug text-muted-foreground sm:text-[13px]">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -275,6 +275,13 @@ export default function Universities() {
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
               {t("career_page.u_empty_hint")}
             </p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="mt-5 rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground hover:bg-muted"
+            >
+              {t("career_page.u_clear_filters")}
+            </button>
           </div>
         ) : (
           <AnimatePresence mode="wait">

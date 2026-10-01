@@ -29,7 +29,7 @@ export class UniversityController {
     @Get(':id/specialties')
     @ApiOperation({ summary: 'Get specialties of a university' })
     @ApiParam({ name: 'id', description: 'UUID of the university' })
-    async findSpecialties(@Param('id') id: string) {
-        return this.universityService.findSpecialties(id);
+    async findSpecialties(@Param('id') id: string, @Query('lang') lang?: string) {
+        return this.universityService.findSpecialties(id, lang);
     }
 }

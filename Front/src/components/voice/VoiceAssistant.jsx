@@ -28,10 +28,11 @@ const SILENCE_MS = 750;        // ин қадар хомӯшӣ — яъне ҷу
 const NO_SPEECH_MS = 8000;     // чизе нагуфт — боз гӯш мекунем
 const MAX_RECORD_MS = 15000;   // ҳадди аксар як навбат
 
+// path: 145 — тугмаи саҳифае, ки корбар аллакай дар он аст, нишон дода намешавад.
 const QUICK_ACTIONS = [
-    { key: "careers", text: "Ихтисос интихоб кунам" },
-    { key: "universities", text: "Донишгоҳҳо" },
-    { key: "quiz", text: "Санҷиш" },
+    { key: "careers", text: "Ихтисос интихоб кунам", path: "/careers" },
+    { key: "universities", text: "Донишгоҳҳо", path: "/universities" },
+    { key: "quiz", text: "Санҷиш", path: "/quiz" },
 ];
 
 export default function VoiceAssistant() {
@@ -925,7 +926,7 @@ export default function VoiceAssistant() {
                                     {t("assistant.start", "Сӯҳбатро сар кунед")}
                                 </button>
                                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                                    {QUICK_ACTIONS.map((action) => (
+                                    {QUICK_ACTIONS.filter((action) => action.path !== location.pathname).map((action) => (
                                         <button
                                             key={action.key}
                                             type="button"

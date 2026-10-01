@@ -5,7 +5,8 @@ import i18n from "./i18n";
 
 const SITE_NAME = "Ихтисоси ман";
 const ORIGIN = "https://ikhtisosiman.qobus.tj";
-const DEFAULT_IMAGE = `${ORIGIN}/logo.png`;
+// 141: 1200×630 барои summary_large_image (пештар логотипи 96×96 буд).
+const DEFAULT_IMAGE = `${ORIGIN}/og-image.jpg`;
 
 const MAX_DESCRIPTION = 160;
 

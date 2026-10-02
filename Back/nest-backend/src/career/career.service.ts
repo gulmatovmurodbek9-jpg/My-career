@@ -1170,7 +1170,7 @@ export class CareerService {
             '«Барномасозӣ ва иқтисодро муқоиса кун» → {"action":"compare","params":{"names":["барномасозӣ","иқтисодиёт"]},"reply":"Муқоиса мекунам."}',
             '',
             'ҚОИДАҲО:',
-            `- "reply" бо забони ${langName}, ҲАТМАН кӯтоҳ: то 15 калима, чунки онро овоз мехонад.`,
+            `- "reply" бо забони ${langName}, ҲАТМАН кӯтоҳ: 1 ҷумла, то 10 калима, чунки онро овоз мехонад.`,
             '- САВОЛИ маълумотӣ («чанд», «чист», «ройгон аст?», «сколько», «что такое», «бесплатно ли», «how many», «what is», «is it free») → "answer" ва аз МАЪЛУМОТИ САЙТ ё КЛАСТЕРҲО ҷавоб деҳ. Саҳифа НАКУШО.',
             '- Амалро вақте интихоб кун, ки корбар чизеро нишон додан, кушодан, ёфтан, муқоиса кардан ё оғоз кардан хоҳад. Саволи бозгашт танҳо вақте бипурс, ки ягон амал тамоман мувофиқ наояд.',
             '- Дар бораи бал, нарх ё донишгоҳҳои як ихтисоси мушаххас пурсанд — open_career (дар саҳифааш ҳамааш ҳаст).',
@@ -1185,7 +1185,7 @@ export class CareerService {
             // Сӯҳбати зинда: ҳадди 6 сония, бе хобидан ҳангоми 429.
             // Gemini аввал: Vertex квотаашро тамом кардааст (429) ва ҳар дархостро
             // 2–4 сония дер мекард, пеш аз он ки ба Gemini гузарад.
-            parsed = readJson(await this.aiService.generateContent(prompt, { fast: true, timeoutMs: 6000, provider: 'gemini' }));
+            parsed = readJson(await this.aiService.generateFast(prompt, 6000));
         } catch (error) {
             // AI ҷавоб надод — ёвар набояд хомӯш монад.
             const excuse = answerLang === 'ru'
@@ -1323,13 +1323,20 @@ export class CareerService {
             // «донишгоҳи Миллиро ёб» — аввал номи мушаххасро меҷӯем,
             // вагарна корбар ба рӯйхати 33-тоӣ мерасад.
             const wantedName = String(given.name || '').trim();
+            // Шаҳри гуфташуда («юрист в Душанбе»): донишгоҳи шаҳри дигар ҷавоб нест —
+            // он гоҳ рӯйхати ҳамон шаҳр кушода мешавад.
+            const foldedMessage = foldTajik(message).toLowerCase();
+            const saidCity = CareerService.CITY_NAMES.find(([, aliases]) =>
+                aliases.some((alias) => foldedMessage.includes(alias.slice(0, Math.max(5, alias.length - 2)))))?.[0] || '';
+            const givenCity = CareerService.cityToTajik(String(given.city || '').trim());
+            const wantedCity = saidCity || (CareerService.CITY_NAMES.some(([name]) => name === givenCity) ? givenCity : '');
             if (wantedName.length >= 3) {
                 // «Донишгоҳи тиббӣ» — донишгоҳ, на аввалин коллеҷи тиббӣ; «коллеҷ» — баръакс.
                 const folded = foldTajik(message);
                 const kind = /коллеч/.test(folded) ? 'коллеч%' : /донишкад/.test(folded) ? 'донишкад%' : /донишгох|университет/.test(folded) ? 'донишгох%' : '';
-                const rows: Array<{ id: string; name: string }> = await this.careerRepository.manager.query(
+                const rows: Array<{ id: string; name: string; city: string | null }> = await this.careerRepository.manager.query(
                     // Шаҳри гуфташуда («… дар Хуҷанд») пеш; баъд навъ, давлатӣ ва калонтарин (ихтисосҳо бештар).
-                    `SELECT u.id, u.name FROM universities u
+                    `SELECT u.id, u.name, u.city FROM universities u
                      WHERE ${TAJIK_FOLD('u.name')} LIKE $1
                         OR ${TAJIK_FOLD(`coalesce(u."shortName", '')`)} LIKE $1
                      ORDER BY (CASE WHEN u.city IS NOT NULL AND $4 LIKE '%' || ${TAJIK_FOLD('u.city')} || '%' THEN 0 ELSE 1 END),
@@ -1341,11 +1348,12 @@ export class CareerService {
                      LIMIT 1`,
                     [`%${foldTajik(wantedName)}%`, `${foldTajik(wantedName)}%`, kind, `${folded} ${foldTajik(String(given.city || ''))}`],
                 );
-                if (rows[0]) params = { id: rows[0].id, name: rows[0].name };
+                const inCity = !wantedCity || foldTajik(rows[0]?.city || '').includes(foldTajik(wantedCity));
+                if (rows[0] && inCity) params = { id: rows[0].id, name: rows[0].name };
             }
 
             if (!params.id) {
-                const city = CareerService.cityToTajik(String(given.city || '').trim());
+                const city = wantedCity || givenCity;
                 if (city) {
                     const rows: Array<{ city: string }> = await this.careerRepository.manager.query(
                         `SELECT DISTINCT city FROM universities WHERE ${TAJIK_FOLD('city')} LIKE $1 LIMIT 1`,

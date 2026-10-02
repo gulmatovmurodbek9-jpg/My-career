@@ -18,10 +18,13 @@ export class TtsError extends Error {
     }
 }
 
-const MODELS: Record<ForeignLang, { dir: string; file: string; id: string }> = {
+// TTS_EN аз .env хонда мешавад — на ҳангоми import (он вақт .env ҳанӯз бор нашудааст).
+const models = (): Record<ForeignLang, { dir: string; file: string; id: string }> => ({
     ru: { dir: 'vits-piper-ru_RU-ruslan-medium', file: 'ru_RU-ruslan-medium.onnx', id: 'piper-ruslan-n05' },
-    en: { dir: 'kokoro-multi-lang-v1_0', file: 'model.onnx', id: 'kokoro-echo-t2' },
-};
+    en: (process.env.TTS_EN || '').toLowerCase() === 'piper'
+        ? { dir: 'vits-piper-en_US-ryan-medium', file: 'en_US-ryan-medium.onnx', id: 'piper-ryan-n05' }
+        : { dir: 'kokoro-multi-lang-v1_0', file: 'model.onnx', id: 'kokoro-echo-t2' },
+});
 
 const LOW_PRIORITY = 10;
 
@@ -43,12 +46,18 @@ export class SherpaClient {
     constructor(private readonly timeoutMs = 30_000) { }
 
     available(lang: ForeignLang): boolean {
-        const spec = MODELS[lang];
+        const spec = models()[lang];
         return existsSync(this.workerFile) && existsSync(join(this.root, spec.dir, spec.file));
     }
 
     modelId(lang: ForeignLang): string {
-        return MODELS[lang].id;
+        return models()[lang].id;
+    }
+
+    // Ҳангоми оғози сервер: process ва моделҳо пешакӣ бор мешаванд, то дархости
+    // якуми корбар 7–10 с интизор нашавад.
+    warm(): void {
+        if (this.available('ru') || this.available('en')) this.start();
     }
 
     // Барои санҷиш ва status.

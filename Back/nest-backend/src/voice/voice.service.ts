@@ -189,6 +189,8 @@ export class VoiceService implements OnModuleInit, OnModuleDestroy {
     private sttClient: any = null;
 
     onModuleInit(): void {
+        // Process-и ru/en ва моделҳояш ҳозир бор мешаванд, на ҳангоми дархости якум.
+        if (this.ruEnEngine === 'sherpa') this.sherpa.warm();
         // Токени аввал 8 сония мегирифт (бор кардани SDK + TLS-и аввал) —
         // ҳамаашро дар оғоз мекунем, то микрофони корбар интизор намонад.
         if (this.sttKey) {

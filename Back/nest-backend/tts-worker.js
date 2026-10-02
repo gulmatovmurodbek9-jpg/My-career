@@ -30,7 +30,22 @@ const MODELS = {
         }),
         dir: 'vits-piper-ru_RU-ruslan-medium',
     },
-    en: {
+    // TTS_EN=piper — Piper ryan (RTF ~0,16, тез); пешфарз Kokoro am_echo (RTF ~0,69).
+    en: (process.env.TTS_EN || '').toLowerCase() === 'piper' ? {
+        sid: 0,
+        config: (dir) => ({
+            vits: {
+                model: join(dir, 'en_US-ryan-medium.onnx'),
+                tokens: join(dir, 'tokens.txt'),
+                dataDir: join(dir, 'espeak-ng-data'),
+                noiseScale: 0.5,
+                noiseScaleW: 0.6,
+            },
+            numThreads: 1,
+            provider: 'cpu',
+        }),
+        dir: 'vits-piper-en_US-ryan-medium',
+    } : {
         sid: 12, // am_echo
         config: (dir) => ({
             kokoro: {
@@ -116,3 +131,17 @@ if (process.env.TTS_WORKER_TEST === '1') {
 // Падар рафт — мо ҳам меравем (process-и ятим намемонад).
 process.on('disconnect', () => process.exit(0));
 process.send?.({ type: 'ready' });
+
+// Моделҳо пешакӣ бор мешаванд (баъди 3 с, то оғози сервер суст нашавад) —
+// вагарна ҷавоби якуми русӣ ё англисӣ баъди ҳар restart 7–10 с интизор мешуд.
+if (process.env.TTS_PRELOAD !== '0') {
+    setTimeout(() => {
+        for (const lang of Object.keys(MODELS)) {
+            try {
+                engine(lang);
+            } catch (error) {
+                process.send?.({ type: 'log', message: `пешакӣ ${lang}: ${error?.message || error}` });
+            }
+        }
+    }, 3000);
+}

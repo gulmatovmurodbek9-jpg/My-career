@@ -7,7 +7,8 @@
 |---|---|---|---|---|
 | tj | овози муаллифи лоиҳа | `../voice-model/` (MMS-tgk, fine-tune) | 16000 | `onnxruntime-node`, дар process-и асосӣ |
 | ru | Piper **Ruslan**, sid 0, noise 0,5 / 0,6 | `vits-piper-ru_RU-ruslan-medium/` | 22050 | `sherpa-onnx-node`, process-и алоҳида (`tts-worker.js`) |
-| en | **Kokoro** v1.0, **am_echo** (sid 12), 2 thread | `kokoro-multi-lang-v1_0/` | 24000 | `sherpa-onnx-node`, process-и алоҳида |
+| en | **Kokoro** v1.0, **am_echo** (sid 12), 2 thread — пешфарз | `kokoro-multi-lang-v1_0/` | 24000 | `sherpa-onnx-node`, process-и алоҳида |
+| en (`TTS_EN=piper`) | Piper **ryan**, sid 0, noise 0,5 / 0,6 — ~5× тезтар аз Kokoro | `vits-piper-en_US-ryan-medium/` | 22050 | ҳамон process |
 
 Моделҳои ru/en дар git нестанд. Дар сервер: `bash scripts/download-tts-models.sh`.
 
@@ -18,6 +19,7 @@
 | Овози тоҷикӣ (`voice-model/`, асос: `facebook/mms-tts-tgk`) | **CC-BY-NC 4.0** | танҳо ғайритиҷоратӣ, бо зикри манбаъ (Meta MMS) |
 | Piper **Ruslan** (ru) | маълумот (RUSLAN corpus): **CC BY-NC-SA 4.0**; модел аз `en_US-lessac` fine-tune шудааст — lessac = Blizzard 2013 license: танҳо тадқиқот, **истифодаи тиҷоратӣ манъ** | **танҳо ғайритиҷоратӣ**, бо зикри манбаъ; тағйирот — бо ҳамон иҷозатнома (ShareAlike) |
 | **Kokoro-82M** v1.0 (en) | **Apache-2.0** | озод, тиҷоратӣ ҳам мумкин |
+| Piper **ryan** (en, ихтиёрӣ) | маълумот (RyanSpeech): **CC BY-NC-SA 4.0**; аз `en_US-lessac` fine-tune | **танҳо ғайритиҷоратӣ**, ShareAlike |
 | `espeak-ng-data` (дар ҳарду архиви ru/en) | **GPL-3.0** | дар сервер истифода бурдан мумкин; ҳангоми паҳн кардани нармафзор — сарчашма лозим |
 | `sherpa-onnx` / `sherpa-onnx-node` | Apache-2.0 | озод |
 
@@ -31,6 +33,9 @@
 ## Танзимот (`.env`)
 - `TTS_RU_EN=sherpa` (пешфарз) — Ruslan ва Kokoro.
 - `TTS_RU_EN=mms` — баргардонидан ба моделҳои пештараи MMS бе тағйири код (`voice-model-rus/`, `voice-model-eng/`).
+- `TTS_EN=kokoro` (пешфарз) ё `TTS_EN=piper` — овози англисӣ: Kokoro (зеботар, сусттар) ё ryan (тез). Кэш ҷудо аст (номи модел дар калид).
+- `TTS_PRELOAD=0` — моделҳоро ҳангоми оғоз бор накардан (пешфарз: баъди 3 с бор мешаванд).
+- `ASSISTANT_MODEL=lite` (пешфарз) ё `flash` — модели AI-и ёвар: `gemini-flash-lite` (~0,9 с) ё `gemini-flash` (~1,4 с).
 
 ## Чӣ тавр кор мекунад
 - Process-и ru/en порти шабака намекушояд — танҳо канали IPC бо process-и асосӣ.

@@ -9,7 +9,8 @@ mkdir -p voice-models
 cd voice-models
 
 BASE="https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models"
-for name in vits-piper-ru_RU-ruslan-medium kokoro-multi-lang-v1_0; do
+# ryan — барои TTS_EN=piper (англисии тез); Kokoro — пешфарз.
+for name in vits-piper-ru_RU-ruslan-medium kokoro-multi-lang-v1_0 vits-piper-en_US-ryan-medium; do
   if [ -d "$name" ]; then
     echo "$name — аллакай ҳаст"
     continue

@@ -21,6 +21,9 @@ type AiProvider = 'vertex' | 'gemini';
 export class AiService implements OnModuleInit {
     private genAI: GoogleGenerativeAI | null = null;
     private geminiModel: any = null;
+    // Модели тез барои ёвари овозӣ: flash-lite бо «thinking»-и ҳадди ақал 0,6–0,8 с
+    // ҷавоб медиҳад (flash — 0,9–2,4 с). ASSISTANT_MODEL=flash — бозгашт ба модели пештара.
+    private assistantModel: any = null;
     private vertex: GoogleGenAI | null = null;
     private vertexModel = 'gemini-2.5-flash';
     private providerDownUntil = new Map<AiProvider, number>();
@@ -37,6 +40,12 @@ export class AiService implements OnModuleInit {
                 model: 'gemini-flash-latest',
                 generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as any,
             });
+            if ((this.configService.get<string>('ASSISTANT_MODEL') || 'lite').toLowerCase() === 'lite') {
+                this.assistantModel = this.genAI.getGenerativeModel({
+                    model: 'gemini-flash-lite-latest',
+                    generationConfig: { thinkingConfig: { thinkingLevel: 'minimal' } } as any,
+                });
+            }
         }
 
         this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-2.5-flash';
@@ -126,6 +135,20 @@ export class AiService implements OnModuleInit {
             },
             rateLimited ? HttpStatus.TOO_MANY_REQUESTS : HttpStatus.SERVICE_UNAVAILABLE,
         );
+    }
+
+    // Сӯҳбати зинда (ёвар, ҷавоби озод дар санҷиш): аввал модели тез; агар хато
+    // ё дер кунад — ҳамон занҷири муқаррарӣ, то корбар бе ҷавоб намонад.
+    async generateFast(prompt: string, timeoutMs = 6000): Promise<string> {
+        if (this.assistantModel) {
+            try {
+                const result = await this.withTimeout(this.assistantModel.generateContent(prompt), 'gemini-lite', Math.min(timeoutMs, 3500)) as any;
+                return result.response.text();
+            } catch (error) {
+                console.error('Gemini lite:', (error as any)?.message || error);
+            }
+        }
+        return this.generateContent(prompt, { fast: true, timeoutMs, provider: 'gemini' });
     }
 
     private withTimeout<T>(work: Promise<T>, which: string, ms: number = AI_PROVIDER_TIMEOUT_MS): Promise<T> {

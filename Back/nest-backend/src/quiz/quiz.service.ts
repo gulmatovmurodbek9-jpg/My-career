@@ -253,7 +253,7 @@ export class QuizService {
         ].join(String.fromCharCode(10));
 
         try {
-            const raw = await this.aiService.generateContent(prompt, { fast: true, timeoutMs: 6000, provider: 'gemini' });
+            const raw = await this.aiService.generateFast(prompt, 6000);
             const match = String(raw || '').match(/"option"\s*:\s*(\d+|null)/);
             const number = match && match[1] !== 'null' ? Number(match[1]) : NaN;
             return { position: number >= 1 && number <= options.length ? number - 1 : null };

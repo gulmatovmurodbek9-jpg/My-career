@@ -6,7 +6,7 @@
 | Забон | Овоз | Модел / папка | Sample rate | Муҳаррик |
 |---|---|---|---|---|
 | tj | овози муаллифи лоиҳа | `../voice-model/` (MMS-tgk, fine-tune) | 16000 | `onnxruntime-node`, дар process-и асосӣ |
-| ru | Piper **Dmitri**, sid 0, noise 0,3 / 0,4 | `vits-piper-ru_RU-dmitri-medium/` | 22050 | `sherpa-onnx-node`, process-и алоҳида (`tts-worker.js`) |
+| ru | Piper **Ruslan**, sid 0, noise 0,5 / 0,6 | `vits-piper-ru_RU-ruslan-medium/` | 22050 | `sherpa-onnx-node`, process-и алоҳида (`tts-worker.js`) |
 | en | **Kokoro** v1.0, **am_echo** (sid 12), 2 thread | `kokoro-multi-lang-v1_0/` | 24000 | `sherpa-onnx-node`, process-и алоҳида |
 
 Моделҳои ru/en дар git нестанд. Дар сервер: `bash scripts/download-tts-models.sh`.
@@ -16,20 +16,20 @@
 | Ҷузъ | Иҷозатнома | Маъно |
 |---|---|---|
 | Овози тоҷикӣ (`voice-model/`, асос: `facebook/mms-tts-tgk`) | **CC-BY-NC 4.0** | танҳо ғайритиҷоратӣ, бо зикри манбаъ (Meta MMS) |
-| Piper **Dmitri** (ru) | маълумот: CC0; **модел аз `en_US-lessac` fine-tune шудааст** — lessac = Blizzard 2013 license: танҳо тадқиқот, **истифодаи тиҷоратӣ манъ** | **танҳо ғайритиҷоратӣ** |
+| Piper **Ruslan** (ru) | маълумот (RUSLAN corpus): **CC BY-NC-SA 4.0**; модел аз `en_US-lessac` fine-tune шудааст — lessac = Blizzard 2013 license: танҳо тадқиқот, **истифодаи тиҷоратӣ манъ** | **танҳо ғайритиҷоратӣ**, бо зикри манбаъ; тағйирот — бо ҳамон иҷозатнома (ShareAlike) |
 | **Kokoro-82M** v1.0 (en) | **Apache-2.0** | озод, тиҷоратӣ ҳам мумкин |
 | `espeak-ng-data` (дар ҳарду архиви ru/en) | **GPL-3.0** | дар сервер истифода бурдан мумкин; ҳангоми паҳн кардани нармафзор — сарчашма лозим |
 | `sherpa-onnx` / `sherpa-onnx-node` | Apache-2.0 | озод |
 
-**Агар сайт тиҷоратӣ шавад:** овози тоҷикӣ ва Dmitri бояд иваз шаванд (Kokoro метавонад монад).
+**Агар сайт тиҷоратӣ шавад:** овози тоҷикӣ ва Ruslan бояд иваз шаванд (Kokoro метавонад монад).
 
 Манбаъҳо:
-- Dmitri: https://huggingface.co/rhasspy/piper-voices (ru/ru_RU/dmitri/medium, MODEL_CARD); lessac license: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html
+- Ruslan: https://huggingface.co/rhasspy/piper-voices (ru/ru_RU/ruslan/medium, MODEL_CARD); корпус: https://ruslan-corpus.github.io/; lessac license: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html
 - Kokoro: https://huggingface.co/hexgrad/Kokoro-82M (LICENSE дар архив)
 - Архивҳо: https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 
 ## Танзимот (`.env`)
-- `TTS_RU_EN=sherpa` (пешфарз) — Dmitri ва Kokoro.
+- `TTS_RU_EN=sherpa` (пешфарз) — Ruslan ва Kokoro.
 - `TTS_RU_EN=mms` — баргардонидан ба моделҳои пештараи MMS бе тағйири код (`voice-model-rus/`, `voice-model-eng/`).
 
 ## Чӣ тавр кор мекунад
@@ -44,6 +44,9 @@
 ## Ченкунӣ дар сервер (02.10.2026, 2 ядро, 3,4 ГБ RAM)
 | | RTF | RAM |
 |---|---|---|
-| Dmitri | 0,16 | ~250 МБ |
+| Ruslan | ≈ Dmitri (0,16)¹ | ~180–250 МБ |
 | Kokoro, 2 thread | 0,69 | ~650 МБ |
 | ҳарду дар process | ru 0,11 · en 0,72 | 831 МБ, озод 1410 МБ |
+
+¹ Дар компютер Ruslan RTF 0,077 бар Dmitri 0,081, RAM +176 МБ бар +201 МБ. Ченкунии сервер баъди deploy.
+Dmitri 02.10.2026 бо Ruslan иваз ва пурра нест карда шуд.

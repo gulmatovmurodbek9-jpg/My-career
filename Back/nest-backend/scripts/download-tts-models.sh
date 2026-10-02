@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Моделҳои овози русӣ (Piper Dmitri) ва англисӣ (Kokoro) → voice-models/
+# Моделҳои овози русӣ (Piper Ruslan) ва англисӣ (Kokoro) → voice-models/
 # Истифода (дар сервер, аз папкаи Back/nest-backend):
 #   bash scripts/download-tts-models.sh
 # Кушодан бо python3 — дар сервер bzip2 нест. Приоритети паст (nice), то сайт суст нашавад.
@@ -9,7 +9,7 @@ mkdir -p voice-models
 cd voice-models
 
 BASE="https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models"
-for name in vits-piper-ru_RU-dmitri-medium kokoro-multi-lang-v1_0; do
+for name in vits-piper-ru_RU-ruslan-medium kokoro-multi-lang-v1_0; do
   if [ -d "$name" ]; then
     echo "$name — аллакай ҳаст"
     continue

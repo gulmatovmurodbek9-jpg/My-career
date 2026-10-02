@@ -1,4 +1,4 @@
-// Овози русӣ (Piper Dmitri) ва англисӣ (Kokoro am_echo) — дар process-и АЛОҲИДА.
+// Овози русӣ (Piper Ruslan) ва англисӣ (Kokoro am_echo) — дар process-и АЛОҲИДА.
 //
 // Чаро алоҳида: sherpa-onnx ва onnxruntime-node (овози тоҷикӣ) ҳар кадом
 // onnxruntime-и худро доранд. Дар як process онҳо ихтилоф мекарданд (модели
@@ -18,17 +18,17 @@ const MODELS = {
         sid: 0,
         config: (dir) => ({
             vits: {
-                model: join(dir, 'ru_RU-dmitri-medium.onnx'),
+                model: join(dir, 'ru_RU-ruslan-medium.onnx'),
                 tokens: join(dir, 'tokens.txt'),
                 dataDir: join(dir, 'espeak-ng-data'),
-                // Тасодуфи кам: «Добро пожаловать» 10/12 → 12/12 дуруст.
-                noiseScale: 0.3,
-                noiseScaleW: 0.4,
+                // «Добро пожаловать» бо 0,3/0,4, 0,5/0,6 ва 0,667/0,8 — 12/12 дуруст; 0,5/0,6 табиӣ ва устувор.
+                noiseScale: 0.5,
+                noiseScaleW: 0.6,
             },
             numThreads: 1,
             provider: 'cpu',
         }),
-        dir: 'vits-piper-ru_RU-dmitri-medium',
+        dir: 'vits-piper-ru_RU-ruslan-medium',
     },
     en: {
         sid: 12, // am_echo

@@ -19,7 +19,7 @@ export class TtsError extends Error {
 }
 
 const MODELS: Record<ForeignLang, { dir: string; file: string; id: string }> = {
-    ru: { dir: 'vits-piper-ru_RU-dmitri-medium', file: 'ru_RU-dmitri-medium.onnx', id: 'piper-dmitri-n03' },
+    ru: { dir: 'vits-piper-ru_RU-ruslan-medium', file: 'ru_RU-ruslan-medium.onnx', id: 'piper-ruslan-n05' },
     en: { dir: 'kokoro-multi-lang-v1_0', file: 'model.onnx', id: 'kokoro-echo-t2' },
 };
 

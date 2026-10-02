@@ -167,7 +167,7 @@ export class VoiceService implements OnModuleInit, OnModuleDestroy {
     // Овозҳои пешакӣ — агар ягон ҷумларо дастӣ сохта бошем.
     private readonly packDir = join(process.cwd(), 'voice-pack');
     private readonly tajik = new TajikTts();
-    // Русӣ ва англисӣ: пешфарз — Piper Dmitri ва Kokoro am_echo дар process-и алоҳида
+    // Русӣ ва англисӣ: пешфарз — Piper Ruslan ва Kokoro am_echo дар process-и алоҳида
     // (TTS_RU_EN=sherpa). Бо TTS_RU_EN=mms — моделҳои пештараи MMS (баргардонидан бе код).
     private readonly sherpa = new SherpaClient(30_000);
     private synthWaiting = 0;

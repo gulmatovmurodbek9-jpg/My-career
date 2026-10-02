@@ -26,7 +26,7 @@ const clusterName = (t, id) => t(`career_page.cl_${id}`);
 export default function UniversityDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const [university, setUniversity] = useState(null);
   const [specialties, setSpecialties] = useState([]);
@@ -52,7 +52,7 @@ export default function UniversityDetail() {
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, i18n.language]);
 
   usePageMeta({
     ready: !!university,

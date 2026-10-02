@@ -85,7 +85,7 @@ const searchText = (uni) =>
   );
 
 export default function Universities() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
   // Ёвари овозӣ шаҳрро бо ?q= мефиристад.
@@ -111,7 +111,11 @@ export default function Universities() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
 
+  // Бо забони интихобшуда; баъди иваз кардани забон аз нав мегирем
+  // (пештар номҳо ва шаҳрҳо то F5 бо забони кӯҳна мемонданд).
+  useEffect(() => {
     const fetchUniversities = async () => {
       try {
         setLoading(true);
@@ -125,7 +129,7 @@ export default function Universities() {
     };
 
     fetchUniversities();
-  }, []);
+  }, [i18n.language]);
 
   const normalizedQuery = foldText(searchQuery);
 

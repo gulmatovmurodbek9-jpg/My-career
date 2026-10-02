@@ -184,7 +184,25 @@ function inferCity(uni) {
   if (uni.city && CITY_CENTERS[uni.city]) return uni.city;
 
   const haystack = `${uni.city || ""} ${uni.name || ""} ${uni.nameTranslated || ""}`;
-  return CITY_KEYWORDS.find((keyword) => haystack.includes(keyword)) || null;
+  const byName = CITY_KEYWORDS.find((keyword) => haystack.includes(keyword));
+  if (byName) return byName;
+
+  // Бо англисӣ ва русӣ шаҳр «Dushanbe», «Худжанд» меояд — бо калидҳои тоҷикӣ
+  // мувофиқ намешуд ва муассиса аз харита гум мешуд (дар Душанбе 37 → 14).
+  // Агар координата бошад, ба наздиктарин маркази шаҳр мансуб мекунем.
+  const lat = Number(uni.latitude);
+  const lng = Number(uni.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) return null;
+  let best = null;
+  let bestDistance = Infinity;
+  for (const [city, center] of Object.entries(CITY_CENTERS)) {
+    const distance = (center.lat - lat) ** 2 + ((center.lng - lng) * Math.cos((lat * Math.PI) / 180)) ** 2;
+    if (distance < bestDistance) {
+      best = city;
+      bestDistance = distance;
+    }
+  }
+  return best;
 }
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
@@ -439,6 +457,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
 
     return Array.from(grouped.entries()).map(([city, items]) => ({
       city,
+      label: items.find((item) => item.city)?.city || city,
       count: items.length,
       totalCareers: items.reduce((acc, item) => acc + (item.careerCount || 0), 0),
       lat: CITY_CENTERS[city]?.lat || CITY_CENTERS[DEFAULT_CITY].lat,
@@ -573,7 +592,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                     <p className="text-sm font-bold leading-tight text-foreground">{uni.nameTranslated || uni.name}</p>
                     <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3.5 w-3.5" />
-                      {uni.inferredCity}
+                      {uni.city || uni.inferredCity}
                     </p>
                   </div>
                 </Popup>
@@ -584,8 +603,8 @@ export default function TajikistanMap({ universities = [], focusResults = false 
             overviewClusters.map((group) => (
               <Marker
                 key={group.city}
-                title={`${group.city}: ${t("career_page.m_count", { count: group.count })}`}
-                alt={group.city}
+                title={`${group.label}: ${t("career_page.m_count", { count: group.count })}`}
+                alt={group.label}
                 position={[group.lat, group.lng]}
                 icon={createClusterIcon({ count: group.count, isActive: group.city === activeCity })}
                 eventHandlers={{
@@ -598,7 +617,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               >
                 <Popup className="university-popup" offset={[0, -12]}>
                   <div className="space-y-2">
-                    <p className="text-sm font-bold leading-tight text-foreground">{group.city}</p>
+                    <p className="text-sm font-bold leading-tight text-foreground">{group.label}</p>
                     <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="h-3.5 w-3.5" />
                       {t("career_page.m_count", { count: group.count })}
@@ -777,7 +796,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                   )}
                   <p className="mt-1 flex items-start gap-1.5 text-sm text-white/65">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{selectedUni.address || selectedUni.inferredCity}</span>
+                    <span>{selectedUni.address || selectedUni.city || selectedUni.inferredCity}</span>
                   </p>
                   {!selectedUni.hasExactLocation && (
                     <p className="mt-1 text-xs text-white/45">
@@ -802,7 +821,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
               <div className="mb-4 grid grid-cols-2 gap-2">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.m_city_label")}</p>
-                  <p className="mt-1 text-lg font-black">{selectedUni.inferredCity}</p>
+                  <p className="mt-1 text-lg font-black">{selectedUni.city || selectedUni.inferredCity}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.u_specialties")}</p>

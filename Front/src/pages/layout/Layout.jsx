@@ -33,7 +33,11 @@ const Layout = () => {
   const location = useLocation();
   const { t, i18n } = useTranslation();
 
-  const isDashboard = location.pathname.startsWith("/dashboard");
+  // Менюи паҳлӯ дар ҳамаи саҳифаҳои корбар — «Захирашудаҳо» ва «Санҷиш» ҳам;
+  // пештар дар онҳо меню набуд ва корбар роҳи бозгаштро гум мекард.
+  const isDashboard = location.pathname.startsWith("/dashboard")
+    || location.pathname === "/favorites"
+    || (location.pathname === "/quiz" && isAuthenticated);
 
   useEffect(() => {
     if (!location.hash) return;

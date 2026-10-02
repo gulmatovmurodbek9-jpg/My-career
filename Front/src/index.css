@@ -973,10 +973,14 @@
 }
 
 .text-gradient-animated {
-  background: linear-gradient(90deg,
+  /* background-image, на background: шакли кӯтоҳ «clip: text»-ро бекор мекард ва
+     дар мавзӯи равшан ба ҷои ҳарфҳо росткунҷаи кабуд мебаромад. */
+  background-image: linear-gradient(90deg,
       hsl(var(--primary)),
       hsl(var(--accent-blue)),
       hsl(var(--primary)));
+  -webkit-background-clip: text;
+  background-clip: text;
   background-size: 200% auto;
   animation: text-gradient-slide 4s linear infinite;
 }

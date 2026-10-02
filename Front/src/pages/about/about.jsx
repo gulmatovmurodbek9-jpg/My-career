@@ -8,11 +8,13 @@ import {
   Layers,
   Lightbulb,
   Rocket,
+  Languages,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
   Star,
-  Target,
   TrendingUp,
   Users,
-  Zap,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -52,10 +54,10 @@ const About = () => {
 
   const show = (value) => (value === null ? "—" : value.toLocaleString("ru-RU"));
   const values = [
-    { icon: Target, title: t('about_page.mission_title', "Миссияи мо"), description: t('about_page.mission_desc', "Кӯмак ба ҷавонони Тоҷикистон дар интихоби касби мувофиқ тавассути маълумоти дақиқ ва роҳнамоии ҳамаҷониба."), gradient: "from-blue-500 to-indigo-500" },
-    { icon: Lightbulb, title: t('about_page.vision_title', "Визияи мо"), description: t('about_page.vision_desc', "Сохтани ҷомеае, ки дар он ҳар шахс касби мувофиқро ёбад — ояндаи дурахшон аз интихоби дуруст оғоз мешавад."), gradient: "from-amber-500 to-orange-500" },
-    { icon: Heart, title: t('about_page.values_title', "Арзишҳои мо"), description: t('about_page.values_desc', "Шаффофият, сифати маълумот ва дастрасии баробар — мо ба ин арзишҳо содиқем."), gradient: "from-rose-500 to-pink-500" },
-    { icon: Zap, title: t('about_page.innovation_title', "Навоварӣ"), description: t('about_page.innovation_desc', "Истифодаи технологияи AI ва маълумоти замонавӣ барои пешниҳоди беҳтарин роҳнамоии касбӣ."), gradient: "from-emerald-500 to-teal-500" },
+    { icon: ShieldCheck, title: t('about_page.mission_title', "Миссияи мо"), description: t('about_page.mission_desc', "Кӯмак ба ҷавонони Тоҷикистон дар интихоби касби мувофиқ тавассути маълумоти дақиқ ва роҳнамоии ҳамаҷониба."), gradient: "from-blue-500 to-indigo-500" },
+    { icon: MapPin, title: t('about_page.vision_title', "Визияи мо"), description: t('about_page.vision_desc', "Сохтани ҷомеае, ки дар он ҳар шахс касби мувофиқро ёбад — ояндаи дурахшон аз интихоби дуруст оғоз мешавад."), gradient: "from-amber-500 to-orange-500" },
+    { icon: Languages, title: t('about_page.values_title', "Арзишҳои мо"), description: t('about_page.values_desc', "Шаффофият, сифати маълумот ва дастрасии баробар — мо ба ин арзишҳо содиқем."), gradient: "from-rose-500 to-pink-500" },
+    { icon: Sparkles, title: t('about_page.innovation_title', "Навоварӣ"), description: t('about_page.innovation_desc', "Истифодаи технологияи AI ва маълумоти замонавӣ барои пешниҳоди беҳтарин роҳнамоии касбӣ."), gradient: "from-emerald-500 to-teal-500" },
   ];
 
   const impactStats = [
@@ -126,13 +128,13 @@ const About = () => {
               const Icon = value.icon;
               return (
                 <motion.div key={index} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.08 }}>
-                  <div className="glass-card p-6 flex items-start gap-5 h-full">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-5 w-5" />
+                  <div className="glass-card p-6 sm:p-7 flex items-start gap-5 h-full">
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${value.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                      <Icon className="h-6 w-6" aria-hidden="true" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1.5 text-lg">{value.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{value.description}</p>
+                      <h3 className="font-bold text-foreground mb-2 text-lg leading-snug">{value.title}</h3>
+                      <p className="text-[15px] text-muted-foreground leading-relaxed">{value.description}</p>
                     </div>
                   </div>
                 </motion.div>

@@ -168,29 +168,28 @@ const Favorites = () => {
     const activeList = activeTab === "liked" ? likedCareers : savedCareers;
 
     return (
-        <div className="pb-24 pt-4">
-            <section className="pt-16 pb-10 relative overflow-hidden">
-                <div className="absolute inset-0 tajik-pattern opacity-5 pointer-events-none" />
-                <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+        <div className="pb-10">
+            <section className="pb-6">
+                <div>
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-4">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
                             <Heart className="w-3.5 h-3.5" />
                             {t('favorites.my_favorites', "Дӯстдоштаҳои ман")}
                         </div>
-                        <h1 className="text-4xl md:text-6xl font-extrabold text-foreground tracking-tighter leading-tight">
+                        <h1 className="text-2xl md:text-[2rem] font-black text-foreground tracking-tight leading-tight">
                             {t('favorites.title_1', "Ихтисосҳои")}{" "}
                             <span className="text-gradient-animated">
                                 {t('favorites.title_2', "захирашуда")}
                             </span>
                         </h1>
-                        <p className="text-lg text-muted-foreground max-w-xl font-medium leading-relaxed">
+                        <p className="text-sm text-muted-foreground max-w-xl font-medium leading-relaxed">
                             {t('favorites.desc', "Ихтисосҳои дӯстдошта ва захирашудаи шуморо дар як ҷо мебинед.")}
                         </p>
                     </motion.div>
                 </div>
             </section>
 
-            <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-8">
+            <div className="mb-6">
                 <div role="group" className="grid w-full grid-cols-2 gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/5 sm:flex sm:w-fit sm:items-center">
                     <button
                         type="button"
@@ -215,7 +214,7 @@ const Favorites = () => {
                 </div>
             </div>
 
-            <section className="max-w-7xl mx-auto px-6 lg:px-8">
+            <section>
                 {loading ? (
                     <div className="flex items-center justify-center py-32">
                         <Loader2 className="w-10 h-10 text-primary animate-spin" />

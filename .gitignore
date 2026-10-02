@@ -87,6 +87,10 @@ tajik-tts/*.wav
 tajik-tts/__pycache__/
 Back/nest-backend/voice-debug.log
 Back/nest-backend/voice-model-*/
+# Моделҳои ru/en (Piper Dmitri, Kokoro) — калон; дар сервер бо scripts/download-tts-models.sh
+Back/nest-backend/voice-models/*/
+# Намунаҳои садо барои гӯш кардан
+tajik-tts/namuna-ru-en/
 tajik-tts/trained/
 tajik-tts/model-kuhna/
 Back/nest-backend/voice-cache-kuhna/

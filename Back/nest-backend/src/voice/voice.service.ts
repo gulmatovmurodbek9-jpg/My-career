@@ -1,7 +1,10 @@
 import {
     BadRequestException,
+    HttpException,
+    HttpStatus,
     Injectable,
     Logger,
+    OnModuleDestroy,
     OnModuleInit,
     ServiceUnavailableException,
 } from '@nestjs/common';
@@ -11,7 +14,8 @@ import { existsSync, readdirSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { TajikTts } from './tajik-tts';
-import { prepareEnglishText, prepareTajikText } from './tj-text';
+import { prepareEnglishText, prepareRussianText, prepareTajikText } from './tj-text';
+import { ForeignLang, SherpaClient, TtsError } from './sherpa-client';
 
 const MAX_TEXT_LENGTH = 2000;
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
@@ -19,6 +23,19 @@ const STT_URL = 'https://api.elevenlabs.io/v1/speech-to-text';
 const STT_TIMEOUT_MS = 25_000;
 const IP_WINDOW_MS = 10 * 60 * 1000;
 const REMOTE_TTS_TIMEOUT_MS = 60_000;
+// Як синтез дар як вақт; агар дар навбат зиёда аз ин бошад — «банд аст», на бори сервер.
+const MAX_SYNTH_QUEUE = 4;
+
+const BUSY_MESSAGE: Record<string, string> = {
+    tj: 'Ёвар ҳоло банд аст, каме интизор шавед.',
+    ru: 'Помощник сейчас занят, подождите немного.',
+    en: 'The assistant is busy right now, please wait a moment.',
+};
+const TIMEOUT_MESSAGE: Record<string, string> = {
+    tj: 'Овоз дер кард — матнро хонед.',
+    ru: 'Голос задерживается — прочитайте текст.',
+    en: 'The voice is taking too long — please read the text.',
+};
 
 // ── Рақамҳо ────────────────────────────────────────────────────────────
 // Модел рақамро намехонад: «4000» бояд «чор ҳазор» шавад.
@@ -144,13 +161,16 @@ export const spellNumbers = (text: string, lang: VoiceLang = 'tj'): string =>
     });
 
 @Injectable()
-export class VoiceService implements OnModuleInit {
+export class VoiceService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(VoiceService.name);
     private readonly cacheDir = join(process.cwd(), 'voice-cache');
     // Овозҳои пешакӣ — агар ягон ҷумларо дастӣ сохта бошем.
     private readonly packDir = join(process.cwd(), 'voice-pack');
     private readonly tajik = new TajikTts();
-    // Русӣ ва англисӣ — моделҳои MMS-и Meta (на овози худамон), танҳо ONNX.
+    // Русӣ ва англисӣ: пешфарз — Piper Dmitri ва Kokoro am_echo дар process-и алоҳида
+    // (TTS_RU_EN=sherpa). Бо TTS_RU_EN=mms — моделҳои пештараи MMS (баргардонидан бе код).
+    private readonly sherpa = new SherpaClient(30_000);
+    private synthWaiting = 0;
     private readonly foreign: Record<'ru' | 'en', TajikTts> = {
         ru: new TajikTts('voice-model-rus', 'русӣ'),
         en: new TajikTts('voice-model-eng', 'англисӣ'),
@@ -192,9 +212,39 @@ export class VoiceService implements OnModuleInit {
             .then((ok) => {
                 if (ok) this.logger.log(`Модели овоз тайёр — ${Date.now() - started} мс`);
             })
-            // Русӣ ва англисӣ баъд аз тоҷикӣ — то оғози сервер суст нашавад.
-            .then(() => Promise.all(Object.values(this.foreign).filter((model) => model.available).map((model) => model.warmup())))
+            // MMS-и русӣ/англисӣ танҳо дар реҷаи «mms» ба RAM бор мешавад.
+            .then(() => this.ruEnEngine === 'mms'
+                ? Promise.all(Object.values(this.foreign).filter((model) => model.available).map((model) => model.warmup()))
+                : undefined)
             .catch(() => undefined);
+    }
+
+    onModuleDestroy(): void {
+        this.sherpa.stop();
+    }
+
+    private get ruEnEngine(): 'sherpa' | 'mms' {
+        return this.configService.get<string>('TTS_RU_EN') === 'mms' ? 'mms' : 'sherpa';
+    }
+
+    private foreignAvailable(lang: ForeignLang): boolean {
+        return this.ruEnEngine === 'mms' ? this.foreign[lang].available : this.sherpa.available(lang);
+    }
+
+    // Як синтез дар як вақт барои ҳамаи забонҳо (2 ядро). Агар навбат пур бошад —
+    // 503 бо рамзи TTS_BUSY: frontend «банд аст» мегӯяд ва матнро нишон медиҳад.
+    private async exclusive<T>(lang: string, job: () => Promise<T>): Promise<T> {
+        if (this.synthWaiting >= MAX_SYNTH_QUEUE) {
+            throw new HttpException({ code: 'TTS_BUSY', message: BUSY_MESSAGE[lang] || BUSY_MESSAGE.tj }, HttpStatus.SERVICE_UNAVAILABLE);
+        }
+        this.synthWaiting += 1;
+        try {
+            const run = this.queue.catch(() => undefined).then(job);
+            this.queue = run;
+            return await run;
+        } finally {
+            this.synthWaiting -= 1;
+        }
     }
 
     // Сервери Python бо модели аслӣ (tajik-tts/server.py).
@@ -221,7 +271,8 @@ export class VoiceService implements OnModuleInit {
             tts: this.ttsUrl ? 'python' : this.tajik.available ? 'onnx' : 'none',
             ttsUrl: this.ttsUrl,
             sampleRate: this.tajik.sampleRate,
-            languages: ['tj', ...Object.entries(this.foreign).filter(([, model]) => model.available).map(([lang]) => lang)],
+            languages: ['tj', ...(['ru', 'en'] as ForeignLang[]).filter((lang) => this.foreignAvailable(lang))],
+            ruEn: this.ruEnEngine,
             cached: count(this.cacheDir, '.wav'),
             packed: count(this.packDir, '.mp3'),
             speechToText: !!this.sttKey,
@@ -237,7 +288,7 @@ export class VoiceService implements OnModuleInit {
         }
         // Дар луғати mms-tts-rus ҳарфи «ё» нест — «е» мегузорем, вагарна ҳарф гум мешавад.
         // Тоҷикӣ: лотинӣ (AutoCAD, SCADA), %, «ы/щ» — ба шакле, ки модел мехонад.
-        const ready = lang === 'tj' ? prepareTajikText(text) : lang === 'en' ? prepareEnglishText(text) : text;
+        const ready = lang === 'tj' ? prepareTajikText(text) : lang === 'en' ? prepareEnglishText(text) : prepareRussianText(text);
         const spelled = spellNumbers(ready, lang);
         return lang === 'ru' ? spelled.replace(/ё/g, 'е').replace(/Ё/g, 'Е') : spelled;
     }
@@ -303,9 +354,7 @@ export class VoiceService implements OnModuleInit {
         // Сервери Python худаш навбат дорад; ONNX-ро мо навбат мекунем.
         let audio = await this.remoteSpeak(spoken, speed);
         if (!audio && this.tajik.available) {
-            audio = await (this.queue = this.queue
-                .catch(() => undefined)
-                .then(() => this.tajik.speak(spoken, speed ?? 1))) as Buffer | null;
+            audio = await this.exclusive('tj', () => this.tajik.speak(spoken, speed ?? 1));
         }
 
         if (!audio) throw new ServiceUnavailableException('Овоз сохта нашуд');
@@ -322,12 +371,14 @@ export class VoiceService implements OnModuleInit {
 
     // Русӣ ва англисӣ: танҳо ONNX (сервери Python танҳо тоҷикиро медонад).
     // Калиди кеш забонро дорад — ибораҳои забонҳои гуногун набояд омехта шаванд.
-    private async speakForeign(rawText: string, lang: 'ru' | 'en'): Promise<{ audio: Buffer; cached: boolean }> {
-        const model = this.foreign[lang];
-        if (!model.available) throw new ServiceUnavailableException(`Модели ${lang} дар сервер нест`);
+    private async speakForeign(rawText: string, lang: ForeignLang): Promise<{ audio: Buffer; cached: boolean }> {
+        const engine = this.ruEnEngine;
+        if (!this.foreignAvailable(lang)) throw new ServiceUnavailableException(`Модели ${lang} дар сервер нест`);
 
         const spoken = this.prepare(rawText, lang);
-        const hash = createHash('sha1').update(`${lang}|${spoken}`).digest('hex');
+        // Калид: забон + модел + матн — садои кӯҳнаи MMS барои овози нав дода намешавад.
+        const modelId = engine === 'mms' ? 'mms' : this.sherpa.modelId(lang);
+        const hash = createHash('sha1').update(`${lang}|${modelId}|${spoken}`).digest('hex');
         const file = join(this.cacheDir, `${hash}.wav`);
         if (existsSync(file)) {
             try {
@@ -337,9 +388,29 @@ export class VoiceService implements OnModuleInit {
             }
         }
 
-        const audio = await (this.queue = this.queue
-            .catch(() => undefined)
-            .then(() => model.speak(spoken))) as Buffer | null;
+        let audio: Buffer | null;
+        try {
+            audio = await this.exclusive(lang, async () => {
+                if (engine === 'mms') return this.foreign[lang].speak(spoken);
+                try {
+                    return await this.sherpa.synth(lang, spoken);
+                } catch (error) {
+                    // Process дар ҳамин лаҳза афтод — як бор дар process-и нав такрор мекунем.
+                    if (error instanceof TtsError && error.code === 'TTS_CRASH') return this.sherpa.synth(lang, spoken);
+                    throw error;
+                }
+            });
+        } catch (error) {
+            if (error instanceof TtsError) {
+                this.logger.warn(`Овози ${lang}: ${error.code} — ${error.message}`);
+                const timeout = error.code === 'TTS_TIMEOUT';
+                throw new HttpException(
+                    { code: error.code, message: (timeout ? TIMEOUT_MESSAGE : BUSY_MESSAGE)[lang] },
+                    timeout ? HttpStatus.GATEWAY_TIMEOUT : HttpStatus.SERVICE_UNAVAILABLE,
+                );
+            }
+            throw error;
+        }
         if (!audio) throw new ServiceUnavailableException('Овоз сохта нашуд');
 
         try {
@@ -349,6 +420,13 @@ export class VoiceService implements OnModuleInit {
             this.logger.warn(`Кеш нигоҳ дошта нашуд: ${error}`);
         }
         return { audio, cached: false };
+    }
+
+    // Танҳо барои санҷиши маҳаллӣ (TTS_WORKER_TEST=1): афтидан ва овезон шудани process.
+    testWorker(type: 'crash' | 'hang'): { pid?: number } {
+        if (process.env.TTS_WORKER_TEST !== '1') throw new ServiceUnavailableException();
+        this.sherpa.sendTest(type);
+        return { pid: this.sherpa.pid };
     }
 
     // ── Шинохти нутқ ───────────────────────────────────────────────────

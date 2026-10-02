@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Ip, Post, Query, Req, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Ip, NotFoundException, Post, Query, Req, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
@@ -65,8 +65,16 @@ export class VoiceController {
         return this.voiceService.transcribe(audio?.buffer, audio?.mimetype);
     }
 
+    // Санҷиши маҳаллӣ: process-и ru/en-ро «афтонидан» ё «овезон кардан».
+    // Танҳо бо TTS_WORKER_TEST=1 ва аз IP-и маҳаллӣ; дар сервер 404/503.
+    @Post('test-worker')
+    testWorker(@Body() body: { type?: string }, @Ip() ip: string) {
+        if (process.env.TTS_WORKER_TEST !== '1' || !LOCAL_IPS.has(ip)) throw new NotFoundException();
+        return this.voiceService.testWorker(body?.type === 'hang' ? 'hang' : 'crash');
+    }
+
     @Get('speak')
-    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ ва англисӣ (MMS)' })
+    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ (Piper Dmitri), англисӣ (Kokoro)' })
     async speakGet(
         @Query('text') text: string,
         @Query('speed') speed: string,
@@ -81,7 +89,7 @@ export class VoiceController {
     }
 
     @Post('speak')
-    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ ва англисӣ (MMS)' })
+    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ (Piper Dmitri), англисӣ (Kokoro)' })
     async speakPost(
         @Body() body: { text: string; speed?: number; lang?: string },
         @Ip() ip: string,
@@ -94,12 +102,13 @@ export class VoiceController {
     }
 
     private async send(text: string, speed: number | undefined, res: Response, lang?: string) {
-        // Як рӯз, на як сол: агар модели овоз иваз шавад, браузер садои нав мегирад.
-        res.setHeader('Cache-Control', 'public, max-age=86400');
+        // Хато («банд аст», «дер шуд») набояд дар кеши браузер монад — кеш танҳо барои садо.
+        res.setHeader('Cache-Control', 'no-store');
 
         // Агар ягон ҷумларо пешакӣ сохта бошем — ҳамонро медиҳем.
         const packed = await this.voiceService.readPack(String(text || '').trim());
         if (packed) {
+            res.setHeader('Cache-Control', 'public, max-age=86400');
             res.setHeader('Content-Type', 'audio/mpeg');
             res.setHeader('X-Voice-Source', 'pack');
             res.setHeader('Content-Length', String(packed.length));
@@ -108,6 +117,8 @@ export class VoiceController {
         }
 
         const { audio, cached } = await this.voiceService.speak(text, speed, lang);
+        // Як рӯз, на як сол: агар модели овоз иваз шавад, браузер садои нав мегирад.
+        res.setHeader('Cache-Control', 'public, max-age=86400');
         res.setHeader('Content-Type', 'audio/wav');
         res.setHeader('X-Voice-Source', cached ? 'cache' : 'model');
         res.setHeader('Content-Length', String(audio.length));

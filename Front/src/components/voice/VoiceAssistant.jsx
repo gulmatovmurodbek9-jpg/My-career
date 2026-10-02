@@ -16,7 +16,23 @@ const GREETED_KEY = "assistant_greeted_v1";
 
 // Версияи овоз дар URL. Браузер садоро нигоҳ медорад — агар моделро иваз
 // кунем, ин рақамро зиёд кунед, вагарна корбар садои кӯҳнаро мешунавад.
-const VOICE_VERSION = "murod-5";
+// murod-6: овози ru (Piper Dmitri) ва en (Kokoro) — кеши браузери кӯҳна дигар дода намешавад.
+const VOICE_VERSION = "murod-6";
+
+// Садо аввал бо fetch гирифта мешавад: агар сервер «банд» (503 TTS_BUSY) ё «дер шуд»
+// (504 TTS_TIMEOUT) гӯяд, корбар паёми фаҳмо мебинад, на «овоз нарасид»-и умумӣ.
+// Ҷумлаи навбатӣ дар вақти гуфтани ҷумлаи ҷорӣ ҳамин тавр пешакӣ гирифта мешавад.
+const voiceUrl = (text, lang) => `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}&v=${VOICE_VERSION}`;
+const fetchVoice = (text, lang) => fetch(voiceUrl(text, lang)).then(async (response) => {
+    if (!response.ok) {
+        let code = "";
+        try { code = (await response.json())?.code || ""; } catch { /* JSON нест */ }
+        const error = new Error("voice");
+        error.code = code === "TTS_BUSY" ? "busy" : code === "TTS_TIMEOUT" ? "slow" : "off";
+        throw error;
+    }
+    return URL.createObjectURL(await response.blob());
+});
 
 // Браузер садоро танҳо баъди пахши корбар иҷозат медиҳад. Ҳамин файли хомӯшро
 // дар пахши аввал мешунавонем ва баъд ҳамон элементро дубора кор мефармоем.
@@ -199,15 +215,22 @@ export default function VoiceAssistant() {
     // Ваъда вақте иҷро мешавад, ки садо тамом шуд — то баъдаш гӯш сар шавад.
     // Ваъда бо true иҷро мешавад, агар садо қатъ шуда бошад (стоп ё хато) —
     // он гоҳ ҷумлаҳои боқимонда гуфта намешаванд.
-    const speakOne = useCallback((text) => new Promise((resolve) => {
+    const speakOne = useCallback((text, ready) => new Promise((resolve) => {
         stopAudio();
         setState("speaking");
         startPulse();
 
         let settled = false;
+        let safety = null;
+        let objectUrl = null;
         const finish = (interrupted = false) => {
             if (settled) return;
             settled = true;
+            clearTimeout(safety);
+            if (objectUrl) {
+                const url = objectUrl;
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
             if (speakDoneRef.current === finish) speakDoneRef.current = null;
             stopPulse();
             resolve(interrupted);
@@ -215,24 +238,23 @@ export default function VoiceAssistant() {
         speakDoneRef.current = finish;
         // Овози браузер русист ва тоҷикиро вайрон мехонад —
         // беҳтар аст хомӯш монем ва матнро нишон диҳем.
-        const fallback = () => {
+        const fallback = (reason = "off") => {
             if (settled) return;
-            setVoiceWarning(true);
+            setVoiceWarning(typeof reason === "string" ? reason : "off");
             finish(true);
         };
 
         const player = playerRef.current || new Audio();
         playerRef.current = player;
         player.onended = () => finish(false);
-        player.onerror = fallback;
+        player.onerror = () => fallback("off");
         const asked = Date.now();
         player.onplaying = () => voiceLog("play", { wait: Date.now() - asked, text: text.slice(0, 40) });
-        player.src = `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${voiceLangRef.current}&v=${VOICE_VERSION}`;
         const started = () => {
             setVoiceWarning(false);
             setNeedTap(false);
         };
-        player.play().then(started).catch((error) => {
+        const playNow = () => player.play().then(started).catch((error) => {
             if (settled) return;
             voiceLog("play-error", { name: error?.name, message: String(error?.message || "").slice(0, 80) });
             // AbortError: садои дигар ин play()-ро қатъ кард — хато нест, як бори дигар.
@@ -253,9 +275,21 @@ export default function VoiceAssistant() {
             fallback();
         });
 
+        (ready || fetchVoice(text, voiceLangRef.current))
+            .then((url) => {
+                if (settled || playerRef.current !== player) {
+                    URL.revokeObjectURL(url);
+                    return;
+                }
+                objectUrl = url;
+                player.src = url;
+                playNow();
+            })
+            .catch((error) => fallback(error?.code || "off"));
+
         // Суғурта: агар садо ба ягон сабаб на тамом шавад, на хато диҳад,
-        // ёвар набояд то абад интизор монад. 25 сония — аз ҳар ҷумла дарозтар.
-        setTimeout(() => finish(false), 25000);
+        // ёвар набояд то абад интизор монад. 40 сония — аз timeout-и сервер (30 с) ва ҳар ҷумла дарозтар.
+        safety = setTimeout(() => finish(false), 40000);
     }), [startPulse, stopAudio, stopPulse]);
 
     // Матни дарозро ҷумла-ҷумла мегӯем: ҷумлаи аввал зуд тайёр мешавад ва
@@ -263,16 +297,20 @@ export default function VoiceAssistant() {
     const speak = useCallback(async (text) => {
         if (!text) return;
         const chunks = splitForSpeech(text);
-        const prefetch = (chunk) => fetch(`${API}/voice/speak?text=${encodeURIComponent(chunk)}&lang=${voiceLangRef.current}&v=${VOICE_VERSION}`)
-            .then((response) => response.arrayBuffer())
-            .catch(() => { });
+        const lang = voiceLangRef.current;
 
+        // Ҷумлаи аввал фавран; навбатӣ дар вақти гуфтани ҷорӣ сохта мешавад.
         let next = null;
         for (let index = 0; index < chunks.length; index += 1) {
-            if (next) await next;
-            next = chunks[index + 1] ? prefetch(chunks[index + 1]) : null;
-            const interrupted = await speakOne(chunks[index]);
-            if (interrupted) return;
+            const current = next || fetchVoice(chunks[index], lang);
+            current.catch(() => { });
+            next = chunks[index + 1] ? fetchVoice(chunks[index + 1], lang) : null;
+            next?.catch(() => { });
+            const interrupted = await speakOne(chunks[index], current);
+            if (interrupted) {
+                next?.then((url) => URL.revokeObjectURL(url)).catch(() => { });
+                return;
+            }
         }
     }, [speakOne]);
 
@@ -912,8 +950,12 @@ export default function VoiceAssistant() {
                         )}
 
                         {voiceWarning && (
-                            <p className="mt-1 text-center text-[12px] text-muted-foreground">
-                                {t("assistant.voice_off", "Овоз нарасид — матнро хонед")}
+                            <p className="mt-1 text-center text-[12px] text-muted-foreground" role="status">
+                                {voiceWarning === "busy"
+                                    ? t("assistant.voice_busy", "Ёвар ҳоло банд аст, каме интизор шавед.")
+                                    : voiceWarning === "slow"
+                                        ? t("assistant.voice_slow", "Овоз дер кард — матнро хонед.")
+                                        : t("assistant.voice_off", "Овоз нарасид — матнро хонед")}
                             </p>
                         )}
 

@@ -118,6 +118,53 @@ export function prepareEnglishText(text: string): string {
         const lat = CYR_TO_LAT[lower] ?? '';
         return ch === lower ? lat : lat.charAt(0).toUpperCase() + lat.slice(1);
     });
-    // «сомонӣ» → «somoni» аллакай; «7, 8, 9» дар луғат нестанд — рақамҳоро баъд spellNumbers мехонад.
+    // «somoni»-ро Kokoro «simoni» мехонд; «somonee» дуруст шунида мешавад (санҷиш 02.10).
+    out = out.replace(/\bsomoni\b/gi, (word) => (word[0] === 'S' ? 'Somonee' : 'somonee'));
+    return out.replace(/\s{2,}/g, ' ').trim();
+}
+
+// ── Русӣ: пас аз «от / до / с / из / около / более / менее …» рақам дар родительный
+// падеж: «до 5000» → «до пяти тысяч» (модел «до пять тысяч» мегуфт).
+// Сол («с 2025 года») дасткорӣ намешавад — он порядковое аст ва модел худаш мехонад.
+const RU_GEN_ONES = ['ноля', 'одного', 'двух', 'трёх', 'четырёх', 'пяти', 'шести', 'семи', 'восьми', 'девяти'];
+const RU_GEN_ONES_F = ['ноля', 'одной', 'двух', 'трёх', 'четырёх', 'пяти', 'шести', 'семи', 'восьми', 'девяти'];
+const RU_GEN_TEENS = ['десяти', 'одиннадцати', 'двенадцати', 'тринадцати', 'четырнадцати', 'пятнадцати', 'шестнадцати', 'семнадцати', 'восемнадцати', 'девятнадцати'];
+const RU_GEN_TENS = ['', '', 'двадцати', 'тридцати', 'сорока', 'пятидесяти', 'шестидесяти', 'семидесяти', 'восьмидесяти', 'девяноста'];
+const RU_GEN_HUNDREDS = ['', 'ста', 'двухсот', 'трёхсот', 'четырёхсот', 'пятисот', 'шестисот', 'семисот', 'восьмисот', 'девятисот'];
+
+const ruGenUnder1000 = (value: number, feminine = false): string => {
+    const parts = [RU_GEN_HUNDREDS[Math.floor(value / 100)]];
+    const rest = value % 100;
+    if (rest >= 10 && rest < 20) parts.push(RU_GEN_TEENS[rest - 10]);
+    else {
+        parts.push(RU_GEN_TENS[Math.floor(rest / 10)]);
+        if (rest % 10) parts.push((feminine ? RU_GEN_ONES_F : RU_GEN_ONES)[rest % 10]);
+    }
+    return parts.filter(Boolean).join(' ');
+};
+
+export const numberToRussianGenitive = (value: number): string => {
+    if (value === 0) return 'ноля';
+    const millions = Math.floor(value / 1_000_000);
+    const thousands = Math.floor((value % 1_000_000) / 1000);
+    const rest = value % 1000;
+    const one = (n: number) => n % 10 === 1 && n % 100 !== 11;
+    return [
+        millions ? `${ruGenUnder1000(millions)} ${one(millions) ? 'миллиона' : 'миллионов'}` : '',
+        thousands ? `${ruGenUnder1000(thousands, true)} ${one(thousands) ? 'тысячи' : 'тысяч'}` : '',
+        rest ? ruGenUnder1000(rest) : '',
+    ].filter(Boolean).join(' ');
+};
+
+const RU_GEN_PREP = /(^|[\s(«"])(от|до|с|из|около|более|менее|свыше|меньше|больше)\s+(\d{1,3}(?:[\s ]\d{3})+|\d+)/gi;
+
+export function prepareRussianText(text: string): string {
+    const out = String(text || '').replace(CODE_IN_PARENS, '').replace(RU_GEN_PREP, (match, lead, prep, digits, offset, whole) => {
+        const value = Number(String(digits).replace(/[\s ]/g, ''));
+        const after = String(whole).slice(offset + match.length);
+        if (!Number.isFinite(value) || value > 999_999_999) return match;
+        if (value >= 1900 && value <= 2100 && /^\s*(-?[а-я]{0,3}\s*)?(год|г\.)/i.test(after)) return match;
+        return `${lead}${prep} ${numberToRussianGenitive(value)}`;
+    });
     return out.replace(/\s{2,}/g, ' ').trim();
 }

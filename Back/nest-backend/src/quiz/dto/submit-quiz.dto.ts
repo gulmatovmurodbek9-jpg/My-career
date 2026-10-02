@@ -23,4 +23,8 @@ export class SubmitQuizDto {
     @IsOptional()
     @IsString()
     lang?: string;
+
+    @ApiProperty({ example: 9, required: false, description: 'Синфи хатмкарда: 9 (танҳо коллеҷ) ё 11' })
+    @IsOptional()
+    grade?: number | string;
 }

@@ -15,6 +15,8 @@ import TajikistanMap from "../../components/map/TajikistanMap";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
+import { useGrade } from "../../lib/grade";
+import GradeSwitch from "../../components/GradeSwitch";
 import { useTranslation } from "react-i18next";
 import { autoDescription } from "../../lib/uniText";
 
@@ -86,6 +88,7 @@ const searchText = (uni) =>
 
 export default function Universities() {
   const { t, i18n } = useTranslation();
+  const grade = useGrade();
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
   // Ёвари овозӣ шаҳрро бо ?q= мефиристад.
@@ -119,7 +122,7 @@ export default function Universities() {
     const fetchUniversities = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`${API}/universities`, { params: withLang() });
+        const { data } = await axios.get(`${API}/universities`, { params: withLang(grade ? { grade } : {}) });
         setUniversities(data || []);
       } catch (error) {
         console.error("Failed to fetch universities:", error);
@@ -129,7 +132,7 @@ export default function Universities() {
     };
 
     fetchUniversities();
-  }, [i18n.language]);
+  }, [i18n.language, grade]);
 
   const normalizedQuery = foldText(searchQuery);
 
@@ -176,6 +179,7 @@ export default function Universities() {
                 <p className="max-w-2xl text-[15px] leading-7 text-muted-foreground">
                   {t("career_page.u_intro")}
                 </p>
+                <GradeSwitch />
               </div>
 
               <div className="grid grid-cols-3 gap-3">

@@ -13,7 +13,7 @@ const PHRASES = [
     // Ҷавобҳои собит (career.service.ts → ASSISTANT_REPLIES.tj).
     'Ана ин ихтисосҳо.',
     'Кушодам.',
-    'Муқоиса тайёр аст.',
+    'Муқоиса мекунам, каме интизор шавед.',
     'Захира шуд.',
     'Санҷишро сар мекунам.',
     'Ана донишгоҳҳо.',
@@ -37,7 +37,7 @@ const PHRASES = [
 // Танҳо вақте садо мегиранд, ки модели русӣ дар voice-model-rus/ бошад.
 const PHRASES_RU = [
     'Добро пожаловать! Я ваш помощник. Чем займёмся — выберем специальность, посмотрим университеты или пройдём тест?',
-    'Вот эти специальности.', 'Открыл.', 'Сравнение готово.', 'Сохранено.', 'Начинаю тест.',
+    'Вот эти специальности.', 'Открыл.', 'Сравниваю, подождите немного.', 'Сохранено.', 'Начинаю тест.',
     'Вот университеты.', 'Открыл ваш отчёт.', 'Вот план подачи документов.', 'Ищу ближайшие университеты.',
     'Вот этот кластер.', 'Открыл чат.', 'Вот ваши сохранённые.', 'О нас.', 'На главную.',
     'Язык изменён.', 'Тема изменена.',
@@ -47,7 +47,7 @@ const PHRASES_RU = [
 // Ибораҳои англисии ёвар (ASSISTANT_REPLIES.en + салом) — модели voice-model-eng/.
 const PHRASES_EN = [
     'Hello! Welcome. I am your assistant. What shall we do: choose a specialty, look at universities, or take the test?',
-    'Here are the specialties.', 'Opened.', 'The comparison is ready.', 'Saved.', 'Starting the test.',
+    'Here are the specialties.', 'Opened.', 'Comparing them now, one moment.', 'Saved.', 'Starting the test.',
     'Here are the universities.', 'I opened your report.', 'Here is the application plan.', 'Looking for the nearest universities.',
     'Here is that cluster.', 'Chat opened.', 'Here are your saved items.', 'About us.', 'Going home.',
     'Language changed.', 'Theme changed.',

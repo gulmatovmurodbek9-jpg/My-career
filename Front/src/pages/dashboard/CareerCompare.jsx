@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowLeft, Search, Scale, Sparkles, Trophy, ThumbsUp, ThumbsDown,
@@ -6,7 +6,7 @@ import {
     Loader2, AlertCircle, CheckCircle, XCircle, Zap, Crown,
     ChevronRight, Plus, X, Star, ArrowUpRight, Bookmark, Lightbulb
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import AiBotIcon from "../../components/AiBotIcon";
 import { useTranslation } from "react-i18next";
 import { clusterLabel } from "../../lib/clusterLabel";
@@ -478,6 +478,20 @@ const CareerCompare = () => {
     const [savedCareers, setSavedCareers] = useState([]);
     const [loadingSavedCareers, setLoadingSavedCareers] = useState(false);
 
+    // Ёвар номҳои навро мефиристад, ҳатто вақте саҳифа аллакай кушода аст —
+    // пештар онҳо танҳо ҳангоми кушодани аввал хонда мешуданд ва интихоби кӯҳна мемонд.
+    const location = useLocation();
+    const voiceNamesRef = useRef(null);
+    useEffect(() => {
+        const asked = new URLSearchParams(location.search).get("names");
+        if (!asked) return;
+        const names = asked.split("|").map((name) => name.trim()).filter(Boolean).slice(0, 5);
+        if (names.length < 2) return;
+        voiceNamesRef.current = names.join("|");
+        setCareers(names);
+        setData(null);
+    }, [location.search]);
+
     useEffect(() => {
         if (token && !user?.quizResults) {
             refreshProfile();
@@ -671,6 +685,15 @@ const CareerCompare = () => {
             setLoading(false);
         }
     };
+
+    // Ёвар «муқоиса кун» гуфт — муқоиса худ ба худ оғоз мешавад, на интизори тугма.
+    useEffect(() => {
+        if (!voiceNamesRef.current || voiceNamesRef.current !== careers.join("|")) return;
+        if (!fullScores || loading || retryCountdown > 0) return;
+        voiceNamesRef.current = null;
+        handleCompare();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [careers, fullScores, loading, retryCountdown]);
 
     const comparisonData = useMemo(() => normalizeCompareResponse(data, careers), [data, careers]);
     const comparedCareers = comparisonData.careerComparison || [];

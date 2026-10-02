@@ -33,14 +33,15 @@ const About = () => {
 
     Promise.allSettled([
       axios.get(`${API}/careers`, { params: { limit: 1 }, signal }),
-      axios.get(`${API}/universities`, { signal }),
+      axios.get(`${API}/universities/summary`, { signal }),
       axios.get(`${API}/clusters`, { signal }),
     ]).then(([careers, universities, clusters]) => {
       setCounts({
         careers: careers.status === "fulfilled" ? careers.value.data?.meta?.total ?? null : null,
+        // «51 + 77»: муассисаҳои олӣ ва коллеҷҳо ҷудо, на «128 донишгоҳ».
         universities:
-          universities.status === "fulfilled" && Array.isArray(universities.value.data)
-            ? universities.value.data.length
+          universities.status === "fulfilled" && universities.value.data?.total
+            ? `${universities.value.data.higher} + ${universities.value.data.colleges}`
             : null,
         clusters:
           clusters.status === "fulfilled" && Array.isArray(clusters.value.data)

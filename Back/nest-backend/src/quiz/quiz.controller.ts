@@ -35,12 +35,21 @@ export class QuizController {
         return { scores: this.quizService.calculateScores(dto) };
     }
 
+    // Ҷавоби озоди корбар (навишта ё гуфта) → варианти наздиктарин. Худи хол
+    // ҳамон хол-и вариант мемонад — санҷиш одилона ва якхела ҳисоб мешавад.
+    @Post('interpret')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Ҷавоби озод → варианти наздиктарин (AI)' })
+    interpret(@Body() body: { question?: string; options?: string[]; text?: string; lang?: string }) {
+        return this.quizService.interpretAnswer(body?.question, body?.options, body?.text, body?.lang);
+    }
+
     @Post('submit')
     @ApiOperation({ summary: 'Фиристодани ҷавобҳо ва гирифтани TOP 12 ихтисосҳо' })
     async submitQuiz(@Body() dto: SubmitQuizDto) {
         const scores = this.quizService.calculateScores(dto);
 
-        const result = await this.quizService.matchCareers(scores, dto.lang);
+        const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade);
 
         return {
             scores,
@@ -54,7 +63,7 @@ export class QuizController {
     @ApiOperation({ summary: 'Фиристодани ҷавобҳо (бо аутентификатсия) — натиҷаҳо захира мешаванд' })
     async submitQuizAuthenticated(@Body() dto: SubmitQuizDto, @Req() req: any) {
         const scores = this.quizService.calculateScores(dto);
-        const result = await this.quizService.matchCareers(scores, dto.lang);
+        const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade);
 
         await this.usersService.saveQuizResults(req.user.userId, scores);
 

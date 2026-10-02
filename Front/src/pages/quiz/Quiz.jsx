@@ -21,6 +21,7 @@ import {
     CheckCircle,
     Briefcase,
     Loader2,
+    PenLine,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -31,6 +32,9 @@ import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../components/toast/ToastProvider";
 import { MMT_CLUSTERS } from "../../lib/mmtClusters";
 import { displayName } from "../../lib/careerName";
+import { careerName, careerDescription } from "../../lib/careerText";
+import { getGrade, gradeText, setGrade, GRADE_EVENT } from "../../lib/grade";
+import { withLang } from "../../lib/apiLang";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
 
@@ -44,7 +48,144 @@ const LogoMark = ({ className = "" }) => (
 // Тартиби ҷавобҳо барои ҳар корбар омехта (ҷои ҷавоб ба самт ишора накунад),
 // вале дар давоми як сессия барои ҳамон савол собит.
 const SHUFFLE_SEED = Math.floor(Math.random() * 1e9);
+// «Ҷавоби худ»: агар ҳеҷ вариант мувофиқ набошад, корбар бо суханони худ менависад;
+// AI онро ба варианти наздиктарин мепайвандад ва хол ҳамон хол-и вариант аст.
+const OWN_TEXT = {
+    tj: {
+        title: "Ҷавоби шумо дар рӯйхат нест?",
+        hint: "Бо суханони худ нависед — AI варианти аз ҳама наздикро меёбад ва ба шумо нишон медиҳад. Хол ҳамон тавр ҳисоб мешавад, ки бо интихоби вариант.",
+        placeholder: "Масалан: «дар бораи ҳайвонот ва табиат»",
+        send: "Ёфтан",
+        matched: "Ҷавоби шумо ба ин вариант наздик аст:",
+        accept: "Қабул",
+        change: "Дигар кардан",
+        none: "Ҷавобро ба ягон вариант пайваст карда натавонистем. Каме дигар нависед ё вариантро интихоб кунед.",
+    },
+    ru: {
+        title: "Вашего ответа нет в списке?",
+        hint: "Напишите своими словами — AI найдёт самый близкий вариант и покажет его вам. Баллы считаются так же, как при выборе варианта.",
+        placeholder: "Например: «о животных и природе»",
+        send: "Найти",
+        matched: "Ваш ответ ближе всего к варианту:",
+        accept: "Принять",
+        change: "Изменить",
+        none: "Не удалось сопоставить ответ с вариантом. Напишите иначе или выберите вариант.",
+    },
+    en: {
+        title: "Your answer is not listed?",
+        hint: "Write it in your own words — AI will find the closest option and show it to you. It is scored the same as choosing that option.",
+        placeholder: "For example: “about animals and nature”",
+        send: "Find",
+        matched: "Your answer is closest to:",
+        accept: "Accept",
+        change: "Change",
+        none: "We could not match your answer to an option. Rephrase it or pick an option.",
+    },
+};
+
+// Фаҳмондани фоизи ҳар самт: кадом ҷавобҳо хол доданд ва дар куҷо хол гум шуд.
+const EXPLAIN_TEXT = {
+    tj: {
+        open: "Чаро ин фоиз?",
+        why: "Фоиз = холҳое, ки ҷавобҳои шумо ба ин самт доданд, аз ҳадди имконпазир.",
+        gave: "Ин ҷавобҳо ба ин самт ишора карданд",
+        missed: "Дар ин саволҳо хол гум шуд",
+        missedHint: "шумо интихоб кардед «{{chosen}}», вале «{{other}}» ба ин самт мувофиқ буд",
+        none: "Ягон ҷавоб ба ин самт ишора накард.",
+        careers: "Ихтисосҳои ин самт",
+        allCareers: "Ҳамаи ихтисосҳои ин самт",
+        more: "Боз {{count}}",
+    },
+    ru: {
+        open: "Почему такой процент?",
+        why: "Процент = баллы, которые ваши ответы дали этому направлению, от максимально возможных.",
+        gave: "Эти ответы указали на это направление",
+        missed: "Здесь баллы потеряны",
+        missedHint: "вы выбрали «{{chosen}}», а к этому направлению подходил «{{other}}»",
+        none: "Ни один ответ не указал на это направление.",
+        careers: "Специальности этого направления",
+        allCareers: "Все специальности направления",
+        more: "Ещё {{count}}",
+    },
+    en: {
+        open: "Why this percentage?",
+        why: "Percentage = points your answers gave this direction out of the maximum possible.",
+        gave: "These answers pointed to this direction",
+        missed: "Points were lost here",
+        missedHint: "you chose “{{chosen}}”, while “{{other}}” matched this direction",
+        none: "None of your answers pointed to this direction.",
+        careers: "Specialties in this direction",
+        allCareers: "All specialties in this direction",
+        more: "{{count}} more",
+    },
+};
+const fill = (text, values) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
+
+// Саволи «ду самт баробар»: чаро пайдо шуд ва ҳар самт чӣ гуна аст.
+const TIE_TEXT = {
+    tj: {
+        why: "Ҷавобҳои шумо ба ин ду самт қариб баробар хол доданд. Дар поён бинед, ки ҳар самт чӣ гуна кор аст ва кадом ихтисосҳо дорад, ва онеро интихоб кунед, ки ба дилатон наздиктар аст — тавсияҳо аз рӯи ҳамин сохта мешаванд.",
+        examples: "Масалан:",
+    },
+    ru: {
+        why: "Ваши ответы дали этим двум направлениям почти одинаковые баллы. Ниже — чем занимаются в каждом и какие там специальности. Выберите то, что вам ближе: по нему будут подобраны рекомендации.",
+        examples: "Например:",
+    },
+    en: {
+        why: "Your answers gave these two directions almost equal points. Below is what each one is about and which specialties it has. Pick the one closer to you — recommendations will be based on it.",
+        examples: "For example:",
+    },
+};
+
+// Баъди санҷиш: қадамҳои мушаххас, то корбар донад, ки минбаъд чӣ кунад.
+const NEXT_TEXT = {
+    tj: {
+        title: "Акнун чӣ кор кунам?",
+        hint: "Санҷиш танҳо самтро нишон медиҳад. Барои интихоби ниҳоӣ ин қадамҳоро гузаред:",
+        steps: [
+            ["Ихтисосҳоро шинос шавед", "2–3 ихтисоси боло ё поёнро кушоед: чӣ кор мекунанд, маош, бали гузариш ва дар куҷо мехонанд."],
+            ["Муқоиса кунед", "2–3 ихтисоси маъқулро паҳлӯи ҳам гузоред — AI фарқ ва ояндаи онҳоро мефаҳмонад."],
+            ["Ҷойи таҳсилро интихоб кунед", "Дар харита муассисаҳоеро бинед, ки ин ихтисосҳоро доранд: нарх, ҷойи ройгон ва шаҳр."],
+            ["Ҳуҷҷатҳоро омода кунед", "Рӯйхати ҳуҷҷатсупорӣ: чӣ лозим аст ва то кай."],
+            ["Ҳанӯз шубҳа доред?", "Ба ёвари овозӣ ё чати AI нависед: «кадом ихтисос барои ман беҳтар аст?»"],
+        ],
+        steps9: "Баъди синфи 9 — танҳо коллеҷҳо нишон дода мешаванд.",
+        open: ["Ихтисосҳо", "Муқоиса", "Харита", "Ҳуҷҷатҳо", "Чати AI"],
+        both: "Шумо ҳарду самтро интихоб кардед — дар «Ҳамаи панҷ самт» самти дуюмро кушоед ва ихтисосҳои онро низ бинед.",
+    },
+    ru: {
+        title: "Что делать дальше?",
+        hint: "Тест показывает только направление. Чтобы выбрать окончательно, пройдите эти шаги:",
+        steps: [
+            ["Познакомьтесь со специальностями", "Откройте 2–3 специальности: чем занимаются, зарплата, проходной балл и где учиться."],
+            ["Сравните", "Поставьте 2–3 понравившиеся специальности рядом — AI объяснит разницу и перспективы."],
+            ["Выберите, где учиться", "На карте — учебные заведения с этими специальностями: цена, бюджетные места, город."],
+            ["Подготовьте документы", "План подачи документов: что нужно и до какого срока."],
+            ["Остались сомнения?", "Спросите голосового помощника или AI-чат: «какая специальность мне подходит больше?»"],
+        ],
+        steps9: "После 9 класса показываются только колледжи.",
+        open: ["Специальности", "Сравнение", "Карта", "Документы", "AI-чат"],
+        both: "Вы выбрали оба направления — откройте второе в блоке «Все пять направлений» и посмотрите его специальности тоже.",
+    },
+    en: {
+        title: "What should I do next?",
+        hint: "The test only shows a direction. To make the final choice, go through these steps:",
+        steps: [
+            ["Get to know the specialties", "Open 2–3 specialties: what they do, salary, entry score and where to study."],
+            ["Compare", "Put 2–3 specialties you like side by side — AI explains the difference and prospects."],
+            ["Choose where to study", "On the map — institutions with these specialties: price, free places, city."],
+            ["Prepare documents", "The application plan: what is needed and by when."],
+            ["Still unsure?", "Ask the voice assistant or AI chat: “which specialty suits me better?”"],
+        ],
+        steps9: "After grade 9, only colleges are shown.",
+        open: ["Specialties", "Compare", "Map", "Documents", "AI chat"],
+        both: "You chose both directions — open the second one in “All five directions” and look at its specialties too.",
+    },
+};
+
 const shuffledOrder = (id, count) => {
+    // Саволи «баробар»: ду самт ва «Не знаю — оба» ҳамеша дар охир — бе омехта.
+    if (id === "tiebreak") return Array.from({ length: count }, (_, i) => i);
     let h = SHUFFLE_SEED;
     for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     const order = Array.from({ length: count }, (_, i) => i);
@@ -81,6 +222,12 @@ const Quiz = () => {
     const [refreshingCareers, setRefreshingCareers] = useState(false);
     const [specOffset, setSpecOffset] = useState(0);
     const [showAllMatched, setShowAllMatched] = useState(false);
+    // Пеш аз санҷиш: «баъди кадом синф?» — синфи 9 танҳо коллеҷ, синфи 11 коллеҷ ва донишгоҳ.
+    const [gradeConfirmed, setGradeConfirmed] = useState(false);
+    const pickGrade = (value) => {
+        setGrade(value);
+        setGradeConfirmed(true);
+    };
 
     useEffect(() => {
         if (user?.savedCareers) {
@@ -130,7 +277,7 @@ const Quiz = () => {
                 } while (page === clusterPage);
             }
             const { data } = await axios.get(`${API}/careers`, {
-                params: { clusterId: results.topCluster.id, limit: CLUSTER_PAGE_SIZE, page },
+                params: { clusterId: results.topCluster.id, limit: CLUSTER_PAGE_SIZE, page, ...(results.grade ? { grade: results.grade } : {}) },
             });
             let careers = data.data || [];
             if (shuffle) careers = [...careers].sort(() => Math.random() - 0.5);
@@ -179,7 +326,17 @@ const Quiz = () => {
     // Ҳолати охирин: тугмаҳои саволи қаблӣ ҳангоми аниматсияи гузариш ҳанӯз дар экран
     // ҳастанд ва бо маълумоти кӯҳна кор мекарданд (қадами 2 такрор илова мешуд).
     const latest = useRef({});
-    latest.current = { questions, currentStep, quizStage, answers, idle: !showResults && !isAnalyzing && !askRetake && !loading };
+    const gradePending = !gradeConfirmed && currentStep === 0 && answers.length === 0 && !showResults && !askRetake;
+    latest.current = { questions, currentStep, quizStage, answers, gradePending, idle: !showResults && !isAnalyzing && !askRetake && !loading };
+
+    // Ёвар синфро иваз кард («я после 9 класса») — савол ҷавоб гирифт.
+    useEffect(() => {
+        const onGrade = (event) => {
+            if (event.detail === 9 || event.detail === 11) setGradeConfirmed(true);
+        };
+        window.addEventListener(GRADE_EVENT, onGrade);
+        return () => window.removeEventListener(GRADE_EVENT, onGrade);
+    }, []);
 
     const handleAnswer = async (selectedValue, clickedQuestionId) => {
         if (busyRef.current) return;
@@ -204,7 +361,10 @@ const Quiz = () => {
             try {
                 let clusterKey;
                 if (quizStage === "tiebreak") {
-                    clusterKey = String(selectedValue);
+                    // «Ҳарду» → самти холаш баландтар (варианти аввал); бонуси интихоб дода намешавад.
+                    clusterKey = String(selectedValue) === "both"
+                        ? String(questions[currentStep].options[0].value)
+                        : String(selectedValue);
                 } else {
                     // Танҳо холҳо (бе AI) — ҷавоб фавран.
                     const { data } = await axios.post(`${API}/quiz/score`, { answers: newAnswers });
@@ -222,7 +382,20 @@ const Quiz = () => {
                                 ru: "Два направления вам одинаково близки. Какое ближе вашему сердцу?",
                                 en: "Two directions suit you equally. Which one is closer to your heart?",
                             },
-                            options: [first, second].map(([key]) => ({ value: key, cluster: key })),
+                            // Фоиз (холҳо дар миқёси 0–40) — то корбар бинад, ки чаро савол пайдо шуд.
+                            options: [
+                                ...[first, second].map(([key, score]) => ({ value: key, cluster: key, percent: Math.round(((Number(score) || 0) / 40) * 100) })),
+                                // Корбар ҳанӯз интихоб карда наметавонад — бо самти баландтар идома медиҳем,
+                                // дар натиҷа самти дуюм ҳам нишон дода мешавад.
+                                {
+                                    value: "both",
+                                    text: {
+                                        tj: "Намедонам — ҳарду ба ман наздиканд",
+                                        ru: "Не знаю — мне близки оба",
+                                        en: "I don't know — both are close to me",
+                                    },
+                                },
+                            ],
                         };
                         setQuestions((prev) => [...prev.filter((q) => q.id !== "tiebreak"), tiebreak]);
                         setQuizStage("tiebreak");
@@ -280,6 +453,179 @@ const Quiz = () => {
         return () => window.removeEventListener("keydown", onKey);
     }, []);
 
+    // Ёвари овозӣ: саволи ҷорӣ бо ҷавобҳо (ба тартиби экран) ба ӯ дода мешавад,
+    // то онро хонад; ҷавоб ва «далее/назад»-и корбар аз ӯ бармегардад.
+    const voiceQuestion = (() => {
+        const question = questions[currentStep];
+        const idle = !showResults && !isAnalyzing && !askRetake && !loading && !stageLoading;
+        if (idle && gradePending) {
+            const text = gradeText(i18n.language);
+            return { id: "grade", step: -1, lang: i18n.language || "tj", question: text.pickTitle, options: [text.pick9, text.pick11] };
+        }
+        if (!idle || !question?.options?.length) return null;
+        const lang = i18n.language || "tj";
+        const text = typeof question.question === "string"
+            ? question.question
+            : question.question?.[lang] || question.question?.tj || "";
+        const options = shuffledOrder(question.id, question.options.length).map((idx) => {
+            const option = question.options[idx];
+            return option.cluster
+                ? clusterLabel(t, { clusterId: Number(String(option.cluster).replace(/\D/g, "")) })
+                : typeof option.text === "string" ? option.text : option.text?.[lang] || option.text?.tj || "";
+        });
+        return { id: question.id, step: currentStep, lang, question: text, options };
+    })();
+    const voiceKey = voiceQuestion ? `${voiceQuestion.id}|${voiceQuestion.lang}` : "";
+    useEffect(() => {
+        window.__quizVoice = voiceQuestion;
+        window.dispatchEvent(new CustomEvent("quiz:question", { detail: voiceQuestion }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [voiceKey]);
+    useEffect(() => () => {
+        window.__quizVoice = null;
+        window.dispatchEvent(new CustomEvent("quiz:question", { detail: null }));
+    }, []);
+    const [openCluster, setOpenCluster] = useState(null);
+    const [showAllReasons, setShowAllReasons] = useState(false);
+    const [clusterIds, setClusterIds] = useState({});
+    const [clusterPreview, setClusterPreview] = useState({});
+    const toggleCluster = async (key, number) => {
+        setShowAllReasons(false);
+        if (openCluster === key) {
+            setOpenCluster(null);
+            return;
+        }
+        setOpenCluster(key);
+        if (clusterPreview[key]) return;
+        try {
+            let ids = clusterIds;
+            if (!ids[number]) {
+                const { data } = await axios.get(`${API}/clusters`);
+                ids = Object.fromEntries((Array.isArray(data) ? data : data?.data || []).map((cluster) => [cluster.clusterId, cluster.id]));
+                setClusterIds(ids);
+            }
+            const id = ids[number];
+            if (!id) return;
+            const { data } = await axios.get(`${API}/careers`, { params: { clusterId: id, limit: 6, page: 1, ...(results?.grade ? { grade: results.grade } : {}) } });
+            setClusterPreview((old) => ({ ...old, [key]: { id, careers: data?.data || [], total: data?.meta?.total || 0 } }));
+        } catch {
+            setClusterPreview((old) => ({ ...old, [key]: { id: null, careers: [], total: 0 } }));
+        }
+    };
+
+    // Ихтисосҳои мисолӣ барои ду самти баробар (бо синфи интихобшуда).
+    const [tieExamples, setTieExamples] = useState({});
+    const tieKey = questions[currentStep]?.id === "tiebreak"
+        ? questions[currentStep].options.map((option) => option.cluster).join(",")
+        : "";
+    useEffect(() => {
+        if (!tieKey) return undefined;
+        let cancelled = false;
+        (async () => {
+            try {
+                const grade = getGrade();
+                const { data } = await axios.get(`${API}/clusters`);
+                const ids = Object.fromEntries((Array.isArray(data) ? data : []).map((cluster) => [cluster.clusterId, cluster.id]));
+                const found = {};
+                for (const key of tieKey.split(",")) {
+                    const id = ids[Number(String(key).replace(/\D/g, ""))];
+                    if (!id) continue;
+                    const res = await axios.get(`${API}/careers`, {
+                        params: withLang({ clusterId: id, limit: 4, page: 1, ...(grade ? { grade } : {}) }),
+                    });
+                    found[key] = (res.data?.data || []).map((career) => displayName(careerName(career, i18n.language)));
+                }
+                if (!cancelled) setTieExamples(found);
+            } catch {
+                /* мисолҳо намоён намешаванд — савол бе онҳо ҳам кор мекунад */
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [tieKey, i18n.language]);
+
+    const [ownText, setOwnText] = useState("");
+    const [ownLoading, setOwnLoading] = useState(false);
+    const [ownMatch, setOwnMatch] = useState(null);
+    const [ownNone, setOwnNone] = useState(false);
+    useEffect(() => {
+        setOwnText("");
+        setOwnMatch(null);
+        setOwnNone(false);
+    }, [voiceKey]);
+
+    // Ҷавоби озод → варианти наздиктарин. Аз ёвар (fromVoice) — фавран қабул
+    // мешавад ва ёвар мегӯяд, ки кадом вариант интихоб шуд.
+    const interpretOwn = async (text, fromVoice = false) => {
+        const quiz = window.__quizVoice;
+        const said = String(text || "").trim();
+        if (!quiz || !said || ownLoading) return;
+        setOwnLoading(true);
+        setOwnNone(false);
+        setOwnMatch(null);
+        let position = null;
+        try {
+            const { data } = await axios.post(`${API}/quiz/interpret`, {
+                question: quiz.question, options: quiz.options, text: said, lang: quiz.lang,
+            }, { timeout: 12000 });
+            position = Number.isInteger(data?.position) ? data.position : null;
+        } catch {
+            position = null;
+        } finally {
+            setOwnLoading(false);
+        }
+        if (window.__quizVoice?.id !== quiz.id) return;
+        if (fromVoice) {
+            window.dispatchEvent(new CustomEvent("quiz:matched", {
+                detail: { position, option: position === null ? "" : quiz.options[position] },
+            }));
+            if (position !== null) {
+                const { questions: list, currentStep: step } = latest.current;
+                const question = list?.[step];
+                if (question?.id === quiz.id) answerRef.current(shuffledOrder(question.id, question.options.length)[position], question.id);
+            }
+            return;
+        }
+        if (position === null) setOwnNone(true);
+        else setOwnMatch({ position, option: quiz.options[position] });
+    };
+    const interpretRef = useRef(interpretOwn);
+    interpretRef.current = interpretOwn;
+
+    const acceptOwn = () => {
+        const { questions: list, currentStep: step } = latest.current;
+        const question = list?.[step];
+        if (!question || !ownMatch) return;
+        answerRef.current(shuffledOrder(question.id, question.options.length)[ownMatch.position], question.id);
+    };
+
+    useEffect(() => {
+        const onCommand = (event) => {
+            const command = event.detail || {};
+            const { questions: list, currentStep: step, answers: given, idle, gradePending: asking } = latest.current;
+            if (!idle) return;
+            if (asking) {
+                if (command.type === "answer" && (command.position === 0 || command.position === 1)) {
+                    pickGrade(command.position === 0 ? 9 : 11);
+                }
+                return;
+            }
+            const question = list?.[step];
+            if (!question?.options?.length) return;
+            if (command.type === "answer") {
+                if (command.position < 0 || command.position >= question.options.length) return;
+                answerRef.current(shuffledOrder(question.id, question.options.length)[command.position], question.id);
+            } else if (command.type === "free") {
+                interpretRef.current(command.text, true);
+            } else if (command.type === "back" && step > 0) {
+                setCurrentStep(step - 1);
+            } else if (command.type === "next" && given.some((answer) => answer.questionId === question.id) && step < list.length - 1) {
+                setCurrentStep(step + 1);
+            }
+        };
+        window.addEventListener("quiz:command", onCommand);
+        return () => window.removeEventListener("quiz:command", onCommand);
+    }, []);
+
     // Ҷавобҳо бо матни савол ва интихоб — барои саҳифаи натиҷа ва ёвар.
     const enrich = (data, finalAnswers) => {
         const activeLang = i18n.language || "tj";
@@ -324,7 +670,7 @@ const Quiz = () => {
         if (busyRef.current) return;
         busyRef.current = true;
         setIsAnalyzing(true);
-        const body = { answers: finalAnswers, lang: i18n.language };
+        const body = { answers: finalAnswers, lang: i18n.language, grade: getGrade() };
         try {
             const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -363,6 +709,7 @@ const Quiz = () => {
         setSavedIds(new Set(user?.savedCareers?.map(c => c.id) || []));
         setAnswers([]);
         setCurrentStep(0);
+        setGradeConfirmed(false);
         axios.get(`${API}/quiz/questions`).then(({ data }) => setQuestions(data)).catch(() => {});
     };
 
@@ -505,6 +852,31 @@ const Quiz = () => {
             }))
             .sort((a, b) => b.raw - a.raw);
         const [first, second] = rankedClusters;
+        const explain = EXPLAIN_TEXT[i18n.language] || EXPLAIN_TEXT.tj;
+        const lang = i18n.language || "tj";
+        // Нохунаки худи матн бардошта мешавад — вагарна «««…»»» дукарата мешуд.
+        const pickText = (value) => String(typeof value === "string" ? value : value?.[lang] || value?.tj || value?.en || "")
+            .trim().replace(/^[«"“]+|[»"”]+$/g, "");
+        const reasonsFor = (key) => {
+            const gave = [];
+            const missed = [];
+            for (const answer of results.answers || results.rawAnswers || []) {
+                const question = questions.find((q) => q.id === answer.questionId);
+                if (!question || question.part !== "mmt") continue;
+                const chosen = question.options?.[Number(answer.selectedValue)];
+                if (!chosen) continue;
+                const points = Number(chosen.scores?.[key]) || 0;
+                const best = question.options
+                    .map((option) => ({ option, points: Number(option.scores?.[key]) || 0 }))
+                    .sort((a, b) => b.points - a.points)[0];
+                const item = { id: question.id, question: pickText(question.question), chosen: pickText(chosen.text) };
+                if (points > 0) gave.push({ ...item, points });
+                else if (best?.points > 0) missed.push({ ...item, other: pickText(best.option.text), points: best.points });
+            }
+            gave.sort((a, b) => b.points - a.points);
+            missed.sort((a, b) => b.points - a.points);
+            return { gave, missed };
+        };
         const isClose = first && second && first.raw - second.raw < 0.15 * Math.max(first.raw, 1);
 
         return (
@@ -527,6 +899,11 @@ const Quiz = () => {
                             {clusterDescription(t, topCluster, "")}
                         </p>
                     )}
+                    {results.grade === 9 && (
+                        <p className="mx-auto mt-3 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary">
+                            {gradeText(i18n.language).results9}
+                        </p>
+                    )}
                     {isClose && second && (
                         <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
                             {t('quiz.close_second', { defaultValue: 'Самти «{{name}}» низ ба шумо хеле наздик аст — бо ихтисосҳои он ҳам шинос шавед.', name: second.label })}
@@ -537,25 +914,116 @@ const Quiz = () => {
                 <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
                     <h2 className="text-lg font-black text-foreground">{t('quiz.all_directions', 'Ҳамаи панҷ самт')}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{t('quiz.all_directions_hint', 'Чӣ қадар ҷавобҳои шумо ба ҳар самт мувофиқ омаданд.')}</p>
-                    <ul className="mt-5 space-y-3.5">
-                        {rankedClusters.map((cluster, index) => (
-                            <li key={cluster.key}>
-                                <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
-                                    <span className={`font-bold ${index === 0 ? "text-foreground" : "text-muted-foreground"}`}>
-                                        {cluster.number}. {cluster.label}
-                                    </span>
-                                    <span className="font-black tabular-nums text-foreground">{cluster.percent}%</span>
-                                </div>
-                                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted" role="presentation">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${cluster.percent}%` }}
-                                        transition={{ duration: 0.6, delay: index * 0.06 }}
-                                        className={`h-full rounded-full ${index === 0 ? "bg-primary" : "bg-primary/35"}`}
-                                    />
-                                </div>
-                            </li>
-                        ))}
+                    <ul className="mt-5 space-y-2">
+                        {rankedClusters.map((cluster, index) => {
+                            const isOpen = openCluster === cluster.key;
+                            const reasons = isOpen ? reasonsFor(cluster.key) : null;
+                            const preview = clusterPreview[cluster.key];
+                            const limit = showAllReasons ? 99 : 3;
+                            return (
+                                <li key={cluster.key} className={`rounded-2xl ${isOpen ? "bg-muted/40" : ""}`}>
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleCluster(cluster.key, cluster.number)}
+                                        aria-expanded={isOpen}
+                                        className="w-full rounded-2xl px-3 py-2.5 text-left cursor-pointer hover:bg-muted/40 focus-ring"
+                                    >
+                                        <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                                            <span className={`font-bold ${index === 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                                                {cluster.number}. {cluster.label}
+                                            </span>
+                                            <span className="flex items-center gap-1.5 font-black tabular-nums text-foreground">
+                                                {cluster.percent}%
+                                                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} aria-hidden="true" />
+                                            </span>
+                                        </div>
+                                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted" role="presentation">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${cluster.percent}%` }}
+                                                transition={{ duration: 0.6, delay: index * 0.06 }}
+                                                className={`h-full rounded-full ${index === 0 ? "bg-primary" : "bg-primary/35"}`}
+                                            />
+                                        </div>
+                                        {!isOpen && (
+                                            <div className="mt-1.5 text-[12px] font-semibold text-primary">{explain.open}</div>
+                                        )}
+                                    </button>
+
+                                    {isOpen && (
+                                        <div className="space-y-4 px-3 pb-4 pt-1 text-sm">
+                                            <p className="text-[13px] text-muted-foreground">{explain.why}</p>
+
+                                            {reasons.gave.length > 0 ? (
+                                                <div>
+                                                    <div className="font-bold text-foreground">✓ {explain.gave}</div>
+                                                    <ul className="mt-2 space-y-2">
+                                                        {reasons.gave.slice(0, limit).map((item) => (
+                                                            <li key={item.id} className="rounded-xl bg-card p-3">
+                                                                <div className="text-[13px] text-muted-foreground">{item.question}</div>
+                                                                <div className="mt-0.5 font-semibold text-foreground">«{item.chosen}»</div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ) : (
+                                                <p className="font-semibold text-muted-foreground">{explain.none}</p>
+                                            )}
+
+                                            {reasons.missed.length > 0 && (
+                                                <div>
+                                                    <div className="font-bold text-foreground">○ {explain.missed}</div>
+                                                    <ul className="mt-2 space-y-2">
+                                                        {reasons.missed.slice(0, limit).map((item) => (
+                                                            <li key={item.id} className="rounded-xl border border-dashed border-border p-3">
+                                                                <div className="text-[13px] text-muted-foreground">{item.question}</div>
+                                                                <div className="mt-0.5 text-foreground">{fill(explain.missedHint, item)}</div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {!showAllReasons && (reasons.gave.length > 3 || reasons.missed.length > 3) && (
+                                                <button type="button" onClick={() => setShowAllReasons(true)} className="text-[13px] font-bold text-primary cursor-pointer">
+                                                    {fill(explain.more, { count: Math.max(0, reasons.gave.length - 3) + Math.max(0, reasons.missed.length - 3) })}
+                                                </button>
+                                            )}
+
+                                            <div>
+                                                <div className="font-bold text-foreground">{explain.careers}</div>
+                                                {!preview ? (
+                                                    <Loader2 className="mt-2 w-4 h-4 animate-spin text-muted-foreground" />
+                                                ) : (
+                                                    <>
+                                                        <div className="mt-2 flex flex-wrap gap-2">
+                                                            {preview.careers.map((career) => (
+                                                                <Link
+                                                                    key={career.id}
+                                                                    to={`/info/${career.id}`}
+                                                                    className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-semibold text-foreground hover:border-primary"
+                                                                >
+                                                                    {displayName(careerName(career, i18n.language))}
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                        {preview.id && (
+                                                            <Link
+                                                                to={`/careers?clusterId=${preview.id}`}
+                                                                className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-primary"
+                                                            >
+                                                                {explain.allCareers}{preview.total ? ` (${preview.total})` : ""}
+                                                                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                                                            </Link>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
                     </ul>
                 </section>
 
@@ -582,7 +1050,7 @@ const Quiz = () => {
                                             <div className="flex items-start gap-3 min-w-0">
                                                 <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-black text-primary">{index + 1}</span>
                                                 <h3 className="text-[15px] font-bold leading-snug text-foreground">
-                                                    <Link to={`/info/${career.id}`} className="hover:text-primary hover:underline">{displayName(career.name)}</Link>
+                                                    <Link to={`/info/${career.id}`} className="hover:text-primary hover:underline">{displayName(careerName(career, i18n.language))}</Link>
                                                 </h3>
                                             </div>
                                             <button
@@ -597,8 +1065,8 @@ const Quiz = () => {
                                                 <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
                                             </button>
                                         </div>
-                                        {(career.description || career.purpose) && (
-                                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{displayName(career.description || career.purpose)}</p>
+                                        {(careerDescription(career, i18n.language) || career.purpose) && (
+                                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{displayName(careerDescription(career, i18n.language) || career.purpose)}</p>
                                         )}
                                         <div className="mt-auto flex items-center justify-between gap-3 pt-1">
                                             <span className="text-xs font-bold text-muted-foreground">
@@ -627,6 +1095,52 @@ const Quiz = () => {
                     </section>
                 )}
 
+                {(() => {
+                    const next = NEXT_TEXT[i18n.language] || NEXT_TEXT.tj;
+                    const choseBoth = (results.answers || results.rawAnswers || []).some(
+                        (answer) => answer.questionId === "tiebreak" && String(answer.selectedValue) === "both",
+                    );
+                    const links = [
+                        topCluster?.id ? `/careers?clusterId=${topCluster.id}` : "/careers",
+                        "/dashboard/compare",
+                        "/universities",
+                        "/dashboard/plan",
+                        "/dashboard/ai-chat",
+                    ];
+                    return (
+                        <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
+                            <h2 className="text-lg font-black text-foreground">{next.title}</h2>
+                            <p className="mt-1 text-sm text-muted-foreground">{next.hint}</p>
+                            {choseBoth && (
+                                <p className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">{next.both}</p>
+                            )}
+                            <ol className="mt-5 space-y-3">
+                                {next.steps.map(([title, desc], index) => (
+                                    <li key={title} className="flex items-start gap-3 rounded-2xl bg-muted/30 p-4">
+                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">
+                                            {index + 1}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-bold text-foreground">{title}</div>
+                                            <p className="mt-0.5 text-[14px] leading-snug text-muted-foreground">
+                                                {desc}
+                                                {index === 2 && results.grade === 9 ? ` ${next.steps9}` : ""}
+                                            </p>
+                                        </div>
+                                        <Link
+                                            to={links[index]}
+                                            className="shrink-0 inline-flex items-center gap-1 self-center rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-bold text-foreground hover:border-primary"
+                                        >
+                                            {next.open[index]}
+                                            <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ol>
+                        </section>
+                    );
+                })()}
+
                 <div className="flex flex-col gap-3 sm:flex-row">
                     {topCluster?.id && (
                         <Link to={`/careers?clusterId=${topCluster.id}`} className="btn-primary flex-1 justify-center !py-4 text-sm">
@@ -644,6 +1158,38 @@ const Quiz = () => {
                     >
                         {t('quiz.retake')}
                     </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (gradePending) {
+        const text = gradeText(i18n.language);
+        const stored = getGrade();
+        return (
+            <div className="max-w-xl mx-auto py-10 px-4">
+                <div className="rounded-[1.75rem] border border-border bg-card shadow-sm p-6 sm:p-8 space-y-5">
+                    <div className="space-y-2 text-center">
+                        <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight">{text.pickTitle}</h2>
+                        <p className="text-[15px] leading-relaxed text-muted-foreground">{text.pickDesc}</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                        {[[9, text.pick9], [11, text.pick11]].map(([value, label], position) => (
+                            <button
+                                key={value}
+                                type="button"
+                                onClick={() => pickGrade(value)}
+                                className={`w-full flex items-center gap-3 p-4 rounded-2xl border text-left text-base font-bold text-foreground cursor-pointer ${
+                                    stored === value ? "border-primary bg-primary/10" : "border-border bg-muted/40 hover:border-primary/50"
+                                }`}
+                            >
+                                <span className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-sm font-black bg-background border border-border text-muted-foreground">
+                                    {String.fromCharCode(65 + position)}
+                                </span>
+                                {label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -668,6 +1214,7 @@ const Quiz = () => {
     const currentAnswer = answers.find((answer) => answer.questionId === currentQuestion.id)?.selectedValue;
     const canGoNext = currentAnswer !== undefined && currentAnswer !== null;
     const activeLang = i18n.language || "tj";
+    const own = OWN_TEXT[activeLang] || OWN_TEXT.tj;
     const questionText = typeof currentQuestion.question === "string"
         ? currentQuestion.question
         : currentQuestion.question?.[activeLang] || currentQuestion.question?.tj || "";
@@ -747,6 +1294,11 @@ const Quiz = () => {
                                 <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight leading-snug">
                                     {questionText}
                                 </h2>
+                                {currentQuestion.id === "tiebreak" && (
+                                    <p className="max-w-md text-[14px] leading-relaxed text-muted-foreground">
+                                        {(TIE_TEXT[activeLang] || TIE_TEXT.tj).why}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 gap-2.5">
@@ -779,11 +1331,93 @@ const Quiz = () => {
                                             >
                                                 {selected ? <Check className="w-4 h-4" /> : String.fromCharCode(65 + position)}
                                             </span>
-                                            <span className="flex-1">{optionText}</span>
+                                            {option.cluster ? (
+                                                <span className="flex-1">
+                                                    <span className="flex items-center justify-between gap-3">
+                                                        <span>{optionText}</span>
+                                                        {typeof option.percent === "number" && (
+                                                            <span className="text-sm font-black tabular-nums text-primary">{option.percent}%</span>
+                                                        )}
+                                                    </span>
+                                                    <span className="mt-1 block text-[13px] font-normal leading-snug text-muted-foreground">
+                                                        {clusterDescription(t, { clusterId: Number(String(option.cluster).replace(/\D/g, "")) })}
+                                                    </span>
+                                                    {tieExamples[option.cluster]?.length > 0 && (
+                                                        <span className="mt-1.5 block text-[13px] font-medium leading-snug text-foreground/80">
+                                                            {(TIE_TEXT[activeLang] || TIE_TEXT.tj).examples} {tieExamples[option.cluster].join(", ")}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            ) : (
+                                                <span className="flex-1">{optionText}</span>
+                                            )}
                                         </button>
                                     );
                                 })}
                             </div>
+
+                            {currentQuestion.id !== "tiebreak" && (
+                            <div className="rounded-2xl border border-dashed border-border p-3.5 sm:p-4 space-y-2.5">
+                                <div className="flex items-start gap-2.5">
+                                    <PenLine className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
+                                    <div>
+                                        <div className="text-sm font-bold text-foreground">{own.title}</div>
+                                        <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{own.hint}</p>
+                                    </div>
+                                </div>
+                                <form
+                                    className="flex gap-2"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        interpretOwn(ownText);
+                                    }}
+                                >
+                                    <input
+                                        value={ownText}
+                                        onChange={(event) => {
+                                            setOwnText(event.target.value);
+                                            setOwnMatch(null);
+                                            setOwnNone(false);
+                                        }}
+                                        maxLength={300}
+                                        placeholder={own.placeholder}
+                                        aria-label={own.title}
+                                        className="flex-1 min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-[15px] text-foreground outline-none focus:border-primary"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!ownText.trim() || ownLoading}
+                                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                                    >
+                                        {ownLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                        {own.send}
+                                    </button>
+                                </form>
+                                {ownMatch && (
+                                    <div className="rounded-xl bg-primary/10 p-3 text-sm" role="status">
+                                        <div className="text-muted-foreground">{own.matched}</div>
+                                        <div className="mt-1 font-bold text-foreground">
+                                            {String.fromCharCode(65 + ownMatch.position)}. {ownMatch.option}
+                                        </div>
+                                        <div className="mt-2.5 flex gap-2">
+                                            <button type="button" onClick={acceptOwn} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold cursor-pointer">
+                                                {own.accept}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setOwnMatch(null)}
+                                                className="px-4 py-2 rounded-lg border border-border bg-card text-sm font-bold text-foreground cursor-pointer"
+                                            >
+                                                {own.change}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                {ownNone && (
+                                    <p className="text-[13px] font-semibold text-destructive" role="status">{own.none}</p>
+                                )}
+                            </div>
+                            )}
                         </div>
                     </motion.div>
                 </AnimatePresence>

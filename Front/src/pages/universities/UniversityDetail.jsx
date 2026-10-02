@@ -6,6 +6,7 @@ import axios from "axios";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
+import { gradeText, useGrade } from "../../lib/grade";
 import { 
   Building2, MapPin, ArrowLeft, BookOpen, 
   GraduationCap, Info, Search, Filter, ShieldCheck 
@@ -27,6 +28,7 @@ export default function UniversityDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const grade = useGrade();
   
   const [university, setUniversity] = useState(null);
   const [specialties, setSpecialties] = useState([]);
@@ -41,7 +43,7 @@ export default function UniversityDetail() {
         setLoading(true);
         const [uniRes, specRes] = await Promise.all([
           axios.get(`${API}/universities/${id}`, { params: withLang() }),
-          axios.get(`${API}/universities/${id}/specialties`, { params: withLang() }),
+          axios.get(`${API}/universities/${id}/specialties`, { params: withLang(grade ? { grade } : {}) }),
         ]);
         setUniversity(uniRes.data);
         setSpecialties(specRes.data);
@@ -52,7 +54,7 @@ export default function UniversityDetail() {
       }
     };
     fetchData();
-  }, [id, i18n.language]);
+  }, [id, i18n.language, grade]);
 
   usePageMeta({
     ready: !!university,
@@ -231,6 +233,11 @@ export default function UniversityDetail() {
         </motion.div>
 
         <section className="mb-8 space-y-6">
+          {grade === 9 && specialties.length === 0 && (
+            <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-foreground" role="status">
+              {gradeText(i18n.language).notForGrade9}
+            </p>
+          )}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-primary" />

@@ -40,6 +40,7 @@ import { resourceUrl } from "../../lib/resourceLinks";
 import { buildRoadmap } from "../../lib/buildRoadmap";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
+import { gradeText, useGrade } from "../../lib/grade";
 import { clusterLabel } from "../../lib/clusterLabel";
 import { studyFormLabel, paymentTypeLabel, languageLabel } from "../../lib/offeringLabels";
 import CareerChat from "../../components/CareerChat";
@@ -134,6 +135,7 @@ function ChoosingHelp({ offerings }) {
 const Info = () => {
   const { id } = useParams();
   const { t, i18n } = useTranslation();
+  const grade = useGrade();
   const { user, token, updateUser, refreshProfile } = useAuthStore();
   const { error: showError, success: showSuccess } = useToast();
   const navigate = useNavigate();
@@ -224,7 +226,7 @@ const Info = () => {
     }
     async function fetchOfferings() {
       try {
-        const { data } = await axios.get(`${API}/careers/${id}/offerings`, { params: withLang() });
+        const { data } = await axios.get(`${API}/careers/${id}/offerings`, { params: withLang(grade ? { grade } : {}) });
         setOfferings(Array.isArray(data) ? data : []);
       } catch (error) {
         setOfferings([]);
@@ -233,7 +235,7 @@ const Info = () => {
     fetchCareer();
     fetchOfferings();
     window.scrollTo(0, 0);
-  }, [id, i18n.language]);
+  }, [id, i18n.language, grade]);
 
   useEffect(() => {
     if (user) {
@@ -792,6 +794,10 @@ const Info = () => {
                   </tbody>
                 </table>
               </div>
+            </Section>
+          ) : grade === 9 ? (
+            <Section icon={GraduationCap} title={t("career_page.unis_title")} gradient="from-blue-500 to-cyan-500">
+              <p className="text-sm font-semibold text-foreground">{gradeText(i18n.language).noCollege}</p>
             </Section>
           ) : unis.length > 0 && (
             <Section icon={GraduationCap} title={t("career_page.unis_title")} subtitle={t("career_page.where_sub_short")} gradient="from-blue-500 to-cyan-500">

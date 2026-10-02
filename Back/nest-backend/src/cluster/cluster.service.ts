@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { parseGrade } from '../common/grade';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cluster } from './cluster.entity';
@@ -11,12 +12,23 @@ export class ClusterService {
         private clusterRepository: Repository<Cluster>,
     ) { }
 
-    findAll(): Promise<Cluster[]> {
-        return this.clusterRepository
+    async findAll(rawGrade?: string): Promise<Cluster[]> {
+        const clusters = await this.clusterRepository
             .createQueryBuilder('cluster')
             .loadRelationCountAndMap('cluster.careerCount', 'cluster.careers')
             .orderBy('cluster.clusterId', 'ASC')
             .getMany();
+        // Баъди синфи 9 — шумораи ихтисосҳо низ танҳо барои коллеҷ.
+        const grade = parseGrade(rawGrade);
+        if (!grade) return clusters;
+        const rows: Array<{ clusterId: string; count: string }> = await this.clusterRepository.manager.query(
+            `SELECT c."clusterId", count(DISTINCT c.id) AS count FROM career c
+             WHERE EXISTS (SELECT 1 FROM career_offerings o WHERE o."careerId" = c.id AND o."basedOn" = $1)
+             GROUP BY 1`,
+            [grade],
+        );
+        const counts = new Map(rows.map((row) => [row.clusterId, Number(row.count)]));
+        return clusters.map((cluster) => Object.assign(cluster, { careerCount: counts.get(cluster.id) ?? 0 }));
     }
 
     findOne(id: string): Promise<Cluster | null> {

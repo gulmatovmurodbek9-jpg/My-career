@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
+import { offeredForGrade, parseGrade } from '../common/grade';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, In } from 'typeorm';
 import { Career } from './career.entity';
@@ -158,6 +159,10 @@ export class CareerService {
             qb.andWhere('career.hasFreeSeats = true');
         }
 
+        // Баъди синфи 9 — танҳо ихтисосҳое, ки коллеҷҳо баъди синфи 9 қабул мекунанд.
+        const grade = parseGrade(query.grade);
+        if (grade) qb.andWhere(offeredForGrade('career'), { grade });
+
         qb.addSelect('career.codeSort');
         qb.orderBy('career.codeSort', 'ASC').addOrderBy('career.name', 'ASC');
 
@@ -204,6 +209,8 @@ export class CareerService {
         lang = 'tj',
         page = 1,
         limit = 12,
+        keepLang = false,
+        rawGrade?: string | number,
     ): Promise<{ data: Career[]; meta: any; filters: any; understood: boolean; question: string | null; options: any[]; answerLang: string }> {
         const question = (rawQuery || '').trim().slice(0, 300);
         let answerLang = ['tj', 'ru', 'en'].includes(lang) ? lang : 'tj';
@@ -218,6 +225,7 @@ export class CareerService {
             ...(filters.maxPrice ? { maxPrice: filters.maxPrice } : {}),
             ...(filters.city ? { city: filters.city } : {}),
             ...(filters.onlyFree ? { freeSeatsOnly: 'true' } : {}),
+            ...(parseGrade(rawGrade) ? { grade: String(parseGrade(rawGrade)) } : {}),
         }) as GetCareersDto;
 
         const clusterFallback = async () => {
@@ -309,7 +317,9 @@ export class CareerService {
 
         if (typeof parsed?.lang === 'string') {
             const said = parsed.lang.trim().toLowerCase();
-            if (said === 'tj' || said === 'ru' || said === 'en') answerLang = said;
+            // Ёвари овозӣ ҷустуҷӯро ҳамеша бо тоҷикӣ мефиристад (номҳо дар база тоҷикӣ) —
+            // он гоҳ забони сайт мемонад, вагарна саҳифаи русӣ тоҷикӣ ҷавоб мегирифт.
+            if (!keepLang && (said === 'tj' || said === 'ru' || said === 'en')) answerLang = said;
         }
 
         const filters: any = {};
@@ -544,7 +554,7 @@ export class CareerService {
         'search', 'open_career', 'compare', 'save_career',
         'start_quiz', 'open_universities', 'nearest_universities', 'open_cluster',
         'open_report', 'open_plan', 'open_chat', 'open_favorites', 'open_about',
-        'go_home', 'set_language', 'set_theme', 'answer', 'choose_direction',
+        'go_home', 'set_language', 'set_theme', 'set_grade', 'answer', 'choose_direction',
     ];
 
     // «Духтур шудан мехоҳам» — дар номи ихтисосҳо калимаи «духтур» нест,
@@ -722,7 +732,7 @@ export class CareerService {
         tj: {
             search: 'Ана ин ихтисосҳо.',
             open_career: 'Кушодам.',
-            compare: 'Муқоиса тайёр аст.',
+            compare: 'Муқоиса мекунам, каме интизор шавед.',
             save_career: 'Захира шуд.',
             start_quiz: 'Санҷишро сар мекунам.',
             open_universities: 'Ана донишгоҳҳо.',
@@ -736,11 +746,13 @@ export class CareerService {
             go_home: 'Ба саҳифаи асосӣ.',
             set_language: 'Забон иваз шуд.',
             set_theme: 'Мавзӯъ иваз шуд.',
+            set_grade_9: 'Фаҳмидам: баъди синфи 9. Акнун танҳо коллеҷҳо ва ихтисосҳои онҳоро нишон медиҳам.',
+            set_grade_11: 'Фаҳмидам: баъди синфи 11. Коллеҷҳо ва донишгоҳҳо ҳарду нишон дода мешаванд.',
         },
         ru: {
             search: 'Вот эти специальности.',
             open_career: 'Открыл.',
-            compare: 'Сравнение готово.',
+            compare: 'Сравниваю, подождите немного.',
             save_career: 'Сохранено.',
             start_quiz: 'Начинаю тест.',
             open_universities: 'Вот университеты.',
@@ -754,11 +766,13 @@ export class CareerService {
             go_home: 'На главную.',
             set_language: 'Язык изменён.',
             set_theme: 'Тема изменена.',
+            set_grade_9: 'Понял: после 9 класса. Теперь показываю только колледжи и их специальности.',
+            set_grade_11: 'Понял: после 11 класса. Показываю и колледжи, и вузы.',
         },
         en: {
             search: 'Here are the specialties.',
             open_career: 'Opened.',
-            compare: 'The comparison is ready.',
+            compare: 'Comparing them now, one moment.',
             save_career: 'Saved.',
             start_quiz: 'Starting the test.',
             open_universities: 'Here are the universities.',
@@ -772,6 +786,8 @@ export class CareerService {
             go_home: 'Going home.',
             set_language: 'Language changed.',
             set_theme: 'Theme changed.',
+            set_grade_9: 'Got it: after grade 9. Now I show only colleges and their specialties.',
+            set_grade_11: 'Got it: after grade 11. I show both colleges and universities.',
         },
     };
 
@@ -787,6 +803,8 @@ export class CareerService {
         const has = (...words: string[]) => words.some((word) => text.includes(word));
 
         const words0 = text.split(' ');
+        // «Тест бесплатный?», «Санҷиш ройгон аст?» — савол дар бораи сайт, на ҷустуҷӯи ихтисоси ройгон.
+        const asksAboutSite = has('test', 'quiz', 'site', 'тест', 'сайт', 'санчиш', 'сомона', 'is it', 'это');
         // Англисӣ ва русӣ: фармонҳои маъмул бе AI — тез ва бехато.
         const IDENTITY: Record<string, string> = {
             tj: 'Ман ёвари овозии «Ихтисоси ман» ҳастам. Ихтисос меёбам, донишгоҳҳоро нишон медиҳам ва санҷиш мегузаронам.',
@@ -812,7 +830,7 @@ export class CareerService {
             if (has('light theme', 'light mode', 'светл')) return { action: 'set_theme', params: { theme: 'light' } };
             if (has('home page', 'go home', 'главн')) return { action: 'go_home', params: {} };
             if (/(^| )(chat|чат)( |$)/.test(text)) return { action: 'open_chat', params: {} };
-            if (has('free', 'бесплат', 'бюджет')) return { action: 'search', params: { query: 'ихтисосҳои ройгон', trusted: true } };
+            if (has('free', 'бесплат', 'бюджет') && !asksAboutSite) return { action: 'search', params: { query: 'ихтисосҳои ройгон', trusted: true } };
             if (has('nearest', 'closest', 'near me', 'ближайш', 'рядом')) return { action: 'nearest_universities', params: {} };
             if ((has('test', 'quiz', 'тест') && has('start', 'take', 'begin', 'нач', 'пройд', 'пройти'))) return { action: 'start_quiz', params: {} };
         }
@@ -854,7 +872,7 @@ export class CareerService {
         }
 
         // Ройгон ва пулакӣ — ҷустуҷӯи AI-и саҳифа инро ба филтр табдил медиҳад.
-        if (has('ройгон', 'бепул', 'грант') && text.split(' ').length <= 4) {
+        if (has('ройгон', 'бепул', 'грант') && text.split(' ').length <= 4 && !asksAboutSite) {
             return { action: 'search', params: { query: 'ихтисосҳои ройгон', trusted: true } };
         }
 
@@ -907,6 +925,44 @@ export class CareerService {
     }
 
     private clusterCache: Cluster[] | null = null;
+    private factsCache: { careers: number; universities: number; colleges: number; higher: number; grade9Careers: number; grade9Places: number; at: number } | null = null;
+
+    // «синфи 9», «9 класс», «после девятого», «grade 9» → 9; ҳамин тавр 11.
+    static detectGrade(message: string): 9 | 11 | null {
+        const text = foldTajik(message).replace(/[^a-zа-яё0-9\s-]/gi, ' ');
+        const aboutSchool = /(синф|класс|grade|мактаб|школ|хатм|тамом|оконч|finish)/.test(text);
+        if (!aboutSchool) return null;
+        if (/(^|\D)11(\D|$)|ёздах|ездах|одиннадцат|eleventh/.test(text)) return 11;
+        if (/(^|\D)9(\D|$)|нух|нухум|девят|ninth/.test(text)) return 9;
+        return null;
+    }
+
+    // Рақамҳои сайт барои ёвар: «Чанд ихтисос ҳаст?» бояд «884» шунавад,
+    // на рӯйхатро. 10 дақиқа нигоҳ медорем — база кам иваз мешавад.
+    private async siteFacts(): Promise<{ careers: number; universities: number; colleges: number; higher: number; grade9Careers: number; grade9Places: number }> {
+        if (this.factsCache && Date.now() - this.factsCache.at < 10 * 60 * 1000) return this.factsCache;
+        try {
+            const [row] = await this.careerRepository.manager.query(
+                `SELECT (SELECT count(*) FROM career)::int AS careers,
+                        (SELECT count(*) FROM universities)::int AS universities,
+                        (SELECT count(*) FROM universities WHERE "institutionType" = 'Коллеҷ')::int AS colleges,
+                        (SELECT count(DISTINCT "careerId") FROM career_offerings WHERE "basedOn" = 9)::int AS grade9careers,
+                        (SELECT count(DISTINCT "universityId") FROM career_offerings WHERE "basedOn" = 9)::int AS grade9places`,
+            );
+            this.factsCache = {
+                careers: row.careers,
+                universities: row.universities,
+                colleges: row.colleges,
+                higher: row.universities - row.colleges,
+                grade9Careers: row.grade9careers,
+                grade9Places: row.grade9places,
+                at: Date.now(),
+            };
+        } catch {
+            return this.factsCache ?? { careers: 0, universities: 0, colleges: 0, higher: 0, grade9Careers: 0, grade9Places: 0 };
+        }
+        return this.factsCache;
+    }
 
     private async loadClusters(): Promise<Cluster[]> {
         if (this.clusterCache) return this.clusterCache;
@@ -984,10 +1040,22 @@ export class CareerService {
     async assistant(
         rawMessage: string,
         lang = 'tj',
-        context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }> } = {},
+        context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number } = {},
     ) {
         const message = String(rawMessage || '').trim().slice(0, 400);
         const answerLang = ['tj', 'ru', 'en'].includes(lang) ? lang : 'tj';
+        const grade = parseGrade(context.grade);
+
+        // «Ман синфи 9-ро хатм мекунам», «я после 11 класса» — синф иваз мешавад.
+        const saidGrade = CareerService.detectGrade(message);
+        if (saidGrade) {
+            return {
+                reply: CareerService.ASSISTANT_REPLIES[answerLang]?.[`set_grade_${saidGrade}`] || '',
+                action: 'set_grade',
+                params: { grade: saidGrade },
+                answerLang,
+            };
+        }
         const langName = answerLang === 'ru' ? 'русӣ' : answerLang === 'en' ? 'англисӣ' : 'тоҷикӣ';
         if (!message) return { reply: '', action: 'answer', params: {}, answerLang };
 
@@ -1033,6 +1101,7 @@ export class CareerService {
         };
 
         const clusters = await this.loadClusters();
+        const facts = await this.siteFacts();
         const clusterLines = clusters
             .filter((cluster) => cluster.clusterId)
             .map((cluster) => `${cluster.clusterId}. ${cluster.clusterName} — ${(cluster.description || '').slice(0, 130)}`);
@@ -1074,6 +1143,18 @@ export class CareerService {
             ...clusterLines,
             clusterLines.length ? 'Агар корбар дар бораи кластер пурсад, аз ҳамин рӯйхат ҷавоб деҳ.' : '',
             '',
+            'МАЪЛУМОТИ САЙТ (ба саволҳо танҳо аз ҳамин ҷавоб деҳ):',
+            facts.careers ? `- ${facts.careers} ихтисос (маълумоти расмии Маркази миллии тестӣ), дар 5 кластер.` : '',
+            facts.universities ? `- ${facts.universities} муассиса дар харита: ${facts.higher} муассисаи олӣ (донишгоҳ, донишкада, филиал, академия) ва ${facts.colleges} коллеҷ. «${facts.universities} донишгоҳ» НАГӮ.` : '',
+            '- Баъди синфи 9 танҳо ба коллеҷ дохил шудан мумкин аст; баъди синфи 11 — ҳам ба коллеҷ, ҳам ба донишгоҳ.',
+            facts.grade9Careers ? `- Баъди синфи 9: ${facts.grade9Careers} ихтисос дар ${facts.grade9Places} коллеҷ ва филиал.` : '',
+            grade === 9 ? '- ИН КОРБАР БАЪДИ СИНФИ 9 АСТ: танҳо коллеҷ ва ихтисосҳои коллеҷро пешниҳод кун, донишгоҳро не.' : '',
+            grade === 11 ? '- Ин корбар баъди синфи 11 аст: ҳам коллеҷ, ҳам донишгоҳ мумкин.' : '',
+            '- Сайт ва санҷиши касбӣ пурра ройгон аст.',
+            '- Се забон: тоҷикӣ, русӣ, англисӣ.',
+            '- Баъди санҷиш: ҳисоботи AI, тавсияи ихтисосҳо, муқоисаи то 5 ихтисос ва рӯйхати ҳуҷҷатсупорӣ.',
+            '- Барои ҳар ихтисос: донишгоҳҳо, нарх, бали гузариш ва ҷойҳои буҷетӣ.',
+            '',
             'ФОРМАТИ ҶАВОБ — танҳо JSON:',
             '{"action": "ном", "params": {...}, "reply": "як ҷумлаи кӯтоҳ"}',
             '',
@@ -1083,14 +1164,19 @@ export class CareerService {
             '«Духтуриро кушо» → {"action":"open_career","params":{"name":"Духтур"},"reply":"Кушодам."}',
             '«Маоши барномасоз чанд аст?» → {"action":"open_career","params":{"name":"барномасоз"},"reply":"Кушодам."}',
             '«Донишгоҳи тиббӣ дар куҷост?» → {"action":"open_universities","params":{"name":"тиббӣ"},"reply":"Кушодам."}',
+            `«Чанд ихтисос доред?» → {"action":"answer","params":{},"reply":"Дар сайт ${facts.careers || 884} ихтисос дар 5 кластер ҳаст."}`,
+            '«Санҷиш ройгон аст?» → {"action":"answer","params":{},"reply":"Ҳа, санҷиш ва сайт пурра ройгон аст."}',
+            '«Санҷиш пулакӣ аст?» → {"action":"answer","params":{},"reply":"Не, пулакӣ нест — санҷиш ва сайт ройгон аст."}',
+            '«Барномасозӣ ва иқтисодро муқоиса кун» → {"action":"compare","params":{"names":["барномасозӣ","иқтисодиёт"]},"reply":"Муқоиса мекунам."}',
             '',
             'ҚОИДАҲО:',
             `- "reply" бо забони ${langName}, ҲАТМАН кӯтоҳ: то 15 калима, чунки онро овоз мехонад.`,
-            '- ҲАМЕША амалро афзал дон. Саволи бозгашт танҳо вақте бипурс, ки ягон амал тамоман мувофиқ наояд.',
+            '- САВОЛИ маълумотӣ («чанд», «чист», «ройгон аст?», «сколько», «что такое», «бесплатно ли», «how many», «what is», «is it free») → "answer" ва аз МАЪЛУМОТИ САЙТ ё КЛАСТЕРҲО ҷавоб деҳ. Саҳифа НАКУШО.',
+            '- Амалро вақте интихоб кун, ки корбар чизеро нишон додан, кушодан, ёфтан, муқоиса кардан ё оғоз кардан хоҳад. Саволи бозгашт танҳо вақте бипурс, ки ягон амал тамоман мувофиқ наояд.',
             '- Дар бораи бал, нарх ё донишгоҳҳои як ихтисоси мушаххас пурсанд — open_career (дар саҳифааш ҳамааш ҳаст).',
             '- Салом, шикоят ё саволи умумӣ → "answer". Амалро танҳо вақте интихоб кун, ки корбар онро равшан хоста бошад.',
             '- Номи ихтисосро тахмин накун; калимаи худи корбарро нависед.',
-            '- Рақам, нарх ё номи донишгоҳ аз худат насоз.',
+            '- Рақам, нарх ё номи донишгоҳро аз худат насоз — танҳо аз МАЪЛУМОТИ САЙТ.',
         ].filter(Boolean).join(String.fromCharCode(10));
 
         // Аввал роутери тез: фармони маълумро бе AI иҷро мекунем.
@@ -1516,9 +1602,10 @@ export class CareerService {
         return this.careerRepository.findOne({ where: { code }, relations: ['cluster', 'universities'] });
     }
 
-    async findOfferings(careerId: string, lang?: string) {
+    async findOfferings(careerId: string, lang?: string, rawGrade?: string) {
+        const grade = parseGrade(rawGrade);
         const offerings = await this.offeringRepository.find({
-            where: { careerId },
+            where: grade ? { careerId, basedOn: grade } : { careerId },
             relations: ['university'],
         });
 
@@ -1604,7 +1691,7 @@ export class CareerService {
         }
     }
 
-    async selectMatchedCareers(userScores: any): Promise<{
+    async selectMatchedCareers(userScores: any, rawGrade?: string | number): Promise<{
         cluster: Cluster | null;
         matchPercentage: number;
         careers: Career[];
@@ -1631,10 +1718,13 @@ export class CareerService {
             Math.round((top.score / CareerService.MMT_MAX_SCORE) * 100),
         );
 
-        const pool = await this.careerRepository.find({
-            where: { clusterId: top.cluster.id },
-            select: ['id', 'name', 'description', 'purpose', 'skills', 'likesCount'],
-        });
+        // Баъди синфи 9 — танҳо ихтисосҳои коллеҷ (пешниҳоди «баъди синфи 9» доранд).
+        const grade = parseGrade(rawGrade);
+        const poolQuery = this.careerRepository.createQueryBuilder('career')
+            .select(['career.id', 'career.name', 'career.description', 'career.purpose', 'career.skills', 'career.likesCount', 'career.translations'])
+            .where('career.clusterId = :clusterId', { clusterId: top.cluster.id });
+        if (grade) poolQuery.andWhere(offeredForGrade('career'), { grade });
+        const pool = await poolQuery.getMany();
 
         // Калидвожа танҳо аз аввали калима: пештар «ай» (AI) дар «ҳайвон», «тайёр»
         // ҳам ёфт мешуд ва ихтисосҳои тасодуфӣ мебаромаданд.

@@ -15,6 +15,8 @@ import { Sparkles, X } from "lucide-react";
 import { usePageMeta } from "../../lib/usePageMeta";
 import FilterSelect from "../../components/FilterSelect";
 import { withLang, currentApiLang } from "../../lib/apiLang";
+import { useGrade } from "../../lib/grade";
+import GradeSwitch from "../../components/GradeSwitch";
 
 const LIMIT = 12;
 
@@ -113,6 +115,7 @@ const FilterRow = ({ active, onClick, icon, label, count }) => (
 
 const Careers = () => {
   const { t, i18n } = useTranslation();
+  const grade = useGrade();
   const [careers, setCareers] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: LIMIT, lastPage: 1 });
@@ -150,7 +153,8 @@ const Careers = () => {
     const askedAi = searchParams.get("ai");
     const askedPlain = searchParams.get("search");
     if (askedAi) {
-      setSearchQuery(askedAi);
+      // Ёвар калимаҳои худи корбарро ҳам мефиристад — дар сатр онҳо, на тарҷумаи тоҷикӣ.
+      setSearchQuery(searchParams.get("said") || askedAi);
       setAiQuery((old) => (old === askedAi ? old : askedAi));
       setCurrentPage(1);
     } else if (askedPlain) {
@@ -158,6 +162,11 @@ const Careers = () => {
       setCurrentPage(1);
     }
   }, [searchParams]);
+
+  // Шумораи ихтисосҳои ҳар кластер — барои синфи интихобшуда.
+  useEffect(() => {
+    axios.get(`${API}/clusters`, { params: grade ? { grade } : {} }).then(r => setClusters(r.data)).catch(console.error);
+  }, [grade]);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { refreshProfile } = useAuthStore();
@@ -214,6 +223,7 @@ const Careers = () => {
       ...(priceRange.min !== null && { minPrice: priceRange.min }),
       ...(priceRange.max !== null && { maxPrice: priceRange.max }),
       ...(cityFilter !== "all" && { city: cityFilter }),
+      ...(grade && { grade }),
     };
 
     axios
@@ -230,7 +240,7 @@ const Careers = () => {
       });
 
     return () => controller.abort();
-  }, [currentPage, debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter, i18n.language, aiActive]);
+  }, [currentPage, debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter, i18n.language, aiActive, grade]);
 
   useEffect(() => {
     if (!aiQuery) return;
@@ -275,7 +285,14 @@ const Careers = () => {
     axios
       .post(
         `${API}/careers/ai-search`,
-        { query: aiQuery, lang: currentApiLang() || "tj", page: currentPage, limit: LIMIT },
+        {
+          query: aiQuery,
+          lang: currentApiLang() || "tj",
+          page: currentPage,
+          limit: LIMIT,
+          keepLang: searchParams.get("voice") === "1" && searchParams.get("ai") === aiQuery,
+          ...(grade && { grade }),
+        },
         { signal: controller.signal },
       )
       .then(({ data }) => {
@@ -300,7 +317,7 @@ const Careers = () => {
       });
 
     return () => controller.abort();
-  }, [aiQuery, aiChoice, currentPage, i18n.language]);
+  }, [aiQuery, aiChoice, currentPage, i18n.language, grade]);
 
   // Ҷустуҷӯи AI танҳо бо пахши тугма: ҳар даъват як дархост ба модел аст.
   const runAiSearch = () => {
@@ -329,7 +346,7 @@ const Careers = () => {
   };
 
   useEffect(() => {
-    axios.get(`${API}/clusters`).then(r => setClusters(r.data)).catch(console.error);
+
     axios.get(`${API}/universities/cities`)
       .then(r => setCities(Array.isArray(r.data) ? r.data : []))
       .catch(() => setCities([]));
@@ -433,6 +450,7 @@ const Careers = () => {
             </div>
 
             <p className="mt-2 text-[13px] text-muted-foreground">{t("ai_search.example")}</p>
+            <GradeSwitch className="mt-3" />
 
             {aiActive && !aiError && !aiLoading && meta.total === 0 && (
               <p className="mt-3 text-[14px] font-semibold text-muted-foreground">

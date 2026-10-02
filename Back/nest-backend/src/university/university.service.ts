@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { parseGrade } from '../common/grade';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { University } from './university.entity';
@@ -27,13 +28,28 @@ export class UniversityService {
         private readonly universityRepo: Repository<University>,
     ) {}
 
-    async findAll(lang?: string) {
+    async findAll(lang?: string, rawGrade?: string) {
         const universities = await this.universityRepo
             .createQueryBuilder('uni')
             .loadRelationCountAndMap('uni.careerCount', 'uni.careers')
             .getMany();
 
-        return universities
+        // Баъди синфи 9 — танҳо муассисаҳое, ки синфи 9-ро қабул мекунанд,
+        // ва шумораи ихтисосҳо низ танҳо барои ҳамон синф.
+        const grade = parseGrade(rawGrade);
+        let visible = universities;
+        if (grade) {
+            const rows: Array<{ universityId: string; count: string }> = await this.universityRepo.manager.query(
+                'SELECT "universityId", count(DISTINCT "careerId") AS count FROM career_offerings WHERE "basedOn" = $1 GROUP BY 1',
+                [grade],
+            );
+            const counts = new Map(rows.map((row) => [row.universityId, Number(row.count)]));
+            visible = universities
+                .filter((uni) => counts.has(uni.id))
+                .map((uni) => Object.assign(uni, { careerCount: counts.get(uni.id) }));
+        }
+
+        return visible
             .map(uni => localizeUniversity({
                 translations: uni.translations,
                 id: uni.id,
@@ -102,7 +118,20 @@ export class UniversityService {
         return localizeUniversity(uni as any, lang);
     }
 
-    async findSpecialties(id: string, lang?: string) {
+    // Шумора барои «51 муассисаи олӣ ва 77 коллеҷ» — на «128 донишгоҳ».
+    async summary() {
+        const [row] = await this.universityRepo.manager.query(
+            `SELECT count(*)::int AS total,
+                    count(*) FILTER (WHERE "institutionType" = 'Коллеҷ')::int AS colleges,
+                    (SELECT count(DISTINCT "universityId") FROM career_offerings WHERE "basedOn" = 9)::int AS "grade9Places",
+                    (SELECT count(DISTINCT "careerId") FROM career_offerings WHERE "basedOn" = 9)::int AS "grade9Careers"
+             FROM universities`,
+        );
+        return { ...row, higher: row.total - row.colleges };
+    }
+
+    async findSpecialties(id: string, lang?: string, rawGrade?: string) {
+        const grade = parseGrade(rawGrade);
         const exists = await this.universityRepo.exists({ where: { id } });
         if (!exists) throw new NotFoundException('University not found');
 
@@ -112,6 +141,9 @@ export class UniversityService {
             .addSelect(['cluster.id', 'cluster.clusterId', 'cluster.clusterName'])
             .from('career', 'career')
             .innerJoin('career_universities', 'cu', 'cu."careerId" = career.id AND cu."universitiesId" = :id', { id })
+            .andWhere(grade
+                ? 'EXISTS (SELECT 1 FROM career_offerings o WHERE o."careerId" = career.id AND o."universityId" = :id AND o."basedOn" = :grade)'
+                : '1 = 1', { id, grade })
             .leftJoin('cluster', 'cluster', 'cluster.id = career."clusterId"')
             .getRawMany();
 

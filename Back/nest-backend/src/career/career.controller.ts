@@ -47,12 +47,12 @@ export class CareerController {
     @Get(':id/offerings')
     @ApiOperation({ summary: 'List every university offering this specialty, with tuition and seats' })
     @ApiParam({ name: 'id', description: 'Career UUID' })
-    async getOfferings(@Param('id') id: string, @Query('lang') lang?: string) {
+    async getOfferings(@Param('id') id: string, @Query('lang') lang?: string, @Query('grade') grade?: string) {
         const career = await this.careerService.findOne(id);
         if (!career) {
             throw new NotFoundException(`Ихтисос бо ID "${id}" ёфт нашуд`);
         }
-        return this.careerService.findOfferings(id, lang);
+        return this.careerService.findOfferings(id, lang, grade);
     }
 
     @Get(':id')
@@ -136,13 +136,15 @@ export class CareerController {
     @Post('ai-search')
     @ApiOperation({ summary: 'Free-text search: AI turns the question into filters' })
     async aiSearch(
-        @Body() body: { query: string; lang?: string; page?: number; limit?: number },
+        @Body() body: { query: string; lang?: string; page?: number; limit?: number; keepLang?: boolean; grade?: string | number },
     ) {
         const result = await this.careerService.aiSearch(
             body?.query,
             body?.lang,
             body?.page,
             body?.limit,
+            body?.keepLang === true,
+            body?.grade,
         );
         return {
             ...result,
@@ -164,8 +166,9 @@ export class CareerController {
 
     @Post('assistant')
     @ApiOperation({ summary: 'Voice assistant: turns a spoken request into one allowed app action' })
-    async assistant(@Body() body: { message: string; lang?: string; careerName?: string; options?: Array<{ id: string; name: string; label?: string }> }) {
+    async assistant(@Body() body: { message: string; lang?: string; careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number }) {
         return this.careerService.assistant(body?.message, body?.lang, {
+            grade: body?.grade,
             careerName: body?.careerName,
             options: body?.options,
         });

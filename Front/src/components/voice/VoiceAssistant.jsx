@@ -5,6 +5,7 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
 import { prefetchSttToken, RealtimeStt } from "./realtimeStt";
+import { getGrade, setGrade } from "../../lib/grade";
 import { voiceLog } from "./voiceLog";
 import { guideFor, splitForSpeech } from "./pageGuide";
 import { API } from "../../lib/config";
@@ -40,6 +41,95 @@ const SILENT_WAV =
     "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
 const SPEECH_RMS = 0.035;      // аз ин баланд — яъне гап зада истодааст
+// ── Санҷиш бо овоз ──────────────────────────────────────────────
+// Ёвар саволро бо ҷавобҳо мехонад; корбар рақам, ҳарф ё худи ҷавобро мегӯяд.
+const QUIZ_ORDINALS = {
+    tj: ["Якум", "Дуюм", "Сеюм", "Чорум", "Панҷум"],
+    ru: ["Первый", "Второй", "Третий", "Четвёртый", "Пятый"],
+    en: ["One", "Two", "Three", "Four", "Five"],
+};
+const QUIZ_HEAD = { tj: "Саволи", ru: "Вопрос", en: "Question" };
+const QUIZ_HINT = {
+    tj: "Рақам ё ҷавобро гӯед. Агар ҷавоби шумо дар рӯйхат набошад, онро бо суханони худ гӯед.",
+    ru: "Назовите номер или ответ. Если вашего ответа нет в списке, скажите его своими словами.",
+    en: "Say the number or the answer. If your answer is not listed, say it in your own words.",
+};
+const quizSpeech = (quiz, lang) => {
+    const ord = QUIZ_ORDINALS[lang] || QUIZ_ORDINALS.tj;
+    const clean = (value) => String(value || "").replace(/[«»"“”]/g, "").replace(/[.!?…\s]+$/, "").trim();
+    const asked = String(quiz.question || "").trim();
+    // step < 0 — саволи пеш аз санҷиш («баъди кадом синф?»), рақам надорад.
+    const head = quiz.step >= 0 ? `${QUIZ_HEAD[lang] || QUIZ_HEAD.tj} ${quiz.step + 1}. ` : "";
+    const parts = [
+        `${head}${clean(asked)}${/\?$/.test(asked) ? "?" : "."}`,
+        ...quiz.options.map((option, index) => `${ord[index] || index + 1}: ${clean(option)}.`),
+    ];
+    if (quiz.step === 0) parts.push(QUIZ_HINT[lang] || QUIZ_HINT.tj);
+    return parts.join(" ");
+};
+
+const foldQuiz = (value) => String(value || "").toLowerCase()
+    .replace(/ё/g, "е").replace(/ӣ/g, "и").replace(/ӯ/g, "у").replace(/ҳ/g, "х")
+    .replace(/ҷ/g, "ч").replace(/қ/g, "к").replace(/ғ/g, "г")
+    .replace(/[^a-zа-я0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+// Решаҳои рақами тартибӣ (ҳар се забон) ва ҳарфҳо — ба тартиби экран A–E.
+const QUIZ_PICK = [
+    ["якум", "як", "1", "перв", "один", "одна", "first", "one", "a", "а", "эй"],
+    ["дуюм", "ду", "2", "втор", "два", "две", "second", "two", "b", "б", "бэ", "бе", "би"],
+    ["сеюм", "се", "3", "трет", "три", "third", "three", "c", "ц", "цэ", "си", "с"],
+    ["чорум", "чор", "4", "четв", "четыр", "fourth", "four", "d", "д", "дэ", "де", "ди"],
+    ["панчум", "панч", "5", "пят", "fifth", "five", "e", "е", "э", "и"],
+];
+// Инҳо танҳо пурра мувофиқ меоянд, на ҳамчун аввали калима («се» ≠ «сегодня»).
+const QUIZ_EXACT = new Set(["як", "ду", "се", "чор", "панч", "a", "а", "b", "б", "c", "ц", "с", "d", "д", "e", "е", "э", "и",
+    "1", "2", "3", "4", "5", "бе", "би", "си", "де", "ди", "дэ", "бэ", "цэ", "эй", "one", "two", "three", "four", "five",
+    "один", "одна", "два", "две", "три"]);
+const QUIZ_FILLER = new Set(["вариант", "ответ", "номер", "чавоби", "чавоб", "раками", "раками", "option", "answer",
+    "number", "letter", "буква", "харфи", "мой", "мне", "я", "выбираю", "интихоб", "мекунам", "the", "is", "it", "ин",
+    "это", "ман", "please", "пожалуйста"]);
+
+const matchQuizCommand = (text, quiz) => {
+    const folded = foldQuiz(text);
+    if (!folded) return null;
+    const words = folded.split(" ");
+    // Саволи синф: «баъди синфи 9», «после одиннадцатого» — аз рӯи рақам, на калимаҳои умумӣ.
+    if (quiz.id === "grade") {
+        if (/(^|\D)11(\D|$)|ездах|одиннадцат|eleven/.test(folded)) return { type: "answer", position: 1 };
+        if (/(^|\D)9(\D|$)|нух|девят|ninth|nine/.test(folded)) return { type: "answer", position: 0 };
+    }
+    if (/(повтор|repeat|again|такрор|боз хон)/.test(folded) && words.length <= 4) return { type: "repeat" };
+    if (/^(далее|дальше|следующ|next|навбати|баъди|бади)/.test(folded) && words.length <= 3) return { type: "next" };
+    if (/^(назад|предыдущ|back|previous|кабли|ба кафо)/.test(folded) && words.length <= 3) return { type: "back" };
+
+    // Рақам ё ҳарф: ибораи кӯтоҳ («второй», «вариант Б», «ҷавоби сеюм»).
+    const meaningful = words.filter((word) => !QUIZ_FILLER.has(word));
+    if (meaningful.length >= 1 && meaningful.length <= 2) {
+        for (const word of meaningful) {
+            const position = QUIZ_PICK.findIndex((stems) => stems.some((stem) =>
+                (QUIZ_EXACT.has(stem) ? word === stem : word.startsWith(stem))));
+            if (position >= 0 && position < quiz.options.length) return { type: "answer", position };
+        }
+    }
+
+    // Худи матни ҷавоб: калимаҳои муҳим (≥ 4 ҳарф) бо 5 ҳарфи аввал муқоиса мешаванд.
+    const said = new Set(words.filter((word) => word.length >= 4).map((word) => word.slice(0, 5)));
+    if (said.size) {
+        const scored = quiz.options.map((option, position) => {
+            const keys = [...new Set(foldQuiz(option).split(" ").filter((word) => word.length >= 4).map((word) => word.slice(0, 5)))];
+            const hits = keys.filter((key) => said.has(key)).length;
+            return { position, score: keys.length ? hits / keys.length : 0, hits };
+        }).sort((a, b) => b.score - a.score);
+        const [best, second] = scored;
+        // Ё аксари калимаҳои вариант, ё калимаи муҳиме, ки танҳо дар ҳамин вариант ҳаст («программирование»).
+        const clear = best && best.hits >= 1 && (!second || second.hits === 0) && said.size <= 3;
+        if (best && best.hits >= 1 && (clear || (best.score >= 0.4 && (!second || best.score - second.score >= 0.2)))) {
+            return { type: "answer", position: best.position };
+        }
+    }
+    // Ҷавоби озоди корбар («ман бештар дар бораи ҳайвонот мегуфтам») — AI варианти наздикро меёбад.
+    return words.length >= 2 ? { type: "free", text } : null;
+};
+
 const SILENCE_MS = 750;        // ин қадар хомӯшӣ — яъне ҷумла тамом шуд
 const NO_SPEECH_MS = 8000;     // чизе нагуфт — боз гӯш мекунем
 const MAX_RECORD_MS = 15000;   // ҳадди аксар як навбат
@@ -60,6 +150,17 @@ export default function VoiceAssistant() {
 
     const [open, setOpen] = useState(false);
     const [started, setStarted] = useState(false);
+    // Телефон: панели паст дар поёни экран, бе модели 3D — саҳифа намоён мемонад
+    // ва панел фавран мекушояд (модели 3D дар телефон дер бор мешуд).
+    const [isPhone, setIsPhone] = useState(
+        () => typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches,
+    );
+    useEffect(() => {
+        const query = window.matchMedia("(max-width: 639px)");
+        const update = () => setIsPhone(query.matches);
+        query.addEventListener("change", update);
+        return () => query.removeEventListener("change", update);
+    }, []);
     const [heard, setHeard] = useState("");
     // Самтҳое, ки ёвар пешниҳод кард («духтури дандон», …) — ҷавоби навбатӣ
     // аз байни инҳо интихоб мешавад.
@@ -98,6 +199,10 @@ export default function VoiceAssistant() {
     const spokenGuidesRef = useRef(new Set());
     const speakGuideRef = useRef(null);
     const realtimeFailedRef = useRef(0);
+    const lastSaidRef = useRef("");
+    const quizRef = useRef(null);
+    const quizReadRef = useRef("");
+    const quizReadingRef = useRef(false);
     const startingRef = useRef(false);
     const quickDropsRef = useRef(0);
 
@@ -348,7 +453,9 @@ export default function VoiceAssistant() {
         switch (action) {
             case "search": {
                 const query = String(params?.query || "").trim();
-                navigate(query ? `/careers?ai=${encodeURIComponent(query)}` : "/careers");
+                // voice=1: ҷавоби саҳифа бо забони сайт; said: гуфтаи корбар дар сатри ҷустуҷӯ.
+                const said = encodeURIComponent(lastSaidRef.current || "");
+                navigate(query ? `/careers?ai=${encodeURIComponent(query)}&voice=1&said=${said}` : "/careers");
                 break;
             }
             case "open_career":
@@ -407,6 +514,9 @@ export default function VoiceAssistant() {
                 break;
             case "set_language":
                 if (params?.lang) i18n.changeLanguage(params.lang);
+                break;
+            case "set_grade":
+                setGrade(Number(params?.grade) === 9 ? 9 : Number(params?.grade) === 11 ? 11 : null);
                 break;
             case "set_theme":
                 if (params?.theme && params.theme !== theme) toggleTheme();
@@ -676,12 +786,36 @@ export default function VoiceAssistant() {
 
         let reply = "";
         const asked = Date.now();
+        // Дар санҷиш: «второй», «Б», худи ҷавоб, «далее», «повтори» — фавран, бе AI;
+        // ҷавоби озод ба саҳифаи санҷиш меравад — он ба варианти наздиктарин мепайвандад.
+        const quiz = window.location.pathname === "/quiz" ? quizRef.current : null;
+        const quizCommand = quiz ? matchQuizCommand(text, quiz) : null;
+        if (quizCommand) {
+            voiceLog("quiz", { text: text.slice(0, 60), type: quizCommand.type, position: quizCommand.position });
+            setHeard(text);
+            busyRef.current = false;
+            setState("idle");
+            if (quizCommand.type === "repeat") {
+                quizReadRef.current = "";
+                window.dispatchEvent(new CustomEvent("quiz:question", { detail: quiz }));
+            } else {
+                window.dispatchEvent(new CustomEvent("quiz:command", { detail: quizCommand }));
+            }
+            // Саволи нав худаш хонда мешавад ва баъд микрофон кушода мешавад;
+            // агар савол иваз нашавад (ҷавоби охирин), микрофонро худамон мекушоем.
+            setTimeout(() => {
+                if (!busyRef.current && handsFreeRef.current) startListening();
+            }, quizCommand.type === "free" ? 6000 : 1500);
+            return;
+        }
+
         voiceLog("send", { text: text.slice(0, 80) });
+        lastSaidRef.current = text;
         try {
             const careerName = await currentCareerName();
             const { data } = await axios.post(
                 `${API}/careers/assistant`,
-                { message: text, lang, careerName, options: optionsRef.current },
+                { message: text, lang, careerName, options: optionsRef.current, grade: getGrade() },
                 { timeout: 30000 },
             );
             voiceLog("reply", { ms: Date.now() - asked, action: data?.action });
@@ -735,6 +869,53 @@ export default function VoiceAssistant() {
     useEffect(() => {
         speakGuideRef.current = speakGuide;
     }, [speakGuide]);
+
+    // Санҷиш: ҳар саволи нав бо ҷавобҳояш хонда мешавад — ҳатто вақте корбар
+    // бо муш интихоб кард. Агар саволи пешина ҳоло хонда шавад, онро мебурем.
+    useEffect(() => {
+        if (!open || !started) return undefined;
+        let timer = null;
+        const read = (quiz, waited = 0) => {
+            if (quizRef.current !== quiz) return;
+            if (busyRef.current) {
+                if (quizReadingRef.current) stopAudio();
+                if (waited < 20000) timer = setTimeout(() => read(quiz, waited + 300), 300);
+                return;
+            }
+            quizReadRef.current = `${quiz.id}|${quiz.lang}`;
+            quizReadingRef.current = true;
+            Promise.resolve(speakGuideRef.current?.(quizSpeech(quiz, voiceLangRef.current)))
+                .finally(() => { quizReadingRef.current = false; });
+        };
+        const onQuestion = (event) => {
+            const quiz = event.detail || null;
+            quizRef.current = quiz;
+            clearTimeout(timer);
+            if (!quiz || quizReadRef.current === `${quiz.id}|${quiz.lang}`) return;
+            read(quiz);
+        };
+        // Ҷавоби озоди гуфташуда ба вариант пайваст шуд (ё не) — ба корбар мегӯем.
+        const onMatched = (event) => {
+            const { position, option } = event.detail || {};
+            const lang = voiceLangRef.current;
+            const text = position === null || position === undefined
+                ? { tj: "Ҷавобро ба ягон вариант пайваст карда натавонистам. Рақами вариантро гӯед ё бо сухани дигар гӯед.",
+                    ru: "Не понял ответ. Назовите номер варианта или скажите иначе.",
+                    en: "I could not match that. Say the option number or rephrase it." }[lang]
+                : { tj: `Ҷавоби шумо ба ин наздик аст: ${option}. Қабул шуд.`,
+                    ru: `Ближе всего: ${option}. Принято.`,
+                    en: `Closest option: ${option}. Accepted.` }[lang];
+            speakGuideRef.current?.(text);
+        };
+        window.addEventListener("quiz:question", onQuestion);
+        window.addEventListener("quiz:matched", onMatched);
+        if (window.__quizVoice) onQuestion({ detail: window.__quizVoice });
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener("quiz:question", onQuestion);
+            window.removeEventListener("quiz:matched", onMatched);
+        };
+    }, [open, started, stopAudio]);
 
     // Корбар худаш ба саҳифаи нав гузашт (тугма ё истинод) — муаррифӣ мекунем.
     // Агар ин кор аз ҷониби ёвар бошад, send() онро аллакай кардааст.
@@ -877,7 +1058,7 @@ export default function VoiceAssistant() {
     return (
         <>
             {open && (
-                <div data-voice-panel className="no-print fixed inset-x-4 bottom-24 z-[60] mx-auto w-auto max-w-[26rem] max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain rounded-[1.75rem] border border-border bg-card shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)] sm:inset-x-auto sm:right-5 sm:w-[26rem]">
+                <div data-voice-panel className="no-print fixed inset-x-0 bottom-0 z-[60] max-h-[60dvh] overflow-y-auto overscroll-contain rounded-t-[1.5rem] border border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_40px_-12px_rgba(15,23,42,0.35)] sm:inset-x-auto sm:bottom-24 sm:right-5 sm:mx-auto sm:w-[26rem] sm:max-h-[calc(100dvh-7.5rem)] sm:rounded-[1.75rem] sm:pb-0 sm:shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)]">
                     <button
                         type="button"
                         onClick={close}
@@ -887,29 +1068,49 @@ export default function VoiceAssistant() {
                         <X className="h-4 w-4" aria-hidden />
                     </button>
 
-                    <div className="flex flex-col items-center px-6 pb-6 pt-9">
-                        <div className="relative h-[10rem] w-full sm:h-[15rem]">
-                            <span
-                                ref={orbRef}
-                                className={`pointer-events-none absolute inset-x-8 bottom-2 top-10 rounded-full bg-gradient-to-br ${glow} opacity-30 blur-3xl`}
-                                style={{ willChange: "transform, opacity" }}
-                            />
-                            <Suspense fallback={<div className="h-full w-full animate-pulse rounded-[1.25rem] bg-muted/40" />}>
-                                <Avatar3D state={state} levelRef={levelRef} />
-                            </Suspense>
-                        </div>
+                    <div className="flex flex-col items-center px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-9">
+                        {isPhone ? (
+                            <div className="flex w-full items-center gap-3 pr-8">
+                                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+                                    <span
+                                        ref={orbRef}
+                                        className={`pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br ${glow} opacity-60 blur-md`}
+                                        style={{ willChange: "transform, opacity" }}
+                                    />
+                                    <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                        <Mic className="h-4 w-4" aria-hidden />
+                                    </span>
+                                </span>
+                                <p className="text-[13px] font-semibold text-muted-foreground" aria-live="polite">
+                                    {statusText}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="relative h-[15rem] w-full">
+                                    <span
+                                        ref={orbRef}
+                                        className={`pointer-events-none absolute inset-x-8 bottom-2 top-10 rounded-full bg-gradient-to-br ${glow} opacity-30 blur-3xl`}
+                                        style={{ willChange: "transform, opacity" }}
+                                    />
+                                    <Suspense fallback={<div className="h-full w-full animate-pulse rounded-[1.25rem] bg-muted/40" />}>
+                                        <Avatar3D state={state} levelRef={levelRef} />
+                                    </Suspense>
+                                </div>
 
-                        <p className="mt-5 text-[13px] font-semibold text-muted-foreground" aria-live="polite">
-                            {statusText}
-                        </p>
+                                <p className="mt-5 text-[13px] font-semibold text-muted-foreground" aria-live="polite">
+                                    {statusText}
+                                </p>
+                            </>
+                        )}
 
                         {heard && started && (
-                            <p className="mt-4 w-full truncate text-center text-[13px] text-muted-foreground">
+                            <p className="mt-3 w-full truncate text-[13px] text-muted-foreground sm:mt-4 sm:text-center">
                                 «{heard}»
                             </p>
                         )}
 
-                        <p className="mt-2 min-h-[3.5rem] text-center text-[16px] leading-relaxed text-foreground">
+                        <p className="mt-2 max-h-[24dvh] w-full overflow-y-auto text-[15px] leading-relaxed text-foreground sm:max-h-none sm:min-h-[3.5rem] sm:text-center sm:text-[16px]">
                             {started ? said : greeting}
                         </p>
 
@@ -964,7 +1165,7 @@ export default function VoiceAssistant() {
                                 <button
                                     type="button"
                                     onClick={startConversation}
-                                    className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-full bg-primary py-3.5 text-[15px] font-bold text-primary-foreground focus-ring"
+                                    className="mt-4 flex w-full items-center justify-center gap-2.5 rounded-full bg-primary py-3.5 text-[15px] font-bold text-primary-foreground focus-ring sm:mt-5"
                                 >
                                     <Mic className="h-5 w-5" aria-hidden />
                                     {t("assistant.start", "Сӯҳбатро сар кунед")}
@@ -988,7 +1189,7 @@ export default function VoiceAssistant() {
                                 </div>
                             </>
                         ) : (
-                            <div className="mt-5 flex w-full items-center gap-2">
+                            <div className="mt-4 flex w-full items-center gap-2 sm:mt-5">
                                 <button
                                     type="button"
                                     onClick={() => (handsFree ? stopConversation() : resumeConversation())}
@@ -1050,7 +1251,7 @@ export default function VoiceAssistant() {
                 onClick={() => (open ? close() : setOpen(true))}
                 aria-label={t("assistant.title", "Ёвари овозӣ")}
                 data-voice-panel
-                className="no-print fixed bottom-6 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring"
+                className={`no-print fixed bottom-6 right-5 z-[60] h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring ${open ? "hidden sm:flex" : "flex"}`}
             >
                 {open ? <X className="h-6 w-6" aria-hidden /> : <Mic className="h-6 w-6" aria-hidden />}
             </button>

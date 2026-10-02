@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { parseGrade } from '../common/grade';
 import { Career } from '../career/career.entity';
 import { Cluster } from '../cluster/cluster.entity';
 import { QUIZ_QUESTIONS, QuizQuestion, QuizPart } from './data/questions';
@@ -108,8 +109,9 @@ export class QuizService {
         return scores;
     }
 
-    async matchCareers(userScores: UserScores, lang: string = 'tj'): Promise<any> {
-        const selection = await this.careerService.selectMatchedCareers(userScores);
+    async matchCareers(userScores: UserScores, lang: string = 'tj', rawGrade?: number | string): Promise<any> {
+        const grade = parseGrade(rawGrade);
+        const selection = await this.careerService.selectMatchedCareers(userScores, grade ?? undefined);
         const { clusterScores, careers: topCareers, matchPercentage: clusterMatchPct } = selection;
 
         const topCluster = selection.cluster;
@@ -124,12 +126,15 @@ export class QuizService {
             purpose: c.purpose,
             matchPercentage: clusterMatchPct,
             tuitionFee: c.tuitionFee,
+            // Номи ихтисос бо забони корбар — фронтенд аз ин тарҷума мегирад.
+            translations: c.translations,
         }));
 
         const personality = "Натиҷаи тести шумо мутобиқати баландро бо " + topCluster.clusterName + " нишон медиҳад.";
-        const aiAdvice = await this.generateAiAdvice(userScores, topCluster, topCareers, lang, clusterScores);
+        const aiAdvice = await this.generateAiAdvice(userScores, topCluster, topCareers, lang, clusterScores, grade);
 
         return {
+            grade,
             topCluster: {
                 id: topCluster.id,
                 clusterName: topCluster.clusterName,
@@ -154,6 +159,7 @@ export class QuizService {
         careers: Career[],
         lang: string = 'tj',
         clusterScores: { cluster: Cluster; score: number }[] = [],
+        grade: number | null = null,
     ): Promise<string> {
         const fallback = this.staticAdvice(cluster, lang);
 
@@ -182,6 +188,8 @@ export class QuizService {
                 `- Ангезаҳои интихобкарда: ${motivation}`,
                 `- Мавзӯъҳое, ки ҷавобҳо ба онҳо ишора мекунанд (танҳо барои фаҳмиши ту): ${keywords}`,
                 `- Ихтисосҳои мувофиқ: ${careers.slice(0, 6).map(c => c.name).join(', ')}`,
+                grade === 9 ? '- Хонанда БАЪДИ СИНФИ 9 аст: танҳо ба КОЛЛЕҶ дохил шуда метавонад. Дар бораи донишгоҳ ва имтиҳони донишгоҳ нагӯ.' : '',
+                grade === 11 ? '- Хонанда баъди синфи 11 аст: ҳам коллеҷ, ҳам донишгоҳ мумкин.' : '',
                 '',
                 'ВАЗИФА:',
                 'Маслиҳати кӯтоҳ ва мушаххас нависед аз 3–4 ҷумла:',
@@ -215,5 +223,42 @@ export class QuizService {
             return `Based on your quiz, we recommend preparing for the "${cluster.clusterName}" MMT cluster exams.`;
         }
         return `Дар асоси тести шумо, мо тавсия медиҳем, ки барои имтиҳонҳои кластери «${cluster.clusterName}» ММТ тайёрӣ бинед.`;
+    }
+
+    async interpretAnswer(
+        rawQuestion?: string,
+        rawOptions?: string[],
+        rawText?: string,
+        rawLang?: string,
+    ): Promise<{ position: number | null }> {
+        const question = String(rawQuestion || '').trim().slice(0, 300);
+        const options = (Array.isArray(rawOptions) ? rawOptions : [])
+            .map((option) => String(option || '').trim().slice(0, 200))
+            .slice(0, 6);
+        const text = String(rawText || '').trim().slice(0, 300);
+        if (!question || options.length < 2 || text.length < 2) return { position: null };
+
+        const prompt = [
+            'Дар санҷиши касбӣ корбар ба ҷои интихоби вариант ҷавоби худро навишт.',
+            'Муайян кун, ки ин ҷавоб аз рӯи МАЪНО ба кадом вариант наздиктар аст.',
+            'Агар ҷавоб ба ҳеҷ вариант умуман рабт надошта бошад (масалан, шӯхӣ, бемаънӣ, «намедонам»), null деҳ.',
+            '',
+            `САВОЛ: ${question}`,
+            'ВАРИАНТҲО:',
+            ...options.map((option, index) => `${index + 1}. ${option}`),
+            '',
+            `ҶАВОБИ КОРБАР: ${text}`,
+            '',
+            'Танҳо JSON: {"option": рақами вариант (1-' + options.length + ') ё null}',
+        ].join(String.fromCharCode(10));
+
+        try {
+            const raw = await this.aiService.generateContent(prompt, { fast: true, timeoutMs: 6000, provider: 'gemini' });
+            const match = String(raw || '').match(/"option"\s*:\s*(\d+|null)/);
+            const number = match && match[1] !== 'null' ? Number(match[1]) : NaN;
+            return { position: number >= 1 && number <= options.length ? number - 1 : null };
+        } catch {
+            return { position: null };
+        }
     }
 }

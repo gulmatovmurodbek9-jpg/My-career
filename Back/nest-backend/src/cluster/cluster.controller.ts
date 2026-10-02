@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, Query } from '@nestjs/common';
 import { ClusterService } from './cluster.service';
 import { CreateClusterDto } from './dto/create-cluster.dto';
 import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
@@ -10,8 +10,8 @@ export class ClusterController {
 
     @Get()
     @ApiOperation({ summary: 'Get all clusters with their careers' })
-    getAll() {
-        return this.clusterService.findAll();
+    getAll(@Query('grade') grade?: string) {
+        return this.clusterService.findAll(grade);
     }
 
     @Get(':id')

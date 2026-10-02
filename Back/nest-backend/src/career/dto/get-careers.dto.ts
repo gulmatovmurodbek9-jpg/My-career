@@ -57,6 +57,11 @@ export class GetCareersDto {
     @IsString()
     freeSeatsOnly?: string;
 
+    @ApiPropertyOptional({ description: 'School grade finished: 9 (colleges only) or 11' })
+    @IsOptional()
+    @IsString()
+    grade?: string;
+
     @ApiPropertyOptional({ description: 'Page number (default: 1)', minimum: 1 })
     @IsOptional()
     @Type(() => Number)

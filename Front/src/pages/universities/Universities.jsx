@@ -96,6 +96,12 @@ export default function Universities() {
     () => new URLSearchParams(window.location.search).get("q") ?? "",
   );
   // 9: реҷаи «Рӯйхат» ва ҷустуҷӯ баъд аз F5 гум намешаванд — дар URL нигоҳ медорем.
+  // «Танҳо коллеҷҳо / танҳо олӣ» — ?type=college|higher (ёвар ҳам ҳамин тавр мекушояд).
+  const readKind = () => {
+    const value = new URLSearchParams(window.location.search).get("type");
+    return value === "college" || value === "higher" ? value : "all";
+  };
+  const [kind, setKind] = useState(readKind);
   const [viewMode, setViewMode] = useState(
     () => (new URLSearchParams(window.location.search).get("view") === "list" ? "list" : "map"),
   );
@@ -103,13 +109,17 @@ export default function Universities() {
     const params = new URLSearchParams(window.location.search);
     if (searchQuery.trim()) params.set("q", searchQuery.trim()); else params.delete("q");
     if (viewMode === "list") params.set("view", "list"); else params.delete("view");
+    if (kind !== "all") params.set("type", kind); else params.delete("type");
     const query = params.toString();
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
-  }, [searchQuery, viewMode]);
+  }, [searchQuery, viewMode, kind]);
 
   useEffect(() => {
-    const asked = new URLSearchParams(window.location.search).get("q");
-    if (asked) setSearchQuery(asked);
+    const params = new URLSearchParams(window.location.search);
+    const asked = params.get("q");
+    setSearchQuery(asked || "");
+    setKind(readKind());
+    if (params.get("view") === "list") setViewMode("list");
   }, [location.search]);
 
   useEffect(() => {
@@ -139,12 +149,13 @@ export default function Universities() {
   const filteredUnis = useMemo(
     () =>
       universities.filter((uni) => {
+        if (kind !== "all" && uni.kind !== kind) return false;
         if (!normalizedQuery) return true;
         // Ҳар калимаи ҷустуҷӯ бояд дар ягон ном бошад («миллии душанбе» ҳам кор мекунад).
         const haystack = searchText(uni);
         return normalizedQuery.split(" ").every((word) => haystack.includes(word));
       }),
-    [normalizedQuery, universities]
+    [normalizedQuery, universities, kind]
   );
 
   const cityCount = useMemo(
@@ -180,6 +191,28 @@ export default function Universities() {
                   {t("career_page.u_intro")}
                 </p>
                 <GradeSwitch />
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[13px] font-semibold text-muted-foreground">{t("career_page.u_kind_label", "Навъ:")}</span>
+                  <div className="inline-flex rounded-xl border border-border bg-card p-1" role="group">
+                    {[
+                      ["all", t("career_page.u_kind_all", "Ҳама")],
+                      ["college", t("career_page.u_kind_college", "Коллеҷҳо")],
+                      ["higher", t("career_page.u_kind_higher", "Донишгоҳ ва донишкадаҳо")],
+                    ].map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setKind(value)}
+                        aria-pressed={kind === value}
+                        className={`rounded-lg px-3 py-1.5 text-[13px] font-bold cursor-pointer focus-ring ${
+                          kind === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">

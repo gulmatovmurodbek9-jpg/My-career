@@ -27,8 +27,12 @@ const PLATFORMS = [
   [/\bnptel\b/i, "https://nptel.ac.in/"],
 ];
 
+// Агар платформа маълум набошад («Курсҳои 1С», номи китоб), ҷустуҷӯи ҳамон ном
+// кушода мешавад — пештар ин сатрҳо мисли пайванд менамуданд, вале пахш намешуданд.
 export function resourceUrl(name) {
-  if (typeof name !== "string") return null;
+  if (typeof name !== "string" || !name.trim()) return null;
   const hit = PLATFORMS.find(([pattern]) => pattern.test(name));
-  return hit ? hit[1] : null;
+  if (hit) return hit[1];
+  if (/1[сc]/i.test(name)) return "https://1c.ru/";
+  return `https://www.google.com/search?q=${encodeURIComponent(name.trim())}`;
 }

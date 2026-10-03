@@ -482,9 +482,12 @@ export default function VoiceAssistant() {
                 if (params?.id) {
                     navigate(`/universities/${params.id}`);
                 } else {
-                    navigate(params?.city
-                        ? `/universities?q=${encodeURIComponent(params.city)}`
-                        : "/universities");
+                    const query = new URLSearchParams();
+                    if (params?.city) query.set("q", params.city);
+                    if (params?.type === "college" || params?.type === "higher") query.set("type", params.type);
+                    // Рӯйхат, на харита: «ҳамаи коллеҷҳо» — номҳо намоён бошанд.
+                    if (params?.type) query.set("view", "list");
+                    navigate(`/universities${query.toString() ? `?${query}` : ""}`);
                 }
                 break;
             case "open_report":

@@ -60,6 +60,8 @@ export class UniversityService {
                 region: uni.region,
                 isState: uni.isState,
                 institutionType: uni.institutionType,
+                // «college» ё «higher» — барои филтри «танҳо коллеҷҳо / танҳо олӣ» (новобаста аз забон).
+                kind: uni.institutionType === 'Коллеҷ' ? 'college' : 'higher',
                 website: uni.website,
                 logo: uni.logo,
                 description: uni.description,

@@ -14,6 +14,7 @@ const PHRASES = [
     'Ана ин ихтисосҳо.',
     'Кушодам.',
     'Муқоиса мекунам, каме интизор шавед.',
+    'Ана ҳамаи коллеҷҳо.', 'Ана донишгоҳ ва донишкадаҳо.',
     'Фаҳмидам: баъди синфи 9. Акнун танҳо коллеҷҳо ва ихтисосҳои онҳоро нишон медиҳам.',
     'Фаҳмидам: баъди синфи 11. Коллеҷҳо ва донишгоҳҳо ҳарду нишон дода мешаванд.',
     'Захира шуд.',
@@ -39,7 +40,7 @@ const PHRASES = [
 // Танҳо вақте садо мегиранд, ки модели русӣ дар voice-model-rus/ бошад.
 const PHRASES_RU = [
     'Добро пожаловать! Я ваш помощник. Чем займёмся — выберем специальность, посмотрим университеты или пройдём тест?',
-    'Вот эти специальности.', 'Открыл.', 'Сравниваю, подождите немного.',
+    'Вот эти специальности.', 'Открыл.', 'Сравниваю, подождите немного.', 'Вот все колледжи.', 'Вот вузы.',
     'Понял: после 9 класса. Теперь показываю только колледжи и их специальности.',
     'Понял: после 11 класса. Показываю и колледжи, и вузы.', 'Сохранено.', 'Начинаю тест.',
     'Вот университеты.', 'Открыл ваш отчёт.', 'Вот план подачи документов.', 'Ищу ближайшие университеты.',
@@ -51,7 +52,7 @@ const PHRASES_RU = [
 // Ибораҳои англисии ёвар (ASSISTANT_REPLIES.en + салом) — модели voice-model-eng/.
 const PHRASES_EN = [
     'Hello! Welcome. I am your assistant. What shall we do: choose a specialty, look at universities, or take the test?',
-    'Here are the specialties.', 'Opened.', 'Comparing them now, one moment.',
+    'Here are the specialties.', 'Opened.', 'Comparing them now, one moment.', 'Here are all the colleges.', 'Here are the universities.',
     'Got it: after grade 9. Now I show only colleges and their specialties.',
     'Got it: after grade 11. I show both colleges and universities.', 'Saved.', 'Starting the test.',
     'Here are the universities.', 'I opened your report.', 'Here is the application plan.', 'Looking for the nearest universities.',

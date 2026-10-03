@@ -1126,7 +1126,7 @@ export class CareerService {
             '- compare — муқоисаи ду ё зиёда ихтисос. params: {"names": ["ном1", "ном2"]}',
             '- save_career — захира кардани ихтисос. params: {"name": "номи ихтисос"}',
             '- start_quiz — оғози санҷиши касбӣ. params: {}',
-            '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "номи донишгоҳ", "city": "шаҳр"} — ном ва шаҳр бо тоҷикӣ («Худжанд» → «Хуҷанд», «medical» → «тиббӣ»)',
+            '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "НОМИ ХОСИ муассиса ё холӣ", "city": "шаҳр", "type": "college" ё "higher" ё холӣ}. «ҳамаи коллеҷҳо», «колледжи», «colleges» → {"type":"college"} БЕ name; «донишгоҳҳо/вузы/universities» → {"type":"higher"} БЕ name. Ном ва шаҳр бо тоҷикӣ («Худжанд» → «Хуҷанд», «medical» → «тиббӣ»)',
             '- open_report — ҳисоботи AI аз рӯи санҷиш. params: {}',
             '- open_plan — рӯйхати ҳуҷҷатсупорӣ. params: {}',
             '- nearest_universities — «донишгоҳи наздиктарин», «дар наздикии ман». params: {}',
@@ -1180,7 +1180,10 @@ export class CareerService {
         ].filter(Boolean).join(String.fromCharCode(10));
 
         // Аввал роутери тез: фармони маълумро бе AI иҷро мекунем.
-        let parsed: any = this.quickRoute(message, answerLang);
+        // Дар саҳифаи ихтисос саволи «Сколько бюджетных мест?» ба ҳамин ихтисос аст,
+        // на ба ҷустуҷӯи умумӣ — роутери тезро намегузарем.
+        const askingAboutPage = !!context.careerName && CareerService.isQuestion(message);
+        let parsed: any = askingAboutPage ? null : this.quickRoute(message, answerLang);
         if (!parsed) try {
             // Сӯҳбати зинда: ҳадди 6 сония, бе хобидан ҳангоми 429.
             // Gemini аввал: Vertex квотаашро тамом кардааст (429) ва ҳар дархостро
@@ -1322,7 +1325,21 @@ export class CareerService {
         if (action === 'open_universities') {
             // «донишгоҳи Миллиро ёб» — аввал номи мушаххасро меҷӯем,
             // вагарна корбар ба рӯйхати 33-тоӣ мерасад.
-            const wantedName = String(given.name || '').trim();
+            // «Ҳамаи коллеҷҳо», «все колледжи», «all colleges» — рӯйхат бо филтри навъ,
+            // на кушодани як коллеҷ (пештар «college» ҳамчун ном ҷустуҷӯ мешуд).
+            const KIND_WORDS = /^(коллеч|колледж|college|донишгох|университет|universit|вуз|донишкада|институт|institut|олий|олӣ|higher|хама|все|all|the|мухассиса|учебн|заведен|дар|в|in|of|ва|и|and)/;
+            const kindOf = (text: string): 'college' | 'higher' | '' => {
+                const folded = foldTajik(text).toLowerCase();
+                if (/коллеч|колледж|college/.test(folded)) return 'college';
+                if (/донишгох|университет|universit|вуз|донишкада|институт|institut|олий|higher/.test(folded)) return 'higher';
+                return '';
+            };
+            const typeWanted = (['college', 'higher'].includes(String(given.type)) ? String(given.type) : '') || kindOf(message);
+            const rawName = String(given.name || '').trim();
+            const nameWords = foldTajik(rawName).toLowerCase().split(/[^a-zа-яё0-9]+/i).filter(Boolean);
+            const genericName = nameWords.every((word) => KIND_WORDS.test(word)
+                || CareerService.CITY_NAMES.some(([, aliases]) => aliases.some((alias) => word.startsWith(alias.slice(0, 5)))));
+            const wantedName = genericName ? '' : rawName;
             // Шаҳри гуфташуда («юрист в Душанбе»): донишгоҳи шаҳри дигар ҷавоб нест —
             // он гоҳ рӯйхати ҳамон шаҳр кушода мешавад.
             const foldedMessage = foldTajik(message).toLowerCase();
@@ -1362,6 +1379,7 @@ export class CareerService {
                     if (rows[0]?.city) params = { city: rows[0].city };
                 }
             }
+            if (!params.id && typeWanted && (genericName || !rawName)) params = { ...params, type: typeWanted };
         }
 
         // Барои амалҳо ҷумлаи собит мегирем — садояш ҳамеша аз кеш меояд.
@@ -1376,6 +1394,26 @@ export class CareerService {
                     params,
                     answerLang,
                 };
+            }
+        }
+
+        // Саволи озод дар бораи ихтисос («дарсҳо бо кадом забон?», «чанд сол?»,
+        // «дар куҷо мехонанд?») — AI аз маълумоти база ҷавоб медиҳад, мисли одам.
+        const generalUniversities = action === 'open_universities' && !params.id && !params.city && !params.type;
+        if ((action === 'open_career' || action === 'answer' || action === 'search' || (generalUniversities && !!context.careerName))
+            && CareerService.isQuestion(message)) {
+            const pageId = context.careerName ? (await this.resolveCareer(context.careerName))?.id || null : null;
+            let careerId: string | null = action === 'open_career' ? params.id || null : null;
+            if (!careerId) careerId = pageId;
+            if (careerId) {
+                const answer = await this.careerAnswer(careerId, message, answerLang, grade);
+                if (answer) {
+                    // Корбар аллакай дар ҳамин саҳифа аст — танҳо ҷавоб, бе гузариш.
+                    const onPage = !!pageId && (action !== 'open_career' || careerId === pageId);
+                    return onPage
+                        ? { reply: answer, action: 'answer', params: {}, answerLang }
+                        : { reply: answer, action: 'open_career', params: action === 'open_career' ? params : { id: careerId }, answerLang };
+                }
             }
         }
 
@@ -1396,9 +1434,87 @@ export class CareerService {
             }
         }
 
+        if (action === 'open_universities' && !params.id && params.type) {
+            const kindReply: Record<string, Record<string, string>> = {
+                college: { tj: 'Ана ҳамаи коллеҷҳо.', ru: 'Вот все колледжи.', en: 'Here are all the colleges.' },
+                higher: { tj: 'Ана донишгоҳ ва донишкадаҳо.', ru: 'Вот вузы.', en: 'Here are the universities.' },
+            };
+            return { reply: kindReply[params.type][answerLang] || kindReply[params.type].tj, action, params, answerLang };
+        }
         const replyKey = action === 'open_universities' && params.id ? 'open_career' : action;
         const canned = CareerService.ASSISTANT_REPLIES[answerLang]?.[replyKey];
         return { reply: canned || reply, action, params, answerLang };
+    }
+
+    // Савол аст, на фармон: «…?», «кадом», «сколько», «which»… ва бе «кушо/покажи/open».
+    static isQuestion(message: string): boolean {
+        const text = foldTajik(message).toLowerCase();
+        if (/(^| )(кушо|нишон дех|захира|мукоиса|покажи|открой|сохрани|сравни|open|show|save|compare)( |$)/.test(text)) return false;
+        return /\?/.test(message)
+            || /(^| )(чанд|кадом|чи|чист|чиро|кучо|оё|чаро|кай|чи тавр|сколько|какой|какая|какие|каком|где|когда|почему|зачем|как|ли|what|which|where|when|why|how|is|are|do|does|can)( |$)/.test(text);
+    }
+
+    // Ҷавоби озод ба саволи корбар дар бораи як ихтисос — танҳо аз маълумоти база.
+    private async careerAnswer(careerId: string, message: string, lang: string, grade: number | null): Promise<string | null> {
+        const career: any = await this.careerRepository.findOne({ where: { id: careerId } });
+        if (!career) return null;
+        const offerings = (await this.offeringRepository.find({ where: { careerId }, relations: ['university'] }))
+            .filter((offering) => !grade || offering.basedOn === grade);
+        const count = (values: string[]) => {
+            const map = new Map<string, number>();
+            for (const value of values.filter(Boolean)) map.set(value, (map.get(value) || 0) + 1);
+            return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([value, n]) => `${value} (${n})`).join(', ');
+        };
+        const fees = offerings.map((o) => o.tuitionFee).filter((fee): fee is number => typeof fee === 'number' && fee > 0);
+        const seats = offerings.reduce((sum, o) => sum + (o.seats || 0), 0);
+        const places = [...new Map(offerings.map((o) => [o.university?.id, o.university])).values()].filter(Boolean) as any[];
+        let scores = '';
+        try {
+            const result: any = await this.admissionScores(careerId);
+            const last = result.years?.[result.years.length - 1];
+            if (last?.minScore) scores = `соли ${last.year}: аз ${last.minScore} то ${last.maxScore} бал`;
+        } catch { /* бал нест */ }
+        const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+        const facts = [
+            `Ихтисос: ${career.name}${career.code ? ` (рамз ${career.code})` : ''}`,
+            career.description ? `Тавсиф: ${String(career.description).slice(0, 300)}` : '',
+            career.degreeType || career.durationYears ? `Дараҷа ва мӯҳлат: ${career.degreeType || '—'}, ${career.durationYears || '—'} сол` : '',
+            offerings.length ? `Забони таҳсил: ${count(offerings.map((o) => o.language))}` : '',
+            offerings.length ? `Шакли таҳсил: ${count(offerings.map((o) => o.studyForm))}` : '',
+            offerings.length ? `Пардохт: ${count(offerings.map((o) => o.paymentType))}` : '',
+            offerings.length ? `Баъди синф: ${count(offerings.map((o) => String(o.basedOn)))}` : '',
+            fees.length ? `Нархи таҳсил: ${Math.min(...fees)}–${Math.max(...fees)} сомонӣ дар сол` : '',
+            seats ? `Ҷойҳои қабул: ${seats}` : '',
+            places.length ? `Муассисаҳо (${places.length}): ${places.slice(0, 8).map((u) => `${u.name} (${u.city || '—'}, ${u.institutionType || ''})`).join('; ')}` : '',
+            scores ? `Бали гузариш, ${scores}` : '',
+            career.salaryAndMarket?.junior ? `Маош: навкор ${career.salaryAndMarket.junior}, ботаҷриба ${career.salaryAndMarket.mid}` : '',
+            career.skills?.technical?.length ? `Малакаҳо: ${career.skills.technical.slice(0, 6).join(', ')}` : '',
+            career.careerOpportunities?.length ? `Ҷойи кор: ${career.careerOpportunities.slice(0, 5).join(', ')}` : '',
+            grade === 9 ? 'Корбар баъди синфи 9 аст — танҳо коллеҷ.' : '',
+        ].filter(Boolean).join('\n');
+        const prompt = [
+            'Ту ёвари овозии сайти «Ихтисоси ман» ҳастӣ. Ба саволи корбар дар бораи ин ихтисос ҷавоб деҳ,',
+            'мисли одами меҳрубон ва донишманд: рост ба савол, 1–2 ҷумлаи кӯтоҳ (то 35 калима), чунки онро овоз мехонад.',
+            'Салом НАГӮ ва «саҳифаро бинед» НАГӮ, агар ҷавоб дар маълумот бошад — рост ба мағзи гап.',
+            'Тоҷикӣ ТАНҲО бо алифбои кириллӣ нависед (ҳеҷ ҳарфи арабӣ/форсӣ).',
+            'Шакли таҳсил: «рӯзона» = дневная/full-time, «ғоибона» = заочная, «фосилавӣ» = дистанционная, «шабона» = вечерняя.',
+            `Ҷавоб ҲАТМАН бо забони ${langName}. Номи забонҳо, шаклҳо ва шаҳрҳоро ба ҳамин забон тарҷума кун.`,
+            'Танҳо аз МАЪЛУМОТ истифода бар. Агар ҷавоб дар маълумот набошад, ростқавлона бигӯ, ки маълумот нест,',
+            'ва пешниҳод кун, ки саҳифаи ихтисосро бинад. Рақамҳоро аз худ насоз. Бе Markdown, бе рӯйхат.',
+            '',
+            'МАЪЛУМОТ:',
+            facts,
+            '',
+            `САВОЛ: ${message}`,
+        ].join('\n');
+        try {
+            const raw = (await this.aiService.generateFast(prompt, 6000)).trim().replace(/^["«]|["»]$/g, '');
+            // Ҳарфҳои арабӣ/форсӣ (гоҳо модел «دقت» менависад) — бардошта мешаванд.
+            const clean = raw.replace(/\*\*/g, '').replace(/[؀-ۿ]+/g, '').replace(/\s{2,}/g, ' ').trim();
+            return clean ? clean.slice(0, 400) : null;
+        } catch {
+            return null;
+        }
     }
 
     // Ҷавоби кӯтоҳ аз маълумоти база ба саволи мушаххас: маош, нарх, ҷойи ройгон.

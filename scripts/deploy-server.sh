@@ -13,7 +13,7 @@
 #     bash /root/My-career/scripts/deploy-server.sh origin/main --seed   # DESTRUCTIVE
 #
 # GitHub Actions builds the frontend on the runner and rsyncs dist/ itself, so
-# it does not pass --with-frontend. The server's autodeploy timer and manual
+# it does not pass --with-frontend. Manual
 # runs do, building on the box itself (~15s; 1.9 GB RAM plus 3 GB of swap).
 #
 # If the API fails to come back healthy the previous commit is rebuilt and
@@ -44,8 +44,8 @@ done
 
 log() { printf '\n==> %s\n' "$*"; }
 
-# Two things can start a deploy: GitHub Actions, and the server's own
-# autodeploy timer. Queue rather than fail so neither ever loses a commit.
+# GitHub Actions ва деплойи дастӣ метавонанд якҷоя оғоз шаванд — навбат, на хато.
+# (Autodeploy-и ҳар дақиқа аз репои ҷамъиятӣ дигар нест: он кодро бо root иҷро мекард.)
 exec 9>/var/lock/mycareer-deploy.lock
 if ! flock -w 900 9; then
   echo "another deploy held the lock for 15 minutes — giving up" >&2
@@ -139,7 +139,7 @@ if [ "$WITH_FRONTEND" -eq 1 ]; then
   install_deps
 
   # Two paths build the frontend and only one of them reads the GitHub
-  # workflow's env: the autodeploy timer builds here on the box. Without a
+  # workflow's env: a manual run builds here on the box. Without a
   # client ID Vite proves the Google sign-in branch dead and strips it, so
   # whichever path ran last decided whether the button existed at all. An
   # OAuth client ID is public — the browser sends it to Google — so it is

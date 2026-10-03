@@ -64,7 +64,7 @@ jobs:
         id: gate
         run: |
           if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "::warning::SSH_PRIVATE_KEY is not set — skipping the push deploy. The server's autodeploy timer will pick this commit up within a minute."
+            echo "::warning::SSH_PRIVATE_KEY is not set — skipping the push deploy. Deploy manually on the server (scripts/deploy-server.sh)."
             echo 'ready=false' >> "$GITHUB_OUTPUT"
           else
             echo 'ready=true' >> "$GITHUB_OUTPUT"

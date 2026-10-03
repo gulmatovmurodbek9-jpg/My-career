@@ -46,11 +46,13 @@ const scaleIn = {
 const labels = {
     tj: {
         title: "AI Маслиҳатгари Касбӣ",
-        subtitle: "Таҳлили мушаххас дар асоси профили психологии шумо",
+        subtitle: "Тавсия дар асоси ҷавобҳои санҷиши шумо",
         badge: "AI Маслиҳатгар",
         generating: "AI таҳлил мекунад...",
         generatingDesc: "Натиҷаи санҷиши шумо бо зеҳни сунъӣ таҳлил карда мешавад",
-        section1: "Таҳлили Шахсият",
+        section1: "Он чи ҷавобҳои шумо нишон медиҳанд",
+        disclaimer: "Ин маслиҳати AI аз рӯи ҷавобҳои санҷиш аст, на хулосаи психолог. Барои қарори муҳим бо омӯзгор ё мушовири мактаб маслиҳат кунед.",
+        directionMatch: "Мувофиқати самт аз тест",
         section2: "Тавсияи Ихтисосҳо",
         section3: "Далелнокӣ",
         section4: "Пешбинии Муваффақият",
@@ -64,7 +66,7 @@ const labels = {
         duration: "Давомнокӣ",
         back: "Бозгашт",
         noQuiz: "Аввал тестро гузаред",
-        noQuizDesc: "Барои гирифтани тавсияи AI, тести психологиро гузаред.",
+        noQuizDesc: "Барои гирифтани тавсияи AI, санҷиши касбиро гузаред.",
         startQuiz: "Оғоз кардани тест",
         error: "Хатогӣ рӯй дод",
         errorTimeout: "Ҷавоб дер монд. Шабакаро санҷед ва дубора кӯшиш кунед.",
@@ -110,11 +112,13 @@ const labels = {
     },
     ru: {
         title: "AI Карьерный Советник",
-        subtitle: "Подробный анализ на основе вашего психологического профиля",
+        subtitle: "Рекомендация на основе ваших ответов в тесте",
         badge: "AI Советник",
         generating: "AI анализирует...",
         generatingDesc: "Результат вашего теста анализируется искусственным интеллектом",
-        section1: "Анализ Личности",
+        section1: "Что показывают ваши ответы",
+        disclaimer: "Это совет AI по ответам теста, а не заключение психолога. Для важного решения посоветуйтесь с учителем или школьным консультантом.",
+        directionMatch: "Совпадение направления по тесту",
         section2: "Рекомендации Профессий",
         section3: "Обоснование",
         section4: "Прогноз Успеха",
@@ -128,7 +132,7 @@ const labels = {
         duration: "Длительность",
         back: "Назад",
         noQuiz: "Сначала пройдите тест",
-        noQuizDesc: "Для получения AI рекомендации пройдите психологический тест.",
+        noQuizDesc: "Для получения AI рекомендации пройдите профориентационный тест.",
         startQuiz: "Начать тест",
         error: "Произошла ошибка",
         errorTimeout: "Ответ занял слишком много времени. Проверьте сеть и попробуйте снова.",
@@ -174,11 +178,13 @@ const labels = {
     },
     en: {
         title: "AI Career Advisor",
-        subtitle: "Detailed analysis based on your psychological profile",
+        subtitle: "A recommendation based on your test answers",
         badge: "AI Advisor",
         generating: "AI is analyzing...",
         generatingDesc: "Your quiz result is being analyzed by artificial intelligence",
-        section1: "Personality Analysis",
+        section1: "What your answers show",
+        disclaimer: "This is AI advice based on your test answers, not a psychologist's assessment. For an important decision, talk to a teacher or school counsellor.",
+        directionMatch: "Direction match from the test",
         section2: "Career Recommendations",
         section3: "Explanation",
         section4: "Success Prediction",
@@ -192,7 +198,7 @@ const labels = {
         duration: "Duration",
         back: "Back",
         noQuiz: "Take the quiz first",
-        noQuizDesc: "To get an AI recommendation, complete the psychological test.",
+        noQuizDesc: "To get an AI recommendation, complete the career test.",
         startQuiz: "Start Quiz",
         error: "An error occurred",
         errorTimeout: "The response took too long. Check your connection and try again.",
@@ -490,6 +496,9 @@ const CareerAdvisorReport = () => {
                                 {report.personalityAnalysis}
                             </p>
                         </div>
+                        <p className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
+                            {t.disclaimer}
+                        </p>
 
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Object.entries(mmtScores || {}).map(([key, val]) => (
@@ -516,6 +525,11 @@ const CareerAdvisorReport = () => {
 
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={Target} title={t.section2} color="from-blue-500 to-cyan-500" />
+                    {report.careerRecommendations?.[0]?.matchPercentage > 0 && (
+                        <p className="mt-2 text-sm font-semibold text-muted-foreground">
+                            {t.directionMatch}: <span className="font-black text-primary">{report.careerRecommendations[0].matchPercentage}%</span>
+                        </p>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
                         {report.careerRecommendations?.map((career, idx) => (
                             <motion.div
@@ -539,22 +553,6 @@ const CareerAdvisorReport = () => {
                                     <p className="text-muted-foreground text-sm leading-relaxed">
                                         {career.shortDescription}
                                     </p>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2.5 flex-1 bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${career.matchPercentage}%` }}
-                                                transition={{ duration: 1.2, delay: 0.5 + idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
-                                                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
-                                            />
-                                        </div>
-                                        <span className="text-sm font-black text-blue-400 min-w-[40px] text-right">
-                                            {career.matchPercentage}%
-                                        </span>
-                                    </div>
-                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-40">
-                                        {t.match}
-                                    </span>
                                 </div>
                             </motion.div>
                         ))}

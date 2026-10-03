@@ -381,7 +381,7 @@ const resources = {
             dashboard: {
                 welcome: "Welcome",
                 profile: "Personal Dashboard",
-                radar_title: "Psychological Profile",
+                radar_title: "Scores by direction",
                 radar_hint: "Scores from your quiz answers",
                 top_cluster: "Your leading direction",
                 guest: "Guest",
@@ -524,7 +524,7 @@ const resources = {
             },
             scores: {
                 empty: "No passing score has been published for this specialty on the NTC portal.",
-                last_year: "passing score in {{year}}", drift: "change since {{year}}",
+                last_year: "passing score in {{year}}", no_score: "The NTC did not publish a passing score", source_note: "Latest data on the site: {{year}} (from stat.ntc.tj, taken 24.09.2026). «—» means the NTC did not publish a score.", drift: "change since {{year}}",
                 competition: "applicants per place", seats_short: "places",
                 by_uni: "Institutions in {{year}}", th_uni: "Institution", th_score: "Score",
                 th_seats: "Places", th_pay: "Form", source: "Source: {{name}}", ntc: "National Testing Center",

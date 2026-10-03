@@ -39,6 +39,8 @@ export default function AdmissionScores({ careerId }) {
     const peak = Math.max(...years.map((y) => y.maxScore ?? 0), 1);
     const first = years[0];
     const last = years[years.length - 1];
+    // Соли охирин бо бал (дар 2025 барои ~19% ихтисосҳо НМТ бал нашр накардааст — «0» нест, балки «—»).
+    const lastScored = [...years].reverse().find((y) => y.minScore != null) || null;
     const drift = first.avgScore && last.avgScore
         ? Math.round((last.avgScore - first.avgScore) * 10) / 10
         : null;
@@ -48,10 +50,12 @@ export default function AdmissionScores({ careerId }) {
             <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
                 <div>
                     <div className="text-3xl font-extrabold tabular-nums text-foreground">
-                        {last.minScore}<span className="text-muted-foreground"> – </span>{last.maxScore}
+                        {lastScored ? <>{lastScored.minScore}<span className="text-muted-foreground"> – </span>{lastScored.maxScore}</> : "—"}
                     </div>
                     <div className="text-[13px] text-muted-foreground">
-                        {t("scores.last_year", "бали гузариш дар {{year}}", { year: last.year })}
+                        {lastScored
+                            ? t("scores.last_year", "бали гузариш дар {{year}}", { year: lastScored.year })
+                            : t("scores.no_score", "НМТ бали гузаришро нашр накардааст")}
                     </div>
                 </div>
                 {drift !== null && (
@@ -90,7 +94,7 @@ export default function AdmissionScores({ careerId }) {
                                 <div
                                     className="w-full max-w-[3rem] rounded-t-[0.5rem] bg-gradient-to-t from-primary/70 to-primary"
                                     style={{ height: `${height}%` }}
-                                    title={`${year.minScore} – ${year.maxScore}`}
+                                    title={year.minScore != null ? `${year.minScore} – ${year.maxScore}` : t("scores.no_score", "НМТ бали гузаришро нашр накардааст")}
                                 />
                             </div>
                             <span className="text-[12px] tabular-nums text-muted-foreground">{year.year}</span>
@@ -101,6 +105,10 @@ export default function AdmissionScores({ careerId }) {
                     );
                 })}
             </div>
+
+            <p className="text-[12px] text-muted-foreground">
+                {t("scores.source_note", "Маълумоти охирин дар сайт: соли {{year}} (аз stat.ntc.tj, гирифта 24.09.2026). «—» — НМТ бал нашр накардааст.", { year: last.year })}
+            </p>
 
             {data.universities?.length > 0 && (
                 <div>

@@ -2547,42 +2547,39 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         const languageName = this.getLanguageName(lang);
         const languageInstructions = {
             Tajik: {
-                task: 'Таҳлили амиқи шахсият ва тавсияҳои касбиро ПУРРА БО ЗАБОНИ ТОҶИКӢ (бо алифбои кириллии тоҷикӣ) омода кунед. Тавсияҳо бояд ба ихтисосҳои воқеии боло зикршуда асос ёбанд.',
+                task: 'Хулосаи кӯтоҳи он чи ҷавобҳои санҷиш дар бораи шавқҳои корбар нишон медиҳанд (НА таҳлили психологӣ ва НА ташхиси шахсият) ва тавсияҳои касбиро ПУРРА БО ЗАБОНИ ТОҶИКӢ (бо алифбои кириллии тоҷикӣ) омода кунед. Тавсияҳо бояд ба ихтисосҳои воқеии боло зикршуда асос ёбанд.',
                 format: 'Ҷавобро ТАНҲО дар қолаби JSON-и зерин баргардонед (бидуни ягон матни иловагӣ ё блокҳои код):',
-                personalityAnalysis: "Таҳлили муфассали психологии корбар дар асоси кластерҳои MMT",
+                personalityAnalysis: "Он чи ҷавобҳои шумо нишон медиҳанд: шавқҳо ва тарзи кор, бо такя ба ҷавобҳои мушаххас. Ҳукм дар бораи шахсият накунед.",
                 name: "Номи ихтисос (аз рӯйхати боло)",
                 shortDescription: "Тавсифи мухтасар ва чаро ин ихтисос ба ин шахс мувофиқ аст",
                 career: "Номи ихтисос",
-                reason: "Сабаби мушаххас ва илмӣ барои интихоби ин ихтисос дар асоси профили MMT-и корбар",
-                reasoning: "Шарҳи он ки чаро эҳтимолияти муваффақият маҳз ҳамин қадар аст",
+                reason: "Сабаби мушаххаси интихоби ин ихтисос: кадом ҷавобҳо ва самт ба он ишора мекунанд",
                 targetCareer: "Ихтисоси асосӣ барои оғоз",
                 stepTitle: "Номи қадам (масалан, Омӯзиши иловагӣ)",
                 stepDuration: "6 моҳ / 1 сол",
                 stepDescription: "Тавсифи пурраи он ки дар ин қадам чӣ бояд кард"
             },
             Russian: {
-                task: 'Подготовьте глубокий психологический анализ личности и профессиональные рекомендации ПОЛНОСТЬЮ НА РУССКОМ ЯЗЫКЕ. Рекомендации должны быть основаны на реальных специальностях, указанных выше.',
+                task: 'Подготовьте краткий вывод о том, что ответы теста говорят об интересах пользователя (НЕ психологический анализ и НЕ диагностика личности), и профессиональные рекомендации ПОЛНОСТЬЮ НА РУССКОМ ЯЗЫКЕ. Рекомендации должны быть основаны на реальных специальностях, указанных выше.',
                 format: 'Возвращайте ответ СТРОГО в следующем формате JSON (без какого-либо дополнительного текста или блоков кода):',
-                personalityAnalysis: "Подробный психологический анализ пользователя на основе кластеров MMT",
+                personalityAnalysis: "Что показывают ваши ответы: интересы и стиль работы, со ссылкой на конкретные ответы. Не делайте выводов о личности.",
                 name: "Название специальности (из списка выше)",
                 shortDescription: "Краткое описание и почему эта специальность подходит человеку",
                 career: "Название специальности",
-                reason: "Конкретная научная причина выбора этой специальности на основе профиля MMT",
-                reasoning: "Объяснение, почему вероятность успеха именно такая",
+                reason: "Конкретная причина выбора этой специальности: какие ответы и направление на неё указывают",
                 targetCareer: "Основная специальность для старта",
                 stepTitle: "Название шага (например, Дополнительное обучение)",
                 stepDuration: "6 месяцев / 1 год",
                 stepDescription: "Полное описание того, что нужно сделать на этом шаге"
             },
             English: {
-                task: 'Prepare a deep personality analysis and career recommendations COMPLETELY IN ENGLISH. Recommendations must be based on the real careers listed above.',
+                task: 'Prepare a short summary of what the test answers say about the user\'s interests (NOT a psychological analysis and NOT a personality diagnosis) and career recommendations COMPLETELY IN ENGLISH. Recommendations must be based on the real careers listed above.',
                 format: 'Return the response STRICTLY in the following JSON format (without any extra text or code blocks):',
-                personalityAnalysis: "Detailed psychological analysis of the user based on MMT clusters",
+                personalityAnalysis: "What your answers show: interests and working style, referring to specific answers. Do not make claims about personality.",
                 name: "Career name (from the list above)",
                 shortDescription: "Brief description and why this career suits the person",
                 career: "Career name",
-                reason: "Specific and scientific reason for choosing this career based on the user's MMT profile",
-                reasoning: "Explanation of why the probability of success is exactly this much",
+                reason: "Specific reason for this career: which answers and direction point to it",
                 targetCareer: "Main career to start with",
                 stepTitle: "Step name (e.g. Additional training)",
                 stepDuration: "6 months / 1 year",
@@ -2613,7 +2610,7 @@ ${allowedNames.map((n) => `  • ${n}`).join('\n')}
 DETAILED QUIZ ANSWERS FROM THE LAST TEST:
 ${quizAnswersContext}
 
-Use the detailed answers above, not only the numeric scores. Explain what the user's answers reveal about interests, work style, learning style, and career fit.
+Use the detailed answers above, not only the numeric scores. Describe what the answers show about interests and work style. You are NOT a psychologist: do not diagnose personality, do not write "you are a natural leader" type claims, do not call anything scientific.
 For learning resources use ONLY items listed in the careers' learningResources above. Do NOT invent book titles, authors, course names or URLs; if none are listed, name only well-known platforms (Stepik, Coursera, Khan Academy) without specific titles.
 Include a QUALITATIVE outlook for the target career (trends, opportunities, risks, skills that will matter) — WITHOUT any numbers, percentages, salaries, probabilities or demand levels. Nobody has data for such forecasts; do not invent them.
 

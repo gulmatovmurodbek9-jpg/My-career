@@ -80,7 +80,8 @@ export class UsersService {
         if (user.role === UserRole.ADMIN) throw new ForbiddenException('Ҳисоби админро аз ин ҷо нест кардан мумкин нест');
         await this.usersRepository.manager.transaction(async (manager) => {
             await manager.query('DELETE FROM appointment WHERE user_id = $1 OR specialist_id = $1', [id]);
-            await manager.query('DELETE FROM quiz_attempts WHERE "userId" = $1', [id]).catch(() => undefined);
+            // Бе .catch: дар PostgreSQL хато тамоми транзаксияро бекор мекунад — бигзор намоён бошад.
+            await manager.query('DELETE FROM quiz_attempts WHERE "userId" = $1', [id]);
             await manager.getRepository(User).delete(id);
         });
     }

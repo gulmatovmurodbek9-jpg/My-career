@@ -15,6 +15,13 @@ const TEXT = {
         feedback: "Баҳои хонандагон",
         feedbackText: "Миёна {{avg}} аз 5 ({{count}} баҳо)",
         none: "ҳанӯз нест",
+        pastTitle: "Натиҷаҳо то имрӯз",
+        pastHint: "{{n}} корбари воқеӣ (корбарони намоишӣ ҳисоб нашудаанд). Ҷавобҳои ҳар савол нигоҳ дошта нашуда буданд, бинобар ин α аз инҳо ҳисоб намешавад.",
+        clear: "Натиҷаи равшан",
+        clearHint: "самти аввал аз дуюм камаш 15% пеш",
+        avgTop: "Холи миёнаи самти аввал",
+        newTitle: "Аз имрӯз (бо ҷавобҳо)",
+        names: { c1: "Табиӣ-техникӣ", c2: "Иқтисод-география", c3: "Филология-санъат", c4: "Ҷомеа-ҳуқуқ", c5: "Тиб-варзиш" },
     },
     ru: {
         title: "Качество теста",
@@ -27,6 +34,13 @@ const TEXT = {
         feedback: "Оценки учеников",
         feedbackText: "Среднее {{avg}} из 5 ({{count}} оценок)",
         none: "пока нет",
+        pastTitle: "Результаты до сегодня",
+        pastHint: "{{n}} реальных пользователей (демо-аккаунты не учтены). Ответы на каждый вопрос не сохранялись, поэтому α по ним не считается.",
+        clear: "Чёткий результат",
+        clearHint: "первое направление опережает второе минимум на 15%",
+        avgTop: "Средний балл первого направления",
+        newTitle: "С сегодняшнего дня (с ответами)",
+        names: { c1: "Естественно-технич.", c2: "Экономика-геогр.", c3: "Филология-искусство", c4: "Общество-право", c5: "Медицина-спорт" },
     },
     en: {
         title: "Test quality",
@@ -39,6 +53,13 @@ const TEXT = {
         feedback: "Student ratings",
         feedbackText: "Average {{avg}} of 5 ({{count}} ratings)",
         none: "none yet",
+        pastTitle: "Results so far",
+        pastHint: "{{n}} real users (demo accounts excluded). Per-question answers were not stored, so α cannot be computed from these.",
+        clear: "Clear result",
+        clearHint: "the top direction leads the second by at least 15%",
+        avgTop: "Average score of the top direction",
+        newTitle: "From today (with answers)",
+        names: { c1: "Natural-technical", c2: "Economics-geography", c3: "Philology-arts", c4: "Society-law", c5: "Medicine-sport" },
     },
 };
 const fill = (text, values) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
@@ -55,6 +76,44 @@ export default function TestQuality({ data }) {
                 <h2 className="text-lg font-black text-foreground">{text.title}</h2>
                 <span className="text-sm text-muted-foreground">{text.attempts}: <b className="text-foreground">{data.attempts}</b></span>
             </div>
+
+            {data.results?.users > 0 && (
+                <div className="rounded-xl border border-border p-4 space-y-3">
+                    <div>
+                        <div className="text-sm font-bold text-foreground">{text.pastTitle}</div>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">{fill(text.pastHint, { n: data.results.users })}</p>
+                    </div>
+                    <div className="space-y-2">
+                        {["c1", "c2", "c3", "c4", "c5"].map((key) => {
+                            const count = data.results.byCluster?.[key] || 0;
+                            const share = Math.round((count / data.results.users) * 100);
+                            return (
+                                <div key={key}>
+                                    <div className="mb-1 flex justify-between text-[13px]">
+                                        <span className="font-semibold text-foreground">{text.names[key]}</span>
+                                        <span className="tabular-nums text-muted-foreground">{count} · {share}%</span>
+                                    </div>
+                                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                        <div className="h-full rounded-full bg-primary" style={{ width: `${share}%` }} />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-xl bg-muted/40 p-3">
+                            <div className="text-xl font-black text-foreground">{data.results.clearShare}%</div>
+                            <div className="text-[12px] font-semibold text-muted-foreground">{text.clear} — {text.clearHint}</div>
+                        </div>
+                        <div className="rounded-xl bg-muted/40 p-3">
+                            <div className="text-xl font-black text-foreground">{data.results.averageTop}%</div>
+                            <div className="text-[12px] font-semibold text-muted-foreground">{text.avgTop}</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="text-sm font-bold text-foreground">{text.newTitle}</div>
 
             <div>
                 <div className="text-sm font-bold text-foreground">{text.alpha}</div>

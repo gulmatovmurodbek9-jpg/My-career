@@ -9,6 +9,7 @@ const TEXT = {
         attempts: "Супоришҳо (бо ҷавобҳо)",
         alpha: "Эътимоднокӣ (Cronbach's α) аз рӯи самт",
         alphaHint: "0,7 ва болотар — хуб; 0,6–0,7 — қобили қабул; камтар — саволҳои ин самт бояд дида шаванд.",
+        alphaFew: "Барои α камаш 30 супориши пурра лозим аст — ҳоло {{n}}. Рақам ҳанӯз боэътимод нест.",
         retest: "Такрор (test–retest)",
         retestText: "{{users}} корбар ду бор супориданд; самти {{same}} нафар ({{share}}%) ҳамон монд.",
         feedback: "Баҳои хонандагон",
@@ -20,6 +21,7 @@ const TEXT = {
         attempts: "Попытки (с ответами)",
         alpha: "Надёжность (альфа Кронбаха) по направлениям",
         alphaHint: "0,7 и выше — хорошо; 0,6–0,7 — приемлемо; ниже — вопросы направления нужно пересмотреть.",
+        alphaFew: "Для α нужно минимум 30 полных прохождений — сейчас {{n}}. Число пока ненадёжно.",
         retest: "Повтор (test–retest)",
         retestText: "{{users}} пользователей прошли дважды; у {{same}} ({{share}}%) направление не изменилось.",
         feedback: "Оценки учеников",
@@ -31,6 +33,7 @@ const TEXT = {
         attempts: "Attempts (with answers)",
         alpha: "Reliability (Cronbach's α) by direction",
         alphaHint: "0.7 and above — good; 0.6–0.7 — acceptable; lower — review that direction's questions.",
+        alphaFew: "α needs at least 30 complete attempts — {{n}} so far. The number is not reliable yet.",
         retest: "Repeat (test–retest)",
         retestText: "{{users}} users took it twice; for {{same}} ({{share}}%) the direction stayed the same.",
         feedback: "Student ratings",
@@ -65,7 +68,7 @@ export default function TestQuality({ data }) {
                         </div>
                     ))}
                 </div>
-                <p className="mt-2 text-[13px] text-muted-foreground">{data.alphaNote || text.alphaHint}</p>
+                <p className="mt-2 text-[13px] text-muted-foreground">{(data.completeAttempts ?? 0) < 30 ? fill(text.alphaFew, { n: data.completeAttempts ?? 0 }) : text.alphaHint}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

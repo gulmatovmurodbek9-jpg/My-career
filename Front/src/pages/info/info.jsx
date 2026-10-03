@@ -37,6 +37,7 @@ import AdmissionScores from "../../components/AdmissionScores";
 import { API } from "../../lib/config";
 import { useToast } from "../../components/toast/ToastProvider";
 import { resourceUrl } from "../../lib/resourceLinks";
+import { splitBooks, usefulCertifications } from "../../lib/resourceFilters";
 import { buildRoadmap } from "../../lib/buildRoadmap";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { withLang } from "../../lib/apiLang";
@@ -402,7 +403,7 @@ const Info = () => {
   const salary = career.salaryAndMarket;
   const techs = career.technologies || [];
   const opportunities = career.careerOpportunities || [];
-  const certs = career.certification || [];
+  const certs = usefulCertifications(career.certification);
   const unis = career.universities || [];
   const resources = career.learningResources;
   // 76/77: бе такрор ва бе худи ҳамин ихтисос.
@@ -833,19 +834,19 @@ const Info = () => {
           {resources && (
             <Section icon={BookOpen} title={t("career_page.resources_title")} subtitle={t("career_page.resources_sub")} gradient="from-rose-500 to-pink-500">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {resources.books?.length > 0 && (
-                  <div>
+                {[["books", splitBooks(resources.books).books], ["topics", splitBooks(resources.books).topics]].map(([kind, items]) => items.length > 0 && (
+                  <div key={kind}>
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
                       <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-primary" /></div>
-                      {t("career_page.books")}
+                      {kind === "books" ? t("career_page.books") : t("career_page.read_topics", "Мавзӯъҳо барои хондан")}
                     </h3>
                     <div className="space-y-1.5">
-                      {resources.books.map((book, i) => (
+                      {items.map((book, i) => (
                         <ResourceItem key={i} name={book} />
                       ))}
                     </div>
                   </div>
-                )}
+                ))}
                 {resources.courses?.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">

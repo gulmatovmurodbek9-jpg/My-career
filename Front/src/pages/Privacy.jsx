@@ -1,6 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router";
+import { API } from "../lib/config";
+import { useAuthStore } from "../store/authStore";
 
 // Сиёсати махфият: истифодабарандагон асосан хонандагони ноболиғанд — бо забони содда,
 // чӣ ҷамъ мешавад, ба кӣ меравад ва чӣ тавр нест кардан мумкин.
@@ -17,7 +21,7 @@ const CONTENT = {
             ["Мӯҳлати нигоҳдорӣ", "Супоришҳои тест 12 моҳ нигоҳ дошта мешаванд ва баъд худкор нест мешаванд. Ҳисоб ва таърихи сӯҳбат то он вақте ки шумо нест кардани онро напурсед."],
             ["Ноболиғон", "Сайт барои хонандагон аст. Тест бе бақайдгирӣ кор мекунад. Агар шумо аз 16 сол хурд бошед, ҳисобро бо розигии падару модар ё омӯзгор созед; волидон метавонанд нест кардани маълумоти фарзандро бипурсанд."],
             ["Мо намекунем", "Маълумотро намефурӯшем, реклама нишон намедиҳем ва ба мактаб ё шахсони дигар намедиҳем."],
-            ["Нест кардан ва савол", "Барои нест кардани ҳисоб ва ҳамаи маълумот ё ҳар савол дар бораи махфият ба " + EMAIL + " нависед — дар 7 рӯз ҷавоб медиҳем."],
+            ["Нест кардан ва савол", "Ҳисоби худро дар поёни ҳамин саҳифа худатон нест карда метавонед (баъди ворид шудан). Барои ҳар савол дар бораи махфият ба " + EMAIL + " нависед — дар 7 рӯз ҷавоб медиҳем."],
         ],
     },
     ru: {
@@ -30,7 +34,7 @@ const CONTENT = {
             ["Срок хранения", "Прохождения теста хранятся 12 месяцев и затем удаляются автоматически. Аккаунт и история чата — пока вы не попросите их удалить."],
             ["Несовершеннолетние", "Сайт создан для школьников. Тест работает без регистрации. Если вам меньше 16 лет, создавайте аккаунт с согласия родителей или учителя; родители могут попросить удалить данные ребёнка."],
             ["Чего мы не делаем", "Не продаём данные, не показываем рекламу и не передаём их школе или третьим лицам."],
-            ["Удаление и вопросы", "Чтобы удалить аккаунт и все данные или задать вопрос о конфиденциальности, напишите на " + EMAIL + " — ответим в течение 7 дней."],
+            ["Удаление и вопросы", "Аккаунт можно удалить самостоятельно внизу этой страницы (после входа). С любым вопросом о конфиденциальности пишите на " + EMAIL + " — ответим в течение 7 дней."],
         ],
     },
     en: {
@@ -43,14 +47,60 @@ const CONTENT = {
             ["Retention", "Test attempts are kept for 12 months and then deleted automatically. Your account and chat history are kept until you ask us to delete them."],
             ["Minors", "The site is for school students. The test works without registration. If you are under 16, create an account with a parent's or teacher's consent; parents can ask us to delete their child's data."],
             ["What we do not do", "We do not sell data, show ads or pass it to schools or third parties."],
-            ["Deletion and questions", "To delete your account and all data, or with any privacy question, email " + EMAIL + " — we reply within 7 days."],
+            ["Deletion and questions", "You can delete your account yourself at the bottom of this page (after signing in). For any privacy question, email " + EMAIL + " — we reply within 7 days."],
         ],
     },
 };
 
+const DELETE_TEXT = {
+    tj: { title: "Ҳисобро нест кардан", hint: "Ҳисоб, захираҳо, лайкҳо, таърихи сӯҳбат ва натиҷаҳои тести шумо якбора нест мешаванд. Баргардонидан мумкин нест.", button: "Ҳисобамро нест кун", confirm: "Ҳисоб ва ҳамаи маълумотатонро бештар барнагардонед. Нест кунем?", error: "Нест карда нашуд. Баъдтар кӯшиш кунед ё ба почта нависед." },
+    ru: { title: "Удалить аккаунт", hint: "Аккаунт, сохранённое, лайки, история чата и результаты теста удалятся сразу. Восстановить нельзя.", button: "Удалить мой аккаунт", confirm: "Аккаунт и все данные нельзя будет вернуть. Удалить?", error: "Не удалось удалить. Попробуйте позже или напишите на почту." },
+    en: { title: "Delete account", hint: "Your account, saved items, likes, chat history and test results are deleted at once. This cannot be undone.", button: "Delete my account", confirm: "Your account and all data cannot be restored. Delete?", error: "Could not delete. Try later or email us." },
+};
+
+// Корбари воридшуда ҳисобашро худаш нест мекунад — бе навиштани почта.
+function DeleteAccount({ lang }) {
+    const text = DELETE_TEXT[lang] || DELETE_TEXT.tj;
+    const { token, logout } = useAuthStore();
+    const navigate = useNavigate();
+    const [busy, setBusy] = React.useState(false);
+    const [error, setError] = React.useState("");
+    if (!token) return null;
+    const remove = async () => {
+        if (!window.confirm(text.confirm)) return;
+        setBusy(true);
+        setError("");
+        try {
+            await axios.delete(`${API}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+            logout();
+            navigate("/");
+        } catch {
+            setError(text.error);
+            setBusy(false);
+        }
+    };
+    return (
+        <section className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
+            <h2 className="font-bold text-foreground">{text.title}</h2>
+            <p className="mt-1.5 leading-relaxed text-muted-foreground">{text.hint}</p>
+            <button
+                type="button"
+                onClick={remove}
+                disabled={busy}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60 cursor-pointer"
+            >
+                <Trash2 className="h-4 w-4" aria-hidden />
+                {text.button}
+            </button>
+            {error && <p className="mt-2 text-sm font-semibold text-destructive" role="status">{error}</p>}
+        </section>
+    );
+}
+
 export default function Privacy() {
     const { i18n } = useTranslation();
-    const content = CONTENT[(i18n.language || "tj").slice(0, 2)] || CONTENT.tj;
+    const lang = (i18n.language || "tj").slice(0, 2);
+    const content = CONTENT[lang] || CONTENT.tj;
     return (
         <div className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
             <div className="flex items-center gap-3">
@@ -67,6 +117,7 @@ export default function Privacy() {
                         <p className="mt-1.5 leading-relaxed text-muted-foreground">{body}</p>
                     </section>
                 ))}
+                <DeleteAccount lang={lang} />
             </div>
         </div>
     );

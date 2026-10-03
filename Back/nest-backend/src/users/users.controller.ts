@@ -186,6 +186,16 @@ export class UsersController {
         return this.usersService.getAiUsage(req.user.userId);
     }
 
+    // Пеш аз ':id': вагарна «me» ҳамчун id-и админ гирифта мешуд.
+    @Delete('me')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Delete my own account and all my data' })
+    async deleteMe(@Req() req: any) {
+        await this.usersService.deleteOwnAccount(req.user.userId);
+        return { message: 'Ҳисоб ва ҳамаи маълумоти шумо нест карда шуд' };
+    }
+
     @Delete(':id')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles('admin')

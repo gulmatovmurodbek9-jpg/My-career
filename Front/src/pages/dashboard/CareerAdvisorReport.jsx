@@ -586,6 +586,9 @@ const CareerAdvisorReport = () => {
                     </div>
                 </motion.section>
 
+                {/* «Эҳтимоли муваффақият»: AI ин рақамро бе маълумот месохт — сервер дигар намедиҳад.
+                    Ҳисоботҳои кӯҳна ҳам ин бахшро нишон намедиҳанд. */}
+                {false && report.successPrediction?.length > 0 && (
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={TrendingUp} title={t.section4} color="from-emerald-500 to-green-500" />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
@@ -646,6 +649,7 @@ const CareerAdvisorReport = () => {
                         ))}
                     </div>
                 </motion.section>
+                )}
 
                 <motion.section variants={itemVariants}>
                     <SectionHeader icon={Route} title={t.section5} color="from-rose-500 to-pink-500" />
@@ -736,7 +740,8 @@ const CareerAdvisorReport = () => {
                                 <TextList title={t.opportunities} items={report.tenYearOutlook.opportunities} />
                                 <TextList title={t.risks} items={report.tenYearOutlook.risks} />
                             </div>
-                            {(report.tenYearOutlook.salaryOutlook || report.tenYearOutlook.demandOutlook) && (
+                            {/* Маош ва талабот баъди 10 сол — пешгӯии бофта буд, нишон дода намешавад. */}
+                            {false && (report.tenYearOutlook.salaryOutlook || report.tenYearOutlook.demandOutlook) && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     {report.tenYearOutlook.salaryOutlook && (
                                         <SalaryOutlookCard data={report.tenYearOutlook.salaryOutlook} t={t} />

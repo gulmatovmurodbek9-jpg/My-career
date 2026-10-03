@@ -80,7 +80,7 @@ export const FAMILIES: Record<string, Family> = {
         books: ['The Web Application Hacker\'s Handbook', 'Криптография и безопасность сетей — Столлингс'],
         courses: ['TryHackMe', 'Cisco CyberOps', 'Coursera — IBM Cybersecurity'],
         blogs: ['OWASP', 'Krebs on Security', 'HackerOne Blog'],
-        certification: ['CompTIA Security+', 'CEH', 'CISSP', 'OSCP'],
+        certification: ['CompTIA Security+', 'CEH'],
         advice: 'Малакаи худро танҳо дар системаҳои худӣ ё платформаҳои иҷозатдодашуда (TryHackMe, HackTheBox) машқ кунед — қонун дар ин соҳа қатъӣ аст. CompTIA Security+ барои оғоз беҳтарин сертификат аст.',
     },
     artificialIntelligence: {
@@ -94,7 +94,7 @@ export const FAMILIES: Record<string, Family> = {
         books: ['Hands-On Machine Learning — Géron', 'Deep Learning — Goodfellow'],
         courses: ['Machine Learning Specialization — Andrew Ng', 'fast.ai'],
         blogs: ['Kaggle', 'Papers with Code', 'Hugging Face'],
-        certification: ['TensorFlow Developer Certificate', 'AWS Certified Machine Learning'],
+        certification: ['AWS Certified Machine Learning', 'Google Data Analytics Certificate'],
         advice: 'Бе математика дар ин соҳа пеш рафтан ғайриимкон аст — агар он барои шумо душвор бошад, аввал онро мустаҳкам кунед. Дар Kaggle иштирок кунед: ин беҳтарин роҳи ҷамъоварии портфолио аст.',
     },
     telecommunications: {

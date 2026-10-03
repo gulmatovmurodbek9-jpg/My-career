@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, MoreThan, Not, Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
@@ -70,6 +70,19 @@ export class UsersService {
             throw new NotFoundException('Корбар ёфт нашуд');
         }
         await this.usersRepository.remove(user);
+    }
+
+    // Корбар ҳисоби худашро нест мекунад (ниг. /privacy): ҳисоб, захираҳо, лайкҳо,
+    // таърихи сӯҳбат ва супоришҳои тест. Админ худашро нест карда наметавонад.
+    async deleteOwnAccount(id: string): Promise<void> {
+        const user = await this.usersRepository.findOne({ where: { id } });
+        if (!user) throw new NotFoundException('Корбар ёфт нашуд');
+        if (user.role === UserRole.ADMIN) throw new ForbiddenException('Ҳисоби админро аз ин ҷо нест кардан мумкин нест');
+        await this.usersRepository.manager.transaction(async (manager) => {
+            await manager.query('DELETE FROM appointment WHERE user_id = $1 OR specialist_id = $1', [id]);
+            await manager.query('DELETE FROM quiz_attempts WHERE "userId" = $1', [id]).catch(() => undefined);
+            await manager.getRepository(User).delete(id);
+        });
     }
 
     async changeRole(id: string, newRole: string): Promise<Partial<User>> {

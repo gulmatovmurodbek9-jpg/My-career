@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
+import { resourcesForAi } from '../common/resource-filters';
 import { offeredForGrade, parseGrade } from '../common/grade';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, In } from 'typeorm';
@@ -2185,7 +2186,7 @@ export class CareerService {
                 `skills: ${career.skills ? JSON.stringify(career.skills) : 'not provided'}`,
                 `technologies: ${career.technologies?.join(', ') || 'not provided'}`,
                 `roadmap: ${career.roadmap ? JSON.stringify(career.roadmap) : 'not provided'}`,
-                `learningResources: ${career.learningResources ? JSON.stringify(career.learningResources) : 'not provided'}`,
+                `learningResources: ${career.learningResources ? JSON.stringify(resourcesForAi(career.learningResources)) : 'not provided'}`,
                 `careerOpportunities: ${career.careerOpportunities?.join(', ') || 'not provided'}`,
                 `universities: ${universities || 'not provided'}`,
             ].join('\n');
@@ -2329,7 +2330,14 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
             userLocation,
         });
         
-        let answer = await this.aiService.generateContent(prompt);
+        let answer: string;
+        try {
+            answer = await this.aiService.generateContent(prompt);
+        } catch (error) {
+            // AI ҷавоб надод — савол аз квота гирифта намешавад.
+            if (user && user.role !== UserRole.ADMIN) await this.refundAiQuota(user.id);
+            throw error;
+        }
 
         if (user && user.role !== UserRole.ADMIN) {
             const history = user.chatHistory || [];
@@ -2365,6 +2373,32 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         return Math.max(0, DAILY_LIMIT - Number(result[0].count));
     }
 
+    // Баргардонидани квота, агар AI хато дод (корбар саволашро гум намекунад).
+    async refundAiQuota(userId: string): Promise<void> {
+        if (!LIMIT_ON || !userId) return;
+        const today = new Date().toISOString().slice(0, 10);
+        await this.userRepository.manager.query(
+            `UPDATE "user" SET "aiDailyUsage" = jsonb_set("aiDailyUsage", '{count}',
+                to_jsonb(GREATEST(COALESCE(("aiDailyUsage"->>'count')::int, 0) - 1, 0)))
+             WHERE id = $1 AND "aiDailyUsage"->>'date' = $2`,
+            [userId, today],
+        ).catch(() => undefined);
+    }
+
+    // Ҳисобот ва муқоиса — гаронтарин дархостҳои AI — ҳам ба квотаи рӯзона дохиланд.
+    async withAiQuota<T>(userId: string | undefined, work: () => Promise<T>): Promise<T> {
+        if (!userId) return work();
+        const user = await this.userRepository.findOne({ where: { id: userId }, select: ['id', 'role'] });
+        const limited = !!user && user.role !== UserRole.ADMIN;
+        if (limited) await this.reserveAiQuota(userId);
+        try {
+            return await work();
+        } catch (error) {
+            if (limited) await this.refundAiQuota(userId);
+            throw error;
+        }
+    }
+
     async askAboutCareer(
         careerId: string,
         question: string,
@@ -2388,9 +2422,15 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         const remaining = limited ? await this.reserveAiQuota(user!.id) : null;
 
         const offerings = await this.findOfferings(careerId);
-        const answer = await this.aiService.generateContent(
-            this.buildSingleCareerPrompt(career, offerings, question, lang),
-        );
+        let answer: string;
+        try {
+            answer = await this.aiService.generateContent(
+                this.buildSingleCareerPrompt(career, offerings, question, lang),
+            );
+        } catch (error) {
+            if (limited) await this.refundAiQuota(user!.id);
+            throw error;
+        }
 
         if (limited) {
             const history = user!.chatHistory || [];
@@ -2485,7 +2525,7 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
             c.cluster?.clusterName ? `  cluster: ${c.cluster.clusterName}` : '',
             c.skills ? `  skills: ${JSON.stringify(c.skills)}` : '',
             c.technologies?.length ? `  technologies: ${c.technologies.join(', ')}` : '',
-            c.learningResources ? `  learningResources: ${JSON.stringify(c.learningResources)}` : '',
+            c.learningResources ? `  learningResources: ${JSON.stringify(resourcesForAi(c.learningResources))}` : '',
             c.roadmap ? `  roadmap: ${JSON.stringify(c.roadmap)}` : '',
             c.salaryAndMarket ? `  salaryAndMarket: ${JSON.stringify(c.salaryAndMarket)}` : '',
             c.careerOpportunities?.length ? `  opportunities: ${c.careerOpportunities.join(', ')}` : '',
@@ -2575,8 +2615,7 @@ ${quizAnswersContext}
 
 Use the detailed answers above, not only the numeric scores. Explain what the user's answers reveal about interests, work style, learning style, and career fit.
 For learning resources use ONLY items listed in the careers' learningResources above. Do NOT invent book titles, authors, course names or URLs; if none are listed, name only well-known platforms (Stepik, Coursera, Khan Academy) without specific titles.
-Include a concrete 10-year outlook for the target career in Tajikistan and globally: 1-3 years, 4-7 years, 8-10 years, opportunities, risks, and skills that will become more valuable.
-Also include estimated salary and demand outlook for the next 10 years. Make clear these are estimates, not guaranteed numbers. Use Tajikistan somoni per month when possible, with beginner/mid/senior ranges and explain what can increase or decrease salary.
+Include a QUALITATIVE outlook for the target career (trends, opportunities, risks, skills that will matter) — WITHOUT any numbers, percentages, salaries, probabilities or demand levels. Nobody has data for such forecasts; do not invent them.
 
 ВАЗИФА: ${instr.task}
 
@@ -2596,13 +2635,6 @@ ${instr.format}
       "reason": "${instr.reason}"
     }
   ],
-  "successPrediction": [
-    {
-      "career": "${instr.career}",
-      "probability": 85,
-      "reasoning": "${instr.reasoning}"
-    }
-  ],
   "careerRoadmap": {
     "targetCareer": "${instr.targetCareer}",
     "steps": [
@@ -2619,21 +2651,7 @@ ${instr.format}
     "midTerm": ["4-7 year trend"],
     "longTerm": ["8-10 year trend"],
     "opportunities": ["Opportunity"],
-    "risks": ["Risk or challenge"],
-    "salaryOutlook": {
-      "currency": "TJS/month",
-      "note": "These are approximate estimates, not guaranteed salaries.",
-      "current": { "beginner": "range", "mid": "range", "senior": "range" },
-      "in10Years": { "beginner": "range", "mid": "range", "senior": "range" },
-      "growthFactors": ["What can increase salary"],
-      "riskFactors": ["What can reduce salary"]
-    },
-    "demandOutlook": {
-      "currentDemand": "low/medium/high",
-      "in10YearsDemand": "low/medium/high",
-      "neededSpecialists": "estimated demand description for Tajikistan and remote market",
-      "why": ["Reason demand grows or falls"]
-    }
+    "risks": ["Risk or challenge"]
   }
 }
 `;
@@ -2682,7 +2700,14 @@ ${instr.format}
                     shortDescription: '',
                 }));
         }
-        for (const field of ['explanation', 'successPrediction']) {
+        // Пешгӯиҳои рақамӣ (эҳтимоли муваффақият, маош ва талабот баъди 10 сол) маълумот
+        // надоранд — агар AI ҳам онҳоро нависад, бардошта мешаванд.
+        delete report.successPrediction;
+        if (report?.tenYearOutlook) {
+            delete report.tenYearOutlook.salaryOutlook;
+            delete report.tenYearOutlook.demandOutlook;
+        }
+        for (const field of ['explanation']) {
             if (Array.isArray(report?.[field])) {
                 report[field] = report[field].filter((item: any) => keepReal(item?.career));
             }
@@ -2691,89 +2716,18 @@ ${instr.format}
             report.careerRoadmap.targetCareer = top3[0]?.name ?? '';
         }
 
-        const targetCareerName = report?.careerRoadmap?.targetCareer || top3[0]?.name || 'Target career';
-        const isTj = lang?.startsWith('tj');
-        const isRu = lang?.startsWith('ru');
-        const fallbackText = {
-            booksTitle: isTj ? `Китоби муқаддимавӣ барои ${targetCareerName}` : isRu ? `Вводная книга для ${targetCareerName}` : `Introductory handbook for ${targetCareerName}`,
-            booksDesc: isTj ? 'Аз асосҳо оғоз кунед: мафҳумҳои асосӣ, вазифаҳои амалӣ ва мисолҳои сода.' : isRu ? 'Начните с основ: ключевые понятия, практические задания и простые примеры.' : 'Start with a beginner-friendly book that explains core concepts and practice tasks.',
-            skillsTitle: isTj ? `Маҳоратҳои касбӣ барои ${targetCareerName}` : isRu ? `Профессиональные навыки для ${targetCareerName}` : `Professional skills for ${targetCareerName}`,
-            skillsDesc: isTj ? 'Барои фаҳмидани истилоҳҳо, тарзи кори ҳаррӯза ва малакаҳои амалӣ.' : isRu ? 'Для понимания терминов, ежедневного рабочего процесса и практических навыков.' : 'Use it to build terminology, daily workflow, and practical understanding.',
-            roadmapVideo: isTj ? `Роҳи омӯзиши ${targetCareerName} барои навомӯзон` : isRu ? `Дорожная карта ${targetCareerName} для начинающих` : `${targetCareerName} beginner roadmap`,
-            projectsVideo: isTj ? `Лоиҳаҳои амалӣ барои ${targetCareerName}` : isRu ? `Практические проекты для ${targetCareerName}` : `${targetCareerName} practical projects`,
-            foundationsCourse: isTj ? `Асосҳои ${targetCareerName}` : isRu ? `Основы ${targetCareerName}` : `${targetCareerName} foundations`,
-            courseDesc: isTj ? 'Курси сохторнок бо вазифаҳо ва сертификат интихоб кунед.' : isRu ? 'Выберите структурированный курс с заданиями и сертификатом.' : 'Choose a structured beginner course with assignments and certificates.',
-            officialPages: isTj ? 'Саҳифаҳои расмии қабули донишгоҳҳо' : isRu ? 'Официальные страницы приемных комиссий вузов' : 'Official university admissions pages',
-            officialDesc: isTj ? 'Барои санҷидани нарх, муҳлат ва талаботи қабул аз манбаи расмӣ истифода баред.' : isRu ? 'Проверяйте стоимость, срок обучения и требования приема на официальных страницах.' : 'Use official pages to verify tuition, duration, and admission requirements.',
-            marketPages: isTj ? 'Ҷойҳои корӣ ва талаботи бозори меҳнат' : isRu ? 'Вакансии и требования рынка труда' : 'Current labor-market vacancies',
-            marketDesc: isTj ? 'Вакансияҳои маҳаллӣ ва remote-ро санҷед, то малакаҳо ва маоши талабшавандаро бинед.' : isRu ? 'Проверяйте локальные и удаленные вакансии, чтобы понимать навыки и зарплатные ожидания.' : 'Check local and remote job posts to validate skills and salary demand.',
-            outlookSummary: isTj ? `${targetCareerName} дар 10 соли оянда бештар малакаҳои рақамӣ, портфолиои амалӣ ва омӯзиши доимиро талаб мекунад.` : isRu ? `${targetCareerName} в ближайшие 10 лет будет требовать сильных цифровых навыков, практического портфолио и постоянного обучения.` : `${targetCareerName} will likely require stronger digital skills, practical portfolios, and continuous learning over the next 10 years.`,
-            shortTerm: isTj ? 'Асосҳоро омӯзед, лоиҳаҳои хурд созед ва абзорҳои сатҳи entry-level-ро аз худ кунед.' : isRu ? 'Изучите основы, сделайте небольшие проекты и освойте инструменты начального уровня.' : 'Build fundamentals, complete small projects, and learn the tools used by entry-level specialists.',
-            midTerm: isTj ? 'Самти махсус интихоб кунед, портфолио созед ва таҷрибаи internship ё freelance гиред.' : isRu ? 'Выберите специализацию, соберите портфолио и получите опыт стажировки или фриланса.' : 'Specialize, create a portfolio, and gain internship or freelance experience.',
-            longTerm: isTj ? 'Ба сатҳи мутахассиси қавӣ, роҳбар, машваратчӣ, омӯзгор ё соҳибкорӣ гузаред.' : isRu ? 'Переходите к ролям эксперта, руководителя, консультанта, преподавателя или предпринимателя.' : 'Move toward expert, lead, consulting, teaching, or entrepreneurship roles.',
-            opportunity: isTj ? 'Кори remote, рақамикунонии соҳаҳо ва талаботи афзоянда ба мутахассисони амалӣ.' : isRu ? 'Удаленная работа, цифровизация отраслей и растущий спрос на практических специалистов.' : 'Remote work, digital transformation, and growing demand for practical specialists.',
-            risk: isTj ? 'Кӯҳна шудани малакаҳо, портфолиои заиф ва такя кардан танҳо ба назария.' : isRu ? 'Устаревание навыков, слабое портфолио и опора только на теорию.' : 'Outdated skills, weak portfolio, and relying only on theory without practice.',
-            answerInsight: isTj ? 'Ин ҷавоб дар таҳлили тавсия истифода шуд ва ба мувофиқати касбӣ таъсир дорад.' : isRu ? 'Этот ответ использован в логике рекомендации и помогает объяснить карьерное соответствие.' : 'This answer was included in the recommendation logic and helps explain the career fit.',
-            salaryNote: isTj ? 'Инҳо тахминанд, на маоши кафолатнок. Маош аз шаҳр, таҷриба, забон, портфолио ва кори remote вобаста аст.' : isRu ? 'Это ориентировочные оценки, не гарантированная зарплата. Доход зависит от города, опыта, языков, портфолио и удаленной работы.' : 'These are approximate estimates, not guaranteed salaries. Salary depends on city, experience, language skills, portfolio, and remote work.',
-            currentDemand: isTj ? 'миёна' : isRu ? 'средний' : 'medium',
-            futureDemand: isTj ? 'баланд' : isRu ? 'высокий' : 'high',
-            neededSpecialists: isTj ? 'Дар 10 соли оянда талабот ба мутахассисони дорои малакаи амалӣ, портфолио ва қобилияти кор бо технологияҳои нав зиёд мешавад.' : isRu ? 'В ближайшие 10 лет будет расти спрос на специалистов с практическими навыками, портфолио и умением работать с новыми технологиями.' : 'Over the next 10 years, demand will grow for specialists with practical skills, a portfolio, and the ability to work with new technologies.',
-            demandWhy: isTj ? 'Рақамикунонӣ, автоматизатсия ва талаботи бозори меҳнат ба натиҷаи амалӣ зиёд мешавад.' : isRu ? 'Цифровизация, автоматизация и спрос рынка на практический результат будут расти.' : 'Digitalization, automation, and market demand for practical results will increase.',
-            growthFactor: isTj ? 'Таҷрибаи воқеӣ, забони англисӣ/русӣ, портфолиои қавӣ, сертификатҳо ва кори remote маошро зиёд мекунанд.' : isRu ? 'Реальный опыт, английский/русский, сильное портфолио, сертификаты и удаленная работа повышают доход.' : 'Real experience, English/Russian, a strong portfolio, certifications, and remote work increase salary.',
-            salaryRisk: isTj ? 'Малакаҳои кӯҳна, набудани лоиҳаҳои амалӣ ва такя ба назария маошро паст нигоҳ медоранд.' : isRu ? 'Устаревшие навыки, отсутствие практических проектов и опора только на теорию ограничивают зарплату.' : 'Outdated skills, lack of practical projects, and relying only on theory keep salary lower.',
-        };
-        report.learningResources = report.learningResources || {
-            books: [
-                { title: fallbackText.booksTitle, description: fallbackText.booksDesc },
-                { title: fallbackText.skillsTitle, description: fallbackText.skillsDesc },
-            ],
-            videos: [
-                { title: fallbackText.roadmapVideo, description: isTj ? 'Ин мавзӯъро дар YouTube ҷустуҷӯ кунед ва playlist-и пурра интихоб кунед.' : isRu ? 'Найдите эту тему на YouTube и выберите полный плейлист.' : 'Search this topic on YouTube for a complete starter playlist.', platform: 'YouTube' },
-                { title: fallbackText.projectsVideo, description: isTj ? 'Бо дарсҳои project-based ва намунаҳои портфолио машқ кунед.' : isRu ? 'Практикуйтесь на проектных уроках и примерах портфолио.' : 'Practice with project-based lessons and portfolio examples.', platform: 'YouTube/freeCodeCamp' },
-            ],
-            courses: [
-                { title: fallbackText.foundationsCourse, description: fallbackText.courseDesc, platform: 'Coursera/edX/Udemy/freeCodeCamp' },
-            ],
-            sources: [
-                { title: fallbackText.officialPages, description: fallbackText.officialDesc },
-                { title: fallbackText.marketPages, description: fallbackText.marketDesc },
-            ],
-        };
-        report.tenYearOutlook = report.tenYearOutlook || {
-            summary: fallbackText.outlookSummary,
-            shortTerm: [fallbackText.shortTerm],
-            midTerm: [fallbackText.midTerm],
-            longTerm: [fallbackText.longTerm],
-            opportunities: [fallbackText.opportunity],
-            risks: [fallbackText.risk],
-        };
-        report.tenYearOutlook.salaryOutlook = report.tenYearOutlook.salaryOutlook || {
-            currency: 'TJS/month',
-            note: fallbackText.salaryNote,
-            current: {
-                beginner: '1 500 - 3 000',
-                mid: '3 500 - 7 000',
-                senior: '8 000 - 15 000+',
-            },
-            in10Years: {
-                beginner: '3 000 - 5 000',
-                mid: '7 000 - 14 000',
-                senior: '15 000 - 30 000+',
-            },
-            growthFactors: [fallbackText.growthFactor],
-            riskFactors: [fallbackText.salaryRisk],
-        };
-        report.tenYearOutlook.demandOutlook = report.tenYearOutlook.demandOutlook || {
-            currentDemand: fallbackText.currentDemand,
-            in10YearsDemand: fallbackText.futureDemand,
-            neededSpecialists: fallbackText.neededSpecialists,
-            why: [fallbackText.demandWhy],
-        };
-        report.quizAnswerAnalysis = report.quizAnswerAnalysis || quizAnswers.map((answer) => ({
-            question: answer.question || answer.questionId,
-            answer: answer.selectedText || String(answer.selectedValue),
-            insight: fallbackText.answerInsight,
-        }));
+        // Захираи сохта нест: пештар агар AI ин қисмҳоро намедод, барои ҲАР ихтисос як хел
+        // «китоби муқаддимавӣ», маоши «1 500 – 3 000», «талабот: баланд» ва «ин ҷавоб дар
+        // тавсия истифода шуд» навишта мешуд — маълумоте, ки вуҷуд надорад. Ҳоло қисми
+        // холӣ дар саҳифа нишон дода намешавад.
+        if (Array.isArray(report?.quizAnswerAnalysis)) {
+            report.quizAnswerAnalysis = report.quizAnswerAnalysis.filter((item: any) => item?.insight);
+        } else if (quizAnswers.length) {
+            report.quizAnswerAnalysis = quizAnswers.map((answer) => ({
+                question: answer.question || answer.questionId,
+                answer: answer.selectedText || String(answer.selectedValue),
+            }));
+        }
 
         return {
             mmtScores: mmt,
@@ -2811,7 +2765,7 @@ ${instr.format}
                 skillsRequired: ["Маҳорат 1", "Маҳорат 2"],
                 marketDemand: "high/medium/low",
                 learningDifficulty: "easy/medium/hard",
-                salaryRange: "Маоши тахминӣ (масалан, 3000-5000 сомонӣ)",
+                salaryRange: "холӣ гузоред — маошро сервер аз база илова мекунад",
                 fallbackBestCareerReason: 'Муқоиса дар асоси параметрҳои техникӣ.',
                 fallbackSummary: 'Маълумоти муфассал ёфт нашуд.',
                 fallbackUnavail: 'Таҳлили AI муваққатан дастнорас аст.',
@@ -2834,7 +2788,7 @@ ${instr.format}
                 skillsRequired: ["Навык 1", "Навык 2"],
                 marketDemand: "high/medium/low",
                 learningDifficulty: "easy/medium/hard",
-                salaryRange: "Ориентировочная зарплата (например, 3000-5000 сомони)",
+                salaryRange: "оставьте пустым — зарплату добавит сервер из базы",
                 fallbackBestCareerReason: 'Сравнение на основе технических параметров.',
                 fallbackSummary: 'Детальная информация не найдена.',
                 fallbackUnavail: 'Анализ AI временно недоступен.',
@@ -2857,7 +2811,7 @@ ${instr.format}
                 skillsRequired: ["Skill 1", "Skill 2"],
                 marketDemand: "high/medium/low",
                 learningDifficulty: "easy/medium/hard",
-                salaryRange: "Estimated salary (e.g. 3000-5000 Somoni)",
+                salaryRange: "leave empty — the server adds salary from the database",
                 fallbackBestCareerReason: 'Comparison based on technical parameters.',
                 fallbackSummary: 'Detailed information not found.',
                 fallbackUnavail: 'AI analysis is temporarily unavailable.',
@@ -2899,11 +2853,11 @@ ID: ${c.id}
         careersContext += `
 
 USER'S CUSTOM COMPARISON QUESTION:
-${compareQuestion?.trim() || 'No custom question. Compare broadly by fit, salary, demand, learning difficulty, pros/cons, and 10-year outlook.'}
+${compareQuestion?.trim() || 'No custom question. Compare broadly by fit, learning difficulty, pros/cons and qualitative future trends (no invented numbers).'}
 
 If the user asks about jobs/places, include workplaces and university/employer context when available.
-If the user asks about money, compare tuition and estimated salary clearly.
-If the user asks about 10 years, compare future demand, automation risk, salary growth, and skill changes.
+If the user asks about money, compare tuition from the data above; do NOT invent salary numbers.
+If the user asks about 10 years, describe trends and automation risk in words only — no numbers, percentages or forecasts.
 If the user asks for differences, give direct differences plus plus/minus for each career.
 `;
         if (candidates.length) {
@@ -2988,6 +2942,26 @@ ${instr.format}
             })
             .filter(Boolean)
             .slice(0, 3);
+
+        // Рақамҳо аз маълумоти мо, на аз AI: фоиз — мувофиқати САМТ-и ихтисос аз тест;
+        // маош — «тахмини муаллиф» аз база (танҳо барои ихтисосҳои бо тавсифи пурра).
+        const mmtScores = scores?.mmtClusters || scores || {};
+        const byCareer = new Map(careers.map((c) => [foldTajik(String(c.name).trim()), c]));
+        if (Array.isArray(report?.careerComparison)) {
+            for (const item of report.careerComparison) {
+                const career: any = byCareer.get(foldTajik(String(item?.career || '').trim()));
+                const clusterNo = career?.cluster?.clusterId;
+                const score = Number(mmtScores?.[`c${clusterNo}`]);
+                if (hasQuizScores && clusterNo && Number.isFinite(score)) {
+                    item.matchPercentage = Math.max(0, Math.min(100, Math.round((score / CareerService.MMT_MAX_SCORE) * 100)));
+                } else {
+                    delete item.matchPercentage;
+                }
+                const salary = career?.contentWritten ? career?.salaryAndMarket : null;
+                if (salary?.junior) item.salaryRange = `≈ ${salary.junior}${salary.mid ? ` … ${salary.mid}` : ''}`;
+                else delete item.salaryRange;
+            }
+        }
 
         return report;
     }

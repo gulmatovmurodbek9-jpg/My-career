@@ -221,7 +221,6 @@ export const cluster1Batch01: CareerContentBatch = [
             'мустаҳкам кунед. Дар Kaggle ҳисоб кушоед ва дар мусобиқаҳо иштирок кунед: ин беҳтарин роҳи ' +
             'ҷамъоварии портфолио аст. Ин соҳа зуд тағйир меёбад, пас омӯзиши доимӣ шарти асосӣ мебошад.',
         certification: [
-            'TensorFlow Developer Certificate',
             'AWS Certified Machine Learning',
             'Microsoft Certified: Azure AI Engineer Associate',
         ],
@@ -373,7 +372,7 @@ export const cluster1Batch01: CareerContentBatch = [
             'Дар ин соҳа қонун ва одоб хеле муҳим аст: малакаи худро танҳо дар системаҳои худӣ ё платформаҳои ' +
             'махсуси иҷозатдодашуда (TryHackMe, HackTheBox) машқ кунед. Сертификатҳо дар амният арзиши воқеӣ ' +
             'доранд — CompTIA Security+ барои оғоз хеле хуб аст.',
-        certification: ['CompTIA Security+', 'CEH — Certified Ethical Hacker', 'CISSP', 'OSCP'],
+        certification: ['CompTIA Security+', 'CEH — Certified Ethical Hacker'],
         durationYears: 4,
         degreeType: 'Бакалавр',
     },

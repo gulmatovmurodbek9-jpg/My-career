@@ -655,7 +655,7 @@ const resources = {
                 th_price: "Price (year)",
                 th_choose: "Choose",
                 non_state: "private",
-                books: "Books",
+                books: "Books", read_topics: "Topics to read about (find a textbook)",
                 courses: "Courses",
                 blogs: "Blogs",
                 golden_advice: "Key advice",

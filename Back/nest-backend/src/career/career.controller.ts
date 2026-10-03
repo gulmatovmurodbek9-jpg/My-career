@@ -241,7 +241,8 @@ export class CareerController {
         if (!body.scores) {
             throw new BadRequestException('Натиҷаҳои санҷишро фиристед');
         }
-        return this.careerService.generateCareerAdvisorReport(body.scores, body.lang || 'tj', body.quizProfile);
+        return this.careerService.withAiQuota(req.user?.userId, () =>
+            this.careerService.generateCareerAdvisorReport(body.scores, body.lang || 'tj', body.quizProfile));
     }
 
     @Post('compare')
@@ -255,6 +256,7 @@ export class CareerController {
         if (!body.careers || body.careers.length < 2) {
             throw new BadRequestException('Ҳадди ақал 2 ихтисосро интихоб кунед');
         }
-        return this.careerService.compareCarers(body.scores, body.careers, body.lang || 'tj', body.compareQuestion);
+        return this.careerService.withAiQuota(req.user?.userId, () =>
+            this.careerService.compareCarers(body.scores, body.careers, body.lang || 'tj', body.compareQuestion));
     }
 }

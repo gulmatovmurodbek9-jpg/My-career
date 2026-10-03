@@ -13,7 +13,6 @@
 |---|---|---|
 | `Back/nest-backend` | API ва база | NestJS · TypeORM · PostgreSQL |
 | `Front` | Сомонаи вебӣ | React · Vite · Tailwind · i18next |
-| `Mobile` | Барномаи мобилӣ | React Native · Expo |
 
 ## Оғоз кардан
 

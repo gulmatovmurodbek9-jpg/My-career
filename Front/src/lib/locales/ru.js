@@ -680,7 +680,7 @@ const resources = {
                 th_price: "Цена (год)",
                 th_choose: "Выбор",
                 non_state: "негосударственный",
-                books: "Книги",
+                books: "Книги", read_topics: "Темы для чтения (найдите учебник)",
                 courses: "Курсы",
                 blogs: "Блоги",
                 golden_advice: "Золотой совет",

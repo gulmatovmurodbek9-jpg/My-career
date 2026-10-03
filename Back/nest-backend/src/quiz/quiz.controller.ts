@@ -27,7 +27,23 @@ export class QuizController {
         return this.stats.feedback(String(body?.attemptId || ''), Number(body?.rating), body?.comment);
     }
 
-    // Сифати тест: Cronbach's α, test–retest ва баҳои хонандагон (танҳо админ).
+    // «Дар ММТ кадом кластерро интихоб кардед?» — муқоисаи натиҷа бо интихоби воқеӣ.
+    @Post('ntc-choice')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Кластере, ки хонанда дар ММТ интихоб кард (0–5)' })
+    ntcChoice(@Body() body: { attemptId?: string; cluster?: number }) {
+        return this.stats.ntcChoice(String(body?.attemptId || ''), Number(body?.cluster));
+    }
+
+    // Воронка: қадами охирини расида дар тест (бе маълумоти шахсӣ).
+    @Post('progress')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Пешрафти тест барои воронка' })
+    progress(@Body() body: { sessionId?: string; step?: number; total?: number; finished?: boolean }) {
+        return this.stats.progress(String(body?.sessionId || ''), Number(body?.step), Number(body?.total), body?.finished === true);
+    }
+
+    // Сифати тест: равшанӣ, устуворӣ, мувофиқат бо ММТ, қаноатмандӣ, воронка (танҳо админ).
     @Get('quality')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles('admin')

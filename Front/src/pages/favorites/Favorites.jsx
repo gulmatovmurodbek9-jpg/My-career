@@ -38,7 +38,7 @@ const CareerCard = ({ career, onUnlike, onUnsave, type }) => {
             <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/5 blur-[60px] group-hover:bg-primary/15 transition-all duration-700" />
 
             <div className="flex items-start justify-between">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.15em] bg-primary/10 text-primary border border-primary/20">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-[0.15em] bg-primary/10 text-primary border border-primary/20">
                     {career.cluster?.clusterName ? clusterLabel(t, career.cluster) : t('common.specialty', "Ихтисос")}
                 </span>
                 <button
@@ -87,7 +87,7 @@ const EmptyState = ({ icon: Icon, title, desc, linkTo, linkText }) => (
         className="glass-card p-16 text-center flex flex-col items-center gap-5"
     >
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Icon className="w-8 h-8 text-primary/50" />
+            <Icon className="w-8 h-8 text-primary/90" />
         </div>
         <div>
             <h3 className="text-2xl font-black text-foreground mb-2">{title}</h3>
@@ -172,7 +172,7 @@ const Favorites = () => {
             <section className="pb-6">
                 <div>
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-black uppercase tracking-[0.3em] text-primary">
                             <Heart className="w-3.5 h-3.5" />
                             {t('favorites.my_favorites', "Дӯстдоштаҳои ман")}
                         </div>

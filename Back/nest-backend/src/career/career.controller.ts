@@ -205,6 +205,10 @@ export class CareerController {
         if (!body.question || body.question.trim().length === 0) {
             throw new BadRequestException('Саволро нависед');
         }
+        // Ҳадди дарозӣ: саволи 100 KB ~25 000 токен ба AI мешуд.
+        if (String(body.question).length > 1000) {
+            throw new BadRequestException('Савол аз 1000 аломат дароз аст');
+        }
         const userId = req.user?.userId;
         const result = await this.careerService.askAi(body.question, userId, body.careerName, body.lang, body.userLocation);
         return result;
@@ -221,6 +225,10 @@ export class CareerController {
     ) {
         if (!body.question || body.question.trim().length === 0) {
             throw new BadRequestException('Саволро нависед');
+        }
+        // Ҳадди дарозӣ: саволи 100 KB ~25 000 токен ба AI мешуд.
+        if (String(body.question).length > 1000) {
+            throw new BadRequestException('Савол аз 1000 аломат дароз аст');
         }
         return this.careerService.askAboutCareer(id, body.question, req.user?.userId, body.lang);
     }

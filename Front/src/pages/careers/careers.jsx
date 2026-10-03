@@ -61,7 +61,7 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
 
       {pages.map((page, i) =>
         page === "..." ? (
-          <span key={`dots-${i}`} className="w-11 h-11 flex items-center justify-center text-muted-foreground/50 text-sm font-black">
+          <span key={`dots-${i}`} className="w-11 h-11 flex items-center justify-center text-muted-foreground text-sm font-black">
             ···
           </span>
         ) : (

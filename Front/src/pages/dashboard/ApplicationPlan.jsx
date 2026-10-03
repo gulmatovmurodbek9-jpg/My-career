@@ -308,7 +308,7 @@ const ApplicationPlan = () => {
                 <div className="mt-6 overflow-x-auto">
                     <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                         <thead>
-                            <tr className="border-b border-border text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+                            <tr className="border-b border-border text-[11px] font-black uppercase tracking-[0.14em] text-muted-foreground">
                                 <th className="py-3 pr-3">{t("plan.th_num")}</th>
                                 <th className="py-3 pr-3">{t("plan.th_code")}</th>
                                 <th className="py-3 pr-3">{t("plan.th_specialty")}</th>

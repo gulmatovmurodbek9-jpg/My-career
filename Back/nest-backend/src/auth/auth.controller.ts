@@ -32,12 +32,6 @@ export class AuthController {
         return this.authService.login(user);
     }
 
-    @Post('signin')
-    @ApiOperation({ summary: 'Login user (alternative)' })
-    async signin(@Body() loginDto: LoginDto, @Req() req: Request) {
-        return this.login(loginDto, req);
-    }
-
     @Post('register')
     @ApiOperation({ summary: 'Register new user' })
     async register(@Body() createUserDto: CreateUserDto) {

@@ -2240,9 +2240,9 @@ export class CareerService {
         const optional = (heading: string, value?: string) =>
             value && value.trim() ? `\n${heading}:\n${value.trim()}\n` : '';
 
-        const locationContext = params.userLocation
-            ? `latitude=${params.userLocation.latitude}, longitude=${params.userLocation.longitude}`
-            : '';
+        // Координатаҳои корбар (кӯдак) ба AI фиристода намешаванд — масофа то донишгоҳҳо
+        // дар сервер ҳисоб мешавад ва танҳо «N км» дар контексти ихтисосҳо меравад.
+        const locationContext = '';
 
         return `
 You are MyCareer AI, a practical career advisor for students in Tajikistan.
@@ -2276,7 +2276,8 @@ TASK:
 - Give a useful chat answer based on the user's profile, quiz results, saved careers, and database context.
 - If the user asks for salary like 3000-4000 somoni, compare it with salaryAndMarket when available; when not available, say it is an estimate and explain why.
 - If the user asks for a city, university, price, or distance, list matching universities with city, tuitionFee, duration, and distanceFromUserKm when available.
-- If the user asks for a full explanation of a specialty, cover: what the specialist does, workplaces, 10-year outlook, technologies, books, video courses, certifications, and first 3 practical steps.
+- If the user asks for a full explanation of a specialty, cover: what the specialist does, workplaces, 10-year outlook, technologies and first 3 practical steps.
+- NEVER invent names of books, courses, certificates, people, websites or numbers. Mention learning resources ONLY if they appear in the provided context (learningResources); otherwise suggest the general type (e.g. "a beginner course in Python on Stepik or Coursera") without specific titles.
 - If the user asks for doctor/medical fields, prefer cluster 5 or health-related rows if they exist in the database context.
 - If official university website or current tuition is missing from context, clearly say it is not in the database yet and recommend checking the official admissions page. Do not invent links or prices.
 
@@ -2316,14 +2317,7 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
             });
         }
 
-        if (user && user.role !== UserRole.ADMIN) {
-            const today = new Date().toISOString().slice(0, 10);
-            const usage = user.aiDailyUsage || { date: null, count: 0 };
-            if (usage.date !== today) { usage.date = today; usage.count = 0; }
-            if (LIMIT_ON && usage.count >= DAILY_LIMIT) {
-                throw new ForbiddenException(`Имрӯз ${DAILY_LIMIT} савол тамом шуд. Фардо дубора кӯшиш кунед.`);
-            }
-        }
+        const remaining = user && user.role !== UserRole.ADMIN ? await this.reserveAiQuota(user.id) : null;
 
         const careers = await this.findRelevantCareers(question, careerName);
         const prompt = this.buildCareerChatPrompt({
@@ -2338,20 +2332,37 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         let answer = await this.aiService.generateContent(prompt);
 
         if (user && user.role !== UserRole.ADMIN) {
-            const today = new Date().toISOString().slice(0, 10);
-            const usage = user.aiDailyUsage || { date: null, count: 0 };
-            if (usage.date !== today) { usage.date = today; usage.count = 0; }
-            usage.count += 1;
-
             const history = user.chatHistory || [];
             history.push({ question, answer, careerName: careerName || undefined, createdAt: new Date().toISOString() });
             if (history.length > 100) history.splice(0, history.length - 100);
 
-            await this.userRepository.update(user.id, { aiDailyUsage: usage, chatHistory: history });
-            return { answer, remainingToday: LIMIT_ON ? Math.max(0, DAILY_LIMIT - usage.count) : null };
+            await this.userRepository.update(user.id, { chatHistory: history });
+            return { answer, remainingToday: remaining };
         }
 
         return { answer, remainingToday: null };
+    }
+
+    // Лимити рӯзонаи AI — атомӣ: ҷой бо як UPDATE банд мешавад. Пештар лимит пеш аз AI
+    // хонда ва баъд навишта мешуд — 30 дархости якбора ҳама «count = 0»-ро медиданд.
+    private async reserveAiQuota(userId: string): Promise<number | null> {
+        if (!LIMIT_ON) return null;
+        const today = new Date().toISOString().slice(0, 10);
+        const rows: Array<{ count: number }> = await this.userRepository.manager.query(
+            `UPDATE "user" SET "aiDailyUsage" = jsonb_build_object(
+                    'date', $2::text,
+                    'count', CASE WHEN "aiDailyUsage"->>'date' = $2 THEN COALESCE(("aiDailyUsage"->>'count')::int, 0) + 1 ELSE 1 END)
+             WHERE id = $1
+               AND ("aiDailyUsage" IS NULL OR "aiDailyUsage"->>'date' IS DISTINCT FROM $2
+                    OR COALESCE(("aiDailyUsage"->>'count')::int, 0) < $3)
+             RETURNING ("aiDailyUsage"->>'count')::int AS count`,
+            [userId, today, DAILY_LIMIT],
+        );
+        const result: any[] = Array.isArray(rows?.[0]) ? (rows as any)[0] : rows;
+        if (!result?.length) {
+            throw new ForbiddenException(`Имрӯз ${DAILY_LIMIT} савол тамом шуд. Фардо дубора кӯшиш кунед.`);
+        }
+        return Math.max(0, DAILY_LIMIT - Number(result[0].count));
     }
 
     async askAboutCareer(
@@ -2373,15 +2384,8 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
             user = await this.userRepository.findOne({ where: { id: userId } });
         }
 
-        const today = new Date().toISOString().slice(0, 10);
         const limited = user && user.role !== UserRole.ADMIN;
-        if (limited) {
-            const usage = user!.aiDailyUsage || { date: null, count: 0 };
-            if (usage.date !== today) { usage.date = today; usage.count = 0; }
-            if (LIMIT_ON && usage.count >= DAILY_LIMIT) {
-                throw new ForbiddenException(`Имрӯз ${DAILY_LIMIT} савол тамом шуд. Фардо дубора кӯшиш кунед.`);
-            }
-        }
+        const remaining = limited ? await this.reserveAiQuota(user!.id) : null;
 
         const offerings = await this.findOfferings(careerId);
         const answer = await this.aiService.generateContent(
@@ -2389,16 +2393,12 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         );
 
         if (limited) {
-            const usage = user!.aiDailyUsage || { date: null, count: 0 };
-            if (usage.date !== today) { usage.date = today; usage.count = 0; }
-            usage.count += 1;
-
             const history = user!.chatHistory || [];
             history.push({ question, answer, careerName: career.name, createdAt: new Date().toISOString() });
             if (history.length > 100) history.splice(0, history.length - 100);
 
-            await this.userRepository.update(user!.id, { aiDailyUsage: usage, chatHistory: history });
-            return { answer, remainingToday: LIMIT_ON ? Math.max(0, DAILY_LIMIT - usage.count) : null };
+            await this.userRepository.update(user!.id, { chatHistory: history });
+            return { answer, remainingToday: remaining };
         }
 
         return { answer, remainingToday: null };
@@ -2574,7 +2574,7 @@ DETAILED QUIZ ANSWERS FROM THE LAST TEST:
 ${quizAnswersContext}
 
 Use the detailed answers above, not only the numeric scores. Explain what the user's answers reveal about interests, work style, learning style, and career fit.
-Also include practical learning resources: books, video lessons, courses, and trusted documentation/sources. If a real URL is uncertain, omit the URL and provide a searchable title/platform.
+For learning resources use ONLY items listed in the careers' learningResources above. Do NOT invent book titles, authors, course names or URLs; if none are listed, name only well-known platforms (Stepik, Coursera, Khan Academy) without specific titles.
 Include a concrete 10-year outlook for the target career in Tajikistan and globally: 1-3 years, 4-7 years, 8-10 years, opportunities, risks, and skills that will become more valuable.
 Also include estimated salary and demand outlook for the next 10 years. Make clear these are estimates, not guaranteed numbers. Use Tajikistan somoni per month when possible, with beginner/mid/senior ranges and explain what can increase or decrease salary.
 

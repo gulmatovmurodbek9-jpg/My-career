@@ -148,7 +148,12 @@ export default function VoiceAssistant() {
     const { token } = useAuthStore();
     const { theme, toggleTheme } = useTheme();
 
-    const [open, setOpen] = useState(false);
+    // Агар корбар тугмаро то бор шудани ин файл пахш карда бошад — фавран кушода.
+    const [open, setOpen] = useState(() => {
+        const asked = typeof window !== "undefined" && window.__voiceOpenRequested;
+        if (asked) window.__voiceOpenRequested = false;
+        return Boolean(asked);
+    });
     const [started, setStarted] = useState(false);
     // Телефон: панели паст дар поёни экран, бе модели 3D — саҳифа намоён мемонад
     // ва панел фавран мекушояд (модели 3D дар телефон дер бор мешуд).

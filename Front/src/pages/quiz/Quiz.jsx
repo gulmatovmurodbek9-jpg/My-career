@@ -384,6 +384,20 @@ const Quiz = () => {
     // ҳастанд ва бо маълумоти кӯҳна кор мекарданд (қадами 2 такрор илова мешуд).
     const latest = useRef({});
     const gradePending = !gradeConfirmed && currentStep === 0 && answers.length === 0 && !showResults && !askRetake;
+
+    // Воронка: «тест сар шуд» ва «то кадом савол расид» — бе маълумоти шахсӣ, танҳо рамзи тасодуфӣ.
+    const sessionRef = useRef(null);
+    const sendProgress = (step, total, finished = false) => {
+        if (!sessionRef.current) {
+            sessionRef.current = (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`).slice(0, 40);
+        }
+        axios.post(`${API}/quiz/progress`, { sessionId: sessionRef.current, step, total, finished }).catch(() => { });
+    };
+    useEffect(() => {
+        if (gradePending || showResults || isAnalyzing || loading || !questions.length) return;
+        sendProgress(currentStep + 1, questions.length);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep, gradePending, showResults, isAnalyzing, loading]);
     latest.current = { questions, currentStep, quizStage, answers, gradePending, idle: !showResults && !isAnalyzing && !askRetake && !loading };
 
     // Ёвар синфро иваз кард («я после 9 класса») — савол ҷавоб гирифт.
@@ -728,6 +742,7 @@ const Quiz = () => {
         busyRef.current = true;
         setIsAnalyzing(true);
         const body = { answers: finalAnswers, lang: i18n.language, grade: getGrade(), context: getQuizContext() };
+        sendProgress(finalAnswers.length, finalAnswers.length, true);
         try {
             const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -767,6 +782,7 @@ const Quiz = () => {
         setAnswers([]);
         setCurrentStep(0);
         setGradeConfirmed(false);
+        sessionRef.current = null;
         axios.get(`${API}/quiz/questions`).then(({ data }) => setQuestions(data)).catch(() => {});
     };
 
@@ -842,7 +858,7 @@ const Quiz = () => {
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest">{t('common.loading')}</p>
+                    <p className="text-muted-foreground text-[11px] font-black uppercase tracking-widest">{t('common.loading')}</p>
                 </div>
             </div>
         );
@@ -1332,9 +1348,9 @@ const Quiz = () => {
                     })()}
                     <p className="text-center text-[12px] leading-relaxed text-muted-foreground">
                         {{
-                            tj: "Ҷавобҳо бе ном нигоҳ дошта мешаванд — барои беҳтар кардани тест. Маслиҳатро AI (Google) месозад; ном ва почтаи шумо ба он фиристода намешавад.",
-                            ru: "Ответы хранятся без имени — для улучшения теста. Совет составляет AI (Google); ваше имя и почта ему не передаются.",
-                            en: "Answers are stored without your name — to improve the test. The advice is written by AI (Google); your name and email are never sent to it.",
+                            tj: "Ҷавобҳо барои беҳтар кардани тест 12 моҳ нигоҳ дошта мешаванд (агар ворид шуда бошед — бо рамзи ҳисоб). Маслиҳатро AI (Google) месозад; ном ва почтаи шумо ба он фиристода намешавад.",
+                            ru: "Ответы хранятся 12 месяцев для улучшения теста (если вы вошли — с идентификатором аккаунта). Совет составляет AI (Google); ваше имя и почта ему не передаются.",
+                            en: "Answers are kept for 12 months to improve the test (with your account ID if you are signed in). The advice is written by AI (Google); your name and email are never sent to it.",
                         }[(i18n.language || "tj").slice(0, 2)] || ""}{" "}
                         <Link to="/privacy" className="font-semibold text-primary hover:underline">{{ tj: "Махфият", ru: "Конфиденциальность", en: "Privacy" }[(i18n.language || "tj").slice(0, 2)]}</Link>
                     </p>

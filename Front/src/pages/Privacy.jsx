@@ -4,41 +4,46 @@ import { ShieldCheck } from "lucide-react";
 
 // Сиёсати махфият: истифодабарандагон асосан хонандагони ноболиғанд — бо забони содда,
 // чӣ ҷамъ мешавад, ба кӣ меравад ва чӣ тавр нест кардан мумкин.
+const EMAIL = "gulmatovmurodbek9@gmail.com";
+
 const CONTENT = {
     tj: {
         title: "Махфият ва маълумоти шумо",
         updated: "Навсозӣ: 03.10.2026",
         sections: [
-            ["Мо чӣ нигоҳ медорем", "Ном ва почта (агар ба қайд гиред), ҷавобҳо ва натиҷаи санҷиш, ихтисосҳои захирашуда ва баҳои шумо ба натиҷа. Бе бақайдгирӣ ҷавобҳои санҷиш бе ном нигоҳ дошта мешаванд — танҳо барои беҳтар кардани тест."],
-            ["Чӣ ба AI (Google Gemini) фиристода мешавад", "Танҳо матни савол ё ҷавобҳои санҷиш ва номи ихтисосҳо — бе ном, почта ва телефони шумо. Google ин маълумотро барои ҷавоб истифода мебарад."],
-            ["Овоз", "Ҳангоми сӯҳбат бо ёвар садои шумо барои табдил ба матн ба ElevenLabs фиристода мешавад ва дар сайти мо нигоҳ дошта намешавад."],
-            ["Ноболиғон", "Агар шумо аз 16 сол хурд бошед, пеш аз бақайдгирӣ бо падару модар ё омӯзгор маслиҳат кунед. Барои истифодаи санҷиш бақайдгирӣ ҳатмӣ нест."],
+            ["Мо чӣ нигоҳ медорем", "Агар ба қайд гиред: ном, почта, натиҷаи тест, ихтисосҳои захирашуда ва писандидашуда, нақшаи ҳуҷҷатсупорӣ ва таърихи сӯҳбат бо AI (100 саволи охир). Ҳар супориши тест (ҷавобҳо, синф, баҳои шумо ба натиҷа) барои беҳтар кардани тест нигоҳ дошта мешавад — бо рамзи корбар, агар ворид шуда бошед, ё бе он."],
+            ["Чӣ ба AI (Google Gemini / Vertex AI) фиристода мешавад", "Матни саволи шумо; дар чати AI ва ҳисобот инчунин натиҷаи тест, ихтисосҳои захирашуда ва писандидашуда. Ном, почта, телефон ва координатаҳои шумо фиристода намешаванд (агар ҷойгиршавиро иҷозат диҳед, дар сервер танҳо масофа то донишгоҳҳо ҳисоб мешавад). Google маълумотро тибқи шартҳои худ коркард мекунад."],
+            ["Овоз", "Ҳангоми сӯҳбат бо ёвар садои шумо барои табдил ба матн ба ElevenLabs (ИМА) фиристода мешавад. Мо садоро нигоҳ намедорем; ElevenLabs онро тибқи шартҳои худ коркард мекунад. Агар нахоҳед — бо клавиатура нависед."],
+            ["Мӯҳлати нигоҳдорӣ", "Супоришҳои тест 12 моҳ нигоҳ дошта мешаванд ва баъд худкор нест мешаванд. Ҳисоб ва таърихи сӯҳбат то он вақте ки шумо нест кардани онро напурсед."],
+            ["Ноболиғон", "Сайт барои хонандагон аст. Тест бе бақайдгирӣ кор мекунад. Агар шумо аз 16 сол хурд бошед, ҳисобро бо розигии падару модар ё омӯзгор созед; волидон метавонанд нест кардани маълумоти фарзандро бипурсанд."],
             ["Мо намекунем", "Маълумотро намефурӯшем, реклама нишон намедиҳем ва ба мактаб ё шахсони дигар намедиҳем."],
-            ["Нест кардан", "Барои нест кардани ҳисоб ва ҳамаи маълумот ба почтаи лоиҳа нависед — дар 7 рӯз нест карда мешавад."],
+            ["Нест кардан ва савол", "Барои нест кардани ҳисоб ва ҳамаи маълумот ё ҳар савол дар бораи махфият ба " + EMAIL + " нависед — дар 7 рӯз ҷавоб медиҳем."],
         ],
     },
     ru: {
         title: "Конфиденциальность и ваши данные",
         updated: "Обновлено: 03.10.2026",
         sections: [
-            ["Что мы храним", "Имя и почту (если вы зарегистрировались), ответы и результат теста, сохранённые специальности и вашу оценку результата. Без регистрации ответы теста хранятся без имени — только для улучшения теста."],
-            ["Что отправляется AI (Google Gemini)", "Только текст вопроса или ответы теста и названия специальностей — без вашего имени, почты и телефона. Google использует эти данные для ответа."],
-            ["Голос", "Во время разговора с помощником ваш голос отправляется в ElevenLabs для распознавания и на нашем сайте не хранится."],
-            ["Несовершеннолетние", "Если вам меньше 16 лет, перед регистрацией посоветуйтесь с родителями или учителем. Для прохождения теста регистрация не нужна."],
+            ["Что мы храним", "Если вы зарегистрировались: имя, почту, результат теста, сохранённые и понравившиеся специальности, план подачи документов и историю чата с AI (последние 100 вопросов). Каждое прохождение теста (ответы, класс, ваша оценка результата) хранится для улучшения теста — с идентификатором пользователя, если вы вошли, или без него."],
+            ["Что отправляется AI (Google Gemini / Vertex AI)", "Текст вашего вопроса; в AI-чате и отчёте также результат теста, сохранённые и понравившиеся специальности. Имя, почта, телефон и ваши координаты не отправляются (если вы разрешите геолокацию, на сервере считается только расстояние до вузов). Google обрабатывает данные по своим условиям."],
+            ["Голос", "Во время разговора с помощником ваш голос отправляется в ElevenLabs (США) для распознавания. Мы голос не храним; ElevenLabs обрабатывает его по своим условиям. Если не хотите — пишите с клавиатуры."],
+            ["Срок хранения", "Прохождения теста хранятся 12 месяцев и затем удаляются автоматически. Аккаунт и история чата — пока вы не попросите их удалить."],
+            ["Несовершеннолетние", "Сайт создан для школьников. Тест работает без регистрации. Если вам меньше 16 лет, создавайте аккаунт с согласия родителей или учителя; родители могут попросить удалить данные ребёнка."],
             ["Чего мы не делаем", "Не продаём данные, не показываем рекламу и не передаём их школе или третьим лицам."],
-            ["Удаление", "Чтобы удалить аккаунт и все данные, напишите на почту проекта — удалим в течение 7 дней."],
+            ["Удаление и вопросы", "Чтобы удалить аккаунт и все данные или задать вопрос о конфиденциальности, напишите на " + EMAIL + " — ответим в течение 7 дней."],
         ],
     },
     en: {
         title: "Privacy and your data",
         updated: "Updated: 03.10.2026",
         sections: [
-            ["What we store", "Your name and email (if you register), your test answers and result, saved specialties and your rating of the result. Without registration, test answers are stored without a name — only to improve the test."],
-            ["What is sent to AI (Google Gemini)", "Only the question text or test answers and specialty names — never your name, email or phone. Google uses this data to produce the answer."],
-            ["Voice", "When you talk to the assistant, your voice is sent to ElevenLabs for speech recognition and is not stored on our site."],
-            ["Minors", "If you are under 16, talk to a parent or teacher before registering. Registration is not needed to take the test."],
+            ["What we store", "If you register: your name, email, test result, saved and liked specialties, application plan and AI chat history (last 100 questions). Every test attempt (answers, grade, your rating of the result) is stored to improve the test — with your user ID if you are signed in, or without it."],
+            ["What is sent to AI (Google Gemini / Vertex AI)", "The text of your question; in the AI chat and report also your test result and saved and liked specialties. Your name, email, phone and coordinates are never sent (if you allow location, only the distance to universities is computed on our server). Google processes the data under its own terms."],
+            ["Voice", "When you talk to the assistant, your voice is sent to ElevenLabs (USA) for speech recognition. We do not store it; ElevenLabs processes it under its own terms. If you prefer, type instead."],
+            ["Retention", "Test attempts are kept for 12 months and then deleted automatically. Your account and chat history are kept until you ask us to delete them."],
+            ["Minors", "The site is for school students. The test works without registration. If you are under 16, create an account with a parent's or teacher's consent; parents can ask us to delete their child's data."],
             ["What we do not do", "We do not sell data, show ads or pass it to schools or third parties."],
-            ["Deletion", "To delete your account and all data, email the project — we delete it within 7 days."],
+            ["Deletion and questions", "To delete your account and all data, or with any privacy question, email " + EMAIL + " — we reply within 7 days."],
         ],
     },
 };

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HealthController } from './common/health.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -48,5 +49,6 @@ import { VoiceModule } from './voice/voice.module';
         AppointmentModule,
         VoiceModule,
     ],
+    controllers: [HealthController],
 })
 export class AppModule { }

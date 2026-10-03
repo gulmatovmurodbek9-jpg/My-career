@@ -254,7 +254,7 @@ const AdminUsers = () => {
                                 isSelf
                                   ? "opacity-20 cursor-not-allowed"
                                   : user.role === "admin"
-                                  ? "hover:bg-amber-500/10 text-amber-600/60 dark:text-amber-400/60 hover:text-amber-600 dark:hover:text-amber-400"
+                                  ? "hover:bg-amber-500/10 text-amber-600/90 dark:text-amber-400/90 hover:text-amber-600 dark:hover:text-amber-400"
                                   : "hover:bg-primary/10 text-primary/70 hover:text-primary"
                               }`}
                               title={user.role === "admin" ? t("admin.users.make_user") : t("admin.users.make_admin")}
@@ -271,7 +271,7 @@ const AdminUsers = () => {
                               onClick={() => setDeleteTarget(user)}
                               disabled={isSelf}
                               className={`p-2 rounded-lg transition-all cursor-pointer ${
-                                isSelf ? "opacity-20 cursor-not-allowed" : "hover:bg-red-500/10 text-red-600/60 dark:text-red-400/60 hover:text-red-600 dark:hover:text-red-400"
+                                isSelf ? "opacity-20 cursor-not-allowed" : "hover:bg-red-500/10 text-red-600/90 dark:text-red-400/90 hover:text-red-600 dark:hover:text-red-400"
                               }`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />

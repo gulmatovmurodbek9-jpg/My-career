@@ -44,7 +44,7 @@ const shortLabel = (name = "") =>
 
 const EmptyChart = ({ title, hint }) => (
   <div className="h-full flex flex-col items-center justify-center text-center px-6">
-    <Inbox className="w-8 h-8 text-muted-foreground/50 mb-3" />
+    <Inbox className="w-8 h-8 text-muted-foreground mb-3" />
     <p className="text-[15px] font-semibold text-muted-foreground">{title}</p>
     <p className="text-[13px] text-muted-foreground/70 mt-1 max-w-xs leading-relaxed">{hint}</p>
   </div>

@@ -181,11 +181,11 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
                 </div>
 
                 <div className={`flex items-center gap-1.5 mt-1.5 px-1 ${isUser ? "justify-end" : "justify-start"}`}>
-                    <span className="text-[10px] text-[hsl(var(--muted-foreground))]/40 font-semibold tabular-nums">
+                    <span className="text-[11px] text-[hsl(var(--muted-foreground))]/40 font-semibold tabular-nums">
                         {formatTime(msg.time)}
                     </span>
                     {isUser && (
-                        <svg className="w-3.5 h-3.5 text-primary/60" viewBox="0 0 16 16" fill="none">
+                        <svg className="w-3.5 h-3.5 text-primary/90" viewBox="0 0 16 16" fill="none">
                             <path d="M2 8.5L5.5 12L14 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             <path d="M5 8.5L8.5 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/>
                         </svg>
@@ -564,7 +564,7 @@ const AiChat = () => {
                             <h1 className="text-sm font-black text-[hsl(var(--foreground))] tracking-tight">{currentDict.title}</h1>
                             <div className="flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] font-bold text-emerald-500">{currentDict.online}</span>
+                                <span className="text-[11px] font-bold text-emerald-500">{currentDict.online}</span>
                             </div>
                         </div>
                     </div>
@@ -594,7 +594,7 @@ const AiChat = () => {
                         </select>
                     )}
                     {remainingToday !== null && (
-                        <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-[10px] font-black text-primary">
+                        <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-[11px] font-black text-primary">
                             <Sparkles className="w-3 h-3" />{remainingToday}
                         </div>
                     )}

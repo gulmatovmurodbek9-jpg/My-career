@@ -26,8 +26,6 @@
     "jspdf-autotable": "^5.0.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.544.0",
-    "maplibre-gl": "^6.9.0",
-    "motion": "^12.23.22",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-i18next": "^16.5.4",

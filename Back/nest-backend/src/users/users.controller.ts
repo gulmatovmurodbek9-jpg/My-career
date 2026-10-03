@@ -12,8 +12,12 @@ export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
 
+    // Машваратҳо хомӯшанд — рӯйхат танҳо барои админ.
     @Get('specialists')
-    @ApiOperation({ summary: 'Get active career specialists' })
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get active career specialists (admin)' })
     async getSpecialists() {
         // Бе вуруд: танҳо майдонҳои ҷамъиятӣ. Пештар email, телефон, lastSeenAt ва
         // натиҷаи тестҳо ба ҳама дода мешуд.

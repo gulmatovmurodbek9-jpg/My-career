@@ -205,7 +205,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         [{ tj: 'Нақша мекашам ва вақту захираҳоро тақсим мекунам', ru: 'Составляю план и распределяю время и ресурсы', en: 'I make the plan and split the time and resources' }, { c2: 2, c4: 1 }],
         [{ tj: 'Қисми душвортаринро, ки дақиқӣ мехоҳад, худам месозам', ru: 'Сам делаю самую сложную часть, где нужна точность', en: 'I do the hardest part that needs precision myself' }, { c1: 2, c5: 1 }],
         [{ tj: 'Матн ва намоиши ниҳоиро зебо месозам', ru: 'Делаю красивыми итоговый текст и презентацию', en: 'I make the final text and presentation look good' }, { c3: 2, c2: 1 }],
-        [{ tj: 'Мебинам, ки ҳар кас чӣ ҳол дорад, ва ба онҳое, ки намерасанд, ёрӣ медиҳам', ru: 'Слежу, как у каждого дела, и помогаю тем, кто не успевает', en: 'I check how everyone is doing and help those falling behind' }, { c5: 2, c3: 1 }],
+        [{ tj: 'Мебинам, ки касе хаста ё бемор нашуда бошад, ва ғамхорӣ мекунам', ru: 'Слежу, чтобы никто не устал и не заболел, и забочусь о ребятах', en: 'Make sure nobody gets exhausted or ill, and look after people' }, { c5: 2, c3: 1 }],
         [{ tj: 'Вақте баҳс сар мешавад, ҳамаро оштӣ медиҳам ва қоида мегузорам', ru: 'Когда начинается спор, мирю всех и ввожу правила', en: 'When an argument starts, I settle it and set the rules' }, { c4: 2, c3: 1 }],
     ]),
     q('m18', 'scenario', {
@@ -215,7 +215,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
     }, [
         [{ tj: 'Қадам ба қадам месанҷам, то сабабро ёбам', ru: 'Проверяю шаг за шагом, пока не найду причину', en: 'Check it step by step until I find the cause' }, { c1: 2, c5: 1 }],
         [{ tj: 'Ҳисоб мекунам: таъмир арзонтар аст ё нав харидан', ru: 'Считаю: дешевле починить или купить новое', en: 'Work out whether fixing or buying new is cheaper' }, { c2: 2, c1: 1 }],
-        [{ tj: 'Мепурсам, ки кафолат ҳаст ё не, ва ҳуқуқамонро мефаҳмам', ru: 'Узнаю, есть ли гарантия, и выясняю наши права', en: 'Find out whether there is a warranty and what our rights are' }, { c4: 2, c2: 1 }],
+        [{ tj: 'Чек ва кафолатро меёбам ва бо фурӯшанда гуфтушунид мекунам', ru: 'Нахожу чек и гарантию и договариваюсь с продавцом', en: 'Find the receipt and warranty and negotiate with the seller' }, { c4: 2, c2: 1 }],
         [{ tj: 'Дастурро мехонам ва ба дигарон бо забони содда мефаҳмонам', ru: 'Читаю инструкцию и объясняю другим простыми словами', en: 'Read the manual and explain it to others in simple words' }, { c3: 2, c1: 1 }],
         [{ tj: 'Аввал месанҷам, ки касе захмӣ нашуда бошад ва ҳама бехатар бошанд', ru: 'Сначала проверяю, что никто не поранился и всё безопасно', en: 'First make sure nobody is hurt and everything is safe' }, { c5: 2, c4: 1 }],
     ]),

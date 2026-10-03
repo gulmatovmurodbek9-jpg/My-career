@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router";
-import VoiceAssistant from "../../components/voice/VoiceAssistant";
+import LazyVoiceAssistant from "../../components/voice/LazyVoiceAssistant";
 import {
   ArrowRight,
   Github,
@@ -244,7 +244,7 @@ const Layout = () => {
                             }`}
                           >
                             <span>{lang.name}</span>
-                            <span className="text-[10px] opacity-40">{lang.label}</span>
+                            <span className="text-[11px] opacity-40">{lang.label}</span>
                           </button>
                         ))}
                       </motion.div>
@@ -342,7 +342,7 @@ const Layout = () => {
                         aria-label={lang.name}
                         aria-pressed={currentLang === lang.code}
                         onClick={() => changeLanguage(lang.code)}
-                        className={`p-3 rounded-xl text-[10px] font-black cursor-pointer ${
+                        className={`p-3 rounded-xl text-[11px] font-black cursor-pointer ${
                           currentLang === lang.code ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -458,7 +458,7 @@ const Layout = () => {
               </div>
 
               <div className="mt-10 md:mt-20 pt-6 md:pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.22em] md:tracking-widest leading-relaxed text-center md:text-left">
+                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.22em] md:tracking-widest leading-relaxed text-center md:text-left">
                   © {new Date().getFullYear()} {t("footer.copyright", "Ikhtisosiman. Built with")} <span className="text-rose-500 animate-pulse">❤</span>{" "}
                   {t("footer.copyright_2", "in Tajikistan.")}
                 </p>
@@ -471,7 +471,7 @@ const Layout = () => {
         </footer>
       )}
 
-      <VoiceAssistant />
+      <LazyVoiceAssistant />
     </div>
   );
 };

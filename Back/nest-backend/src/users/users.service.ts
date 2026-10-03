@@ -37,31 +37,6 @@ const DEFAULT_SPECIALIST_AVAILABILITY = {
     saturday: ['10:00', '11:00', '12:00'],
 };
 
-const DEFAULT_SPECIALISTS = [
-    {
-        name: 'Фаррух Ализода',
-        email: 'farrukh.specialist@mycareer.tj',
-        password: 'specialist123',
-        phoneNumber: '+992 90 111 22 33',
-        specialization: 'Мушовири интихоби касб',
-        bio: 'Мутахассиси роҳнамоии касбӣ бо таҷрибаи кор бо довталабон, интихоби кластерҳо ва таҳияи нақшаи таҳсил.',
-        meetingLocation: 'Душанбе, маркази машваратии Ихтисоси ман',
-        ratingAverage: 4.8,
-        ratingCount: 12,
-    },
-    {
-        name: 'Мадина Каримова',
-        email: 'madina.specialist@mycareer.tj',
-        password: 'specialist123',
-        phoneNumber: '+992 93 222 44 55',
-        specialization: 'Психологи касбӣ',
-        bio: 'Бо тестҳои шавқ, қобилият ва профили шахсӣ кор мекунад, то донишҷӯ ихтисоси мувофиқтарро интихоб намояд.',
-        meetingLocation: 'Душанбе, кӯчаи Рӯдакӣ 45',
-        ratingAverage: 4.9,
-        ratingCount: 18,
-    },
-];
-
 @Injectable()
 export class UsersService {
     constructor(
@@ -230,8 +205,6 @@ export class UsersService {
     }
 
     async findSpecialists(activeOnly = true): Promise<Partial<User>[]> {
-        await this.ensureDefaultSpecialists();
-
         const where: any = { role: UserRole.SPECIALIST };
         if (activeOnly) where.isActive = true;
 
@@ -287,28 +260,6 @@ export class UsersService {
         user.bio = user.bio || 'Мутахассиси роҳнамоии касбӣ. Маълумоти пурраро админ метавонад баъдтар илова кунад.';
         user.meetingLocation = user.meetingLocation || 'Маркази машваратӣ';
         user.weeklyAvailability = user.weeklyAvailability || DEFAULT_SPECIALIST_AVAILABILITY;
-    }
-
-    private async ensureDefaultSpecialists(): Promise<void> {
-        const existingCount = await this.usersRepository.count({
-            where: { role: UserRole.SPECIALIST },
-        });
-        if (existingCount > 0) return;
-
-        for (const item of DEFAULT_SPECIALISTS) {
-            const existingUser = await this.findOne(item.email);
-            if (existingUser) continue;
-
-            const hashedPassword = await bcrypt.hash(item.password, 10);
-            const specialist = this.usersRepository.create({
-                ...item,
-                password: hashedPassword,
-                role: UserRole.SPECIALIST,
-                isActive: true,
-                weeklyAvailability: DEFAULT_SPECIALIST_AVAILABILITY,
-            });
-            await this.usersRepository.save(specialist);
-        }
     }
 
     async createPasswordResetCode(email: string): Promise<{ user: User; code: string } | null> {

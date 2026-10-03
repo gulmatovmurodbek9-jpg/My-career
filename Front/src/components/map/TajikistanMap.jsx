@@ -792,7 +792,7 @@ export default function TajikistanMap({ universities = [], focusResults = false 
                     {selectedUni.nameTranslated || selectedUni.name}
                   </p>
                   {selectedUni.nameTranslated && (
-                    <p className="mt-0.5 text-xs leading-snug text-white/50">{selectedUni.name}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-white/90">{selectedUni.name}</p>
                   )}
                   <p className="mt-1 flex items-start gap-1.5 text-sm text-white/65">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
@@ -820,11 +820,11 @@ export default function TajikistanMap({ universities = [], focusResults = false 
 
               <div className="mb-4 grid grid-cols-2 gap-2">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.m_city_label")}</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.m_city_label")}</p>
                   <p className="mt-1 text-lg font-black">{selectedUni.city || selectedUni.inferredCity}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.u_specialties")}</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/45">{t("career_page.u_specialties")}</p>
                   <p className="mt-1 text-lg font-black">{selectedUni.careerCount || 0}</p>
                 </div>
               </div>

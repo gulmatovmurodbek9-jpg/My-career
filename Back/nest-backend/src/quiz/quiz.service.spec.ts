@@ -83,12 +83,22 @@ describe('QuizService.hasInventedNumbers (санҷиши ҷавоби AI)', () =
 });
 
 import { QuizStatsService } from './quiz-stats.service';
-describe('Cronbach alpha', () => {
-    it('саволҳои ҳамоҳанг — α баланд', () => {
-        const m = [[3, 3, 3], [0, 0, 0], [3, 3, 0], [0, 0, 3], [3, 3, 3], [0, 0, 0]];
-        expect(QuizStatsService.cronbachAlpha(m)!).toBeGreaterThan(0.6);
+describe('Сифати тест', () => {
+    const day = 24 * 60 * 60 * 1000;
+    const at = (d: number) => new Date(Date.UTC(2026, 9, 1) + d * day).toISOString();
+    it('такрор танҳо пас аз ≥ 7 рӯз ҳисоб мешавад', () => {
+        const r = QuizStatsService.retest([
+            { userId: 'a', topCluster: 'c1', createdAt: at(0) },
+            { userId: 'a', topCluster: 'c2', createdAt: at(0.001) }, // баъди 2 дақиқа — ҳисоб намешавад
+            { userId: 'a', topCluster: 'c1', createdAt: at(8) },
+            { userId: 'b', topCluster: 'c3', createdAt: at(0) },
+            { userId: 'b', topCluster: 'c4', createdAt: at(3) }, // 3 рӯз — кам
+        ]);
+        expect(r.users).toBe(1);
+        expect(r.sameDirection).toBe(1);
     });
-    it('маълумоти кам — null', () => {
-        expect(QuizStatsService.cronbachAlpha([[1, 2]])).toBeNull();
+    it('натиҷаи равшан: самти аввал камаш 15% пеш', () => {
+        expect(QuizStatsService.isClear({ c1: 30, c2: 20 })).toBe(true);
+        expect(QuizStatsService.isClear({ c1: 30, c2: 28 })).toBe(false);
     });
 });

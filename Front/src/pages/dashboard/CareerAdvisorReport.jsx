@@ -552,7 +552,7 @@ const CareerAdvisorReport = () => {
                                             {career.matchPercentage}%
                                         </span>
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-40">
                                         {t.match}
                                     </span>
                                 </div>
@@ -632,7 +632,7 @@ const CareerAdvisorReport = () => {
                                     </div>
                                 </div>
 
-                                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${probBg(pred.probability)}`}>
+                                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider border ${probBg(pred.probability)}`}>
                                     <Zap className="w-3.5 h-3.5" />
                                     {t.probability}
                                 </div>
@@ -656,7 +656,7 @@ const CareerAdvisorReport = () => {
                                     <Target className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">
                                         {t.targetCareer}
                                     </span>
                                     <h4 className="text-base font-black text-foreground uppercase tracking-tight">
@@ -756,7 +756,7 @@ const CareerAdvisorReport = () => {
                         <div className="glass-card p-5 md:p-6 mt-3 space-y-3">
                             {(report.quizAnswerAnalysis?.length ? report.quizAnswerAnalysis : storedQuiz.answers).map((item, idx) => (
                                 <div key={idx} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
-                                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-primary mb-2">
+                                    <div className="text-[11px] font-black uppercase tracking-[0.18em] text-primary mb-2">
                                         {t.answered} #{idx + 1}
                                     </div>
                                     <h5 className="text-sm font-black text-foreground leading-snug">
@@ -817,7 +817,7 @@ const ResourceCard = ({ icon: Icon, title, items }) => {
                             <div className="text-sm font-bold text-foreground">{value.title || value.name}</div>
                             {value.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{value.description}</p>}
                             {value.url && (
-                                <a href={value.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary">
+                                <a href={value.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-primary">
                                     {t.open || "Open"} <ExternalLink className="w-3 h-3" />
                                 </a>
                             )}

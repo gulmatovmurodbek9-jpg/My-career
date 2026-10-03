@@ -111,7 +111,7 @@ export default function SalarySection({ salary, contentWritten, careerName, clus
           </p>
           {/* Маоши сатҳҳо манбаи расмӣ надорад — ростқавлона «тахминӣ» навишта мешавад. */}
           <p className="mb-3 text-[13px] text-amber-700 dark:text-amber-400">
-            {t("career_page.sal_estimate_note", "Тахминӣ: аз эълонҳои кор ва суҳбат бо мутахассисон, на омори расмӣ. Маоши миёнаи соҳа дар боло — аз Агентии омор.")}
+            {t("career_page.sal_estimate_note", "Тахмини муаллифи сайт — манбаи расмӣ нест. Рақами боэътимод — маоши миёнаи соҳа дар боло (Агентии омор).")}
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {tiers.map((tier) => (

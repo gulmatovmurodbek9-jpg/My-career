@@ -35,7 +35,7 @@ const get = async (url) => {
     return response.json();
 };
 
-function page({ route, title, description, body, jsonLd }) {
+function page({ route, title, description, body, jsonLd, noIndex = false }) {
     const canonical = `${ORIGIN}${route}`;
     let html = shell
         .replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`)
@@ -46,6 +46,8 @@ function page({ route, title, description, body, jsonLd }) {
     const head = [
         `<link rel="canonical" href="${esc(canonical)}" />`,
         `<meta property="og:url" content="${esc(canonical)}" />`,
+        // Тавсифи қолабӣ — noindex: Google онҳоро «thin content» меҳисобад.
+        noIndex ? '<meta name="robots" content="noindex,follow" />' : '',
         jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>` : '',
     ].filter(Boolean).join('\n    ');
     html = html.replace('</head>', `    ${head}\n  </head>`);
@@ -99,6 +101,7 @@ const links = (items) => `<ul>${items.map(([href, text]) => `<li><a href="${esc(
         ].join('');
         page({
             route: `/info/${career.id}`,
+            noIndex: !career.contentWritten,
             title: `${career.name}${career.code ? ` (${career.code})` : ''} — донишгоҳҳо, маош ва бал | ${SITE}`,
             description: cut(`${career.name}: ${about || 'ихтисоси ММТ'}${unis.length ? ` Дар ${unis.length} донишгоҳи Тоҷикистон.` : ''}`, 158),
             body,
@@ -170,6 +173,7 @@ const links = (items) => `<ul>${items.map(([href, text]) => `<li><a href="${esc(
             + [...clusters].map(([name, items]) => `<h2>${esc(name)}</h2>${links(items.slice(0, 12).map((c) => [`/info/${c.id}`, c.name]))}`).join(''),
     });
 
+    console.log(`noindex (тавсифи қолабӣ): ${careers.filter((c) => !c.contentWritten).length}`);
     console.log(`Тайёр: ${careers.length + universities.length + 4} саҳифа, ${((Date.now() - started) / 1000).toFixed(1)} с → ${outDir}`);
 })().catch((error) => {
     console.error('Prerender нашуд:', error.message);

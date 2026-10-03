@@ -260,7 +260,7 @@ const AdminCareers = () => {
                             </button>
                             <button
                               onClick={() => setDeleteTarget(career)}
-                              className="p-2 rounded-lg hover:bg-red-500/10 text-red-600/60 dark:text-red-400/60 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
+                              className="p-2 rounded-lg hover:bg-red-500/10 text-red-600/90 dark:text-red-400/90 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

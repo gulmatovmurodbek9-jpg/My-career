@@ -168,7 +168,7 @@ const About = () => {
                     )}
                   </div>
                   <div className="glass-card p-5 flex-1">
-                    <div className="pill-tag !text-[10px] !py-0.5 !px-2 w-fit mb-2">{item.year}</div>
+                    <div className="pill-tag !text-[11px] !py-0.5 !px-2 w-fit mb-2">{item.year}</div>
                     <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">{item.description}</p>
                   </div>

@@ -2,19 +2,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import axios from 'axios'
 import './index.css'
-import i18n from './lib/i18n'
+import i18n, { i18nReady } from './lib/i18n'
 import { loginUrl } from './components/RouteGuards'
-import { installMockInterceptor } from './lib/mockApi'
 import { REQUEST_TIMEOUT_MS } from './lib/config'
 import App from './App.jsx'
 import { ToastProvider } from './components/toast/ToastProvider'
 import { useAuthStore } from './store/authStore'
 
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
-
-// Маълумоти қалбакӣ танҳо дар таҳия: дар production ҳангоми хатои сервер
-// корбар маълумоти сохта медид (ҳатто воридшавӣ).
-if (import.meta.env.DEV) installMockInterceptor();
 
 const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/quiz', '/profile', '/settings', '/favorites'];
 let handlingExpiredSession = false;
@@ -55,10 +50,14 @@ const AppWithToast = () => {
   return <App />;
 };
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <ToastProvider>
-      <AppWithToast />
-    </ToastProvider>
-  </StrictMode>,
-);
+// Забони русӣ/англисӣ аз файли алоҳида меояд — то он бор нашавад, сайт нишон дода
+// намешавад (вагарна як лаҳза матни тоҷикӣ медурахшид).
+i18nReady.finally(() => {
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <ToastProvider>
+        <AppWithToast />
+      </ToastProvider>
+    </StrictMode>,
+  );
+});

@@ -28,7 +28,7 @@ export function formatTuition(specialty, t) {
 export function SpecialtyMeta({ specialty, size = "normal" }) {
   const { t } = useTranslation();
   const tuition = formatTuition(specialty, t);
-  const pad = size === "small" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]";
+  const pad = size === "small" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-[11px]";
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -132,7 +132,7 @@ export default function SpecialtyCard({ specialty }) {
         <div className="flex justify-between items-start mb-6">
           <div className="flex flex-col gap-2">
             {specialty.cluster?.clusterName && (
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/20 w-fit">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/20 w-fit">
                 {clusterLabelNumbered(t, specialty.cluster)}
               </span>
             )}
@@ -299,7 +299,7 @@ export function SpecialtyCardList({ specialty }) {
               className={`flex items-center gap-1.5 z-20 transition-all active:scale-95`}
             >
               <Heart className={`w-4 h-4 ${isLiked ? "text-rose-500 fill-rose-500" : "text-muted-foreground"}`} />
-              <span className={`text-[10px] font-black ${isLiked ? "text-rose-500" : ""}`}>{likesCount}</span>
+              <span className={`text-[11px] font-black ${isLiked ? "text-rose-500" : ""}`}>{likesCount}</span>
             </button>
           </div>
           <ArrowRight className="w-4 h-4 text-primary" />

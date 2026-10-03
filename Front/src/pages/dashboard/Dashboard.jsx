@@ -99,7 +99,7 @@ const Dashboard = () => {
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                    <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-[10px]">{t("common.loading")}</p>
+                    <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-[11px]">{t("common.loading")}</p>
                 </div>
             </div>
         );
@@ -123,7 +123,7 @@ const Dashboard = () => {
                         <motion.div
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-[0.2em] text-primary"
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-black uppercase tracking-[0.2em] text-primary"
                         >
                             <LayoutDashboard className="w-3 h-3" />
                             {t('dashboard.profile')}

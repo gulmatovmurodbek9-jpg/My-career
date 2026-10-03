@@ -92,7 +92,7 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
             <div className="relative z-10 flex h-full flex-col p-6 md:p-7">
                 <div className="flex items-start justify-between gap-3">
                     <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] ${isTop
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] ${isTop
                             ? "bg-secondary/10 text-secondary"
                             : "bg-muted text-muted-foreground"
                             }`}
@@ -132,7 +132,7 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                     </h3>
                     {career.code && (
                         <div className="mt-2 flex items-center gap-1.5">
-                            <span className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+                            <span className="text-[11px] font-black uppercase tracking-[0.14em] text-muted-foreground">
                                 {t('common.code', 'Код')}
                             </span>
                             <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums text-foreground">
@@ -148,7 +148,7 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
 
                 {universities.length > 0 && (
                     <div className="mt-4">
-                        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                        <span className="text-[11px] font-black uppercase tracking-[0.16em] text-muted-foreground">
                             {t('common.where_to_study', 'Дар куҷо хондан мумкин')}
                         </span>
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -172,7 +172,7 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
 
                 <div className="mt-6">
                     <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                        <span className="text-[11px] font-black uppercase tracking-[0.16em] text-muted-foreground">
                             {/* Фоизи САМТ (барои ҳамаи ихтисосҳои самт якхела) — ростқавлона ҳамин тавр ном дорад. */}
                             {t('common.direction_match', 'Мувофиқати самт')}
                         </span>

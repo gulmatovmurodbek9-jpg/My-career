@@ -247,6 +247,8 @@ const Info = () => {
   const metaUniversities = career?.universities || [];
   usePageMeta({
     ready: !!career,
+    // Саҳифаҳои бо тавсифи қолабӣ ба Google намераванд (thin content рейтинги сайтро паст мекунад).
+    noIndex: !!career && !career.contentWritten,
     title: career
       ? career.code
         ? t("misc2.meta_career_title", { name: career.name, code: career.code })
@@ -738,7 +740,7 @@ const Info = () => {
                 <table className="w-full min-w-[720px] text-sm border-separate border-spacing-y-1.5">
                   <caption className="sr-only">{t("career_page.where_title")}</caption>
                   <thead>
-                    <tr className="text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <tr className="text-left text-[11px] font-black uppercase tracking-widest text-muted-foreground">
                       <th scope="col" className="px-4 py-2">{t("career_page.th_institution")}</th>
                       <th scope="col" className="px-4 py-2">{t("career_page.th_city")}</th>
                       <th scope="col" className="px-4 py-2">{t("career_page.th_form")}</th>
@@ -760,7 +762,7 @@ const Info = () => {
                             <div className="font-semibold text-foreground leading-snug">{offering.university?.nameTranslated || offering.university?.name}</div>
                           )}
                           {offering.university?.isState === false && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">{t("career_page.non_state")}</span>
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">{t("career_page.non_state")}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">

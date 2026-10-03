@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, Query, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ClusterService } from './cluster.service';
 import { CreateClusterDto } from './dto/create-cluster.dto';
-import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('clusters')
 @Controller('clusters')
@@ -25,14 +28,21 @@ export class ClusterController {
         return cluster;
     }
 
+    // Тағйири кластерҳо — танҳо админ (пештар бе guard буд: ҳар кас нест ё иваз карда метавонист).
     @Post()
-    @ApiOperation({ summary: 'Create a new cluster' })
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Create a new cluster (admin)' })
     create(@Body() createClusterDto: CreateClusterDto) {
         return this.clusterService.create(createClusterDto);
     }
 
     @Put(':id')
-    @ApiOperation({ summary: 'Update cluster by ID' })
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Update cluster by ID (admin)' })
     @ApiParam({ name: 'id', description: 'Cluster UUID' })
     async update(@Param('id') id: string, @Body() updateDto: CreateClusterDto) {
         const cluster = await this.clusterService.findOne(id);
@@ -43,7 +53,10 @@ export class ClusterController {
     }
 
     @Delete(':id')
-    @ApiOperation({ summary: 'Delete cluster by ID' })
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Delete cluster by ID (admin)' })
     @ApiParam({ name: 'id', description: 'Cluster UUID' })
     async delete(@Param('id') id: string) {
         const cluster = await this.clusterService.findOne(id);

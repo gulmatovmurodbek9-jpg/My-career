@@ -220,11 +220,11 @@ export default function UniversityDetail() {
 
               <div className="flex gap-8 pt-4 border-t border-white/5">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_specialties")}</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_specialties")}</p>
                   <p className="text-xl font-bold text-foreground">{uniqueSpecialties.length}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_clusters")}</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t("career_page.u_clusters")}</p>
                   <p className="text-xl font-bold text-foreground">{clusters.length}</p>
                 </div>
               </div>
@@ -317,7 +317,7 @@ export default function UniversityDetail() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div 
-                      className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                      className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider"
                       style={{ backgroundColor: cData?.bg || "var(--primary/10)", color: cData?.text || "var(--primary)" }}
                     >
                       {clusterName(t, spec.cluster?.clusterId)}
@@ -348,7 +348,7 @@ export default function UniversityDetail() {
         {filteredSpecialties.length === 0 && (
           <div className="py-20 text-center space-y-4">
             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
-              <Search className="w-10 h-10 text-muted-foreground/50" />
+              <Search className="w-10 h-10 text-muted-foreground" />
             </div>
             <p className="text-xl font-bold text-muted-foreground">{t("misc2.no_specialty")}</p>
             <button 

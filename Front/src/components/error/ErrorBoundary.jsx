@@ -71,7 +71,7 @@ export class ErrorBoundary extends Component {
                 <summary className="cursor-pointer font-black uppercase text-primary mb-2">
                   Error Details
                 </summary>
-                <pre className="bg-black/40 p-3 rounded-xl overflow-auto text-[10px] text-red-400 whitespace-pre-wrap">
+                <pre className="bg-black/40 p-3 rounded-xl overflow-auto text-[11px] text-red-400 whitespace-pre-wrap">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>

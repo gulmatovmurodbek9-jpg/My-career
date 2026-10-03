@@ -40,7 +40,8 @@ export class SitemapController {
     @Header('Cache-Control', 'public, max-age=3600')
     async getSitemap(): Promise<string> {
         const [careers, universities] = await Promise.all([
-            this.careerRepository.find({ select: ['id'] }),
+            // Танҳо ихтисосҳо бо тавсифи воқеӣ; қолабӣ — noindex ва дар sitemap нестанд.
+            this.careerRepository.find({ select: ['id'], where: { contentWritten: true } }),
             this.universityRepository.find({ select: ['id', 'updatedAt'] }),
         ]);
 

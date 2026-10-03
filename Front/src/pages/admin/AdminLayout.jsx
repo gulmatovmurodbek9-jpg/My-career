@@ -119,7 +119,7 @@ const AdminLayout = () => {
 
           <Link
             to="/"
-            className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-emerald-600/50 dark:text-emerald-400/50 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
+            className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-emerald-600/90 dark:text-emerald-400/90 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
           >
             <Globe className="w-[18px] h-[18px] flex-shrink-0" />
             <AnimatePresence>
@@ -196,7 +196,7 @@ const AdminLayout = () => {
 
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-red-600/60 dark:text-red-400/60 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer ${collapsed ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-semibold text-red-600/90 dark:text-red-400/90 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer ${collapsed ? 'justify-center' : ''}`}
           >
             <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
             <AnimatePresence>

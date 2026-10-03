@@ -225,7 +225,7 @@ const Register = () => {
                         <div className="mt-6 space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="h-px flex-1 bg-border/60" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Google</span>
+                                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Google</span>
                                 <div className="h-px flex-1 bg-border/60" />
                             </div>
                             <div className="flex justify-center min-h-[44px]">

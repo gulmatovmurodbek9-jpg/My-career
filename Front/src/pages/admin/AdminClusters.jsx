@@ -167,13 +167,13 @@ const AdminClusters = () => {
                       <div className="flex items-center gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
                         <button
                           onClick={() => { setEditingCluster(cluster); setFormOpen(true); }}
-                          className="p-1.5 rounded-lg hover:bg-primary/10 text-primary/50 hover:text-primary transition-all cursor-pointer"
+                          className="p-1.5 rounded-lg hover:bg-primary/10 text-primary/90 hover:text-primary transition-all cursor-pointer"
                         >
                           <Edit className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => setDeleteTarget(cluster)}
-                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-600/40 dark:text-red-400/40 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-600/90 dark:text-red-400/90 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

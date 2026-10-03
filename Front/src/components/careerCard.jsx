@@ -33,7 +33,7 @@ export function SpecialtyCardList({ specialty }) {
         <div className="flex items-center justify-between">
           <div className="flex flex-wrap gap-1">
             {specialty.skills?.technical?.slice(0, 2).map((skill, i) => (
-              <span key={i} className="pill-tag !text-[10px] !py-0.5 !px-2">{skill}</span>
+              <span key={i} className="pill-tag !text-[11px] !py-0.5 !px-2">{skill}</span>
             ))}
           </div>
           <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -69,10 +69,10 @@ export default function SpecialtyCard({ specialty }) {
 
         <div className="flex flex-wrap gap-1.5 mb-4">
           {specialty.skills?.technical?.slice(0, 4).map((skill, i) => (
-            <span key={i} className="pill-tag !text-[10px] !py-0.5 !px-2">{skill}</span>
+            <span key={i} className="pill-tag !text-[11px] !py-0.5 !px-2">{skill}</span>
           ))}
           {specialty.skills?.technical?.length > 4 && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               +{specialty.skills.technical.length - 4}
             </span>
           )}
@@ -169,12 +169,12 @@ export default function SpecialtyCard({ specialty }) {
                     <div className="space-y-2">
                       {specialty.roadmap.map((step) => (
                         <div key={step.step} className="flex items-start gap-2">
-                          <div className="w-5 h-5 rounded icon-box flex items-center justify-center text-primary text-[10px] font-bold flex-shrink-0 mt-0.5">
+                          <div className="w-5 h-5 rounded icon-box flex items-center justify-center text-primary text-[11px] font-bold flex-shrink-0 mt-0.5">
                             {step.step}
                           </div>
                           <div>
                             <div className="text-xs font-medium text-foreground">{step.title}</div>
-                            <div className="text-[10px] text-muted-foreground">{step.tasks?.slice(0, 2).join(", ")}</div>
+                            <div className="text-[11px] text-muted-foreground">{step.tasks?.slice(0, 2).join(", ")}</div>
                           </div>
                         </div>
                       ))}
@@ -184,15 +184,15 @@ export default function SpecialtyCard({ specialty }) {
                   {activeTab === "salary" && specialty.salaryAndMarket && (
                     <div className="grid grid-cols-3 gap-2">
                       <div className="glass-card-sm p-3 text-center">
-                        <div className="text-[10px] text-muted-foreground">Junior</div>
+                        <div className="text-[11px] text-muted-foreground">Junior</div>
                         <div className="text-sm font-bold text-emerald-600">{specialty.salaryAndMarket.junior}</div>
                       </div>
                       <div className="glass-card-sm p-3 text-center">
-                        <div className="text-[10px] text-muted-foreground">Mid</div>
+                        <div className="text-[11px] text-muted-foreground">Mid</div>
                         <div className="text-sm font-bold text-amber-600">{specialty.salaryAndMarket.mid}</div>
                       </div>
                       <div className="glass-card-sm p-3 text-center">
-                        <div className="text-[10px] text-muted-foreground">Senior</div>
+                        <div className="text-[11px] text-muted-foreground">Senior</div>
                         <div className="text-sm font-bold text-indigo-600">{specialty.salaryAndMarket.senior}</div>
                       </div>
                     </div>

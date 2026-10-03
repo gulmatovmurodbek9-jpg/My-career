@@ -151,7 +151,8 @@ if [ "$WITH_FRONTEND" -eq 1 ]; then
   NODE_OPTIONS="--max-old-space-size=1536" npm run build
 
   log "publishing frontend to $WEBROOT"
-  rsync -a --delete "$FRONT_DIR/dist/" "$WEBROOT/"
+  # rsync дар сервер насб нест — cp (файлҳои кӯҳнаи hashed зарар намерасонанд).
+  if command -v rsync >/dev/null; then rsync -a --delete "$FRONT_DIR/dist/" "$WEBROOT/"; else cp -r "$FRONT_DIR/dist/." "$WEBROOT/"; fi
 
   # SEO: саҳифаҳои статикӣ (ихтисосҳо, донишгоҳҳо) аз нав сохта мешаванд.
   log "prerender SEO pages"

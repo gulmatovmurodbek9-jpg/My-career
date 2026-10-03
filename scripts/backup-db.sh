@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Нусхаи эҳтиётии ҳаррӯзаи база (cron, 03:30). 14 рӯзи охир нигоҳ дошта мешавад.
 #
-#   Насб (як бор, дар сервер):
-#     ( crontab -l 2>/dev/null; echo "30 3 * * * bash /root/My-career/scripts/backup-db.sh >> /var/log/mycareer-backup.log 2>&1" ) | crontab -
+#   Дар сервер бо systemd-timer иҷро мешавад (cron насб нест):
+#     /etc/systemd/system/mycareer-backup.{service,timer}, ҳар рӯз 03:30
+#     ҳолат: systemctl list-timers | grep mycareer · лог: journalctl -u mycareer-backup
 #
 #   Санҷиши барқароркунӣ (нусхаи охиринро ба базаи муваққатӣ мекушояд ва мешуморад):
 #     bash /root/My-career/scripts/backup-db.sh --verify

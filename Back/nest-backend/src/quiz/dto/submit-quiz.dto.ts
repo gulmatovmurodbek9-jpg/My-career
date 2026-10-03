@@ -27,4 +27,9 @@ export class SubmitQuizDto {
     @ApiProperty({ example: 9, required: false, description: 'Синфи хатмкарда: 9 (танҳо коллеҷ) ё 11' })
     @IsOptional()
     grade?: number | string;
+
+    // Ихтиёрӣ: фанҳои қавӣ, «танҳо ройгон», шаҳр — барои тартиби ихтисосҳо ва огоҳиҳо.
+    @ApiProperty({ required: false, example: { subjects: ['math'], budget: 'free', city: 'Хуҷанд' } })
+    @IsOptional()
+    context?: { subjects?: string[]; budget?: 'free' | 'any'; city?: string };
 }

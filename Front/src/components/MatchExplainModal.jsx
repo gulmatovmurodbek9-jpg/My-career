@@ -1,86 +1,52 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck, AlertTriangle, ShieldAlert, TrendingUp, Activity } from "lucide-react";
-import {
-    Radar,
-    RadarChart,
-    PolarGrid,
-    PolarAngleAxis,
-    ResponsiveContainer,
-    Tooltip,
-    Legend,
-} from "recharts";
+import { X, Info, Search, BarChart3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+// «Чаро ин ихтисос?» — танҳо он чи ҳисоб воқеан медонад:
+// 1) мувофиқати САМТ (аз қисми 1-и тест, барои ҳамаи ихтисосҳои самт якхела);
+// 2) калимаҳо аз ҷавобҳои қисми 2, ки дар номи ё тавсифи ҳамин ихтисос ёфт шуданд.
+// Пештар дар ин ҷо «cosine», «euclidean» ва радари профили сунъӣ буд — маълумоти нав
+// намедоданд, бинобар ин бардошта шуданд.
 
 const DIMENSION_NAMES = {
-    c1: { tj: "Табиӣ-техникӣ", ru: "Естественно-технический", en: "Natural-Technical" },
-    c2: { tj: "Иқтисод-география", ru: "Экономико-географический", en: "Economics-Geography" },
-    c3: { tj: "Филология-санъат", ru: "Филология-искусство", en: "Philology-Arts" },
-    c4: { tj: "Ҷомеашиносӣ-ҳуқуқ", ru: "Социология-право", en: "Sociology-Law" },
-    c5: { tj: "Тиб-варзиш", ru: "Медицина-спорт", en: "Medicine-Sports" },
+    c1: { tj: "Табиӣ ва техникӣ", ru: "Естественно-технический", en: "Natural & technical" },
+    c2: { tj: "Иқтисод ва география", ru: "Экономика и география", en: "Economics & geography" },
+    c3: { tj: "Филология ва санъат", ru: "Филология и искусство", en: "Philology & arts" },
+    c4: { tj: "Ҷомеашиносӣ ва ҳуқуқ", ru: "Обществознание и право", en: "Social science & law" },
+    c5: { tj: "Тиб ва варзиш", ru: "Медицина и спорт", en: "Medicine & sport" },
 };
 
 const UI_TEXT = {
-    modalTitle: { tj: "Таҳлили мувофиқат", ru: "Анализ совпадения", en: "Match Analysis" },
-    match: { tj: "Мувофиқат", ru: "Совпадение", en: "Match" },
-    shape: { tj: "Шакл", ru: "Форма", en: "Shape" },
-    proximity: { tj: "Наздикӣ", ru: "Близость", en: "Proximity" },
-    confidence: { tj: "Боварӣ", ru: "Уверенность", en: "Confidence" },
-    profileCompare: { tj: "Муқоисаи профилҳо", ru: "Сравнение профилей", en: "Profile Comparison" },
-    yourProfile: { tj: "Профили шумо", ru: "Ваш профиль", en: "Your Profile" },
-    careerProfile: { tj: "Кластери ММТ", ru: "Кластер НЦТ", en: "MMT Cluster" },
-    dimBreakdown: { tj: "Тафсилоти ҳар бахш", ru: "Разбивка по измерениям", en: "Dimension Breakdown" },
-    dimension: { tj: "Кластер", ru: "Кластер", en: "Cluster" },
-    alignment: { tj: "Мувофиқат", ru: "Совпадение", en: "Alignment" },
-    strength: { tj: "Сатҳ", ru: "Уровень", en: "Strength" },
-    strongAlign: { tj: "Мувофиқати баланд", ru: "Сильное совпадение", en: "Strong alignment" },
-    moderateAlign: { tj: "Мувофиқати миёна", ru: "Среднее совпадение", en: "Moderate alignment" },
-    weakAlign: { tj: "Мувофиқати паст", ru: "Слабое совпадение", en: "Weak alignment" },
-    confHigh: { tj: "Баланд", ru: "Высокая", en: "High" },
-    confMedium: { tj: "Миёна", ru: "Средняя", en: "Medium" },
-    confLow: { tj: "Паст", ru: "Низкая", en: "Low" },
+    modalTitle: { tj: "Чаро ин ихтисос?", ru: "Почему эта специальность?", en: "Why this specialty?" },
+    direction: { tj: "Мувофиқати самт", ru: "Совпадение направления", en: "Direction match" },
+    directionHint: {
+        tj: "Аз қисми 1-и тест: ҷавобҳои шумо ба ин самт чанд хол доданд, аз ҳадди имконпазир. Барои ҳамаи ихтисосҳои ин самт якхела аст.",
+        ru: "Из первой части теста: сколько баллов ваши ответы дали этому направлению от максимума. Одинаково для всех специальностей направления.",
+        en: "From part 1 of the test: points your answers gave this direction out of the maximum. The same for every specialty in the direction.",
+    },
+    rank: { tj: "Ҷой дар рӯйхат", ru: "Место в списке", en: "Place in the list" },
+    whyTitle: { tj: "Чаро маҳз ин ихтисос боло аст", ru: "Почему именно эта специальность выше", en: "Why this specialty ranks high" },
+    whyWords: {
+        tj: "Ҷавобҳои шумо дар қисми 2 ба ин мавзӯъҳо ишора карданд ва онҳо дар ин ихтисос ҳастанд:",
+        ru: "Ваши ответы во второй части указали на эти темы, и они есть в этой специальности:",
+        en: "Your part-2 answers pointed to these topics, and they appear in this specialty:",
+    },
+    whyNone: {
+        tj: "Ҷавобҳои қисми 2 ба ин ихтисос мустақиман ишора накарданд — он аз ҳамон самт аст ва аз рӯи алифбо дар рӯйхат омад.",
+        ru: "Ответы второй части прямо не указали на эту специальность — она из того же направления и стоит в списке по алфавиту.",
+        en: "Your part-2 answers did not point to this specialty directly — it is from the same direction and listed alphabetically.",
+    },
+    profile: { tj: "Холи шумо дар ҳар самт", ru: "Ваши баллы по направлениям", en: "Your score in each direction" },
+    honest: {
+        tj: "Ин тавсия аст, на ҳукм. Ихтисосро кушоед ва бинед: чӣ кор мекунанд, дар куҷо мехонанд ва бали гузариш чанд аст.",
+        ru: "Это рекомендация, а не приговор. Откройте специальность: чем занимаются, где учиться и какой проходной балл.",
+        en: "This is a suggestion, not a verdict. Open the specialty: what the work is, where to study and the entry score.",
+    },
 };
 
 const DIMENSIONS = ["c1", "c2", "c3", "c4", "c5"];
-
-
-function txt(key, lang) {
-    const entry = UI_TEXT[key];
-    if (!entry) return key;
-    return entry[lang] || entry.en;
-}
-
-function dimName(dim, lang) {
-    const entry = DIMENSION_NAMES[dim];
-    if (!entry) return dim;
-    return entry[lang] || entry.en;
-}
-
-const STRENGTH_CONFIG = {
-    strong: { key: "strongAlign", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", bar: "bg-emerald-500" },
-    moderate: { key: "moderateAlign", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", bar: "bg-amber-500" },
-    weak: { key: "weakAlign", color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", bar: "bg-rose-500" },
-};
-
-const CONFIDENCE_CONFIG = {
-    high: { key: "confHigh", icon: ShieldCheck, color: "text-emerald-400", bg: "bg-emerald-500/15", border: "border-emerald-500/30" },
-    medium: { key: "confMedium", icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/15", border: "border-amber-500/30" },
-    low: { key: "confLow", icon: ShieldAlert, color: "text-rose-400", bg: "bg-rose-500/15", border: "border-rose-500/30" },
-};
-
-function getStrength(value) {
-    if (value > 0.8) return STRENGTH_CONFIG.strong;
-    if (value >= 0.5) return STRENGTH_CONFIG.moderate;
-    return STRENGTH_CONFIG.weak;
-}
-
-function getConfidence(value) {
-    if (value > 0.25) return CONFIDENCE_CONFIG.high;
-    if (value >= 0.1) return CONFIDENCE_CONFIG.medium;
-    return CONFIDENCE_CONFIG.low;
-}
-
+const pick = (entry, lang) => (entry ? entry[lang] || entry.en : "");
 
 export default function MatchExplainModal({ isOpen, onClose, matchData }) {
     const { i18n } = useTranslation();
@@ -88,28 +54,8 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
 
     if (!matchData) return null;
 
-    const {
-        name,
-        matchPercentage = 0,
-        cosineSimilarity = 0,
-        euclideanSimilarity = 0,
-        confidenceIndex = 0,
-        dimensionBreakdown = {},
-        userProfile = {},
-        careerProfile = {},
-    } = matchData;
-
-    const radarData = DIMENSIONS.map((dim) => ({
-        dimension: dimName(dim, lang),
-        [txt("yourProfile", lang)]: userProfile[dim] ?? 0,
-        [txt("careerProfile", lang)]: careerProfile[dim] ?? 0,
-        fullMark: 10,
-    }));
-
-    const userKey = txt("yourProfile", lang);
-    const careerKey = txt("careerProfile", lang);
-    const confidence = getConfidence(confidenceIndex);
-    const ConfIcon = confidence.icon;
+    const { name, matchPercentage = 0, clusterMatch, rank, reasons = [], userProfile = {} } = matchData;
+    const direction = Math.round(clusterMatch ?? matchPercentage ?? 0);
 
     return (
         <AnimatePresence>
@@ -122,7 +68,6 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                         onClick={onClose}
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
                     />
-
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -131,15 +76,11 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
                         onClick={(e) => e.target === e.currentTarget && onClose()}
                     >
-                        <div className="relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
-                            <div className="shrink-0 bg-card border-b border-border px-6 py-4 flex items-start justify-between gap-4">
+                        <div className="relative flex w-full max-w-xl max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
+                            <div className="shrink-0 border-b border-border px-6 py-4 flex items-start justify-between gap-4">
                                 <div className="min-w-0 space-y-1">
-                                    <p className="text-xs font-bold uppercase tracking-wide text-primary">
-                                        {txt("modalTitle", lang)}
-                                    </p>
-                                    <h2 className="text-lg font-black leading-snug text-foreground">
-                                        {name}
-                                    </h2>
+                                    <p className="text-xs font-bold uppercase tracking-wide text-primary">{pick(UI_TEXT.modalTitle, lang)}</p>
+                                    <h2 className="text-lg font-black leading-snug text-foreground">{name}</h2>
                                 </div>
                                 <button
                                     onClick={onClose}
@@ -150,147 +91,73 @@ export default function MatchExplainModal({ isOpen, onClose, matchData }) {
                                 </button>
                             </div>
 
-                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-8">
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
-                                        <div className="text-3xl font-black text-primary">{matchPercentage}%</div>
-                                        <div className="text-xs font-semibold text-muted-foreground mt-1">
-                                            {txt("match", lang)}
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center">
-                                        <div className="text-xl font-black text-foreground">
-                                            {Math.round(cosineSimilarity * 100)}%
-                                            <span className="text-xs font-bold text-muted-foreground ml-1.5">
-                                                {txt("shape", lang)}
-                                            </span>
-                                        </div>
-                                        <div className="text-xl font-black text-foreground mt-1">
-                                            {Math.round(euclideanSimilarity * 100)}%
-                                            <span className="text-xs font-bold text-muted-foreground ml-1.5">
-                                                {txt("proximity", lang)}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className={`rounded-xl p-4 text-center border ${confidence.bg} ${confidence.border}`}>
-                                        <ConfIcon className={`w-6 h-6 mx-auto mb-1 ${confidence.color}`} />
-                                        <div className={`text-sm font-black ${confidence.color}`}>
-                                            {txt(confidence.key, lang)}
-                                        </div>
-                                        <div className="text-xs font-semibold text-muted-foreground mt-0.5">
-                                            {txt("confidence", lang)}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                                        <Activity className="w-4 h-4 text-primary" />
-                                        {txt("profileCompare", lang)}
-                                    </h3>
+                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-6">
+                                <div className="grid grid-cols-2 gap-3">
                                     <div className="rounded-2xl border border-border bg-muted/40 p-4">
-                                        <div className="h-[280px] w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
-                                                    <PolarGrid stroke="rgba(99, 102, 241, 0.08)" />
-                                                    <PolarAngleAxis
-                                                        dataKey="dimension"
-                                                        tick={{ fill: "hsl(var(--foreground))", fontSize: 10, fontWeight: 800 }}
-                                                    />
-                                                    <Radar
-                                                        name={userKey}
-                                                        dataKey={userKey}
-                                                        stroke="#2563eb"
-                                                        strokeWidth={2}
-                                                        fill="#2563eb"
-                                                        fillOpacity={0.15}
-                                                        dot={{ r: 3, fill: "#2563eb" }}
-                                                    />
-                                                    <Radar
-                                                        name={careerKey}
-                                                        dataKey={careerKey}
-                                                        stroke="#f59e0b"
-                                                        strokeWidth={2}
-                                                        fill="#f59e0b"
-                                                        fillOpacity={0.1}
-                                                        dot={{ r: 3, fill: "#f59e0b" }}
-                                                        strokeDasharray="4 4"
-                                                    />
-                                                    <Tooltip
-                                                        contentStyle={{
-                                                            backgroundColor: "rgba(18, 18, 18, 0.95)",
-                                                            border: "1px solid rgba(255,255,255,0.1)",
-                                                            borderRadius: "12px",
-                                                            padding: "10px 14px",
-                                                            fontSize: "12px",
-                                                        }}
-                                                    />
-                                                    <Legend
-                                                        wrapperStyle={{ fontSize: "11px", fontWeight: 700, paddingTop: "12px" }}
-                                                    />
-                                                </RadarChart>
-                                            </ResponsiveContainer>
-                                        </div>
+                                        <div className="text-3xl font-black text-primary">{direction}%</div>
+                                        <div className="mt-1 text-xs font-semibold text-muted-foreground">{pick(UI_TEXT.direction, lang)}</div>
                                     </div>
+                                    {rank ? (
+                                        <div className="rounded-2xl border border-border bg-muted/40 p-4">
+                                            <div className="text-3xl font-black text-foreground">#{rank}</div>
+                                            <div className="mt-1 text-xs font-semibold text-muted-foreground">{pick(UI_TEXT.rank, lang)}</div>
+                                        </div>
+                                    ) : <div />}
                                 </div>
+                                <p className="flex gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    {pick(UI_TEXT.directionHint, lang)}
+                                </p>
 
                                 <div>
-                                    <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                                        <TrendingUp className="w-4 h-4 text-primary" />
-                                        {txt("dimBreakdown", lang)}
+                                    <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
+                                        <Search className="h-4 w-4 text-primary" />
+                                        {pick(UI_TEXT.whyTitle, lang)}
                                     </h3>
-                                    <div className="rounded-2xl border border-border bg-muted/40 overflow-hidden">
-                                        <div className="grid grid-cols-[1fr_100px_140px] gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">
-                                            <span className="text-xs font-semibold text-muted-foreground">
-                                                {txt("dimension", lang)}
-                                            </span>
-                                            <span className="text-xs font-semibold text-muted-foreground text-center">
-                                                {txt("alignment", lang)}
-                                            </span>
-                                            <span className="text-xs font-semibold text-muted-foreground text-right">
-                                                {txt("strength", lang)}
-                                            </span>
-                                        </div>
-
-                                        {DIMENSIONS.map((dim, idx) => {
-                                            const value = dimensionBreakdown[dim] ?? 0;
-                                            const pct = Math.round(value * 100);
-                                            const str = getStrength(value);
-
-                                            return (
-                                                <motion.div
-                                                    key={dim}
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: idx * 0.05 }}
-                                                    className="grid grid-cols-[1fr_100px_140px] gap-2 items-center px-4 py-3 border-b border-border/60 last:border-b-0"
-                                                >
-                                                    <span className="text-sm font-bold text-foreground">{dimName(dim, lang)}</span>
-
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                                                            <motion.div
-                                                                initial={{ width: 0 }}
-                                                                animate={{ width: `${pct}%` }}
-                                                                transition={{ duration: 0.8, delay: idx * 0.05 }}
-                                                                className={`h-full rounded-full ${str.bar}`}
-                                                            />
-                                                        </div>
-                                                        <span className="text-xs font-black text-muted-foreground w-9 text-right">{pct}%</span>
-                                                    </div>
-
-                                                    <div className="flex justify-end">
-                                                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${str.bg} ${str.border} ${str.color}`}>
-                                                            {txt(str.key, lang)}
-                                                        </span>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-                                    </div>
+                                    {reasons.length > 0 ? (
+                                        <>
+                                            <p className="text-[13px] text-muted-foreground">{pick(UI_TEXT.whyWords, lang)}</p>
+                                            <div className="mt-2 flex flex-wrap gap-2">
+                                                {reasons.map((word) => (
+                                                    <span key={word} className="rounded-full bg-primary/10 px-3 py-1 text-[13px] font-semibold text-primary">
+                                                        {word}…
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p className="text-[13px] text-muted-foreground">{pick(UI_TEXT.whyNone, lang)}</p>
+                                    )}
                                 </div>
+
+                                {Object.keys(userProfile).length > 0 && (
+                                    <div>
+                                        <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-foreground">
+                                            <BarChart3 className="h-4 w-4 text-primary" />
+                                            {pick(UI_TEXT.profile, lang)}
+                                        </h3>
+                                        <div className="space-y-2.5">
+                                            {DIMENSIONS.map((dim) => {
+                                                const value = Math.max(0, Math.min(100, Number(userProfile[dim]) || 0));
+                                                return (
+                                                    <div key={dim}>
+                                                        <div className="mb-1 flex justify-between text-[13px]">
+                                                            <span className="font-semibold text-foreground">{pick(DIMENSION_NAMES[dim], lang)}</span>
+                                                            <span className="font-black tabular-nums text-foreground">{value}%</span>
+                                                        </div>
+                                                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                                            <div className="h-full rounded-full bg-primary" style={{ width: `${value}%` }} />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <p className="rounded-2xl border border-border bg-muted/30 p-3 text-[13px] leading-relaxed text-muted-foreground">
+                                    {pick(UI_TEXT.honest, lang)}
+                                </p>
                             </div>
                         </div>
                     </motion.div>

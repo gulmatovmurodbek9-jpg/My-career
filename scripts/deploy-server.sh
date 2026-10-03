@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Deploy My Career on the production server (62.238.33.236).
+# Deploy My Career on the production server (31.222.229.253).
 #
 # GitHub Actions pipes this file over ssh, so the version that runs is always
 # the one from the commit being deployed:
@@ -100,6 +100,15 @@ fi
 log "backend: install + build"
 build_backend
 
+# Тестҳо пеш аз restart: формулаи тест ё ҳисоби ихтисосҳо вайрон бошад — сайти кӯҳна мемонад.
+log "backend: tests"
+if ! (cd "$API_DIR" && npx jest --ci); then
+  echo "!!! tests failed — keeping $PREV_SHA, nothing restarted" >&2
+  git -C "$REPO" reset --hard "$PREV_SHA"
+  build_backend
+  exit 1
+fi
+
 if [ "$SEED" -eq 1 ]; then
   log "reseeding database (destructive)"
   cd "$API_DIR" && npm run seed
@@ -143,6 +152,10 @@ if [ "$WITH_FRONTEND" -eq 1 ]; then
 
   log "publishing frontend to $WEBROOT"
   rsync -a --delete "$FRONT_DIR/dist/" "$WEBROOT/"
+
+  # SEO: саҳифаҳои статикӣ (ихтисосҳо, донишгоҳҳо) аз нав сохта мешаванд.
+  log "prerender SEO pages"
+  (cd "$API_DIR" && node prerender-seo.js "$FRONT_DIR/dist/index.html" "$WEBROOT")
   chown -R www-data:www-data "$WEBROOT"
 fi
 

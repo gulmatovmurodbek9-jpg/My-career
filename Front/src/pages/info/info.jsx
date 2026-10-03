@@ -494,6 +494,13 @@ const Info = () => {
               {displayName(career.description || career.purpose)}
             </p>
 
+            {/* Ростқавлона: тавсифи бисёр ихтисосҳо аз қолаб аст; маълумоти расмӣ аз НМТ — ҷудо. */}
+            {!career.contentWritten && (
+              <p className="max-w-3xl rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm leading-relaxed text-foreground">
+                {t("career_page.template_note", "Тавсифи муфассали ин ихтисос ҳанӯз навишта мешавад — матни боло умумӣ аст. Маълумоти расмӣ (рамз, муассисаҳо, нарх, ҷойҳо ва бали гузариш) аз Маркази миллии тестӣ гирифта шудааст.")}
+              </p>
+            )}
+
             <div className="flex flex-wrap gap-3">
               {(career.minTuitionFee || career.maxTuitionFee) && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
@@ -518,7 +525,7 @@ const Info = () => {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card-sm text-xs">
                   <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
                   <span className="text-muted-foreground">{t("career_page.starting_salary")}</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{salary.junior}</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400" title={t("career_page.sal_estimate", "Тахминӣ")}>≈ {salary.junior}</span>
                 </div>
               )}
               {roadmap.length > 0 && (

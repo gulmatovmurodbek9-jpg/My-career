@@ -14,13 +14,32 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SSH_HOST: 62.238.33.236
+  SSH_HOST: 31.222.229.253
   SSH_USER: root
   WEBROOT: /var/www/ikhtisosiman
   SITE_URL: https://ikhtisosiman.qobus.tj
 
 jobs:
+  # Аввал тестҳо ва build: агар формулаи тест ё код вайрон бошад, ба prod намеравад.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Back/nest-backend/package-lock.json
+      - name: Backend tests + build
+        working-directory: Back/nest-backend
+        run: |
+          npm ci --no-audit --no-fund
+          npx jest --ci
+          npm run build
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -57,7 +76,7 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' '62.238.33.236 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPLGrZP+/dnG6oI5lgvcc4kKjseIC5DntMd0m3jZ6vqT' > ~/.ssh/known_hosts
+          printf '%s\n' '31.222.229.253 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJpVRucwBY4lVmzvmcSfEC6fsqDtsh+g4f+Tqf+bjqMr' > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
           cat >> ~/.ssh/config <<EOF
           Host production
@@ -79,6 +98,9 @@ jobs:
         if: steps.gate.outputs.ready == 'true'
         run: |
           rsync -az --delete Front/dist/ production:$WEBROOT/
+          # SEO: 1016 саҳифаи статикӣ бояд ба JS-и нав ишора кунанд — дастӣ фаромӯш мешуд.
+          rsync -az Front/dist/index.html production:/root/My-career/Front/dist/index.html
+          ssh production "cd /root/My-career/Back/nest-backend && node prerender-seo.js /root/My-career/Front/dist/index.html $WEBROOT"
           ssh production "chown -R www-data:www-data $WEBROOT"
 
       - name: Smoke test

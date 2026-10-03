@@ -96,3 +96,12 @@ tajik-tts/model-kuhna/
 Back/nest-backend/voice-cache-kuhna/
 tajik-tts/model-nav/
 Back/nest-backend/voice-cache-nav/
+
+# Боқимондаҳои кори овоз (маҳаллӣ, на барои git)
+Back/nest-backend/voice-cache-old-*/
+Back/nest-backend/*.tmp.js
+*.off
+tajik-tts/model-eng/
+tajik-tts/model-eng-meta/
+tajik-tts/muqoisa/
+tajik-tts/suret/

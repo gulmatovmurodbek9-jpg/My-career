@@ -8,6 +8,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../mail/mail.module';
 
+export function requireJwtSecret(secret?: string): string {
+  if (!secret || secret.length < 16) {
+    throw new Error('JWT_SECRET дар .env нест ё кӯтоҳ аст (камаш 16 аломат) — сервер бе он оғоз намешавад.');
+  }
+  return secret;
+}
+
 @Module({
   imports: [
     UsersModule,
@@ -16,7 +23,8 @@ import { MailModule } from '../mail/mail.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'secretKey',
+        // Калиди пешфарз нест: агар JWT_SECRET гум шавад, ҳар кас токени админ месохт.
+        secret: requireJwtSecret(configService.get<string>('JWT_SECRET')),
         signOptions: { expiresIn: '7d' },
       }),
       inject: [ConfigService],

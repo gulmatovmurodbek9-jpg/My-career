@@ -563,7 +563,7 @@ export class UsersService {
 
         const today = new Date().toISOString().slice(0, 10);
         const usage = user.aiDailyUsage || { date: null, count: 0 };
-        const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 0);
+        const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 30);
 
         const usedToday = usage.date === today ? usage.count : 0;
         return {

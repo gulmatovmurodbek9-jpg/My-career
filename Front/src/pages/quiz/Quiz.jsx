@@ -35,6 +35,8 @@ import { displayName } from "../../lib/careerName";
 import { careerName, careerDescription } from "../../lib/careerText";
 import { getGrade, gradeText, setGrade, GRADE_EVENT } from "../../lib/grade";
 import { withLang } from "../../lib/apiLang";
+import QuizFeedback from "../../components/QuizFeedback";
+import { CLUSTER_SUBJECTS, SUBJECTS, getQuizContext, setQuizContext, subjectName } from "../../lib/quizContext";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
 
@@ -183,6 +185,51 @@ const NEXT_TEXT = {
     },
 };
 
+const CONTEXT_TEXT = {
+    tj: {
+        title: "Барои тавсияи дақиқтар (ихтиёрӣ)",
+        subjects: "Дар кадом фанҳо баҳоятон баланд аст?",
+        budget: "Таҳсил",
+        any: "Пулакӣ ҳам мумкин",
+        free: "Танҳо ҷойи ройгон",
+        city: "Шаҳри шумо",
+        anyCity: "Фарқ надорад",
+        weakTitle: "Ба фанҳо диққат диҳед",
+        weak: "Барои самти «{{name}}» фанҳои {{subjects}} муҳиманд, вале шумо онҳоро ҳамчун фанни қавӣ қайд накардед. Ин манъ нест — танҳо тайёрии бештар лозим мешавад.",
+        local: "дар шаҳри шумо",
+        freeSeat: "ҷойи ройгон дорад",
+        noneLocal: "Дар шаҳри {{city}} ихтисосҳои ин самт ёфт нашуданд — ихтисосҳо дар шаҳрҳои дигаранд.",
+    },
+    ru: {
+        title: "Для более точной рекомендации (необязательно)",
+        subjects: "По каким предметам у вас высокие оценки?",
+        budget: "Обучение",
+        any: "Можно и платно",
+        free: "Только бюджет",
+        city: "Ваш город",
+        anyCity: "Неважно",
+        weakTitle: "Обратите внимание на предметы",
+        weak: "Для направления «{{name}}» важны предметы {{subjects}}, но вы не отметили их как сильные. Это не запрет — просто понадобится больше подготовки.",
+        local: "в вашем городе",
+        freeSeat: "есть бюджетные места",
+        noneLocal: "В городе {{city}} специальностей этого направления не нашлось — они в других городах.",
+    },
+    en: {
+        title: "For a more precise recommendation (optional)",
+        subjects: "Which subjects do you get high marks in?",
+        budget: "Study",
+        any: "Paid is fine too",
+        free: "Free places only",
+        city: "Your city",
+        anyCity: "Doesn't matter",
+        weakTitle: "Mind the subjects",
+        weak: "For the “{{name}}” direction, {{subjects}} matter, but you did not mark them as strong. That is not a ban — you will just need more preparation.",
+        local: "in your city",
+        freeSeat: "has free places",
+        noneLocal: "No specialties of this direction were found in {{city}} — they are in other cities.",
+    },
+};
+
 const shuffledOrder = (id, count) => {
     // Саволи «баробар»: ду самт ва «Не знаю — оба» ҳамеша дар охир — бе омехта.
     if (id === "tiebreak") return Array.from({ length: count }, (_, i) => i);
@@ -226,8 +273,18 @@ const Quiz = () => {
     const [gradeConfirmed, setGradeConfirmed] = useState(false);
     const pickGrade = (value) => {
         setGrade(value);
+        setQuizContext(quizContext);
         setGradeConfirmed(true);
     };
+    const [quizContext, setQuizContextState] = useState(getQuizContext);
+    const [cityList, setCityList] = useState([]);
+    useEffect(() => {
+        axios.get(`${API}/universities/cities`).then(({ data }) => setCityList(Array.isArray(data) ? data.map((row) => row.city).filter(Boolean) : [])).catch(() => { });
+    }, []);
+    const toggleSubject = (key) => setQuizContextState((old) => ({
+        ...old,
+        subjects: old.subjects.includes(key) ? old.subjects.filter((s) => s !== key) : [...old.subjects, key],
+    }));
 
     useEffect(() => {
         if (user?.savedCareers) {
@@ -670,7 +727,7 @@ const Quiz = () => {
         if (busyRef.current) return;
         busyRef.current = true;
         setIsAnalyzing(true);
-        const body = { answers: finalAnswers, lang: i18n.language, grade: getGrade() };
+        const body = { answers: finalAnswers, lang: i18n.language, grade: getGrade(), context: getQuizContext() };
         try {
             const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -1027,6 +1084,28 @@ const Quiz = () => {
                     </ul>
                 </section>
 
+                {(() => {
+                    const ctx = CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj;
+                    const lang2 = (i18n.language || "tj").slice(0, 2);
+                    const context = results.context || null;
+                    const number = Number(topCluster?.clusterNumber) || 0;
+                    const needed = CLUSTER_SUBJECTS[number] || [];
+                    const weak = context?.subjects?.length > 0 && !needed.some((s) => context.subjects.includes(s));
+                    const noLocal = context?.city && matched.length > 0 && !matched.some((career) => career.local);
+                    if (!weak && !noLocal) return null;
+                    return (
+                        <section className="rounded-[2rem] border border-amber-500/30 bg-amber-500/10 p-6 sm:p-8 space-y-2">
+                            <h2 className="text-lg font-black text-foreground">{ctx.weakTitle}</h2>
+                            {weak && (
+                                <p className="text-[15px] leading-relaxed text-foreground">
+                                    {fill(ctx.weak, { name: clusterLabel(t, topCluster), subjects: needed.map((s) => subjectName(s, lang2)).join(", ") })}
+                                </p>
+                            )}
+                            {noLocal && <p className="text-[15px] leading-relaxed text-foreground">{fill(ctx.noneLocal, { city: context.city })}</p>}
+                        </section>
+                    );
+                })()}
+
                 {aiAdvice && (
                     <section className="rounded-[2rem] border border-primary/25 bg-primary/5 p-6 sm:p-8">
                         <div className="flex items-center gap-2 text-sm font-black text-primary">
@@ -1067,6 +1146,12 @@ const Quiz = () => {
                                         </div>
                                         {(careerDescription(career, i18n.language) || career.purpose) && (
                                             <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{displayName(careerDescription(career, i18n.language) || career.purpose)}</p>
+                                        )}
+                                        {(career.local || career.free) && (
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {career.local && <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">📍 {(CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj).local}</span>}
+                                                {career.free && <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[12px] font-semibold text-primary">{(CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj).freeSeat}</span>}
+                                            </div>
                                         )}
                                         <div className="mt-auto flex items-center justify-between gap-3 pt-1">
                                             <span className="text-xs font-bold text-muted-foreground">
@@ -1141,6 +1226,8 @@ const Quiz = () => {
                     );
                 })()}
 
+                <QuizFeedback attemptId={results.attemptId} />
+
                 <div className="flex flex-col gap-3 sm:flex-row">
                     {topCluster?.id && (
                         <Link to={`/careers?clusterId=${topCluster.id}`} className="btn-primary flex-1 justify-center !py-4 text-sm">
@@ -1190,6 +1277,67 @@ const Quiz = () => {
                             </button>
                         ))}
                     </div>
+                    {(() => {
+                        const ctx = CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj;
+                        const lang2 = (i18n.language || "tj").slice(0, 2);
+                        return (
+                            <details className="rounded-2xl border border-dashed border-border p-4">
+                                <summary className="cursor-pointer text-sm font-bold text-foreground">{ctx.title}</summary>
+                                <div className="mt-4 space-y-4">
+                                    <div>
+                                        <div className="text-[13px] font-semibold text-muted-foreground">{ctx.subjects}</div>
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            {SUBJECTS.map((subject) => (
+                                                <button
+                                                    key={subject.key}
+                                                    type="button"
+                                                    onClick={() => toggleSubject(subject.key)}
+                                                    aria-pressed={quizContext.subjects.includes(subject.key)}
+                                                    className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold cursor-pointer ${
+                                                        quizContext.subjects.includes(subject.key) ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary"
+                                                    }`}
+                                                >
+                                                    {subject[lang2] || subject.tj}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <label className="text-[13px] font-semibold text-muted-foreground">
+                                            {ctx.budget}
+                                            <select
+                                                value={quizContext.budget}
+                                                onChange={(event) => setQuizContextState((old) => ({ ...old, budget: event.target.value }))}
+                                                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+                                            >
+                                                <option value="any">{ctx.any}</option>
+                                                <option value="free">{ctx.free}</option>
+                                            </select>
+                                        </label>
+                                        <label className="text-[13px] font-semibold text-muted-foreground">
+                                            {ctx.city}
+                                            <select
+                                                value={quizContext.city}
+                                                onChange={(event) => setQuizContextState((old) => ({ ...old, city: event.target.value }))}
+                                                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+                                            >
+                                                <option value="">{ctx.anyCity}</option>
+                                                {cityList.map((city) => <option key={city} value={city}>{city}</option>)}
+                                            </select>
+                                        </label>
+                                    </div>
+                                </div>
+                            </details>
+                        );
+                    })()}
+                    <p className="text-center text-[12px] leading-relaxed text-muted-foreground">
+                        {{
+                            tj: "Ҷавобҳо бе ном нигоҳ дошта мешаванд — барои беҳтар кардани тест. Маслиҳатро AI (Google) месозад; ном ва почтаи шумо ба он фиристода намешавад.",
+                            ru: "Ответы хранятся без имени — для улучшения теста. Совет составляет AI (Google); ваше имя и почта ему не передаются.",
+                            en: "Answers are stored without your name — to improve the test. The advice is written by AI (Google); your name and email are never sent to it.",
+                        }[(i18n.language || "tj").slice(0, 2)] || ""}{" "}
+                        <Link to="/privacy" className="font-semibold text-primary hover:underline">{{ tj: "Махфият", ru: "Конфиденциальность", en: "Privacy" }[(i18n.language || "tj").slice(0, 2)]}</Link>
+                    </p>
                 </div>
             </div>
         );

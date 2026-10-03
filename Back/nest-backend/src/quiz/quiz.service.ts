@@ -20,6 +20,9 @@ export interface UserScores {
     cognitive: Record<string, number>;
     motivation: Record<string, any>;
     specialtyKeywords: string[];
+    // Ду самт баробар баромаданд ва корбар худаш яке интихоб кард. Хол илова намешавад
+    // (пештар +3-и бе асос буд) — интихоб рост самти асосиро муайян мекунад.
+    chosenCluster?: string;
 }
 
 @Injectable()
@@ -102,16 +105,14 @@ export class QuizService {
         for (const key of CLUSTERS) {
             scores.mmtClusters[key] = max[key] > 0 ? Math.round((raw[key] / max[key]) * 400) / 10 : 0;
         }
-        if (tiebreak) {
-            scores.mmtClusters[tiebreak as keyof MMTScores] = Math.min(40, scores.mmtClusters[tiebreak as keyof MMTScores] + 3);
-        }
+        if (tiebreak) scores.chosenCluster = tiebreak;
 
         return scores;
     }
 
-    async matchCareers(userScores: UserScores, lang: string = 'tj', rawGrade?: number | string): Promise<any> {
+    async matchCareers(userScores: UserScores, lang: string = 'tj', rawGrade?: number | string, context?: any): Promise<any> {
         const grade = parseGrade(rawGrade);
-        const selection = await this.careerService.selectMatchedCareers(userScores, grade ?? undefined);
+        const selection = await this.careerService.selectMatchedCareers(userScores, grade ?? undefined, context);
         const { clusterScores, careers: topCareers, matchPercentage: clusterMatchPct } = selection;
 
         const topCluster = selection.cluster;
@@ -128,6 +129,10 @@ export class QuizService {
             tuitionFee: c.tuitionFee,
             // Номи ихтисос бо забони корбар — фронтенд аз ин тарҷума мегирад.
             translations: c.translations,
+            // Чаро дар рӯйхат боло аст: калимаҳои ҷавобҳо, шаҳр, ҷойи ройгон.
+            reasons: selection.careerReasons.get(c.id) || [],
+            local: selection.careerContext?.get(c.id)?.local || false,
+            free: selection.careerContext?.get(c.id)?.free || false,
         }));
 
         const personality = "Натиҷаи тести шумо мутобиқати баландро бо " + topCluster.clusterName + " нишон медиҳад.";
@@ -135,6 +140,7 @@ export class QuizService {
 
         return {
             grade,
+            context: context || null,
             topCluster: {
                 id: topCluster.id,
                 clusterName: topCluster.clusterName,
@@ -161,7 +167,7 @@ export class QuizService {
         clusterScores: { cluster: Cluster; score: number }[] = [],
         grade: number | null = null,
     ): Promise<string> {
-        const fallback = this.staticAdvice(cluster, lang);
+        const fallback = this.staticAdvice(cluster, lang, careers, clusterScores, grade);
 
         try {
             const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
@@ -208,21 +214,66 @@ export class QuizService {
             ].filter(Boolean).join('\n');
 
             const text = (await this.aiService.generateContent(prompt))?.trim();
-            return text && text.length > 40 ? text : fallback;
+            if (!text || text.length <= 40) return fallback;
+            // Санҷиши худкор: рақаме, ки дар маълумоти мо нест (бал, маош, сол), бофта аст —
+            // он гоҳ матни захиравии бехатар.
+            if (QuizService.hasInventedNumbers(text, prompt)) {
+                console.warn('AI advice рақами бофта дошт — матни захиравӣ истифода шуд');
+                return fallback;
+            }
+            return text;
         } catch (error) {
             console.error('AI advice афтод, матни захиравӣ истифода мешавад:', error?.message || error);
             return fallback;
         }
     }
 
-    private staticAdvice(cluster: Cluster, lang: string): string {
+    // Рақамҳои матни AI, ки дар prompt нестанд. Рақамҳои хурди «шуморагӣ» (1–5) иҷозат.
+    static hasInventedNumbers(text: string, source: string): boolean {
+        const known = new Set((source.match(/\d+/g) || []).map(String));
+        return (text.match(/\d+/g) || []).some((value) => Number(value) > 5 && !known.has(value));
+    }
+
+    // Маслиҳат бе AI — аз худи натиҷа сохта мешавад, на як ҷумлаи умумӣ: самт, самти
+    // дуюм (агар наздик бошад), 3 ихтисоси боло ва қадами навбатӣ.
+    private staticAdvice(
+        cluster: Cluster,
+        lang: string,
+        careers: Career[] = [],
+        clusterScores: { cluster: Cluster; score: number }[] = [],
+        grade: number | null = null,
+    ): string {
+        const tr = (c: Cluster) => (lang !== 'tj' && (c as any)?.translations?.[lang]?.clusterName) || c.clusterName;
+        const name = (c: Career) => (lang !== 'tj' && (c as any)?.translations?.[lang]?.name) || c.name;
+        const top = clusterScores.find((entry) => entry.cluster.id === cluster.id)?.score ?? 0;
+        const second = clusterScores.filter((entry) => entry.cluster.id !== cluster.id).sort((a, b) => b.score - a.score)[0];
+        const close = second && top > 0 && top - second.score < 0.15 * top;
+        const list = careers.slice(0, 3).map(name).join(', ');
         if (lang === 'ru') {
-            return `Основываясь на вашем тесте, мы рекомендуем готовиться к экзаменам кластера «${cluster.clusterName}» НЦТ.`;
+            return [
+                `Ваши ответы сильнее всего указали на направление «${tr(cluster)}».`,
+                close ? `Направление «${tr(second.cluster)}» тоже очень близко — посмотрите и его.` : '',
+                list ? `Начните со специальностей: ${list}.` : '',
+                grade === 9 ? 'После 9 класса — выбирайте колледж с этой специальностью.' : 'Готовьтесь к предметам экзамена НЦТ этого кластера.',
+                'Следующий шаг: сравните 2–3 специальности и посмотрите, где учиться и какой проходной балл.',
+            ].filter(Boolean).join(' ');
         }
         if (lang === 'en') {
-            return `Based on your quiz, we recommend preparing for the "${cluster.clusterName}" MMT cluster exams.`;
+            return [
+                `Your answers pointed most strongly to the "${tr(cluster)}" direction.`,
+                close ? `The "${tr(second.cluster)}" direction is also very close — look at it too.` : '',
+                list ? `Start with these specialties: ${list}.` : '',
+                grade === 9 ? 'After grade 9, choose a college that offers this specialty.' : 'Prepare for the NTC exam subjects of this cluster.',
+                'Next step: compare 2–3 specialties and check where to study and the entry score.',
+            ].filter(Boolean).join(' ');
         }
-        return `Дар асоси тести шумо, мо тавсия медиҳем, ки барои имтиҳонҳои кластери «${cluster.clusterName}» ММТ тайёрӣ бинед.`;
+        return [
+            `Ҷавобҳои шумо бештар ба самти «${tr(cluster)}» ишора карданд.`,
+            close ? `Самти «${tr(second.cluster)}» низ хеле наздик аст — онро ҳам бинед.` : '',
+            list ? `Аз ин ихтисосҳо сар кунед: ${list}.` : '',
+            grade === 9 ? 'Баъди синфи 9 — коллеҷеро интихоб кунед, ки ин ихтисосро дорад.' : 'Ба фанҳои имтиҳони ММТ-и ҳамин кластер тайёрӣ бинед.',
+            'Қадами навбатӣ: 2–3 ихтисосро муқоиса кунед ва бинед, ки дар куҷо мехонанд ва бали гузариш чанд аст.',
+        ].filter(Boolean).join(' ');
     }
 
     async interpretAnswer(

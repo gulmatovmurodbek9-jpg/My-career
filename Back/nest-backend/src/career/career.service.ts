@@ -13,7 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { AiService } from '../ai/ai.service';
 import { User, UserRole } from '../users/user.entity';
 
-const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 0);
+const DAILY_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 30);
 const LIMIT_ON = DAILY_LIMIT > 0;
 
 
@@ -1487,7 +1487,7 @@ export class CareerService {
             seats ? `Ҷойҳои қабул: ${seats}` : '',
             places.length ? `Муассисаҳо (${places.length}): ${places.slice(0, 8).map((u) => `${u.name} (${u.city || '—'}, ${u.institutionType || ''})`).join('; ')}` : '',
             scores ? `Бали гузариш, ${scores}` : '',
-            career.salaryAndMarket?.junior ? `Маош: навкор ${career.salaryAndMarket.junior}, ботаҷриба ${career.salaryAndMarket.mid}` : '',
+            career.salaryAndMarket?.junior ? `Маош (ТАХМИНӢ, на омори расмӣ — ҳатман «тахминан» гӯ): навкор ${career.salaryAndMarket.junior}, ботаҷриба ${career.salaryAndMarket.mid}` : '',
             career.skills?.technical?.length ? `Малакаҳо: ${career.skills.technical.slice(0, 6).join(', ')}` : '',
             career.careerOpportunities?.length ? `Ҷойи кор: ${career.careerOpportunities.slice(0, 5).join(', ')}` : '',
             grade === 9 ? 'Корбар баъди синфи 9 аст — танҳо коллеҷ.' : '',
@@ -1532,9 +1532,9 @@ export class CareerService {
         const parts: string[] = [];
         const salary = (career as any).salaryAndMarket;
         if (asks.salary && salary?.junior) {
-            parts.push(lang === 'ru' ? `Начинающий специалист получает ${salary.junior}, опытный — ${salary.mid}.`
-                : lang === 'en' ? `A beginner earns ${salary.junior}, an experienced specialist ${salary.mid}.`
-                    : `Мутахассиси навкор ${salary.junior} ва ботаҷриба ${salary.mid} мегирад.`);
+            parts.push(lang === 'ru' ? `По оценке, начинающий специалист получает около ${salary.junior}, опытный — ${salary.mid}.`
+                : lang === 'en' ? `Roughly, a beginner earns ${salary.junior} and an experienced specialist ${salary.mid}.`
+                    : `Тахминан мутахассиси навкор ${salary.junior} ва ботаҷриба ${salary.mid} мегирад.`);
         }
         const min = career.minTuitionFee || career.tuitionFee;
         const max = career.maxTuitionFee || career.tuitionFee;
@@ -1815,12 +1815,14 @@ export class CareerService {
         }
     }
 
-    async selectMatchedCareers(userScores: any, rawGrade?: string | number): Promise<{
+    async selectMatchedCareers(userScores: any, rawGrade?: string | number, context?: { budget?: string; city?: string }): Promise<{
         cluster: Cluster | null;
         matchPercentage: number;
         careers: Career[];
         clusterScores: { cluster: Cluster; score: number }[];
         careerRanks: Map<string, number>;
+        careerReasons: Map<string, string[]>;
+        careerContext?: Map<string, { local: boolean; free: boolean }>;
     }> {
         const mmtScores = userScores?.mmtClusters || { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
         const clusters = await this.clusterRepository.find();
@@ -1832,9 +1834,11 @@ export class CareerService {
             }))
             .sort((a, b) => b.score - a.score);
 
-        const top = clusterScores[0];
+        // Корбар дар саволи «ду самт баробар» худаш интихоб кард — ҳамон самт асосӣ аст.
+        const chosen = String(userScores?.chosenCluster || '');
+        const top = clusterScores.find((entry) => `c${entry.cluster.clusterId}` === chosen) || clusterScores[0];
         if (!top) {
-            return { cluster: null, matchPercentage: 0, careers: [], clusterScores, careerRanks: new Map() };
+            return { cluster: null, matchPercentage: 0, careers: [], clusterScores, careerRanks: new Map(), careerReasons: new Map() };
         }
 
         const matchPercentage = Math.min(
@@ -1845,7 +1849,7 @@ export class CareerService {
         // Баъди синфи 9 — танҳо ихтисосҳои коллеҷ (пешниҳоди «баъди синфи 9» доранд).
         const grade = parseGrade(rawGrade);
         const poolQuery = this.careerRepository.createQueryBuilder('career')
-            .select(['career.id', 'career.name', 'career.description', 'career.purpose', 'career.skills', 'career.likesCount', 'career.translations'])
+            .select(['career.id', 'career.name', 'career.description', 'career.purpose', 'career.skills', 'career.translations'])
             .where('career.clusterId = :clusterId', { clusterId: top.cluster.id });
         if (grade) poolQuery.andWhere(offeredForGrade('career'), { grade });
         const pool = await poolQuery.getMany();
@@ -1858,6 +1862,8 @@ export class CareerService {
         const words = (text: string): string[] => text.toLowerCase().split(/[^0-9a-zа-яёӣӯқғҳҷ]+/i).filter(Boolean);
         const hits = (list: string[], keyword: string): boolean => list.some((word) => word.startsWith(keyword));
 
+        // Хол ва калимаҳое, ки ихтисосро боло бурданд — барои «чаро ин ихтисос?».
+        const reasons = new Map<string, string[]>();
         const scoreOf = (career: Career): number => {
             if (!keywords.length) return 0;
 
@@ -1869,18 +1875,41 @@ export class CareerService {
                 ...(career.skills?.soft || []),
             ].join(' '));
 
-            return keywords.reduce((total, keyword) => {
-                if (hits(name, keyword)) return total + 4;
-                if (hits(body, keyword)) return total + 1;
-                return total;
+            const matched: string[] = [];
+            const total = keywords.reduce((sum, keyword) => {
+                if (hits(name, keyword)) { matched.push(keyword); return sum + 4; }
+                if (hits(body, keyword)) { matched.push(keyword); return sum + 1; }
+                return sum;
             }, 0);
+            reasons.set(career.id, matched);
+            return total;
         };
 
+        // Имкони хонанда: шаҳр ва «танҳо ройгон». Ихтисосро хориҷ намекунем (шояд омода
+        // бошад кӯчад), вале ихтисосҳое, ки дар шаҳраш ё бо ҷойи ройгон ҳастанд, болотар.
+        const city = String(context?.city || '').trim();
+        const wantsFree = context?.budget === 'free';
+        const extra = new Map<string, { local: boolean; free: boolean }>();
+        if ((city || wantsFree) && pool.length) {
+            const rows: Array<{ id: string; local: boolean; free: boolean }> = await this.careerRepository.manager.query(
+                `SELECT o."careerId" AS id,
+                        bool_or($2 <> '' AND u.city = $2) AS local,
+                        bool_or(o."paymentType" = 'ройгон') AS free
+                 FROM career_offerings o JOIN universities u ON u.id = o."universityId"
+                 WHERE o."careerId" = ANY($1) AND ($3::int IS NULL OR o."basedOn" = $3)
+                 GROUP BY 1`,
+                [pool.map((c) => c.id), city, grade],
+            );
+            for (const row of rows) extra.set(row.id, { local: !!row.local, free: !!row.free });
+        }
+        const bonus = (id: string) => (extra.get(id)?.local ? 2 : 0) + (wantsFree && extra.get(id)?.free ? 2 : 0);
+
         const ranked = pool
-            .map(career => ({ career, rank: scoreOf(career) }))
+            .map(career => ({ career, rank: scoreOf(career) + bonus(career.id) }))
+            // Лайкҳо ба тартиб таъсир намекунанд (вагарна «ҳалқаи маъруфият» мешуд):
+            // аввал мувофиқат бо ҷавобҳо, баъд алифбо.
             .sort((a, b) =>
                 b.rank - a.rank ||
-                (b.career.likesCount ?? 0) - (a.career.likesCount ?? 0) ||
                 (a.career.name || '').localeCompare(b.career.name || ''))
             .slice(0, 12);
 
@@ -1900,78 +1929,38 @@ export class CareerService {
             careers: topCareers,
             clusterScores,
             careerRanks: new Map(ranked.map((r) => [r.career.id, r.rank])),
+            careerReasons: reasons,
+            careerContext: extra,
         };
     }
 
+    // Натиҷа барои Dashboard. Фоиз = мувофиқати САМТ (як барои ҳамаи ихтисосҳои самт) ва
+    // ростқавлона ҳамин тавр ном дорад. Тартиби ихтисосҳо аз калимаҳои ҷавобҳои қисми 2;
+    // ҳамон калимаҳо ҳамчун «чаро ин ихтисос» дода мешаванд. Cosine/Euclidean бардошта шуд:
+    // профили ихтисос танҳо як кластер дошт ва онҳо маълумоти нав намедоданд.
     async matchCareers(userScores: any): Promise<any[]> {
-        const { careers, matchPercentage, clusterScores, cluster, careerRanks } =
+        const { careers, matchPercentage, clusterScores, careerRanks, careerReasons } =
             await this.selectMatchedCareers(userScores);
 
         const userProfile: Record<string, number> = {};
         for (const entry of clusterScores) {
-            userProfile[`c${entry.cluster.clusterId}`] = Number(
-                ((entry.score / CareerService.MMT_MAX_SCORE) * 10).toFixed(1),
-            );
+            userProfile[`c${entry.cluster.clusterId}`] = Math.round((entry.score / CareerService.MMT_MAX_SCORE) * 100);
         }
 
-        const careerProfile: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
-        if (cluster) careerProfile[`c${cluster.clusterId}`] = 10;
-
-        const values = clusterScores.map((entry) => entry.score);
-        const norm = Math.sqrt(values.reduce((sum, v) => sum + v * v, 0));
-        const topScore = clusterScores[0]?.score ?? 0;
-        const secondScore = clusterScores[1]?.score ?? 0;
-        const cosineSimilarity = norm > 0 ? Number((topScore / norm).toFixed(3)) : 0;
-
-        const ideal = CareerService.MMT_MAX_SCORE;
-        const distance = Math.sqrt(
-            clusterScores.reduce((sum, entry, index) => {
-                const target = index === 0 ? ideal : 0;
-                return sum + (entry.score - target) ** 2;
-            }, 0),
-        );
-        const maxDistance = Math.sqrt(ideal * ideal * clusterScores.length);
-        const euclideanSimilarity = maxDistance > 0
-            ? Number(Math.max(0, 1 - distance / maxDistance).toFixed(3))
-            : 0;
-
-        const confidenceIndex = topScore > 0
-            ? Number(((topScore - secondScore) / topScore).toFixed(3))
-            : 0;
-
-        const dimensionBreakdown: Record<string, number> = {};
-        for (const entry of clusterScores) {
-            const key = `c${entry.cluster.clusterId}`;
-            dimensionBreakdown[key] = topScore > 0
-                ? Number((entry.score / topScore).toFixed(3))
-                : 0;
-        }
-
-        const maxRank = Math.max(0, ...careers.map((c) => careerRanks.get(c.id) ?? 0));
-
-        return careers.map(career => {
+        return careers.map((career, index) => {
             const universities = (career.universities || []);
-
-            const rank = careerRanks.get(career.id) ?? 0;
-            const relative = maxRank > 0 ? rank / maxRank : 1;
-            const careerMatch = Math.max(
-                35,
-                Math.min(99, Math.round(matchPercentage * (0.75 + 0.25 * relative))),
-            );
-
             return {
                 id: career.id,
                 code: career.code,
                 name: career.name,
                 description: career.description,
                 purpose: career.purpose,
-                matchPercentage: careerMatch,
-                cosineSimilarity,
-                euclideanSimilarity,
-                confidenceIndex,
-                dimensionBreakdown,
+                matchPercentage,
+                clusterMatch: matchPercentage,
+                rank: index + 1,
+                keywordScore: careerRanks.get(career.id) ?? 0,
+                reasons: careerReasons.get(career.id) ?? [],
                 userProfile,
-                careerProfile,
                 likesCount: career.likesCount,
                 universities: universities.slice(0, 3).map(uni => ({
                     id: uni.id,
@@ -2681,6 +2670,9 @@ ${instr.format}
             typeof name === 'string' && allowed.has(name.trim().toLowerCase());
 
         if (Array.isArray(report?.careerRecommendations)) {
+            // Фоизро AI намесозад: ҳамон мувофиқати самт аз ҳисоби тест.
+            const realPercent = top3[0]?.matchPercentage ?? 0;
+            for (const rec of report.careerRecommendations) if (rec) rec.matchPercentage = realPercent;
             const kept = report.careerRecommendations.filter((r: any) => keepReal(r?.name));
             report.careerRecommendations = kept.length
                 ? kept

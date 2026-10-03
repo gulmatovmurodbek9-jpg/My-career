@@ -88,6 +88,12 @@ async function wipe(dataSource: DataSource, includeUsers: boolean): Promise<void
 }
 
 async function main(): Promise<void> {
+    // Seed ҷадвалҳоро тоза мекунад ва схемаро бе migration иваз мекунад (synchronize).
+    // Дар production танҳо бо --force, то тасодуфан маълумоти корбарон гум нашавад.
+    if (process.env.NODE_ENV === 'production' && !process.argv.includes('--force')) {
+        console.error('Seed дар production бе --force иҷро намешавад (маълумот тоза мешавад). Аввал нусхаи эҳтиётии база гиред.');
+        process.exit(1);
+    }
     const includeUsers = process.argv.includes('--all');
 
     console.log('=== SEED: базаи MyCareer ===\n');

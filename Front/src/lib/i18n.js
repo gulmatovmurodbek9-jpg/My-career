@@ -261,7 +261,7 @@ i18n
                         logout: "Баромад"
                     },
                     common: {
-                        match_level: "Дараҷаи Мувофиқат",
+                        match_level: "Дараҷаи Мувофиқат", direction_match: "Мувофиқати самт",
                         best_pick: "Беҳтарин Интихоб",
                         why_match: "Чаро ин?",
                         where_to_study: "Дар куҷо хондан мумкин",
@@ -474,6 +474,7 @@ i18n
                         compare_desc: "Ихтисосҳоро бо AI муқоиса кунед ва беҳтаринро ёбед"
                     },
                     footer: {
+                        privacy: "Махфият ва маълумот",
                         platform: "Платформа",
                         contact: "Тамос",
                         location: "Душанбе, Тоҷикистон",
@@ -594,6 +595,8 @@ i18n
                         cl_4_desc: "Кластери ҷомеашиносӣ ва ҳуқуқ — ҳуқуқшиносӣ, сиёсатшиносӣ, журналистика, кори иҷтимоӣ ва муносибатҳои байналмилалӣ. Барои онҳое, ки адолат, ҷомеа ва муошират барояшон муҳим аст.",
                         cl_5_desc: "Кластери тиб, биология ва варзиш — табобат, дорусозӣ, ҳамширагӣ, биология, экология ва тарбияи ҷисмонӣ. Барои онҳое, ки ба саломатии инсон ва табиати зинда шавқ доранд.",
                         sal_by_experience: "Аз рӯи таҷриба дар ҳамин ихтисос",
+                        sal_estimate: "Тахминӣ", sal_estimate_note: "Тахминӣ: аз эълонҳои кор ва суҳбат бо мутахассисон, на омори расмӣ. Маоши миёнаи соҳа дар боло — аз Агентии омор.",
+                        template_note: "Тавсифи муфассали ин ихтисос ҳанӯз навишта мешавад — матни боло умумӣ аст. Маълумоти расмӣ (рамз, муассисаҳо, нарх, ҷойҳо ва бали гузариш) аз Маркази миллии тестӣ гирифта шудааст.",
                         sal_no_data: "Барои ин ихтисос маълумоти тасдиқшудаи маош надорем. Рақами тахминӣ нишон намедиҳем, то шумо дар асоси маълумоти нодуруст қарор нагиред.",
                         sal_equal: "баробар",
                         sal_public_text: "Маош аз рӯи Кодекси меҳнати Ҷумҳурии Тоҷикистон ва шабакаи ягонаи тарифӣ муайян мешавад: музди ҳадди ақали қонунӣ зарб бар зинаи тарифии вазифа. Ба он иловапулиҳо барои дараҷа, собиқаи кор ва шароити меҳнат зам мешаванд.",
@@ -1234,7 +1237,7 @@ i18n
                         logout: "Выйти"
                     },
                     common: {
-                        match_level: "Уровень Соответствия",
+                        match_level: "Уровень Соответствия", direction_match: "Совпадение направления",
                         best_pick: "Лучший Выбор",
                         why_match: "Почему это?",
                         where_to_study: "Где можно учиться",
@@ -1372,6 +1375,7 @@ i18n
                         compare_desc: "Сравните профессии с помощью AI и найдите лучшую"
                     },
                     footer: {
+                        privacy: "Конфиденциальность",
                         platform: "Платформа",
                         contact: "Контакты",
                         location: "Душанбе, Таджикистан",
@@ -1588,6 +1592,8 @@ i18n
                         cl_4_desc: "Кластер обществознания и права — юриспруденция, политология, журналистика, социальная работа и международные отношения. Для тех, кому важны справедливость, общество и общение.",
                         cl_5_desc: "Кластер медицины, биологии и спорта — лечение, фармация, сестринское дело, биология, экология и физическое воспитание. Для тех, кому интересны здоровье человека и живая природа.",
                         sal_by_experience: "По опыту работы в этой специальности",
+                        sal_estimate: "Оценка", sal_estimate_note: "Оценка: по вакансиям и беседам со специалистами, не официальная статистика. Средняя зарплата по отрасли выше — от Агентства по статистике.",
+                        template_note: "Подробное описание этой специальности ещё готовится — текст выше общий. Официальные данные (код, учебные заведения, цена, места и проходной балл) взяты у Национального центра тестирования.",
                         sal_no_data: "По этой специальности у нас нет подтверждённых данных о зарплате. Приблизительных цифр мы не показываем, чтобы вы не принимали решение на основе неверных данных.",
                         sal_equal: "наравне",
                         sal_public_text: "Зарплата определяется по Трудовому кодексу Республики Таджикистан и единой тарифной сетке: законный минимум умножается на тарифный разряд должности. К нему добавляются надбавки за квалификацию, стаж и условия труда.",
@@ -2221,7 +2227,7 @@ i18n
                         logout: "Log out"
                     },
                     common: {
-                        match_level: "Match Level",
+                        match_level: "Match Level", direction_match: "Direction match",
                         best_pick: "Best Pick",
                         why_match: "Why this?",
                         where_to_study: "Where to study",
@@ -2359,6 +2365,7 @@ i18n
                         compare_desc: "Compare careers with AI and find the best match"
                     },
                     footer: {
+                        privacy: "Privacy",
                         platform: "Platform",
                         contact: "Contact",
                         location: "Dushanbe, Tajikistan",
@@ -2566,6 +2573,8 @@ i18n
                         cl_4_desc: "The social science and law cluster — law, political science, journalism, social work and international relations. For those who care about justice, society and communication.",
                         cl_5_desc: "The medicine, biology and sport cluster — treatment, pharmacy, nursing, biology, ecology and physical education. For those drawn to human health and the living world.",
                         sal_by_experience: "By experience in this specialty",
+                        sal_estimate: "Estimate", sal_estimate_note: "Estimate: from job ads and talks with specialists, not official statistics. The sector average above is from the Statistics Agency.",
+                        template_note: "A detailed description of this specialty is still being written — the text above is general. Official data (code, institutions, price, places and entry score) comes from the National Testing Center.",
                         sal_no_data: "We have no verified salary data for this specialty. We do not show an estimate, so that you do not decide on the basis of a wrong figure.",
                         sal_equal: "the same",
                         sal_public_text: "Pay follows the Labour Code of the Republic of Tajikistan and the unified pay scale: the legal minimum multiplied by the grade of the post, plus supplements for qualification, length of service and working conditions.",

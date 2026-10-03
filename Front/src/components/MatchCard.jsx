@@ -173,7 +173,8 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                 <div className="mt-6">
                     <div className="flex items-baseline justify-between gap-2">
                         <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
-                            {t('common.match_level', 'Дараҷаи Мувофиқат')}
+                            {/* Фоизи САМТ (барои ҳамаи ихтисосҳои самт якхела) — ростқавлона ҳамин тавр ном дорад. */}
+                            {t('common.direction_match', 'Мувофиқати самт')}
                         </span>
                         <span className="text-lg font-bold tabular-nums text-primary">{percent}%</span>
                     </div>
@@ -182,7 +183,7 @@ const MatchCard = ({ career, matchPercentage, isLiked: initialLiked, isSaved: in
                         aria-valuenow={percent}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-label={t('common.match_level', 'Дараҷаи Мувофиқат')}
+                        aria-label={t('common.direction_match', 'Мувофиқати самт')}
                         className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"
                     >
                         <motion.div

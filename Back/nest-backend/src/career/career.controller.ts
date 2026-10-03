@@ -10,6 +10,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AiService } from '../ai/ai.service';
 import { diskStorage } from 'multer';
+import { Ip } from '@nestjs/common';
+import { assertAiAllowed } from '../common/ai-limit';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -137,7 +139,9 @@ export class CareerController {
     @ApiOperation({ summary: 'Free-text search: AI turns the question into filters' })
     async aiSearch(
         @Body() body: { query: string; lang?: string; page?: number; limit?: number; keepLang?: boolean; grade?: string | number },
+        @Ip() ip: string,
     ) {
+        assertAiAllowed(ip);
         const result = await this.careerService.aiSearch(
             body?.query,
             body?.lang,
@@ -166,7 +170,8 @@ export class CareerController {
 
     @Post('assistant')
     @ApiOperation({ summary: 'Voice assistant: turns a spoken request into one allowed app action' })
-    async assistant(@Body() body: { message: string; lang?: string; careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number }) {
+    async assistant(@Body() body: { message: string; lang?: string; careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number }, @Ip() ip: string) {
+        assertAiAllowed(ip);
         return this.careerService.assistant(body?.message, body?.lang, {
             grade: body?.grade,
             careerName: body?.careerName,

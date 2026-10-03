@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import TestQuality from "../../components/admin/TestQuality";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -104,6 +105,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activity, setActivity] = useState(null);
+  const [quality, setQuality] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -124,6 +126,11 @@ const AdminDashboard = () => {
       .get(`${API}/users/admin/activity`, { headers: { Authorization: `Bearer ${token}` } })
       .then(({ data }) => setActivity(data))
       .catch(() => setActivity(null));
+
+    axios
+      .get(`${API}/quiz/quality`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setQuality(data))
+      .catch(() => setQuality(null));
   }, [token]);
 
   if (loading) {
@@ -238,6 +245,8 @@ const AdminDashboard = () => {
           delay={0.15}
         />
       </div>
+
+      <TestQuality data={quality} />
 
       {activity && (
         <motion.div

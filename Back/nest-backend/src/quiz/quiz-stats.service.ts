@@ -98,28 +98,36 @@ export class QuizStatsService implements OnModuleInit {
 
         // Натиҷаҳои то пайдоиши ин ҷадвал (танҳо холҳо, бе ҷавобҳо) — аз профили корбарони
         // ВОҚЕӢ. Корбарони намоишӣ (як пароли умумӣ барои зиёда аз 3 нафар) ҳисоб намешаванд.
-        const past: Array<{ scores: Record<string, number> }> = await this.dataSource.query(`
-            SELECT "quizResults"->'mmtClusters' AS scores FROM "user" u
-            WHERE "quizResults" ? 'mmtClusters'
-              AND (u.password IS NULL OR u.password NOT IN (
-                    SELECT password FROM "user" WHERE password IS NOT NULL GROUP BY password HAVING count(*) > 3))`);
-        const byCluster: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
-        let clear = 0;
-        let topSum = 0;
-        for (const { scores } of past) {
-            const ranked = Object.entries(scores || {}).map(([key, value]) => [key, Number(value) || 0] as [string, number])
-                .filter(([key]) => key in byCluster).sort((a, b) => b[1] - a[1]);
-            if (!ranked.length) continue;
-            byCluster[ranked[0][0]] += 1;
-            topSum += ranked[0][1];
-            // «Натиҷаи равшан»: самти аввал аз дуюм камаш 15% пеш аст (ҳамон ҳадди саволи «баробар»).
-            if (!ranked[1] || ranked[0][1] - ranked[1][1] >= 0.15 * Math.max(ranked[0][1], 1)) clear += 1;
-        }
+        const past: Array<{ scores: Record<string, number>; demo: boolean }> = await this.dataSource.query(`
+            SELECT "quizResults"->'mmtClusters' AS scores,
+                   (u.password IS NOT NULL AND u.password IN (
+                        SELECT password FROM "user" WHERE password IS NOT NULL GROUP BY password HAVING count(*) > 3)) AS demo
+            FROM "user" u
+            WHERE "quizResults" ? 'mmtClusters'`);
+        const summarize = (list: Array<{ scores: Record<string, number> }>) => {
+            const byCluster: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+            let clear = 0;
+            let topSum = 0;
+            for (const { scores } of list) {
+                const ranked = Object.entries(scores || {}).map(([key, value]) => [key, Number(value) || 0] as [string, number])
+                    .filter(([key]) => key in byCluster).sort((a, b) => b[1] - a[1]);
+                if (!ranked.length) continue;
+                byCluster[ranked[0][0]] += 1;
+                topSum += ranked[0][1];
+                // «Натиҷаи равшан»: самти аввал аз дуюм камаш 15% пеш аст (ҳамон ҳадди саволи «баробар»).
+                if (!ranked[1] || ranked[0][1] - ranked[1][1] >= 0.15 * Math.max(ranked[0][1], 1)) clear += 1;
+            }
+            return {
+                users: list.length,
+                byCluster,
+                clearShare: list.length ? Math.round((clear / list.length) * 100) : null,
+                averageTop: list.length ? Math.round((topSum / list.length / 40) * 100) : null,
+            };
+        };
+        // Ҳама ва танҳо воқеӣ — ҷудо: корбарони намоишӣ (як пароли умумӣ) дар «воқеӣ» нестанд.
         const results = {
-            users: past.length,
-            byCluster,
-            clearShare: past.length ? Math.round((clear / past.length) * 100) : null,
-            averageTop: past.length ? Math.round((topSum / past.length / 40) * 100) : null,
+            all: { ...summarize(past), demo: past.filter((row) => row.demo).length },
+            real: summarize(past.filter((row) => !row.demo)),
         };
 
         return {

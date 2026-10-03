@@ -74,7 +74,7 @@ export class VoiceController {
     }
 
     @Get('speak')
-    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ (Piper Ruslan), англисӣ (Kokoro)' })
+    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ (Piper Ruslan), англисӣ (Piper Ryan)' })
     async speakGet(
         @Query('text') text: string,
         @Query('speed') speed: string,
@@ -89,7 +89,7 @@ export class VoiceController {
     }
 
     @Post('speak')
-    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ (Piper Ruslan), англисӣ (Kokoro)' })
+    @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ (Piper Ruslan), англисӣ (Piper Ryan)' })
     async speakPost(
         @Body() body: { text: string; speed?: number; lang?: string },
         @Ip() ip: string,

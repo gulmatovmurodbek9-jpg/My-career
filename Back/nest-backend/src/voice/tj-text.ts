@@ -118,7 +118,7 @@ export function prepareEnglishText(text: string): string {
         const lat = CYR_TO_LAT[lower] ?? '';
         return ch === lower ? lat : lat.charAt(0).toUpperCase() + lat.slice(1);
     });
-    // «somoni»-ро Kokoro «simoni» мехонд; «somonee» дуруст шунида мешавад (санҷиш 02.10).
+    // «somoni»-ро модели англисӣ «simoni» мехонд; «somonee» дуруст шунида мешавад (санҷиш 02.10).
     out = out.replace(/\bsomoni\b/gi, (word) => (word[0] === 'S' ? 'Somonee' : 'somonee'));
     return out.replace(/\s{2,}/g, ' ').trim();
 }

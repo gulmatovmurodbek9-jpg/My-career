@@ -1,8 +1,8 @@
-// Овози русӣ (Piper Ruslan) ва англисӣ (Kokoro am_echo) — дар process-и АЛОҲИДА.
+// Овози русӣ (Piper Ruslan) ва англисӣ (Piper Ryan) — дар process-и АЛОҲИДА.
 //
 // Чаро алоҳида: sherpa-onnx ва onnxruntime-node (овози тоҷикӣ) ҳар кадом
 // onnxruntime-и худро доранд. Дар як process онҳо ихтилоф мекарданд (модели
-// тоҷикӣ кушода намешуд) ва Kokoro 4–7 баробар суст мешуд (санҷиш 02.10.2026).
+// тоҷикӣ кушода намешуд) ва модели англисӣ 4–7 баробар суст мешуд (санҷиш 02.10.2026).
 //
 // Пайваст: танҳо канали IPC-и process-и падар (fork). Ин process ягон порти
 // шабака намекушояд — аз берун, ҳатто аз localhost, дастрас нест.
@@ -30,8 +30,8 @@ const MODELS = {
         }),
         dir: 'vits-piper-ru_RU-ruslan-medium',
     },
-    // TTS_EN=piper — Piper ryan (RTF ~0,16, тез); пешфарз Kokoro am_echo (RTF ~0,69).
-    en: (process.env.TTS_EN || '').toLowerCase() === 'piper' ? {
+    // Piper Ryan (мардона), RTF ~0,16 — 5–7× тезтар аз Kokoro, ки 03.10.2026 пурра бардошта шуд.
+    en: {
         sid: 0,
         config: (dir) => ({
             vits: {
@@ -45,21 +45,6 @@ const MODELS = {
             provider: 'cpu',
         }),
         dir: 'vits-piper-en_US-ryan-medium',
-    } : {
-        sid: 12, // am_echo
-        config: (dir) => ({
-            kokoro: {
-                model: join(dir, 'model.onnx'),
-                voices: join(dir, 'voices.bin'),
-                tokens: join(dir, 'tokens.txt'),
-                dataDir: join(dir, 'espeak-ng-data'),
-                lexicon: `${join(dir, 'lexicon-us-en.txt')},${join(dir, 'lexicon-zh.txt')}`,
-            },
-            // 1 thread дар сервер RTF 1,23 буд, 2 thread — 0,69.
-            numThreads: 2,
-            provider: 'cpu',
-        }),
-        dir: 'kokoro-multi-lang-v1_0',
     },
 };
 

@@ -13,14 +13,22 @@ import {
   Globe,
   Sun,
   Moon,
+  Languages,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
 
 const AdminLayout = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
+  // Забон дар админка ҳам — ҳамон тавре ки дар сайт (app_lang нигоҳ дошта мешавад).
+  const LANGS = [["tj", "TJ"], ["ru", "RU"], ["en", "EN"]];
+  const currentLang = (i18n.language || "tj").slice(0, 2);
+  const changeLanguage = (code) => {
+    i18n.changeLanguage(code);
+    try { localStorage.setItem("app_lang", code); } catch { /* бе нигоҳдорӣ */ }
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuthStore();
@@ -150,6 +158,32 @@ const AdminLayout = () => {
               )}
             </AnimatePresence>
           </div>
+
+          {collapsed ? (
+            <button
+              onClick={() => changeLanguage(LANGS[(LANGS.findIndex(([code]) => code === currentLang) + 1) % LANGS.length][0])}
+              aria-label={t("admin.language", "Забон")}
+              className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-black text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+            >
+              {currentLang.toUpperCase()}
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 px-3 py-2">
+              <Languages className="w-[18px] h-[18px] flex-shrink-0 text-muted-foreground" />
+              <div className="flex flex-1 rounded-lg border border-border p-0.5" role="group" aria-label={t("admin.language", "Забон")}>
+                {LANGS.map(([code, label]) => (
+                  <button
+                    key={code}
+                    onClick={() => changeLanguage(code)}
+                    aria-pressed={currentLang === code}
+                    className={`flex-1 rounded-md py-1 text-[12px] font-black cursor-pointer ${currentLang === code ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <button
             onClick={toggleTheme}

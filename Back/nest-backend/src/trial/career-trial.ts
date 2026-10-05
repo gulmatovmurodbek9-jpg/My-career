@@ -287,6 +287,7 @@ export function parseAiJson(raw: string): any {
 export function repairInnerQuotes(json: string): string {
     let out = '';
     let inString = false;
+    const stack: string[] = [];
     for (let i = 0; i < json.length; i += 1) {
         const ch = json[i];
         if (inString && ch === '\\') {
@@ -310,6 +311,17 @@ export function repairInnerQuotes(json: string): string {
         if (inString && (ch === '\n' || ch === '\r')) {
             out += ch === '\n' ? '\\n' : '';
             continue;
+        }
+        if (!inString) {
+            if (ch === '{' || ch === '[') stack.push(ch);
+            else if (ch === '}' || ch === ']') {
+                // Вергули иловагӣ пеш аз қавси пӯшанда.
+                out = out.replace(/,\s*$/, '');
+                // Модел баъзан рӯйхатро бо } мепӯшад (ё баръакс) — қавси дурустро мегузорем.
+                const open = stack.pop();
+                out += open === '[' ? ']' : '}';
+                continue;
+            }
         }
         out += ch;
     }

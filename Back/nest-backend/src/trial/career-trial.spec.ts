@@ -111,3 +111,13 @@ describe('parseAiJson', () => {
         expect(parseAiJson(raw)).toEqual({ a: 'Ӯ гуфт "салом" ва рафт', b: ['x', 'y'], c: 'сатри\nнав' });
     });
 });
+
+describe('parseAiJson: сохтор', () => {
+    const { parseAiJson } = require('./career-trial');
+    it('рӯйхати бо } пӯшидашударо таъмир мекунад', () => {
+        expect(parseAiJson('{"a": {"list": ["x", "y"}}, "b": 1}')).toEqual({ a: { list: ['x', 'y'] }, b: 1 });
+    });
+    it('вергули иловагиро нест мекунад', () => {
+        expect(parseAiJson('{"a": [1, 2,], "b": {"c": 3,},}')).toEqual({ a: [1, 2], b: { c: 3 } });
+    });
+});

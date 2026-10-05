@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, Clock, Sparkles } from "lucide-react";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
+import TrialIcon from "../../components/TrialIcon";
 import { fillText, langCode, trialText } from "../../lib/trialText";
 
 // Рӯйхати сенарияҳои «Як рӯз дар ихтисос».
@@ -60,7 +61,7 @@ export default function TrialHub() {
                                 to={`/trial/${scenario.family}`}
                                 className="group flex flex-col rounded-3xl border border-border bg-card p-6 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-xl hover:shadow-primary/10"
                             >
-                                <span className="text-4xl" aria-hidden>{scenario.icon}</span>
+                                <TrialIcon family={scenario.family} size="lg" />
                                 <span className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{scenario.familyName}</span>
                                 <span className="mt-1 text-xl font-black text-foreground">{scenario.role}</span>
                                 <span className="mt-1 text-sm text-muted-foreground">{scenario.place}</span>

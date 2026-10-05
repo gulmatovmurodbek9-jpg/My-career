@@ -22,8 +22,11 @@ export interface TaskText {
     question: string;
     options?: OptionText[];
     unit?: string;
-    // Шарҳи умумӣ баъди санҷиш.
-    explain: string;
+    // Баъди санҷиш, бо забони содда: малакае, ки хонанда санҷид; 3 қадами фикри
+    // мутахассис; як ҷумла дар бораи кори воқеӣ.
+    skillName: string;
+    steps: string[];
+    realLife: string;
     // Барои вазифаи рақамӣ: шарҳи ҷавобҳои хатои маъмул.
     wrongNumbers?: Record<string, string>;
 }
@@ -51,7 +54,6 @@ export interface TaskKey {
 
 export interface Scenario {
     family: string;
-    icon: string;
     minutes: number;
     keys: [TaskKey, TaskKey, TaskKey];
     text: Record<Lang, ScenarioText>;

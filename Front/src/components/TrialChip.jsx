@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { Target } from "lucide-react";
 import { familyForCareer, langCode, trialText } from "../lib/trialText";
 
 // Тугмаи хурди «Як рӯз дар ихтисос» дар корти ихтисос. Корт худаш <Link> аст,
@@ -27,7 +28,7 @@ export default function TrialChip({ specialty, className = "" }) {
             title={text.ctaTitle}
             className={`z-20 inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[12px] font-bold text-primary transition hover:bg-primary hover:text-primary-foreground cursor-pointer ${className}`}
         >
-            <span aria-hidden>🎯</span> {text.name}
+            <Target className="h-3.5 w-3.5" aria-hidden /> {text.name}
         </button>
     );
 }

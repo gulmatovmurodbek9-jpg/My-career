@@ -37,6 +37,7 @@ import { getGrade, gradeText, setGrade, GRADE_EVENT } from "../../lib/grade";
 import { withLang } from "../../lib/apiLang";
 import QuizFeedback from "../../components/QuizFeedback";
 import { CLUSTER_FAMILY, FAMILY_ROLE, fillText, langCode, trialText } from "../../lib/trialText";
+import TrialIcon from "../../components/TrialIcon";
 import { CLUSTER_SUBJECTS, SUBJECTS, getQuizContext, setQuizContext, subjectName } from "../../lib/quizContext";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
@@ -1207,7 +1208,7 @@ const Quiz = () => {
                     return (
                         <section className="rounded-[2rem] border border-primary/25 bg-gradient-to-br from-primary/10 to-indigo-500/5 p-6 sm:p-8">
                             <div className="flex items-start gap-4">
-                                <span className="text-4xl" aria-hidden>{role.icon}</span>
+                                <TrialIcon family={family} size="lg" />
                                 <div className="min-w-0 flex-1">
                                     <h2 className="text-lg font-black text-foreground">{trial.quizTitle}</h2>
                                     <p className="mt-1 text-sm text-muted-foreground">{fillText(trial.quizText, { role: role[lang] })}</p>

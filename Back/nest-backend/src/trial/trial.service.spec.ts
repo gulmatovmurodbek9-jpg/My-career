@@ -59,7 +59,7 @@ describe('TrialService', () => {
         const { service } = build();
         for (const family of Object.keys(SCENARIOS)) {
             const json = JSON.stringify(service.get(family, 'tj'));
-            expect(json).not.toMatch(/"feedback"|"answer"|"explain"|"wrongNumbers"|"mustFirst"|"related"/);
+            expect(json).not.toMatch(/"feedback"|"answer"|"steps"|"realLife"|"wrongNumbers"|"mustFirst"|"related"/);
         }
     });
 

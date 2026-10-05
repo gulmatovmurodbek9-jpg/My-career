@@ -4,7 +4,6 @@ import { Scenario } from '../trial.types';
 // додашуда — ҳамон кори воқеии ҳуқуқшинос (матнро дақиқ хондан ва ба ҳолат татбиқ кардан).
 export const LAW: Scenario = {
     family: 'law',
-    icon: '⚖️',
     minutes: 10,
     keys: [
         { id: 't1', kind: 'choice', skill: 'hard', answer: 'b', related: ['1240103', '124010104'] },
@@ -29,7 +28,9 @@ export const LAW: Scenario = {
                         { id: 'b', text: '1200 сомонӣ — гарав бе арзиши тиреза', feedback: 'Дуруст. Обои — фарсудашавии муқаррарӣ (б. 4.3), тиреза — зарар (б. 4.4). Ҳуқуқшинос ҳар ҷумлаи шартномаро ба ҳар далел мувофиқ мекунад.' },
                         { id: 'c', text: 'Ҳеҷ чиз — соҳиб ҳақ аст', feedback: 'Шартнома ба соҳиб ҳақ намедиҳад, ки тамоми гаравро барои обои кӯҳна нигоҳ дорад.' },
                     ],
-                    explain: 'Ҳуқуқшинос бо «ҳиссиёт» кор намекунад: ҳар далелро бо ҷумлаи мушаххаси ҳуҷҷат муқоиса мекунад.',
+                    skillName: "Хондани дақиқи ҳуҷҷат",
+                    steps: ["Обои аз кӯҳнагӣ ранг гум кард — ин «фарсудашавии муқаррарӣ» аст (б. 4.3), зарар нест.", "Тирезаро бародари Фаррух шикаст — ин зарар аст (б. 4.4).", "1500 − 300 = 1200 сомонӣ — ҳамин қадар ҳаққи Фаррух аст."],
+                    realLife: "Ҳуқуқшинос ҳар рӯз ҳуҷҷат мехонад ва ҳар далелро бо ҳар банд муқоиса мекунад.",
                 },
                 {
                     title: 'Кадом далелҳо қавитаранд?',
@@ -41,7 +42,9 @@ export const LAW: Scenario = {
                         { id: 'c', text: 'Паёми WhatsApp-и соҳибхона: «Обои аллакай кӯҳна буд, ҳеҷ гап не»', feedback: 'Қавӣ: худи тарафи муқобил навиштааст.' },
                         { id: 'd', text: 'Фаррух ваъда медиҳад, ки «ҳамааш тоза буд»', feedback: 'Суханони тарафи манфиатдор — далели заиф.' },
                     ],
-                    explain: 'Ҳуқуқшинос на бо савол «кӣ ҳақ аст?», балки бо савол «чиро исбот карда метавонем?» кор мекунад.',
+                    skillName: "Ҷамъ кардани далел",
+                    steps: ["Сурат бо сана нишон медиҳад, ки обои аз рӯзи аввал чӣ ҳол дошт.", "Паёми худи соҳибхона қавитарин аст — ӯ худаш навиштааст.", "«Бачаи хуб» ва «ҳамааш тоза буд» — суханон ҳастанд, на далел."],
+                    realLife: "Дар суд на он ки ҳақ аст, балки он ки исбот карда метавонад, ғолиб мешавад.",
                 },
                 {
                     title: 'Ба мизоҷ рост гӯед',
@@ -53,7 +56,9 @@ export const LAW: Scenario = {
                         { id: 'b', text: '«Барои тиреза 300 сомонӣ ҳақ доранд, 1200 — ҳаққи шумо. Аввал ба соҳиб бо суратҳо ва паёмҳо номаи расмӣ мефиристем — аксар вақт ҳамин кифоя аст. Агар не, баъд суд.»', feedback: 'Ростқавлӣ, интизории воқеӣ ва аввал қадами арзонтарин.' },
                         { id: 'c', text: '«Суд дароз ва гарон аст — фаромӯш кунед.»', feedback: 'Шумо ҳуқуқи ӯро ҳимоя накардед.' },
                     ],
-                    explain: 'Ҳуқуқшинос бояд ором бошад ва ҳақиқатро гӯяд — ҳатто вақте ки он ба мизоҷ хуш намеояд.',
+                    skillName: "Ростқавлӣ бо мизоҷ",
+                    steps: ["«Ғолиб мешавем» ваъда надиҳед — шумо инро намедонед.", "Рақами воқеиро гӯед: 1200 сомонӣ, на 6500.", "Аввал роҳи арзонро пешниҳод кунед: номаи расмӣ. Суд — қадами охирин."],
+                    realLife: "Мизоҷон ба ҳуқуқшиносе бармегарданд, ки рост гуфт — ҳатто агар ҷавоб он қадар хуш набошад.",
                 },
             ],
             reality: [
@@ -79,7 +84,9 @@ export const LAW: Scenario = {
                         { id: 'b', text: '1200 сомони — залог за вычетом окна', feedback: 'Верно. Обои — естественный износ (п. 4.3), окно — ущерб (п. 4.4). Юрист сопоставляет каждый пункт договора с каждым фактом.' },
                         { id: 'c', text: 'Ничего — хозяин прав', feedback: 'Договор не даёт хозяину права удерживать весь залог из-за старых обоев.' },
                     ],
-                    explain: 'Юрист работает не с «ощущениями»: каждый факт он сверяет с конкретной фразой документа.',
+                    skillName: "Внимательное чтение документа",
+                    steps: ["Обои выцвели от времени — это «естественный износ» (п. 4.3), не ущерб.", "Окно разбил брат Фарруха — это ущерб (п. 4.4).", "1500 − 300 = 1200 сомони — столько положено Фарруху."],
+                    realLife: "Юрист каждый день читает документы и сверяет каждый факт с каждым пунктом.",
                 },
                 {
                     title: 'Какие доказательства сильнее?',
@@ -91,7 +98,9 @@ export const LAW: Scenario = {
                         { id: 'c', text: 'Сообщение хозяина в WhatsApp: «Обои и так были старые, ничего страшного»', feedback: 'Сильное: это написала сама противоположная сторона.' },
                         { id: 'd', text: 'Фаррух уверяет, что «всё было чисто»', feedback: 'Слова заинтересованной стороны — слабое доказательство.' },
                     ],
-                    explain: 'Юрист думает не «кто прав?», а «что мы можем доказать?».',
+                    skillName: "Сбор доказательств",
+                    steps: ["Фото с датой показывает, какими обои были с первого дня.", "Сообщение самого хозяина — самое сильное: он сам это написал.", "«Хороший парень» и «всё было чисто» — это слова, а не доказательства."],
+                    realLife: "В суде побеждает не тот, кто прав, а тот, кто может это доказать.",
                 },
                 {
                     title: 'Скажите клиенту правду',
@@ -103,7 +112,9 @@ export const LAW: Scenario = {
                         { id: 'b', text: '«За окно 300 сомони они вправе удержать, 1200 — ваши. Сначала отправим хозяину официальное письмо с фото и сообщениями — часто этого достаточно. Если нет — суд.»', feedback: 'Честность, реалистичные ожидания и сначала самый дешёвый шаг.' },
                         { id: 'c', text: '«Суд — это долго и дорого, забудьте.»', feedback: 'Вы не защитили его права.' },
                     ],
-                    explain: 'Юрист должен быть спокойным и говорить правду — даже когда она не нравится клиенту.',
+                    skillName: "Честность с клиентом",
+                    steps: ["Не обещайте «выиграем» — вы этого не знаете.", "Назовите реальную сумму: 1200 сомони, а не 6500.", "Сначала предложите дешёвый путь: официальное письмо. Суд — последний шаг."],
+                    realLife: "Клиенты возвращаются к юристу, который сказал правду, — даже если она не очень приятная.",
                 },
             ],
             reality: [
@@ -129,7 +140,9 @@ export const LAW: Scenario = {
                         { id: 'b', text: '1200 somoni — the deposit minus the window', feedback: 'Correct. Wallpaper is normal wear (cl. 4.3), the window is damage (cl. 4.4). A lawyer matches each clause to each fact.' },
                         { id: 'c', text: 'Nothing — the landlord is right', feedback: 'The contract does not let the landlord keep the whole deposit for old wallpaper.' },
                     ],
-                    explain: 'A lawyer does not work with "feelings": each fact is checked against a specific sentence of the document.',
+                    skillName: "Reading a document closely",
+                    steps: ["The wallpaper faded with age — that is normal wear (cl. 4.3), not damage.", "Farrukh's brother broke the window — that is damage (cl. 4.4).", "1500 − 300 = 1200 somoni — that is what Farrukh is owed."],
+                    realLife: "A lawyer reads documents every day and checks each fact against each clause.",
                 },
                 {
                     title: 'Which evidence is strongest?',
@@ -141,7 +154,9 @@ export const LAW: Scenario = {
                         { id: 'c', text: 'The landlord\'s WhatsApp message: "The wallpaper was old anyway, no problem"', feedback: 'Strong: the other side wrote it themselves.' },
                         { id: 'd', text: 'Farrukh promises "everything was clean"', feedback: 'Words of an interested party are weak evidence.' },
                     ],
-                    explain: 'A lawyer asks not "who is right?" but "what can we prove?".',
+                    skillName: "Gathering evidence",
+                    steps: ["A dated photo shows the wallpaper's state from day one.", "The landlord's own message is strongest — he wrote it himself.", "“Good lad” and “everything was clean” are words, not evidence."],
+                    realLife: "In court the winner is not who is right but who can prove it.",
                 },
                 {
                     title: 'Tell the client the truth',
@@ -153,7 +168,9 @@ export const LAW: Scenario = {
                         { id: 'b', text: '"They may keep 300 for the window; 1200 is yours. First we send the landlord a formal letter with the photos and messages — that is often enough. If not, then court."', feedback: 'Honesty, realistic expectations and the cheapest step first.' },
                         { id: 'c', text: '"Court is long and expensive — forget it."', feedback: 'You did not defend his rights.' },
                     ],
-                    explain: 'A lawyer must stay calm and tell the truth — even when the client does not like it.',
+                    skillName: "Honesty with the client",
+                    steps: ["Do not promise “we will win” — you do not know that.", "Give the real figure: 1200 somoni, not 6500.", "Offer the cheap route first: a formal letter. Court is the last step."],
+                    realLife: "Clients come back to the lawyer who told the truth — even when it was not pleasant.",
                 },
             ],
             reality: [

@@ -2,7 +2,6 @@ import { Scenario } from '../trial.types';
 
 export const TEACHER: Scenario = {
     family: 'teacher',
-    icon: '📚',
     minutes: 10,
     keys: [
         { id: 't1', kind: 'choice', skill: 'hard', answer: 'c', related: ['1230104', '123010404'] },
@@ -25,7 +24,9 @@ export const TEACHER: Scenario = {
                         { id: 'b', text: 'Ӯ бепарво аст', feedback: 'Шояд не: ин хатои бисёр маъмул аст ва аз фаҳмиши нодуруст пайдо мешавад, на аз танбалӣ.' },
                         { id: 'c', text: 'Ӯ сурат ва махраҷро ҷудо-ҷудо ҷамъ кард, мисли ду адади оддӣ', feedback: 'Дуруст. Омӯзгори хуб на танҳо «хато» менависад — мефаҳмад, ки хонанда чӣ гуна фикр кард.' },
                     ],
-                    explain: 'Омӯзгор хаторо мисли табиб ташхис мекунад: хонанда кадом қоидаро барои худ сохтааст? Танҳо баъд маълум мешавад, ки чӣ тавр ёрӣ диҳад.',
+                    skillName: "Фаҳмидани фикри хонанда",
+                    steps: ["Сорбон ҳисобро дуруст кард: 2 + 1 = 3 ва 3 + 3 = 6.", "Мушкил дар фикр аст: ӯ касрро мисли ду адади алоҳида ҷамъ кард.", "Вақте сабабро фаҳмидед, медонед, ки чӣ тавр ёрӣ диҳед."],
+                    realLife: "Омӯзгор ҳар рӯз дафтарҳоро месанҷад ва на танҳо «хато» менависад — мефаҳмад, ки хато аз куҷо омад.",
                 },
                 {
                     title: 'Чӣ тавр фаҳмонед?',
@@ -36,7 +37,9 @@ export const TEACHER: Scenario = {
                         { id: 'b', text: 'Нонро ба 3 қисм тақсим мекунам: «2 порча ва 1 порча — чанд порча шуд? Порчаҳо хурдтар шуданд?»', feedback: 'Аввал мисоли зинда, баъд қоида. Сорбон худаш мебинад, ки 3/6 — нисф аст ва аз 2/3 ҳам хурдтар!' },
                         { id: 'c', text: 'Видеоро аз интернет нишон медиҳам', feedback: 'Метавонад ёрӣ диҳад, аммо видео намедонад, ки маҳз Сорбон дар куҷо гум шуд.' },
                     ],
-                    explain: 'Кӯдак аввал бо чашм ва даст мефаҳмад, баъд бо қоида. Омӯзгор ҳамон як мавзӯъро бо 3–4 роҳ фаҳмонда метавонад.',
+                    skillName: "Фаҳмонидан",
+                    steps: ["Кӯдак аввал бо чашм мефаҳмад: нонро ба 3 порча тақсим кунед.", "«2 порча + 1 порча = 3 порча» — ин тамоми нон аст, яъне 3/3.", "Баъд қоида худаш фаҳмо мешавад: махраҷ ҳамон мемонад."],
+                    realLife: "Омӯзгори хуб як мавзӯъро бо 3–4 роҳ фаҳмонда метавонад — барои ҳар кӯдак роҳи худаш.",
                 },
                 {
                     title: 'Волидайни норозӣ',
@@ -49,7 +52,9 @@ export const TEACHER: Scenario = {
                         { id: 'c', text: '«Бубахшед, ҳоло бисёр банд ҳастам.»', feedback: 'Волидайн шарики омӯзгоранд, на монеа.' },
                         { id: 'd', text: 'Гӯш мекунам ва дафтарро нишон медиҳам: «Ана, ӯ касрҳоро мисли ду адад ҷамъ мекунад. Ин зуд ислоҳ мешавад — дар хона бо нон ё себ машқ кунед.»', feedback: 'Аввал гӯш кардан, баъд далел ва нақшаи якҷоя. Акнун модар ёрдамчии шумост.' },
                     ],
-                    explain: 'Омӯзгор на танҳо бо кӯдакон, балки бо калонсолон ҳам кор мекунад: волидайн, ҳамкорон, маъмурият.',
+                    skillName: "Кор бо волидайн",
+                    steps: ["Аввал гӯш кунед — модар нигарон аст, на душман.", "Далел нишон диҳед: дафтар ва хатои мушаххас.", "Якҷоя нақша созед: «дар хона бо нон машқ кунед»."],
+                    realLife: "Омӯзгор ҳам бо кӯдакон ва ҳам бо калонсолон кор мекунад. Вақте волидайн ёрдам медиҳанд, кӯдак тезтар меомӯзад.",
                 },
             ],
             reality: [
@@ -73,7 +78,9 @@ export const TEACHER: Scenario = {
                         { id: 'b', text: 'Он невнимательный', feedback: 'Скорее нет: это очень частая ошибка из-за неверного понимания, а не из-за лени.' },
                         { id: 'c', text: 'Он сложил числители и знаменатели отдельно, как два обычных числа', feedback: 'Верно. Хороший учитель не просто пишет «ошибка» — он понимает, как рассуждал ученик.' },
                     ],
-                    explain: 'Учитель диагностирует ошибку, как врач: какое правило ученик придумал для себя? Только тогда понятно, как помочь.',
+                    skillName: "Понимать, как думает ученик",
+                    steps: ["Сорбон посчитал верно: 2 + 1 = 3 и 3 + 3 = 6.", "Проблема в рассуждении: он сложил дробь как два отдельных числа.", "Когда понятна причина, понятно и как помочь."],
+                    realLife: "Учитель каждый день проверяет тетради и не просто пишет «ошибка» — он понимает, откуда она.",
                 },
                 {
                     title: 'Как объяснить?',
@@ -84,7 +91,9 @@ export const TEACHER: Scenario = {
                         { id: 'b', text: 'Разделю лепёшку на 3 части: «2 куска и 1 кусок — сколько кусков? Куски стали меньше?»', feedback: 'Сначала живой пример, потом правило. Сорбон сам увидит, что 3/6 — это половина, и она даже меньше 2/3!' },
                         { id: 'c', text: 'Покажу видео из интернета', feedback: 'Может помочь, но видео не знает, где именно запутался Сорбон.' },
                     ],
-                    explain: 'Ребёнок сначала понимает глазами и руками, потом правилом. Учитель умеет объяснить одну тему 3–4 способами.',
+                    skillName: "Умение объяснять",
+                    steps: ["Ребёнок сначала понимает глазами: разделите лепёшку на 3 куска.", "«2 куска + 1 кусок = 3 куска» — это вся лепёшка, то есть 3/3.", "Потом правило понятно само: знаменатель не меняется."],
+                    realLife: "Хороший учитель объясняет одну тему 3–4 способами — для каждого ребёнка свой.",
                 },
                 {
                     title: 'Недовольный родитель',
@@ -97,7 +106,9 @@ export const TEACHER: Scenario = {
                         { id: 'c', text: '«Извините, я сейчас очень занят.»', feedback: 'Родители — партнёры учителя, а не помеха.' },
                         { id: 'd', text: 'Выслушаю и покажу тетрадь: «Вот, он складывает дроби как два числа. Это быстро исправимо — потренируйтесь дома на лепёшке или яблоке.»', feedback: 'Сначала выслушать, потом факт и общий план. Теперь мама — ваш помощник.' },
                     ],
-                    explain: 'Учитель работает не только с детьми, но и со взрослыми: родителями, коллегами, администрацией.',
+                    skillName: "Работа с родителями",
+                    steps: ["Сначала выслушайте — мама волнуется, она не враг.", "Покажите факт: тетрадь и конкретную ошибку.", "Составьте общий план: «потренируйтесь дома на лепёшке»."],
+                    realLife: "Учитель работает и с детьми, и со взрослыми. Когда родители помогают, ребёнок учится быстрее.",
                 },
             ],
             reality: [
@@ -121,7 +132,9 @@ export const TEACHER: Scenario = {
                         { id: 'b', text: 'He is careless', feedback: 'Probably not: this is a very common mistake that comes from misunderstanding, not laziness.' },
                         { id: 'c', text: 'He added the numerators and the denominators separately, like two ordinary numbers', feedback: 'Correct. A good teacher does not just write "wrong" — they understand how the pupil was thinking.' },
                     ],
-                    explain: 'A teacher diagnoses a mistake like a doctor: what rule did the pupil invent for himself? Only then is it clear how to help.',
+                    skillName: "Understanding how a pupil thinks",
+                    steps: ["Sorbon counted correctly: 2 + 1 = 3 and 3 + 3 = 6.", "The problem is the reasoning: he added a fraction like two separate numbers.", "Once you know the cause, you know how to help."],
+                    realLife: "A teacher checks notebooks every day and does not just write “wrong” — they find where the mistake came from.",
                 },
                 {
                     title: 'How do you explain it?',
@@ -132,7 +145,9 @@ export const TEACHER: Scenario = {
                         { id: 'b', text: 'Cut a flatbread into 3 pieces: "2 pieces and 1 piece — how many pieces? Did the pieces get smaller?"', feedback: 'A real example first, then the rule. Sorbon sees for himself that 3/6 is a half — even less than 2/3!' },
                         { id: 'c', text: 'Show a video from the internet', feedback: 'It may help, but a video does not know where exactly Sorbon got lost.' },
                     ],
-                    explain: 'Children understand with eyes and hands first, rules second. A teacher can explain one topic in 3–4 different ways.',
+                    skillName: "Explaining",
+                    steps: ["Children understand with their eyes first: cut a flatbread into 3 pieces.", "“2 pieces + 1 piece = 3 pieces” — the whole bread, which is 3/3.", "Then the rule makes sense by itself: the denominator stays the same."],
+                    realLife: "A good teacher can explain one topic in 3–4 ways — a different one for each child.",
                 },
                 {
                     title: 'An unhappy parent',
@@ -145,7 +160,9 @@ export const TEACHER: Scenario = {
                         { id: 'c', text: '"Sorry, I am very busy right now."', feedback: 'Parents are a teacher\'s partners, not an obstacle.' },
                         { id: 'd', text: 'Listen and show the notebook: "Look, he adds fractions like two numbers. This is quick to fix — practise at home with bread or apples."', feedback: 'Listen first, then evidence and a shared plan. Now the mother is your helper.' },
                     ],
-                    explain: 'Teachers work not only with children but with adults too: parents, colleagues, the school administration.',
+                    skillName: "Working with parents",
+                    steps: ["Listen first — the mother is worried, not an enemy.", "Show evidence: the notebook and the exact mistake.", "Make a plan together: “practise at home with bread”."],
+                    realLife: "Teachers work with children and adults. When parents help, the child learns faster.",
                 },
             ],
             reality: [

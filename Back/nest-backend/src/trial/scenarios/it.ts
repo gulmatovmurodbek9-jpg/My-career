@@ -23,7 +23,6 @@ const CODE_EN = [
 
 export const IT: Scenario = {
     family: 'it',
-    icon: '💻',
     minutes: 10,
     keys: [
         { id: 't1', kind: 'choice', skill: 'hard', answer: 'b', related: ['1400101', '198010101'] },
@@ -48,7 +47,9 @@ export const IT: Scenario = {
                         { id: 'c', text: 'Сатри 2: тахфиф бояд 20 бошад', feedback: 'Барои ин пойафзол 180 мебарояд, аммо моли 1000-сомонӣ 980 мешавад, на 900. Ин ислоҳ нест — пинҳон кардани хатост.' },
                         { id: 'd', text: 'Сатри 4: нишон додан хато дорад', feedback: 'Сатри 4 ҳамон рақамеро нишон медиҳад, ки ба он доданд. Хато пештар аст.' },
                     ],
-                    explain: 'Барномасоз аввал мефаҳмад, ки рақами нодуруст аз куҷо омадааст: 200 − 10 = 190. Яъне код фоизро ҳамчун сомонӣ кам кардааст.',
+                    skillName: "Диққат ба тафсилот",
+                    steps: ["Аввал рақамро санҷед: 200 − 10 = 190. Яъне код 10 сомонӣ кам кард.", "Аммо бояд 10 фоиз кам мешуд: 200 × 10 / 100 = 20 сомонӣ.", "Пас хато дар сатри 3 аст — ҳамон ҷое, ки нарх ҳисоб мешавад."],
+                    realLife: "Барномасоз рӯзе даҳҳо бор ҳамин корро мекунад: хаторо меёбад, сабабашро мефаҳмад ва ислоҳ мекунад.",
                 },
                 {
                     title: 'Аввал чӣ?',
@@ -59,7 +60,9 @@ export const IT: Scenario = {
                         { id: 'c', text: 'Менеҷер: «То ҷумъа тугмаи нави "Харид бо насия" лозим».' },
                         { id: 'a', text: 'Пардохт бо корт дар сайт тамоман кор намекунад — аз соати 8:30.' },
                     ],
-                    explain: 'Аввал пардохт — мағоза ҳар дақиқа пул гум мекунад. Баъд тугмаи нав — мӯҳлат дорад. Ранги логотип интизор шуда метавонад. Барномасоз ҳар рӯз қарор мекунад, ки аз даҳ кор кадомаш ҳозир муҳим аст.',
+                    skillName: "Муайян кардани афзалият",
+                    steps: ["Пардохт кор намекунад — мағоза ҳар дақиқа пул гум мекунад. Ин аввал.", "Тугмаи нав то ҷумъа лозим аст — вақт ҳаст, аммо мӯҳлат дорад.", "Ранги логотип ба касе зарар намерасонад — метавонад интизор шавад."],
+                    realLife: "Дар кор ҳамеша вазифа аз вақт зиёд аст. Барномасози хуб аввал он чиро мекунад, ки зарари бештар дорад.",
                 },
                 {
                     title: 'Ба мизоҷ ҷавоб диҳед',
@@ -72,7 +75,9 @@ export const IT: Scenario = {
                         { id: 'c', text: '«Шумо дуруст мегӯед, бубахшед. Хато дар ҳисоби тахфиф буд — ислоҳ кардем. 10 сомонии иловагиро имрӯз ба картатон бармегардонем.»', feedback: 'Эътироф, фаҳмонидани содда, ҳалли мушаххас ва мӯҳлат. Ҳамин тавр мизоҷ мемонад.' },
                         { id: 'd', text: 'Ҳоло ҷавоб намедиҳам — аввал хаторо ислоҳ мекунам.', feedback: 'Мизоҷи бе ҷавоб монда то ислоҳ шудани хато дар ҳамаи шабакаҳо менависад.' },
                     ],
-                    explain: 'Барномасоз бо одамон бисёр гап мезанад: бо даста, менеҷер ва мизоҷ. Фикри мураккабро содда гуфтан ҳамон қадар муҳим аст, ки код навиштан.',
+                    skillName: "Муошират бо мизоҷ",
+                    steps: ["Аввал эътироф кунед: «Шумо дуруст мегӯед». Одами асабонӣ ором мешавад.", "Бо забони содда гӯед, ки чӣ шуд — бе калимаҳои техникӣ.", "Бигӯед, ки чӣ мекунед ва кай: «имрӯз пулро бармегардонем»."],
+                    realLife: "Барномасоз на танҳо бо компютер, балки бо одамон ҳам кор мекунад. Мизоҷе, ки ӯро шуниданд, бармегардад.",
                 },
             ],
             reality: [
@@ -98,7 +103,9 @@ export const IT: Scenario = {
                         { id: 'c', text: 'Строка 2: скидка должна быть 20', feedback: 'Для этой обуви выйдет 180, но товар за 1000 станет 980, а не 900. Это не исправление, а маскировка ошибки.' },
                         { id: 'd', text: 'Строка 4: ошибка в выводе', feedback: 'Строка 4 показывает то число, которое ей дали. Ошибка раньше.' },
                     ],
-                    explain: 'Программист сначала выясняет, откуда взялось неверное число: 200 − 10 = 190. Значит, код вычел проценты как сомони.',
+                    skillName: "Внимание к деталям",
+                    steps: ["Сначала проверьте число: 200 − 10 = 190. Значит, код вычел 10 сомони.", "А нужно было вычесть 10 процентов: 200 × 10 / 100 = 20 сомони.", "Значит, ошибка в строке 3 — там, где считается цена."],
+                    realLife: "Программист делает это десятки раз в день: находит ошибку, понимает причину и исправляет.",
                 },
                 {
                     title: 'Что сначала?',
@@ -109,7 +116,9 @@ export const IT: Scenario = {
                         { id: 'c', text: 'Менеджер: «К пятнице нужна новая кнопка "Купить в рассрочку"».' },
                         { id: 'a', text: 'Оплата картой на сайте не работает совсем — с 8:30.' },
                     ],
-                    explain: 'Сначала оплата — магазин теряет деньги каждую минуту. Затем кнопка — у неё срок. Цвет логотипа подождёт. Программист каждый день решает, какая из десяти задач важна прямо сейчас.',
+                    skillName: "Расстановка приоритетов",
+                    steps: ["Оплата не работает — магазин теряет деньги каждую минуту. Это первое.", "Новая кнопка нужна к пятнице — время есть, но есть и срок.", "Цвет логотипа никому не вредит — может подождать."],
+                    realLife: "Задач всегда больше, чем времени. Хороший программист сначала берёт то, что вредит сильнее всего.",
                 },
                 {
                     title: 'Ответьте клиенту',
@@ -122,7 +131,9 @@ export const IT: Scenario = {
                         { id: 'c', text: '«Вы правы, извините. Ошибка была в расчёте скидки — мы её исправили. Лишние 10 сомони вернём на вашу карту сегодня.»', feedback: 'Признание, простое объяснение, конкретное решение и срок. Так клиент остаётся.' },
                         { id: 'd', text: 'Пока не отвечать — сначала исправить ошибку.', feedback: 'Клиент без ответа успеет написать во все соцсети.' },
                     ],
-                    explain: 'Программист много общается: с командой, менеджером и клиентом. Объяснить сложное просто — так же важно, как писать код.',
+                    skillName: "Общение с клиентом",
+                    steps: ["Сначала признайте: «Вы правы». Взволнованный человек успокаивается.", "Простыми словами скажите, что случилось — без технических терминов.", "Скажите, что и когда сделаете: «сегодня вернём деньги»."],
+                    realLife: "Программист работает не только с компьютером, но и с людьми. Клиент, которого услышали, возвращается.",
                 },
             ],
             reality: [
@@ -148,7 +159,9 @@ export const IT: Scenario = {
                         { id: 'c', text: 'Line 2: the discount should be 20', feedback: 'That gives 180 here, but a 1000-somoni item becomes 980, not 900. That hides the bug instead of fixing it.' },
                         { id: 'd', text: 'Line 4: the output is wrong', feedback: 'Line 4 shows whatever number it is given. The bug is earlier.' },
                     ],
-                    explain: 'A programmer first finds where the wrong number comes from: 200 − 10 = 190. So the code subtracted percent as somoni.',
+                    skillName: "Attention to detail",
+                    steps: ["First check the number: 200 − 10 = 190. So the code took off 10 somoni.", "But it should take off 10 percent: 200 × 10 / 100 = 20 somoni.", "So the bug is in line 3 — where the price is calculated."],
+                    realLife: "A programmer does this dozens of times a day: find the bug, understand why, fix it.",
                 },
                 {
                     title: 'What first?',
@@ -159,7 +172,9 @@ export const IT: Scenario = {
                         { id: 'c', text: 'Manager: "We need a new "Buy in instalments" button by Friday."' },
                         { id: 'a', text: 'Card payments on the site do not work at all — since 8:30.' },
                     ],
-                    explain: 'Payments first — the shop loses money every minute. Then the button — it has a deadline. The logo can wait. Every day a programmer decides which of ten tasks matters right now.',
+                    skillName: "Prioritising",
+                    steps: ["Payments are down — the shop loses money every minute. That comes first.", "The new button is due Friday — there is time, but there is a deadline.", "The logo colour hurts nobody — it can wait."],
+                    realLife: "There are always more tasks than time. A good programmer starts with whatever causes the most harm.",
                 },
                 {
                     title: 'Answer the customer',
@@ -172,7 +187,9 @@ export const IT: Scenario = {
                         { id: 'c', text: '"You are right, sorry. The discount was calculated wrongly — we fixed it. We will refund the extra 10 somoni to your card today."', feedback: 'Admit, explain simply, give a concrete fix and a time. That keeps the customer.' },
                         { id: 'd', text: 'Do not reply yet — fix the bug first.', feedback: 'A customer left without a reply will post about it everywhere.' },
                     ],
-                    explain: 'Programmers talk a lot: to the team, managers and customers. Explaining complex things simply matters as much as writing code.',
+                    skillName: "Talking to customers",
+                    steps: ["First admit it: “You are right.” An upset person calms down.", "Say what happened in plain words — no technical terms.", "Say what you will do and when: “we refund you today”."],
+                    realLife: "Programmers work with people, not just computers. A customer who feels heard comes back.",
                 },
             ],
             reality: [

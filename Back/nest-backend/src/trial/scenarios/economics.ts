@@ -8,7 +8,6 @@ const TABLE = {
 
 export const ECONOMICS: Scenario = {
     family: 'economics',
-    icon: '📊',
     minutes: 10,
     keys: [
         { id: 't1', kind: 'choice', skill: 'hard', answer: 'd', related: ['2250135', '1250104'] },
@@ -32,7 +31,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'c', text: 'Шоколад', feedback: 'Шоколад гаронтарин аст, аммо 30 × 8 = 240 сомонӣ медиҳад.' },
                         { id: 'd', text: 'Равған', feedback: 'Дуруст: 50 × 2 = 100 сомонӣ — камтарин, гарчанде нархаш баланд аст.' },
                     ],
-                    explain: 'Фоида: нон 300, шир 200, шоколад 240, равған 100. Иқтисодчӣ ба ҳисоб бовар мекунад, на ба тахмин: моли гарон на ҳамеша фоидаовар аст.',
+                    skillName: "Кор бо рақамҳо",
+                    steps: ["Аз ҳар мол чанд сомонӣ мемонад? Нон: 4 − 3 = 1. Равған: 30 − 28 = 2.", "Ба шумораи фурӯхташуда зарб кунед: нон 300 × 1 = 300, равған 50 × 2 = 100.", "Моли гарон на ҳамеша фоидаовар аст — муҳим он аст, ки чӣ қадар мефурӯшед."],
+                    realLife: "Иқтисодчӣ ҳар моҳ ҳамин тавр ҳисоб мекунад ва мегӯяд: чиро бештар оварем, чиро камтар.",
                 },
                 {
                     title: 'Нархи нонро баланд кунем?',
@@ -44,7 +45,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'b', text: 'Фоида ҳамон 300 мемонад, вале 150 мизоҷ ба ҷои дигар мераванд', feedback: 'Дуруст: 150 × (5 − 3) = 300. Фоида тағйир наёфт, вале мизоҷон рафтанд — ва ширу равғанро ҳам дигар аз мо намехаранд.' },
                         { id: 'c', text: 'Фоида кам мешавад', feedback: 'Ҳисоб кунед: 150 × 2 = 300 — ҳамон қадар.' },
                     ],
-                    explain: 'Нархи баланд на ҳамеша фоидаи бештар аст: вақте нарх меафзояд, харидорон кам мешаванд. Иқтисодчӣ ин ду чизро якҷоя ҳисоб мекунад.',
+                    skillName: "Қарор аз рӯи маълумот",
+                    steps: ["Нархи нав 5 сомонӣ: аз ҳар нон 5 − 3 = 2 сомонӣ мемонад.", "Аммо харидорон ним мешаванд: 150 × 2 = 300 — ҳамон фоидаи пештара.", "Ва 150 мизоҷ ба мағозаи дигар мераванд — шояд дигар барнагарданд."],
+                    realLife: "Иқтисодчӣ пеш аз ҳар қарор мепурсад: «Агар ин корро кунем, баъд чӣ мешавад?»",
                 },
                 {
                     title: 'Ба соҳиб фаҳмонед',
@@ -56,7 +59,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'c', text: '«Фоида ҳамон 300 мемонад, аммо 150 харидор ба ҳамсоя мераванд — ва ширу равғанро ҳам дар он ҷо мехаранд. Биёед аввал як ҳафта санҷем.»', feedback: 'Як ҷумла, як рақам ва як пешниҳоди бехатар. Рақамро ба забони одам гуфтан — малакаи асосии иқтисодчӣ.' },
                         { id: 'd', text: 'Розӣ мешавам, то ҷанҷол нашавад', feedback: 'Иқтисодчие, ки хаторо медонад ва хомӯш аст, кори худро намекунад.' },
                     ],
-                    explain: 'Ҳисоби дуруст нисфи кор аст. Нисфи дигар — ба одам чунон фаҳмонидан, ки ӯ қарори беҳтар қабул кунад.',
+                    skillName: "Фаҳмонидани рақамҳо ба одамон",
+                    steps: ["Ҷадвали калон нишон надиҳед — як рақами асосиро гӯед.", "Бигӯед, ки ин барои ӯ чӣ маъно дорад: «мизоҷон ба ҳамсоя мераванд».", "Роҳи бехатар пешниҳод кунед: «аввал як ҳафта санҷем»."],
+                    realLife: "Иқтисодчии хуб на он аст, ки беҳтар ҳисоб мекунад, балки он ки дигаронро бовар кунонда метавонад.",
                 },
             ],
             reality: [
@@ -81,7 +86,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'c', text: 'Шоколад', feedback: 'Шоколад самый дорогой, но даёт 30 × 8 = 240 сомони.' },
                         { id: 'd', text: 'Масло', feedback: 'Верно: 50 × 2 = 100 сомони — меньше всех, хотя цена высокая.' },
                     ],
-                    explain: 'Прибыль: хлеб 300, молоко 200, шоколад 240, масло 100. Экономист верит расчёту, а не впечатлению: дорогой товар не всегда выгоден.',
+                    skillName: "Работа с цифрами",
+                    steps: ["Сколько остаётся с одной штуки? Хлеб: 4 − 3 = 1. Масло: 30 − 28 = 2.", "Умножьте на количество проданного: хлеб 300 × 1 = 300, масло 50 × 2 = 100.", "Дорогой товар не всегда выгоден — важно, сколько вы продаёте."],
+                    realLife: "Экономист каждый месяц так считает и говорит, что закупать больше, а что меньше.",
                 },
                 {
                     title: 'Поднять цену на хлеб?',
@@ -93,7 +100,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'b', text: 'Прибыль останется 300, но 150 покупателей уйдут', feedback: 'Верно: 150 × (5 − 3) = 300. Прибыль не изменилась, а покупатели ушли — и молоко с маслом они тоже купят у соседей.' },
                         { id: 'c', text: 'Прибыль уменьшится', feedback: 'Посчитайте: 150 × 2 = 300 — столько же.' },
                     ],
-                    explain: 'Высокая цена — не всегда большая прибыль: с ростом цены покупателей становится меньше. Экономист считает оба эффекта вместе.',
+                    skillName: "Решения на основе данных",
+                    steps: ["Новая цена 5 сомони: с хлеба остаётся 5 − 3 = 2 сомони.", "Но покупателей вдвое меньше: 150 × 2 = 300 — та же прибыль.", "А 150 покупателей уйдут к соседям — и могут не вернуться."],
+                    realLife: "Перед любым решением экономист спрашивает: «Если так сделаем — что будет дальше?»",
                 },
                 {
                     title: 'Объясните владельцу',
@@ -105,7 +114,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'c', text: '«Прибыль останется 300, но 150 покупателей уйдут к соседям — и молоко с маслом купят там же. Давайте сначала попробуем неделю.»', feedback: 'Одна фраза, одно число и безопасное предложение. Сказать цифры человеческим языком — главный навык экономиста.' },
                         { id: 'd', text: 'Соглашусь, чтобы не спорить', feedback: 'Экономист, который видит ошибку и молчит, не делает свою работу.' },
                     ],
-                    explain: 'Правильный расчёт — половина работы. Вторая половина — объяснить так, чтобы человек принял лучшее решение.',
+                    skillName: "Объяснять цифры людям",
+                    steps: ["Не показывайте большую таблицу — назовите одно главное число.", "Объясните, что это значит для него: «покупатели уйдут к соседям».", "Предложите безопасный шаг: «давайте сначала попробуем неделю»."],
+                    realLife: "Хороший экономист — не тот, кто лучше считает, а тот, кто умеет убедить других.",
                 },
             ],
             reality: [
@@ -130,7 +141,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'c', text: 'Chocolate', feedback: 'Chocolate is the most expensive but gives 30 × 8 = 240 somoni.' },
                         { id: 'd', text: 'Oil', feedback: 'Correct: 50 × 2 = 100 somoni — the least, despite the high price.' },
                     ],
-                    explain: 'Profit: bread 300, milk 200, chocolate 240, oil 100. An economist trusts the calculation, not the impression: an expensive item is not always profitable.',
+                    skillName: "Working with numbers",
+                    steps: ["How much is left per item? Bread: 4 − 3 = 1. Oil: 30 − 28 = 2.", "Multiply by how many were sold: bread 300 × 1 = 300, oil 50 × 2 = 100.", "An expensive item is not always profitable — what matters is how much you sell."],
+                    realLife: "An economist does this every month and says what to stock more of and what less.",
                 },
                 {
                     title: 'Raise the price of bread?',
@@ -142,7 +155,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'b', text: 'Profit stays at 300, but 150 customers leave', feedback: 'Correct: 150 × (5 − 3) = 300. Profit did not change, but customers left — and they will buy milk and oil elsewhere too.' },
                         { id: 'c', text: 'Profit falls', feedback: 'Calculate: 150 × 2 = 300 — the same.' },
                     ],
-                    explain: 'A higher price is not always a higher profit: as the price rises, buyers leave. An economist counts both effects together.',
+                    skillName: "Data-based decisions",
+                    steps: ["New price 5 somoni: each loaf leaves 5 − 3 = 2 somoni.", "But buyers halve: 150 × 2 = 300 — the same profit as before.", "And 150 customers go elsewhere — and may not come back."],
+                    realLife: "Before any decision an economist asks: “If we do this, what happens next?”",
                 },
                 {
                     title: 'Explain it to the owner',
@@ -154,7 +169,9 @@ export const ECONOMICS: Scenario = {
                         { id: 'c', text: '"Profit stays at 300, but 150 customers go next door — and buy their milk and oil there too. Let\'s try it for one week first."', feedback: 'One sentence, one number, one safe proposal. Turning numbers into plain words is an economist\'s key skill.' },
                         { id: 'd', text: 'Agree, to avoid an argument', feedback: 'An economist who sees a mistake and stays silent is not doing the job.' },
                     ],
-                    explain: 'A correct calculation is half the job. The other half is explaining it so the person makes a better decision.',
+                    skillName: "Explaining numbers to people",
+                    steps: ["Do not show a big spreadsheet — give one key number.", "Say what it means for him: “customers will go next door”.", "Offer a safe step: “let's try it for a week first”."],
+                    realLife: "A good economist is not the one who calculates best but the one who can convince others.",
                 },
             ],
             reality: [

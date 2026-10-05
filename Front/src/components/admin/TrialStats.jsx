@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { API } from "../../lib/config";
+import { Lightbulb } from "lucide-react";
 import { FAMILY_ROLE } from "../../lib/trialText";
+import TrialIcon from "../TrialIcon";
 
 // «Як рӯз дар ихтисос» барои админ ва ҳимоя: чанд нафар санҷиданд, чӣ қадар писанд омад
 // ва боварӣ ба интихоб пеш → баъд чӣ гуна тағйир ёфт.
@@ -89,7 +91,7 @@ export default function TrialStats({ token }) {
                     <div className="space-y-2">
                         {data.byFamily.filter((row) => row.count > 0).map((row) => (
                             <div key={row.family} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-muted/30 px-3 py-2 text-[13px]">
-                                <span className="font-bold text-foreground">{FAMILY_ROLE[row.family]?.icon} {FAMILY_ROLE[row.family]?.[lang] || row.family}</span>
+                                <span className="inline-flex items-center gap-2 font-bold text-foreground"><TrialIcon family={row.family} size="sm" /> {FAMILY_ROLE[row.family]?.[lang] || row.family}</span>
                                 <span className="text-muted-foreground">{text.count}: <b className="text-foreground">{row.count}</b></span>
                                 <span className="text-muted-foreground">{text.solved}: <b className="text-foreground">{row.solvedAverage ?? "—"}</b></span>
                                 <span className="text-muted-foreground">{text.rating}: <b className="text-foreground">{row.rating ?? "—"}</b></span>
@@ -97,7 +99,7 @@ export default function TrialStats({ token }) {
                             </div>
                         ))}
                     </div>
-                    <p className="text-[13px] leading-relaxed text-muted-foreground">💡 {text.hint}</p>
+                    <p className="flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground"><Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden /> {text.hint}</p>
                 </>
             )}
         </div>

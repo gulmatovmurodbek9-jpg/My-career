@@ -83,7 +83,6 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
         return {
             scenarios: Object.values(SCENARIOS).map((scenario) => ({
                 family: scenario.family,
-                icon: scenario.icon,
                 minutes: scenario.minutes,
                 role: scenario.text[l].role,
                 place: scenario.text[l].place,
@@ -103,7 +102,6 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
             familyName: name(result.family),
             ownName: name(result.own),
             role: scenario?.text[l].role || null,
-            icon: scenario?.icon || null,
         };
     }
 
@@ -113,7 +111,6 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
         const text = scenario.text[toLang(lang)];
         return {
             family: scenario.family,
-            icon: scenario.icon,
             minutes: scenario.minutes,
             familyName: FAMILIES.find((item) => item.id === scenario.family)?.name[toLang(lang)],
             role: text.role,
@@ -177,7 +174,9 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
             answer: key.answer,
             feedback,
             numberFeedback: key.kind === 'number' && !solved ? task.wrongNumbers?.[String(Number(answer))] || null : null,
-            explain: task.explain,
+            skillName: task.skillName,
+            steps: task.steps,
+            realLife: task.realLife,
         };
     }
 

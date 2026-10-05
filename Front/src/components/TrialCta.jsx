@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 import { API } from "../lib/config";
 import { fillText, langCode, trialText } from "../lib/trialText";
+import TrialIcon from "./TrialIcon";
 
 // Тугмаи «Як рӯз дар ихтисос» дар саҳифаи ҳар ихтисос: сенарияи гурӯҳи ҳамин ихтисос
 // ё, агар он ҳанӯз навишта нашуда бошад, наздиктарин аз ҳамон самти ММТ (ростқавлона гуфта мешавад).
@@ -28,7 +29,7 @@ export default function TrialCta({ career }) {
     return (
         <div className="rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/10 to-indigo-500/5 p-5 sm:p-6">
             <div className="flex items-start gap-4">
-                <span className="text-4xl" aria-hidden>{match.icon}</span>
+                <TrialIcon family={match.family} size="lg" />
                 <div className="min-w-0 flex-1">
                     <h2 className="text-lg font-black text-foreground">{text.ctaTitle}</h2>
                     <p className="mt-1 text-[15px] text-muted-foreground">{fillText(text.ctaText, { role: match.role })}</p>

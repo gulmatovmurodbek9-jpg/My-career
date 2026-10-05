@@ -46,7 +46,8 @@ try {
 
     await page.goto(`${BASE}/trial/it`, { waitUntil: "networkidle2" });
     await sleep(800);
-    check("Муқаддима", (await text()).includes("Як рӯз дар ихтисос: Барномасоз"));
+    const intro = await text();
+    check("Муқаддима", intro.includes("Барномасоз") && intro.includes("3 вазифа"));
     await clickOption("Намедонам");
     await click("Оғоз");
     await sleep(500);
@@ -56,7 +57,8 @@ try {
     await clickOption("Сатри 3");
     await click("Санҷидан");
     await sleep(800);
-    check("Вазифаи 1: «Дуруст!» ва шарҳ", (await text()).includes("Дуруст!") && (await text()).includes("Мутахассис чӣ тавр фикр мекунад"));
+    const t1 = await text();
+    check("Вазифаи 1: табрик, 3 қадам, кори воқеӣ, малака", t1.includes("Офарин!") && t1.toLowerCase().includes("чаро чунин аст") && t1.includes("Дар кори воқеӣ:") && t1.includes("Диққат ба тафсилот"));
     await click("Ҳа, шавқовар");
     await sleep(500);
 
@@ -67,7 +69,7 @@ try {
     await clickOption("Директор");
     await click("Санҷидан");
     await sleep(800);
-    check("Вазифаи 2: тартиби пурра дуруст", (await text()).includes("Тартиби пурра ҳам дуруст"));
+    check("Вазифаи 2: тартиби пурра дуруст", (await text()).includes("Аъло!"));
     await click("Не, шавқовар нест");
     await sleep(500);
 
@@ -77,7 +79,7 @@ try {
     await click("Санҷидан");
     await sleep(800);
     const t3 = await text();
-    check("Вазифаи 3: «Не дуруст» ва шарҳи варианти дуруст", t3.includes("Не дуруст") && t3.includes("Эътироф, фаҳмонидани содда"));
+    check("Вазифаи 3: рӯҳбаландкунӣ ва шарҳи варианти дуруст", t3.includes("Ин ҳам таҷриба аст.") && t3.includes("Эътироф, фаҳмонидани содда"));
     await click("Ҳа, шавқовар");
     await sleep(500);
 

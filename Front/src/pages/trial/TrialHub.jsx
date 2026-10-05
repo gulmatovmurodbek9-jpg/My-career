@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Clock, Sparkles } from "lucide-react";
+import { ArrowRight, Clock, Search, Sparkles } from "lucide-react";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
 import TrialIcon from "../../components/TrialIcon";
-import { fillText, langCode, trialText } from "../../lib/trialText";
+import { familyForCareer, fillText, langCode, trialText } from "../../lib/trialText";
+import { displayName } from "../../lib/careerName";
 
 // Рӯйхати сенарияҳои «Як рӯз дар ихтисос».
 export default function TrialHub() {
@@ -15,6 +16,8 @@ export default function TrialHub() {
     const text = trialText(lang);
     const [data, setData] = useState(null);
     const [error, setError] = useState(false);
+    const [query, setQuery] = useState("");
+    const [found, setFound] = useState(null);
 
     usePageMeta({ title: text.name, description: text.hubIntro, path: "/trial" });
 
@@ -26,6 +29,19 @@ export default function TrialHub() {
             .catch(() => alive && setError(true));
         return () => { alive = false; };
     }, [lang]);
+
+    // Ҷустуҷӯи ихтисос: ҳар 884 ихтисос сенарияи худро дорад.
+    useEffect(() => {
+        const q = query.trim();
+        if (q.length < 2) { setFound(null); return undefined; }
+        let alive = true;
+        const timer = setTimeout(() => {
+            axios.get(`${API}/careers`, { params: { search: q, limit: 8, lang } })
+                .then((res) => alive && setFound(res.data?.data || []))
+                .catch(() => alive && setFound([]));
+        }, 300);
+        return () => { alive = false; clearTimeout(timer); };
+    }, [query, lang]);
 
     return (
         <div className="mx-auto max-w-5xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
@@ -44,6 +60,41 @@ export default function TrialHub() {
                 ))}
             </div>
 
+            <div className="mt-8 rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/10 to-transparent p-5 sm:p-6">
+                <h2 className="text-xl font-black text-foreground">{text.searchTitle}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{text.searchHint}</p>
+                <label className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 focus-within:border-primary">
+                    <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+                    <input
+                        type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={text.searchPlaceholder}
+                        aria-label={text.searchTitle}
+                        className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+                    />
+                </label>
+                {found && (
+                    <ul className="mt-3 space-y-2">
+                        {found.length === 0 && <li className="px-1 text-sm text-muted-foreground">{text.noResults}</li>}
+                        {found.map((career) => (
+                            <li key={career.id}>
+                                <Link to={`/trial/career/${career.id}`} state={{ careerName: career.nameTranslated || career.name }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 hover:border-primary">
+                                    <TrialIcon family={familyForCareer(career)} size="md" />
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block font-bold leading-snug text-foreground">{displayName(career.nameTranslated || career.name)}</span>
+                                        {career.code && <span className="block font-mono text-xs text-muted-foreground">{career.code}</span>}
+                                    </span>
+                                    <ArrowRight className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            <h2 className="mt-10 text-lg font-black text-foreground">{text.samplesTitle}</h2>
+
             {error && <p className="mt-8 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{text.loadError}</p>}
 
             {!data && !error && (
@@ -54,7 +105,7 @@ export default function TrialHub() {
 
             {data && (
                 <>
-                    <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {data.scenarios.map((scenario) => (
                             <Link
                                 key={scenario.family}
@@ -77,15 +128,6 @@ export default function TrialHub() {
                         ))}
                     </div>
 
-                    <div className="mt-10 rounded-3xl border border-dashed border-border p-6">
-                        <div className="font-bold text-foreground">{text.soon}</div>
-                        <p className="mt-1 text-sm text-muted-foreground">{text.soonHint}</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            {data.families.filter((family) => !family.ready).map((family) => (
-                                <span key={family.id} className="rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">{family.name}</span>
-                            ))}
-                        </div>
-                    </div>
                 </>
             )}
         </div>

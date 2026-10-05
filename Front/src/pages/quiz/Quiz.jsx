@@ -1205,18 +1205,35 @@ const Quiz = () => {
                     const lang = langCode(i18n.language);
                     const trial = trialText(lang);
                     const role = FAMILY_ROLE[family];
+                    // Сенарияи худи ихтисосҳои аз ҳама мувофиқ (агар бошанд), вагарна — сенарияи оила.
+                    const top = matched.filter((spec) => spec.id).slice(0, 3);
+                    const label = (spec) => displayName(careerName(spec, i18n.language));
                     return (
                         <section className="rounded-[2rem] border border-primary/25 bg-gradient-to-br from-primary/10 to-indigo-500/5 p-6 sm:p-8">
                             <div className="flex items-start gap-4">
                                 <TrialIcon family={family} size="lg" />
                                 <div className="min-w-0 flex-1">
                                     <h2 className="text-lg font-black text-foreground">{trial.quizTitle}</h2>
-                                    <p className="mt-1 text-sm text-muted-foreground">{fillText(trial.quizText, { role: role[lang] })}</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">{fillText(trial.quizText, { role: top[0] ? label(top[0]) : role[lang] })}</p>
                                 </div>
                             </div>
-                            <Link to={`/trial/${family}`} className="btn-primary mt-4 w-full !py-3.5 sm:w-auto">
+                            <Link
+                                to={top[0] ? `/trial/career/${top[0].id}` : `/trial/${family}`}
+                                state={top[0] ? { careerName: label(top[0]) } : undefined}
+                                className="btn-primary mt-4 w-full !py-3.5 sm:w-auto"
+                            >
                                 {trial.name} <ArrowRight className="w-4 h-4" aria-hidden="true" />
                             </Link>
+                            {top.length > 1 && (
+                                <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+                                    <span className="text-muted-foreground">{trial.quizMore}</span>
+                                    {top.slice(1).map((spec) => (
+                                        <Link key={spec.id} to={`/trial/career/${spec.id}`} state={{ careerName: label(spec) }} className="rounded-xl border border-border bg-card px-3 py-1.5 font-semibold text-foreground hover:border-primary">
+                                            {label(spec)}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                         </section>
                     );
                 })()}

@@ -103,3 +103,11 @@ describe('Сенарияи ихтисос: омехтан', () => {
         expect(json).not.toMatch(/"feedback"|"answer"|"steps"|"realLife"|"tip"|"mustFirst"/);
     });
 });
+
+describe('parseAiJson', () => {
+    it('нохунаки дохилиро таъмир мекунад', () => {
+        const { parseAiJson } = require('./career-trial');
+        const raw = '```json\n{"a": "Ӯ гуфт "салом" ва рафт", "b": ["x", "y"], "c": "сатри\nнав"}\n```';
+        expect(parseAiJson(raw)).toEqual({ a: 'Ӯ гуфт "салом" ва рафт', b: ['x', 'y'], c: 'сатри\nнав' });
+    });
+});

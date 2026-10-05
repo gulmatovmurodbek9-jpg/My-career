@@ -222,7 +222,7 @@ ${factLines}
 12. МАНЪ: рақами маош/музд; рақами моддаҳои қонун; номи доруҳо ва миқдори воқеии табобат; кафолатҳо («100% кор меёбед»); эҳтимоли муваффақият.
 13. Забон — тоҷикии адабӣ бо кириллица (ӣ ӯ қ ғ ҳ ҷ ҳатман). Ба хонанда ҲАМЕША бо «ШУМО» муроҷиат кун (шумо ҳастед, мекунед, бифаҳмед) — ҳеҷ гоҳ «ту». Сарлавҳаҳо ва саволҳо ҳам бо шакли «шумо»: «Хаторо ёбед», «Баландиро муайян кунед», на «ёб», «муайян кун». Матн кӯтоҳ ва зинда: intro — 2 ҷумла; prompt — то 3 ҷумла; вариант — то 30 калима.
 
-ФОРМАТ — танҳо JSON:
+ФОРМАТ — танҳо JSON-и дуруст. Дар ДОХИЛИ матнҳо нохунаки дукабата (\") НАГУЗОР — барои иқтибос танҳо «...» истифода бар. Маҳз 3–4 вариант дар ҳар вазифа (multi — маҳз 4).
 {
   "keys": [
     {"id":"t1","kind":"choice","skill":"hard","answer":"b"},
@@ -258,7 +258,8 @@ export function buildTranslatePrompt(tj: CareerTrialText, lang: 'ru' | 'en'): st
 - Сохтор, калидҳо, тартиб ва ҳамаи "id"-ҳо айнан ҳамон монанд; танҳо матнҳо тарҷума шаванд.
 - Рақамҳо, вақт, ҷадвалҳо ва номҳои шаҳр/одамон тағйир наёбанд (номҳо бо транслитератсия).
 - Тарҷума табиӣ ва содда барои хонандаи 15-сола бошад, на калима ба калима.
-- Ҷавоб — танҳо JSON.
+- Дар дохили матнҳо нохунаки дукабата (\") нагузор — танҳо « » (ru) ё ‘ ’ / “ ” (en).
+- Ҷавоб — танҳо JSON-и дуруст.
 
 ${JSON.stringify(tj)}`;
 }
@@ -269,7 +270,50 @@ export function parseAiJson(raw: string): any {
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     if (start < 0 || end <= start) throw new Error('JSON ёфт нашуд');
-    return JSON.parse(text.slice(start, end + 1));
+    const body = text.slice(start, end + 1);
+    try {
+        return JSON.parse(body);
+    } catch (error) {
+        // AI баъзан дар дохили матн " мегузорад. Нохунаке, ки пас аз он , : } ] намеояд,
+        // нохунаки дохилӣ аст — онро escape мекунем ва боз кӯшиш мекунем.
+        try {
+            return JSON.parse(repairInnerQuotes(body));
+        } catch {
+            throw error;
+        }
+    }
+}
+
+export function repairInnerQuotes(json: string): string {
+    let out = '';
+    let inString = false;
+    for (let i = 0; i < json.length; i += 1) {
+        const ch = json[i];
+        if (inString && ch === '\\') {
+            out += ch + (json[i + 1] ?? '');
+            i += 1;
+            continue;
+        }
+        if (ch === '"') {
+            if (!inString) {
+                inString = true;
+            } else {
+                let j = i + 1;
+                while (j < json.length && /\s/.test(json[j])) j += 1;
+                if (j >= json.length || ',:}]'.includes(json[j])) inString = false;
+                else {
+                    out += '\\"';
+                    continue;
+                }
+            }
+        }
+        if (inString && (ch === '\n' || ch === '\r')) {
+            out += ch === '\n' ? '\\n' : '';
+            continue;
+        }
+        out += ch;
+    }
+    return out;
 }
 
 // Барои браузер: бе ҷавобҳо ва шарҳҳо (онҳо баъди ҷавоб аз /check меоянд).

@@ -27,6 +27,8 @@ export interface TaskText {
     skillName: string;
     steps: string[];
     realLife: string;
+    // Ихтиёрӣ: чӣ тавр ин малакаро аз ҳозир инкишоф диҳед (сенарияҳои ихтисос).
+    tip?: string;
     // Барои вазифаи рақамӣ: шарҳи ҷавобҳои хатои маъмул.
     wrongNumbers?: Record<string, string>;
 }
@@ -36,7 +38,7 @@ export interface ScenarioText {
     place: string;
     intro: string;
     disclaimer?: string;
-    tasks: [TaskText, TaskText, TaskText];
+    tasks: TaskText[];
     reality: string[];
 }
 
@@ -55,6 +57,6 @@ export interface TaskKey {
 export interface Scenario {
     family: string;
     minutes: number;
-    keys: [TaskKey, TaskKey, TaskKey];
+    keys: TaskKey[];
     text: Record<Lang, ScenarioText>;
 }

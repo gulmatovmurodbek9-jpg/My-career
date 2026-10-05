@@ -47,7 +47,7 @@ try {
     await page.goto(`${BASE}/trial/it`, { waitUntil: "networkidle2" });
     await sleep(800);
     const intro = await text();
-    check("Муқаддима", intro.includes("Барномасоз") && intro.includes("3 вазифа"));
+    check("Муқаддима", intro.includes("Барномасоз") && intro.includes("2 вазифаи касбӣ"));
     await clickOption("Намедонам");
     await click("Оғоз");
     await sleep(500);
@@ -99,11 +99,10 @@ try {
     const res = await fetch(`${API}/careers?limit=1`).then((r) => r.json()).catch(() => null);
     const career = res?.data?.[0];
     if (career?.id) {
-        const match = await fetch(`${API}/trial/resolve?code=${career.code || ""}&cluster=${career.mmtCluster || ""}`).then((r) => r.json());
         await page.goto(`${BASE}/info/${career.id}`, { waitUntil: "networkidle2" });
         await sleep(1500);
-        const href = `/trial/${match.family}?career=${career.id}`;
-        check("Саҳифаи ихтисос: тугмаи «Як рӯз дар ихтисос»", await page.evaluate((href) => !!document.querySelector(`a[href="${href}"]`), href), `${career.code} → ${match.family}${match.exact ? "" : " (наздиктарин)"}`);
+        const href = `/trial/career/${career.id}`;
+        check("Саҳифаи ихтисос: тугмаи «Як рӯз дар ихтисос»", await page.evaluate((href) => !!document.querySelector(`a[href="${href}"]`), href), career.code);
     } else {
         check("Саҳифаи ихтисос: ихтисос ёфт нашуд", false);
     }

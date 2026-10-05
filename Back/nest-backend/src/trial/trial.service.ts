@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, OnModuleDestroy, OnModuleInit } from '@n
 import { DataSource } from 'typeorm';
 import { FAMILIES, resolveFamily } from './families';
 import { Lang, Scenario, TaskKey } from './trial.types';
+import { CareerTrialContent, publicTask } from './career-trial';
+import { CREATE_TABLE as CREATE_CAREER_TRIALS } from './career-trials.table';
 import { IT } from './scenarios/it';
 import { ECONOMICS } from './scenarios/economics';
 import { TEACHER } from './scenarios/teacher';
@@ -56,6 +58,7 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
                 "confAfter" smallint NULL CHECK ("confAfter" BETWEEN 1 AND 5),
                 "createdAt" timestamptz NOT NULL DEFAULT now()
             )`);
+        await this.dataSource.query(CREATE_CAREER_TRIALS);
         await this.cleanup();
         this.cleanupTimer = setInterval(() => void this.cleanup(), 24 * 60 * 60 * 1000);
     }
@@ -118,24 +121,102 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
             intro: text.intro,
             disclaimer: text.disclaimer || null,
             reality: text.reality,
-            tasks: scenario.keys.map((key, index) => {
-                const task = text.tasks[index];
-                return {
-                    id: key.id,
-                    kind: key.kind,
-                    skill: key.skill,
-                    pick: key.kind === 'multi' ? (key.answer as string[]).length : undefined,
-                    title: task.title,
-                    prompt: task.prompt,
-                    quote: task.quote,
-                    code: task.code,
-                    table: task.table,
-                    question: task.question,
-                    unit: task.unit,
-                    options: task.options?.map(({ id, text: label }) => ({ id, text: label })),
-                };
-            }),
+            tasks: scenario.keys.map((key, index) => publicTask(key, text.tasks[index])),
         };
+    }
+
+    // ---------- Сенарияи худи ихтисос (884; AI аз рӯи маълумоти ихтисос сохтааст) ----------
+
+    private async careerScenario(careerId: string): Promise<Scenario & { text: CareerTrialContent['text'] }> {
+        if (!isUuid(careerId)) throw new NotFoundException('Сенария ёфт нашуд');
+        const [row] = await this.dataSource.query('SELECT content FROM career_trials WHERE "careerId" = $1', [careerId]);
+        if (!row?.content) throw new NotFoundException('Сенарияи ин ихтисос ҳанӯз тайёр нест');
+        const content = row.content as CareerTrialContent;
+        return { family: 'career', minutes: 20, keys: content.keys, text: content.text } as any;
+    }
+
+    // Маълумоти ихтисос барои хулоса: кластер, рамз ва дар куҷо хондан (нарх, ҷой, шакл).
+    private async careerFacts(careerId: string, lang: Lang) {
+        const [career] = await this.dataSource.query(
+            `SELECT c.id, c.code, c.name, c.translations -> $2::text ->> 'name' AS tr, c."mmtCluster", c."degreeType", c."durationYears",
+                    c."minTuitionFee", c."maxTuitionFee", c."hasFreeSeats", cl.id AS "clusterId", cl."clusterName"
+             FROM career c LEFT JOIN cluster cl ON cl.id = c."clusterId" WHERE c.id = $1`,
+            [careerId, lang],
+        );
+        if (!career) throw new NotFoundException('Ихтисос ёфт нашуд');
+        const offerings = await this.dataSource.query(
+            `SELECT o.id, o."studyForm", o."paymentType", o."tuitionFee", o.language, o.seats, o."basedOn",
+                    u.id AS "universityId", u.name AS university, u.translations -> $2::text ->> 'name' AS "universityTr", u.city
+             FROM career_offerings o JOIN universities u ON u.id = o."universityId"
+             WHERE o."careerId" = $1
+             ORDER BY (o."paymentType" = 'ройгон') DESC, o."tuitionFee" NULLS FIRST, u.name
+             LIMIT 40`,
+            [careerId, lang],
+        ).catch(() => []);
+        return {
+            id: career.id,
+            code: career.code,
+            name: career.tr || career.name,
+            nameTj: career.name,
+            mmtCluster: career.mmtCluster,
+            cluster: career.clusterId ? { id: career.clusterId, name: career.clusterName } : null,
+            degreeType: career.degreeType,
+            durationYears: career.durationYears,
+            minTuitionFee: career.minTuitionFee,
+            maxTuitionFee: career.maxTuitionFee,
+            hasFreeSeats: career.hasFreeSeats,
+            offerings: offerings.map((o: any) => ({
+                id: o.id,
+                university: o.universityTr || o.university,
+                universityId: o.universityId,
+                city: o.city,
+                studyForm: o.studyForm,
+                paymentType: o.paymentType,
+                tuitionFee: o.tuitionFee,
+                language: o.language,
+                seats: o.seats,
+                basedOn: o.basedOn,
+            })),
+        };
+    }
+
+    async getCareer(careerId: string, lang?: string) {
+        const l = toLang(lang);
+        const scenario = await this.careerScenario(careerId);
+        const text = scenario.text[l];
+        return {
+            family: 'career',
+            generated: true,
+            minutes: scenario.minutes,
+            role: text.role,
+            place: text.place,
+            intro: text.intro,
+            day: text.day,
+            pros: text.pros,
+            cons: text.cons,
+            goodFor: text.goodFor,
+            hardFor: text.hardFor,
+            tasks: scenario.keys.map((key, index) => publicTask(key, text.tasks[index])),
+            career: await this.careerFacts(careerId, l),
+        };
+    }
+
+    async checkCareer(careerId: string, taskId: string, answer: unknown, lang?: string) {
+        return this.checkScenario(await this.careerScenario(careerId), taskId, answer, lang);
+    }
+
+    async finishCareer(careerId: string, input: FinishInput) {
+        const scenario = await this.careerScenario(careerId);
+        const result = await this.finishScenario(scenario, { ...input, careerId });
+        return { ...result, career: await this.careerFacts(careerId, toLang(input?.lang)) };
+    }
+
+    // Пешрафти тавлид (барои админ).
+    async coverage() {
+        const [row] = await this.dataSource.query(
+            'SELECT (SELECT count(*)::int FROM career) AS total, (SELECT count(*)::int FROM career_trials) AS ready',
+        );
+        return row;
     }
 
     static grade(key: TaskKey, answer: unknown): { solved: boolean; perfect: boolean } {
@@ -161,7 +242,10 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
 
     // Баъди ҷавоб: дуруст буд ё не, ҷавоби дуруст ва шарҳи ҳамаи вариантҳо.
     check(family: string, taskId: string, answer: unknown, lang?: string) {
-        const scenario = this.scenario(family);
+        return this.checkScenario(this.scenario(family), taskId, answer, lang);
+    }
+
+    private checkScenario(scenario: Scenario, taskId: string, answer: unknown, lang?: string) {
         const index = scenario.keys.findIndex((key) => key.id === taskId);
         if (index < 0) throw new NotFoundException('Вазифа ёфт нашуд');
         const key = scenario.keys[index];
@@ -177,6 +261,7 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
             skillName: task.skillName,
             steps: task.steps,
             realLife: task.realLife,
+            tip: task.tip || null,
         };
     }
 
@@ -186,7 +271,17 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
     }
 
     async finish(input: FinishInput) {
-        const scenario = this.scenario(String(input?.family || ''));
+        const result = await this.finishScenario(this.scenario(String(input?.family || '')), input);
+        // Сенарияи оила барои ихтисоси мушаххас — хулоса ҳамон маълумоти ихтисосро дорад.
+        if (isUuid(input?.careerId)) {
+            try {
+                return { ...result, career: await this.careerFacts(String(input.careerId), toLang(input?.lang)) };
+            } catch { /* бе маълумоти ихтисос */ }
+        }
+        return result;
+    }
+
+    private async finishScenario(scenario: Scenario, input: FinishInput) {
         const lang = toLang(input?.lang);
         const given = Array.isArray(input?.tasks) ? input.tasks : [];
         const tasks = scenario.keys.map((key, index) => {
@@ -245,7 +340,7 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
                 related: scenario.keys[task.index].related.map((code) => byCode.get(code)).filter(Boolean),
             })),
             // Агар писанд наомад — самти дигарро санҷидан пешниҳод мешавад.
-            suggestOther: (rating !== null && rating <= 2) || tasks.every((task) => !task.liked),
+            suggestOther: (rating !== null && rating <= 2) || tasks.filter((task) => task.liked).length < tasks.length / 3,
         };
     }
 
@@ -262,7 +357,7 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
                 solvedAverage: average(list.map((row) => Number(row.solved))),
                 rating: average(ratings),
                 likedShare: list.length
-                    ? Math.round((list.reduce((sum, row) => sum + (row.tasks || []).filter((task) => task.liked).length, 0) / (list.length * 3)) * 100)
+                    ? Math.round((list.reduce((sum, row) => sum + (row.tasks || []).filter((task) => task.liked).length, 0) / list.reduce((sum, row) => sum + Math.max(1, (row.tasks || []).length), 0)) * 100)
                     : null,
                 confidence: {
                     count: paired.length,
@@ -275,8 +370,9 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
             };
         };
         return {
+            coverage: await this.coverage(),
             all: summarize(rows),
-            byFamily: Object.keys(SCENARIOS).map((family) => ({ family, ...summarize(rows.filter((row) => row.family === family)) })),
+            byFamily: [...Object.keys(SCENARIOS), 'career'].map((family) => ({ family, ...summarize(rows.filter((row) => row.family === family)) })),
         };
     }
 }

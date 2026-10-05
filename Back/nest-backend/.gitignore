@@ -11,3 +11,7 @@ keys/
 *.local
 npm-debug.log*
 yarn-debug.log*
+
+# Логи тавлиди сенарияҳо ва файлҳои интиқол
+trials-generate.log
+trials*.json

@@ -33,6 +33,27 @@ export class TrialController {
         return this.trial.stats();
     }
 
+    // Сенарияи худи ихтисос (884). 404 — ҳанӯз тайёр нест (браузер сенарияи оиларо нишон медиҳад).
+    @Get('career/:careerId')
+    @ApiOperation({ summary: 'Сенарияи ихтисос + кластер ва дар куҷо хондан' })
+    getCareer(@Param('careerId') careerId: string, @Query('lang') lang?: string) {
+        return this.trial.getCareer(careerId, lang);
+    }
+
+    @Post('career/:careerId/check')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Санҷиши як вазифаи сенарияи ихтисос' })
+    checkCareer(@Param('careerId') careerId: string, @Body() body: { taskId?: string; answer?: unknown; lang?: string }) {
+        return this.trial.checkCareer(careerId, String(body?.taskId || ''), body?.answer, body?.lang);
+    }
+
+    @Post('career/:careerId/finish')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Анҷоми сенарияи ихтисос' })
+    finishCareer(@Param('careerId') careerId: string, @Body() body: FinishInput) {
+        return this.trial.finishCareer(careerId, { ...body, family: 'career' });
+    }
+
     @Get(':family')
     @ApiOperation({ summary: 'Сенария бе ҷавобҳои дуруст' })
     get(@Param('family') family: string, @Query('lang') lang?: string) {

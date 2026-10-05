@@ -12,6 +12,8 @@ const TEXT = {
     tj: {
         title: "Як рӯз дар ихтисос",
         empty: "Ҳанӯз касе сенарияро нагузаштааст. Дар пилот хонандагонро ба /trial фиристед.",
+        coverage: "Сенарияҳои ихтисосҳо: {{ready}} аз {{total}} тайёр",
+        careerRow: "Сенарияҳои ихтисосҳо",
         count: "Гузаштанд",
         solved: "Ҳал (аз 3)",
         rating: "Писанд (аз 4)",
@@ -23,6 +25,8 @@ const TEXT = {
     ru: {
         title: "День в профессии",
         empty: "Пока никто не прошёл сценарий. На пилоте отправьте учеников на /trial.",
+        coverage: "Сценарии специальностей: готово {{ready}} из {{total}}",
+        careerRow: "Сценарии специальностей",
         count: "Прошли",
         solved: "Решено (из 3)",
         rating: "Понравилось (из 4)",
@@ -34,6 +38,8 @@ const TEXT = {
     en: {
         title: "A day in the job",
         empty: "Nobody has completed a scenario yet. During the pilot, send students to /trial.",
+        coverage: "Specialty scenarios: {{ready}} of {{total}} ready",
+        careerRow: "Specialty scenarios",
         count: "Completed",
         solved: "Solved (of 3)",
         rating: "Liked (of 4)",
@@ -64,6 +70,17 @@ export default function TrialStats({ token }) {
     return (
         <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
             <h2 className="text-lg font-black text-foreground">{text.title}</h2>
+            {data.coverage?.total > 0 && (
+                <div>
+                    <div className="flex justify-between text-[13px] font-semibold text-muted-foreground">
+                        <span>{fill(text.coverage, data.coverage)}</span>
+                        <span>{Math.round((data.coverage.ready / data.coverage.total) * 100)}%</span>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${(data.coverage.ready / data.coverage.total) * 100}%` }} />
+                    </div>
+                </div>
+            )}
             {!all.count ? (
                 <p className="text-sm text-muted-foreground">{text.empty}</p>
             ) : (
@@ -91,7 +108,7 @@ export default function TrialStats({ token }) {
                     <div className="space-y-2">
                         {data.byFamily.filter((row) => row.count > 0).map((row) => (
                             <div key={row.family} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-muted/30 px-3 py-2 text-[13px]">
-                                <span className="inline-flex items-center gap-2 font-bold text-foreground"><TrialIcon family={row.family} size="sm" /> {FAMILY_ROLE[row.family]?.[lang] || row.family}</span>
+                                <span className="inline-flex items-center gap-2 font-bold text-foreground"><TrialIcon family={row.family} size="sm" /> {FAMILY_ROLE[row.family]?.[lang] || (row.family === "career" ? text.careerRow : row.family)}</span>
                                 <span className="text-muted-foreground">{text.count}: <b className="text-foreground">{row.count}</b></span>
                                 <span className="text-muted-foreground">{text.solved}: <b className="text-foreground">{row.solvedAverage ?? "—"}</b></span>
                                 <span className="text-muted-foreground">{text.rating}: <b className="text-foreground">{row.rating ?? "—"}</b></span>

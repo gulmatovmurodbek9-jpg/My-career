@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "e2e": "node e2e/quiz.e2e.mjs",
-    "e2e:trial": "node e2e/trial.e2e.mjs"
+    "e2e:trial": "node e2e/trial.e2e.mjs",
+    "e2e:career-trial": "node e2e/career-trial.e2e.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

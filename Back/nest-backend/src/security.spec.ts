@@ -35,6 +35,8 @@ const PUBLIC: Record<string, string> = {
     'POST /quiz/interpret': 'ҷавоби озод, лимити IP',
     'POST /quiz/submit': 'тест бе вуруд',
     'POST /trial/:family/check': 'санҷиши як вазифа, чизе наменависад',
+    'POST /trial/career/:careerId/check': 'санҷиши як вазифа, чизе наменависад',
+    'POST /trial/career/:careerId/finish': 'натиҷаи сенарияи ихтисос, бе маълумоти шахсӣ',
     'POST /trial/:family/finish': 'натиҷаи «Як рӯз дар ихтисос», бе маълумоти шахсӣ',
     'POST /voice/debug': 'танҳо бо VOICE_DEBUG=1',
     'POST /voice/stt': 'аз сайти мо + лимити IP',

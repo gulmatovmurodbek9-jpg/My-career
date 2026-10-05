@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Target } from "lucide-react";
-import { familyForCareer, langCode, trialText } from "../lib/trialText";
+import { langCode, trialText } from "../lib/trialText";
 
 // Тугмаи хурди «Як рӯз дар ихтисос» дар корти ихтисос. Корт худаш <Link> аст,
 // бинобар ин <a>-и дохилӣ мумкин нест — тугма клики кортро боз медорад.
@@ -10,13 +10,12 @@ export default function TrialChip({ specialty, className = "" }) {
     const navigate = useNavigate();
     const { i18n } = useTranslation();
     const text = trialText(langCode(i18n.language));
-    const family = familyForCareer(specialty);
-    if (!family) return null;
+    if (!specialty?.id) return null;
 
     const open = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        navigate(`/trial/${family}?career=${specialty.id}`, {
+        navigate(`/trial/career/${specialty.id}`, {
             state: { careerName: specialty.nameTranslated || specialty.name },
         });
     };

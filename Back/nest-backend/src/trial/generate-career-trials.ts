@@ -87,24 +87,45 @@ async function main() {
     };
 
     // Як қадам бо такрор: агар validate хато ёбад — хатоҳо ба промпт илова мешаванд.
-    const step = async <T>(label: string, code: string, prompt: string, thinking: number, check: (value: any) => string[]): Promise<T> => {
+    // Лимити суръат (429): интизор мешавем ва кӯшишро ҳисоб намекунем (то 12 бор).
+    const isRateLimit = (error: any) => /429|RESOURCE_EXHAUSTED|Resource exhausted/i.test(String(error?.message || error));
+    const step = async <T>(label: string, code: string, prompt: string, thinking: number, check: (value: any) => string[], fix?: (value: any) => any): Promise<T> => {
         let feedback = '';
         let lastError = '';
+        let waits = 0;
         for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
             try {
-                const result = await ask(prompt + feedback, thinking);
+                const result = fix ? fix(await ask(prompt + feedback, thinking)) : await ask(prompt + feedback, thinking);
                 const errors = check(result);
                 if (!errors.length) return result as T;
                 lastError = errors.slice(0, 4).join('; ');
                 feedback = `\n\nДАФЪАИ ПЕШТАРА ИН ХАТОҲО БУДАНД — ҳатман ислоҳ кун:\n- ${errors.slice(0, 20).join('\n- ')}`;
                 console.log(`  ↻ ${code} ${label} (кӯшиши ${attempt}): ${lastError}`);
             } catch (error) {
+                if (isRateLimit(error) && waits < 12) {
+                    waits += 1;
+                    attempt -= 1;
+                    await sleep(30000 + Math.random() * 60000);
+                    continue;
+                }
                 lastError = (error as any)?.message?.slice(0, 160) || String(error);
                 console.log(`  ✗ ${code} ${label} (кӯшиши ${attempt}): ${lastError}`);
                 await sleep(4000 * attempt);
             }
         }
         throw new Error(`${label}: ${lastError}`);
+    };
+
+    // Тарҷумон баъзан id-и вариантҳоро иваз мекунад: агар шумора баробар бошад, id-ро аз рӯи тартиб
+    // аз тоҷикӣ мегузорем (тарҷума ҳамон тартибро нигоҳ медорад).
+    const alignIds = (translated: any, tj: any) => {
+        (translated?.tasks || []).forEach((task: any, i: number) => {
+            const ref = tj.tasks?.[i]?.options || [];
+            if (Array.isArray(task?.options) && task.options.length === ref.length) {
+                task.options.forEach((option: any, j: number) => { if (option) option.id = ref[j].id; });
+            }
+        });
+        return translated;
     };
 
     const generateOne = async (career: any) => {
@@ -116,7 +137,7 @@ async function main() {
             return keyErrors.length ? keyErrors : validateLanguage(result?.tj, result.keys, 'tj');
         });
         const [ru, en] = await Promise.all((['ru', 'en'] as const).map((lang) =>
-            step<any>(lang, career.code, buildTranslatePrompt(first.tj, lang), 0, (result) => validateLanguage(result, first.keys, lang, first.tj)),
+            step<any>(lang, career.code, buildTranslatePrompt(first.tj, lang), 0, (result) => validateLanguage(result, first.keys, lang, first.tj), (result) => alignIds(result, first.tj)),
         ));
         const content = { keys: first.keys, text: { tj: first.tj, ru, en } };
         const errors = validateCareerTrial(content);

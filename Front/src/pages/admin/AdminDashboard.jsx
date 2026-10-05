@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import TestQuality from "../../components/admin/TestQuality";
+import TrialStats from "../../components/admin/TrialStats";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -247,6 +248,8 @@ const AdminDashboard = () => {
       </div>
 
       <TestQuality data={quality} />
+
+      <TrialStats token={token} />
 
       {activity && (
         <motion.div

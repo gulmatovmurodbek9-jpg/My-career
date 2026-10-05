@@ -433,7 +433,7 @@ const Layout = () => {
                       {t("footer.platform", "Platform")}
                     </h4>
                     <ul className="space-y-4">
-                      {navLinks.map((link, i) => (
+                      {[...navLinks, { to: "/trial", label: t("nav.trial", "Як рӯз дар ихтисос") }].map((link, i) => (
                         <li key={i}>
                           <Link to={link.to} className="text-sm font-bold text-muted-foreground hover:text-primary transition-all">
                             {link.label}

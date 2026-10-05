@@ -1,0 +1,161 @@
+import { Scenario } from '../trial.types';
+
+export const MEDICINE: Scenario = {
+    family: 'medicine',
+    icon: '🩺',
+    minutes: 10,
+    keys: [
+        { id: 't1', kind: 'order', skill: 'hard', answer: ['a', 'b', 'c'], mustFirst: 'a', related: ['1790101', '1790102'] },
+        { id: 't2', kind: 'number', skill: 'hard', answer: 20, related: ['1790103', '180020102'] },
+        { id: 't3', kind: 'choice', skill: 'soft', answer: 'c', related: ['2790131', '179010501'] },
+    ],
+    text: {
+        tj: {
+            role: 'Ҳамшира / табиб дар қабул',
+            place: 'Маркази саломатии ноҳия · соати 7:30',
+            intro: 'Навбати шабонаи шумо қариб тамом аст. Дар долон се нафар интизоранд, табиби калон дар ҷарроҳхона аст.',
+            disclaimer: 'Ин омӯзиши тиббӣ нест. Дар ҳолати воқеӣ ба 103 занг занед.',
+            tasks: [
+                {
+                    title: 'Аввал киро мебинед?',
+                    prompt: 'Дар долон:',
+                    question: 'Беморонро аз рӯи навбат гузоред: аз хатарноктарин.',
+                    options: [
+                        { id: 'b', text: 'Кӯдаки 6-сола: ҳарорат 38,2°, аммо бозӣ мекунад ва об менӯшад.' },
+                        { id: 'c', text: 'Зан ангушташро бо корд бурид; хун бо бандина қатъ шудааст.' },
+                        { id: 'a', text: 'Марди 55-сола: 20 дақиқа дарди сина, ки ба дасти чап мегузарад; арақ кардааст.' },
+                    ],
+                    explain: 'Дарди сина, ки ба даст мегузарад ва бо арақ — метавонад нишонаи инфаркт бошад: ҳар дақиқа муҳим аст. Кӯдак бемор, аммо ҳолаташ устувор. Ангушт кӯмак мехоҳад, вале хатар гузашт. Дар тиб на он ки баландтар фарёд мезанад, балки он ки хатараш зиёдтар аст, аввал меравад.',
+                },
+                {
+                    title: 'Миқдори дору',
+                    prompt: 'Табиб навиштааст: 500 мг, 2 бор дар як рӯз, 5 рӯз. Дар дорухона ҳар таблетка 250 мг аст.',
+                    question: 'Барои тамоми табобат чанд таблетка лозим?',
+                    unit: 'таблетка',
+                    explain: 'Як қабул — 2 таблетка (500 ÷ 250). Дар як рӯз 2 бор — 4 таблетка. 5 рӯз × 4 = 20. Дар тиб хатои ҳисоб метавонад ба бемор зарар расонад — ҳамшира ҳамеша ду бор месанҷад.',
+                    wrongNumbers: {
+                        '10': 'Шумо фаромӯш кардед, ки як қабул ду таблетка аст.',
+                        '5': 'Шумо фаромӯш кардед, ки дар як рӯз ду бор қабул мешавад.',
+                        '40': 'Аз ҳад зиёд: 500 мг — ду таблетка, на чор.',
+                    },
+                },
+                {
+                    title: 'Духтари бемор метарсад',
+                    prompt: 'Духтари марди якум гиря мекунад:',
+                    quote: 'Падарам мемирад?!',
+                    question: 'Чӣ мегӯед?',
+                    options: [
+                        { id: 'a', text: '«Не, ҳеҷ гап не, ҳамааш хуб мешавад.»', feedback: 'Шумо инро намедонед. Ваъдаи дурӯғ дар тиб бахшида намешавад.' },
+                        { id: 'b', text: 'Ҷавоб намедиҳам — вақт нест', feedback: 'Вақт воқеан кам аст, аммо як ҷумла 10 сония мегирад ва тарсро кам мекунад.' },
+                        { id: 'c', text: '«Ҳолаташ ҷиддӣ аст. Ҳоло ҳама кори лозимиро мекунем ва табибро даъват кардем. Шумо ин ҷо нишинед — ман ҳар 15 дақиқа хабар медиҳам.»', feedback: 'Рост, ором ва бо амали мушаххас. Ин ҳамдардӣ бе дурӯғ аст.' },
+                        { id: 'd', text: 'Ҳамаи ташхисҳои эҳтимолиро бо истилоҳҳои тиббӣ мефаҳмонам', feedback: 'Дар ҳолати тарс одам истилоҳҳоро намефаҳмад ва бештар метарсад.' },
+                    ],
+                    explain: 'Табиб ва ҳамшира на танҳо бемор, балки наздиконашро ҳам ором мекунанд — рост ва бо эҳтиром.',
+                },
+            ],
+            reality: [
+                'Таҳсил дароз: 5–7 сол ва баъд ординатура; омӯзиш ҳеҷ гоҳ тамом намешавад.',
+                'Навбатҳои шабона, хун, дард ва гоҳо марг — ин кор барои ҳама нест, ва ин айб нест.',
+                'Ҳар қарор масъулият дорад: оё шумо зери фишор ором фикр карда метавонед?',
+            ],
+        },
+        ru: {
+            role: 'Медсестра / врач приёмного отделения',
+            place: 'Районный центр здоровья · 7:30',
+            intro: 'Ваше ночное дежурство почти закончилось. В коридоре ждут трое, старший врач на операции.',
+            disclaimer: 'Это не медицинское обучение. В реальной ситуации звоните 103.',
+            tasks: [
+                {
+                    title: 'Кого принять первым?',
+                    prompt: 'В коридоре:',
+                    question: 'Расставьте пациентов по очереди — начиная с самого опасного случая.',
+                    options: [
+                        { id: 'b', text: 'Ребёнок 6 лет: температура 38,2°, но играет и пьёт воду.' },
+                        { id: 'c', text: 'Женщина порезала палец ножом; кровь остановлена повязкой.' },
+                        { id: 'a', text: 'Мужчина 55 лет: 20 минут боль в груди, отдаёт в левую руку; весь в поту.' },
+                    ],
+                    explain: 'Боль в груди с отдачей в руку и потом может быть признаком инфаркта — важна каждая минута. Ребёнок болен, но состояние стабильное. Палец требует помощи, но опасность миновала. В медицине первым идёт не тот, кто громче, а тот, у кого риск выше.',
+                },
+                {
+                    title: 'Доза лекарства',
+                    prompt: 'Врач назначил: 500 мг, 2 раза в день, 5 дней. В аптеке таблетки по 250 мг.',
+                    question: 'Сколько таблеток нужно на весь курс?',
+                    unit: 'таблеток',
+                    explain: 'Один приём — 2 таблетки (500 ÷ 250). В день 2 раза — 4 таблетки. 5 дней × 4 = 20. Ошибка в расчёте может навредить пациенту — медсестра всегда перепроверяет.',
+                    wrongNumbers: {
+                        '10': 'Вы забыли, что один приём — это две таблетки.',
+                        '5': 'Вы забыли, что приём два раза в день.',
+                        '40': 'Слишком много: 500 мг — две таблетки, а не четыре.',
+                    },
+                },
+                {
+                    title: 'Дочь пациента напугана',
+                    prompt: 'Дочь первого пациента плачет:',
+                    quote: 'Папа умрёт?!',
+                    question: 'Что вы скажете?',
+                    options: [
+                        { id: 'a', text: '«Нет-нет, всё будет хорошо.»', feedback: 'Вы этого не знаете. Ложное обещание в медицине непростительно.' },
+                        { id: 'b', text: 'Не отвечу — нет времени', feedback: 'Времени действительно мало, но одна фраза занимает 10 секунд и снижает страх.' },
+                        { id: 'c', text: '«Состояние серьёзное. Мы делаем всё необходимое и уже вызвали врача. Посидите здесь — я буду сообщать вам каждые 15 минут.»', feedback: 'Честно, спокойно и с конкретным действием. Это сочувствие без лжи.' },
+                        { id: 'd', text: 'Объясню все возможные диагнозы медицинскими терминами', feedback: 'В страхе человек не понимает терминов и пугается ещё сильнее.' },
+                    ],
+                    explain: 'Врач и медсестра успокаивают не только пациента, но и родных — честно и с уважением.',
+                },
+            ],
+            reality: [
+                'Долгое обучение: 5–7 лет и затем ординатура; учёба не заканчивается никогда.',
+                'Ночные дежурства, кровь, боль и иногда смерть — эта работа не для всех, и это не стыдно.',
+                'Каждое решение — ответственность: сможете ли вы спокойно думать под давлением?',
+            ],
+        },
+        en: {
+            role: 'Nurse / admitting doctor',
+            place: 'District health centre · 7:30',
+            intro: 'Your night shift is almost over. Three people are waiting in the corridor and the senior doctor is in surgery.',
+            disclaimer: 'This is not medical training. In a real emergency call 103.',
+            tasks: [
+                {
+                    title: 'Who do you see first?',
+                    prompt: 'In the corridor:',
+                    question: 'Put the patients in order — most dangerous first.',
+                    options: [
+                        { id: 'b', text: 'A 6-year-old: temperature 38.2°, but playing and drinking water.' },
+                        { id: 'c', text: 'A woman cut her finger with a knife; the bleeding stopped under a bandage.' },
+                        { id: 'a', text: 'A 55-year-old man: chest pain for 20 minutes spreading to his left arm; sweating.' },
+                    ],
+                    explain: 'Chest pain spreading to the arm with sweating can be a heart attack — every minute counts. The child is ill but stable. The finger needs care but the danger has passed. In medicine the first one seen is not the loudest but the one at highest risk.',
+                },
+                {
+                    title: 'Medicine dose',
+                    prompt: 'The doctor prescribed: 500 mg, twice a day, for 5 days. The pharmacy has 250 mg tablets.',
+                    question: 'How many tablets are needed for the whole course?',
+                    unit: 'tablets',
+                    explain: 'One dose is 2 tablets (500 ÷ 250). Twice a day is 4 tablets. 5 days × 4 = 20. A calculation error can harm a patient — a nurse always double-checks.',
+                    wrongNumbers: {
+                        '10': 'You forgot that one dose is two tablets.',
+                        '5': 'You forgot that it is taken twice a day.',
+                        '40': 'Too many: 500 mg is two tablets, not four.',
+                    },
+                },
+                {
+                    title: 'The patient\'s daughter is scared',
+                    prompt: 'The first patient\'s daughter is crying:',
+                    quote: 'Is my dad going to die?!',
+                    question: 'What do you say?',
+                    options: [
+                        { id: 'a', text: '"No, no, everything will be fine."', feedback: 'You do not know that. A false promise is unforgivable in medicine.' },
+                        { id: 'b', text: 'Say nothing — there is no time', feedback: 'Time is short, but one sentence takes 10 seconds and reduces fear.' },
+                        { id: 'c', text: '"His condition is serious. We are doing everything needed and have called the doctor. Sit here — I will update you every 15 minutes."', feedback: 'Honest, calm and with a concrete action. Compassion without lies.' },
+                        { id: 'd', text: 'Explain all possible diagnoses in medical terms', feedback: 'A frightened person does not understand jargon and only gets more scared.' },
+                    ],
+                    explain: 'Doctors and nurses calm not only the patient but the family too — honestly and respectfully.',
+                },
+            ],
+            reality: [
+                'Long training: 5–7 years plus residency; learning never ends.',
+                'Night shifts, blood, pain and sometimes death — this job is not for everyone, and that is no shame.',
+                'Every decision carries responsibility: can you think calmly under pressure?',
+            ],
+        },
+    },
+};

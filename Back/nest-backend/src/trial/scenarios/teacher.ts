@@ -1,0 +1,158 @@
+import { Scenario } from '../trial.types';
+
+export const TEACHER: Scenario = {
+    family: 'teacher',
+    icon: '📚',
+    minutes: 10,
+    keys: [
+        { id: 't1', kind: 'choice', skill: 'hard', answer: 'c', related: ['1230104', '123010404'] },
+        { id: 't2', kind: 'choice', skill: 'hard', answer: 'b', related: ['1020501', '1020505'] },
+        { id: 't3', kind: 'choice', skill: 'soft', answer: 'd', related: ['1010101', '2860101'] },
+    ],
+    text: {
+        tj: {
+            role: 'Омӯзгор',
+            place: 'Бохтар · мактаб · соати 8:00',
+            intro: 'Шумо омӯзгори математикаи синфи 5 ҳастед. Дар мизатон 28 дафтари кори хонагӣ гузошта шудааст.',
+            tasks: [
+                {
+                    title: 'Хатои хонандаро фаҳмед',
+                    prompt: 'Дар дафтари Сорбон навишта шудааст:',
+                    code: '2/3 + 1/3 = 3/6',
+                    question: 'Ӯ дар куҷо хато кард?',
+                    options: [
+                        { id: 'a', text: 'Ӯ ҳисоб карда наметавонад', feedback: '2 + 1 = 3 ва 3 + 3 = 6 — ҳисоб дуруст аст. Хато дар фикр аст.' },
+                        { id: 'b', text: 'Ӯ бепарво аст', feedback: 'Шояд не: ин хатои бисёр маъмул аст ва аз фаҳмиши нодуруст пайдо мешавад, на аз танбалӣ.' },
+                        { id: 'c', text: 'Ӯ сурат ва махраҷро ҷудо-ҷудо ҷамъ кард, мисли ду адади оддӣ', feedback: 'Дуруст. Омӯзгори хуб на танҳо «хато» менависад — мефаҳмад, ки хонанда чӣ гуна фикр кард.' },
+                    ],
+                    explain: 'Омӯзгор хаторо мисли табиб ташхис мекунад: хонанда кадом қоидаро барои худ сохтааст? Танҳо баъд маълум мешавад, ки чӣ тавр ёрӣ диҳад.',
+                },
+                {
+                    title: 'Чӣ тавр фаҳмонед?',
+                    prompt: 'Ба Сорбон бояд фаҳмонед, ки чаро 2/3 + 1/3 ба 3/6 баробар нест.',
+                    question: 'Кадом роҳ беҳтар аст?',
+                    options: [
+                        { id: 'a', text: 'Қоидаро такрор мекунам: «Махраҷ ҳамон мемонад»', feedback: 'Ӯ қоидаро ёд мегирад ва фардо фаромӯш мекунад — чунки намефаҳмад, ки чаро.' },
+                        { id: 'b', text: 'Нонро ба 3 қисм тақсим мекунам: «2 порча ва 1 порча — чанд порча шуд? Порчаҳо хурдтар шуданд?»', feedback: 'Аввал мисоли зинда, баъд қоида. Сорбон худаш мебинад, ки 3/6 — нисф аст ва аз 2/3 ҳам хурдтар!' },
+                        { id: 'c', text: 'Видеоро аз интернет нишон медиҳам', feedback: 'Метавонад ёрӣ диҳад, аммо видео намедонад, ки маҳз Сорбон дар куҷо гум шуд.' },
+                    ],
+                    explain: 'Кӯдак аввал бо чашм ва даст мефаҳмад, баъд бо қоида. Омӯзгор ҳамон як мавзӯъро бо 3–4 роҳ фаҳмонда метавонад.',
+                },
+                {
+                    title: 'Волидайни норозӣ',
+                    prompt: 'Модари Сорбон ба мактаб меояд:',
+                    quote: 'Чаро писарам «3» гирифт?! Ӯ ҳар рӯз дарс мехонад!',
+                    question: 'Чӣ мекунед?',
+                    options: [
+                        { id: 'a', text: '«Баҳо баҳо аст, ман иваз намекунам.»', feedback: 'Шояд баҳо дуруст аст — аммо модар ҳамчун душман меравад ва ба кӯдак ёрӣ намедиҳад.' },
+                        { id: 'b', text: 'Баҳоро ба «4» иваз мекунам, то ором шавад', feedback: 'Сорбон ҳанӯз касрҳоро намедонад. Баҳои дурӯғ мушкилро пинҳон мекунад.' },
+                        { id: 'c', text: '«Бубахшед, ҳоло бисёр банд ҳастам.»', feedback: 'Волидайн шарики омӯзгоранд, на монеа.' },
+                        { id: 'd', text: 'Гӯш мекунам ва дафтарро нишон медиҳам: «Ана, ӯ касрҳоро мисли ду адад ҷамъ мекунад. Ин зуд ислоҳ мешавад — дар хона бо нон ё себ машқ кунед.»', feedback: 'Аввал гӯш кардан, баъд далел ва нақшаи якҷоя. Акнун модар ёрдамчии шумост.' },
+                    ],
+                    explain: 'Омӯзгор на танҳо бо кӯдакон, балки бо калонсолон ҳам кор мекунад: волидайн, ҳамкорон, маъмурият.',
+                },
+            ],
+            reality: [
+                'Шомҳо дафтарҳоро месанҷед ва нақшаи дарс менависед — кор бо занги охирин тамом намешавад.',
+                'Дар синф 25–35 нафар, ҳар кадом дигар хел меомӯзад; сабр аз ҳама муҳимтар аст.',
+                'Дарс ҳар сол такрор мешавад, аммо кӯдакон ҳар сол нав ҳастанд.',
+            ],
+        },
+        ru: {
+            role: 'Учитель',
+            place: 'Бохтар · школа · 8:00',
+            intro: 'Вы учитель математики 5 класса. На столе лежат 28 тетрадей с домашней работой.',
+            tasks: [
+                {
+                    title: 'Поймите ошибку ученика',
+                    prompt: 'В тетради Сорбона написано:',
+                    code: '2/3 + 1/3 = 3/6',
+                    question: 'Где он ошибся?',
+                    options: [
+                        { id: 'a', text: 'Он не умеет считать', feedback: '2 + 1 = 3 и 3 + 3 = 6 — счёт верный. Ошибка в рассуждении.' },
+                        { id: 'b', text: 'Он невнимательный', feedback: 'Скорее нет: это очень частая ошибка из-за неверного понимания, а не из-за лени.' },
+                        { id: 'c', text: 'Он сложил числители и знаменатели отдельно, как два обычных числа', feedback: 'Верно. Хороший учитель не просто пишет «ошибка» — он понимает, как рассуждал ученик.' },
+                    ],
+                    explain: 'Учитель диагностирует ошибку, как врач: какое правило ученик придумал для себя? Только тогда понятно, как помочь.',
+                },
+                {
+                    title: 'Как объяснить?',
+                    prompt: 'Нужно объяснить Сорбону, почему 2/3 + 1/3 не равно 3/6.',
+                    question: 'Какой способ лучше?',
+                    options: [
+                        { id: 'a', text: 'Повторю правило: «Знаменатель остаётся прежним»', feedback: 'Он выучит правило и завтра забудет — потому что не понимает, почему.' },
+                        { id: 'b', text: 'Разделю лепёшку на 3 части: «2 куска и 1 кусок — сколько кусков? Куски стали меньше?»', feedback: 'Сначала живой пример, потом правило. Сорбон сам увидит, что 3/6 — это половина, и она даже меньше 2/3!' },
+                        { id: 'c', text: 'Покажу видео из интернета', feedback: 'Может помочь, но видео не знает, где именно запутался Сорбон.' },
+                    ],
+                    explain: 'Ребёнок сначала понимает глазами и руками, потом правилом. Учитель умеет объяснить одну тему 3–4 способами.',
+                },
+                {
+                    title: 'Недовольный родитель',
+                    prompt: 'Мама Сорбона пришла в школу:',
+                    quote: 'Почему мой сын получил «3»?! Он каждый день учит уроки!',
+                    question: 'Что вы сделаете?',
+                    options: [
+                        { id: 'a', text: '«Оценка есть оценка, я её не изменю.»', feedback: 'Возможно, оценка верная — но мама уйдёт врагом и ребёнку не поможет.' },
+                        { id: 'b', text: 'Исправлю на «4», чтобы она успокоилась', feedback: 'Сорбон всё ещё не понимает дроби. Ложная оценка прячет проблему.' },
+                        { id: 'c', text: '«Извините, я сейчас очень занят.»', feedback: 'Родители — партнёры учителя, а не помеха.' },
+                        { id: 'd', text: 'Выслушаю и покажу тетрадь: «Вот, он складывает дроби как два числа. Это быстро исправимо — потренируйтесь дома на лепёшке или яблоке.»', feedback: 'Сначала выслушать, потом факт и общий план. Теперь мама — ваш помощник.' },
+                    ],
+                    explain: 'Учитель работает не только с детьми, но и со взрослыми: родителями, коллегами, администрацией.',
+                },
+            ],
+            reality: [
+                'Вечерами проверка тетрадей и планы уроков — работа не заканчивается с последним звонком.',
+                'В классе 25–35 человек, и каждый учится по-своему; терпение важнее всего.',
+                'Урок повторяется каждый год, но дети каждый год новые.',
+            ],
+        },
+        en: {
+            role: 'Teacher',
+            place: 'Bokhtar · school · 8:00',
+            intro: 'You teach maths in grade 5. There are 28 homework notebooks on your desk.',
+            tasks: [
+                {
+                    title: 'Understand the pupil\'s mistake',
+                    prompt: 'Sorbon\'s notebook says:',
+                    code: '2/3 + 1/3 = 3/6',
+                    question: 'Where did he go wrong?',
+                    options: [
+                        { id: 'a', text: 'He cannot count', feedback: '2 + 1 = 3 and 3 + 3 = 6 — the counting is right. The reasoning is wrong.' },
+                        { id: 'b', text: 'He is careless', feedback: 'Probably not: this is a very common mistake that comes from misunderstanding, not laziness.' },
+                        { id: 'c', text: 'He added the numerators and the denominators separately, like two ordinary numbers', feedback: 'Correct. A good teacher does not just write "wrong" — they understand how the pupil was thinking.' },
+                    ],
+                    explain: 'A teacher diagnoses a mistake like a doctor: what rule did the pupil invent for himself? Only then is it clear how to help.',
+                },
+                {
+                    title: 'How do you explain it?',
+                    prompt: 'You need to show Sorbon why 2/3 + 1/3 is not 3/6.',
+                    question: 'Which way is best?',
+                    options: [
+                        { id: 'a', text: 'Repeat the rule: "The denominator stays the same"', feedback: 'He will memorise the rule and forget it tomorrow — because he does not understand why.' },
+                        { id: 'b', text: 'Cut a flatbread into 3 pieces: "2 pieces and 1 piece — how many pieces? Did the pieces get smaller?"', feedback: 'A real example first, then the rule. Sorbon sees for himself that 3/6 is a half — even less than 2/3!' },
+                        { id: 'c', text: 'Show a video from the internet', feedback: 'It may help, but a video does not know where exactly Sorbon got lost.' },
+                    ],
+                    explain: 'Children understand with eyes and hands first, rules second. A teacher can explain one topic in 3–4 different ways.',
+                },
+                {
+                    title: 'An unhappy parent',
+                    prompt: 'Sorbon\'s mother comes to school:',
+                    quote: 'Why did my son get a "3"?! He studies every day!',
+                    question: 'What do you do?',
+                    options: [
+                        { id: 'a', text: '"A mark is a mark, I will not change it."', feedback: 'The mark may be fair — but the mother leaves as an enemy and the child gets no help.' },
+                        { id: 'b', text: 'Change it to a "4" so she calms down', feedback: 'Sorbon still does not understand fractions. A false mark hides the problem.' },
+                        { id: 'c', text: '"Sorry, I am very busy right now."', feedback: 'Parents are a teacher\'s partners, not an obstacle.' },
+                        { id: 'd', text: 'Listen and show the notebook: "Look, he adds fractions like two numbers. This is quick to fix — practise at home with bread or apples."', feedback: 'Listen first, then evidence and a shared plan. Now the mother is your helper.' },
+                    ],
+                    explain: 'Teachers work not only with children but with adults too: parents, colleagues, the school administration.',
+                },
+            ],
+            reality: [
+                'Evenings go to marking notebooks and planning lessons — the job does not end with the last bell.',
+                'A class has 25–35 pupils, each learning differently; patience matters most.',
+                'The lesson repeats every year, but the children are new every year.',
+            ],
+        },
+    },
+};

@@ -12,6 +12,7 @@ import { AiModule } from './ai/ai.module';
 import { UniversityModule } from './university/university.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { VoiceModule } from './voice/voice.module';
+import { TrialModule } from './trial/trial.module';
 
 @Module({
     imports: [
@@ -48,6 +49,7 @@ import { VoiceModule } from './voice/voice.module';
         UniversityModule,
         AppointmentModule,
         VoiceModule,
+        TrialModule,
     ],
     controllers: [HealthController],
 })

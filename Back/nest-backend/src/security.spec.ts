@@ -8,13 +8,14 @@ import { QuizController } from './quiz/quiz.controller';
 import { AuthController } from './auth/auth.controller';
 import { VoiceController } from './voice/voice.controller';
 import { UniversityController } from './university/university.controller';
+import { TrialController } from './trial/trial.controller';
 import { ROLES_KEY } from './auth/decorators/roles.decorator';
 import { AppointmentModule } from './appointment/appointment.module';
 
 // Ҳар эндпоинте, ки маълумотро тағйир медиҳад (POST/PUT/PATCH/DELETE), бояд guard дошта
 // бошад — ба ғайр аз рӯйхати ошкоро ҷамъиятӣ дар поён (бо сабаб). Ҳамин тест хатои
 // «кластерҳо бе ҳимоя»-ро (даври 2-и журӣ) мегирифт.
-const CONTROLLERS = [ClusterController, CareerController, UsersController, QuizController, AuthController, VoiceController, UniversityController];
+const CONTROLLERS = [ClusterController, CareerController, UsersController, QuizController, AuthController, VoiceController, UniversityController, TrialController];
 
 const PUBLIC: Record<string, string> = {
     'POST /auth/login': 'вуруд',
@@ -33,6 +34,8 @@ const PUBLIC: Record<string, string> = {
     'POST /quiz/score': 'ҳисоби хол, чизе наменависад',
     'POST /quiz/interpret': 'ҷавоби озод, лимити IP',
     'POST /quiz/submit': 'тест бе вуруд',
+    'POST /trial/:family/check': 'санҷиши як вазифа, чизе наменависад',
+    'POST /trial/:family/finish': 'натиҷаи «Як рӯз дар ихтисос», бе маълумоти шахсӣ',
     'POST /voice/debug': 'танҳо бо VOICE_DEBUG=1',
     'POST /voice/stt': 'аз сайти мо + лимити IP',
     'POST /voice/test-worker': 'танҳо TTS_WORKER_TEST=1 ва localhost',
@@ -81,6 +84,12 @@ describe('Амният: ҳар эндпоинти тағйирдиҳанда ҳ�
     it('рӯйхати мутахассисон ҷамъиятӣ нест', () => {
         const route = routes().find((r) => r.key === 'GET /users/specialists');
         expect(route?.guarded).toBe(true);
+    });
+
+    it('натиҷаҳои «Як рӯз дар ихтисос» танҳо барои админ', () => {
+        const route = routes().find((r) => r.key === 'GET /trial/stats');
+        expect(route?.guarded).toBe(true);
+        expect(route?.roles).toEqual(['admin']);
     });
 
     it('машваратҳо (функсияи хомӯш) эндпоинт надоранд', () => {

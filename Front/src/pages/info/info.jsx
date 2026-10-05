@@ -46,6 +46,7 @@ import { clusterLabel } from "../../lib/clusterLabel";
 import { studyFormLabel, paymentTypeLabel, languageLabel } from "../../lib/offeringLabels";
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
+import TrialCta from "../../components/TrialCta";
 import { displayName } from "../../lib/careerName";
 
 const fadeIn = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
@@ -556,6 +557,8 @@ const Info = () => {
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
         <div className="space-y-5">
+
+          <TrialCta career={career} />
 
           {career.purpose && (
             <Section icon={Target} title={t("career_page.purpose_title")} subtitle={t("career_page.purpose_sub")} gradient="from-blue-500 to-indigo-500">

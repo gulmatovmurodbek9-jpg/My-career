@@ -14,6 +14,7 @@ import {
 
 } from "lucide-react";
 import { displayName } from "../lib/careerName";
+import TrialChip from "./TrialChip";
 
 export function formatTuition(specialty, t) {
   const min = specialty.minTuitionFee ?? specialty.tuitionFee;
@@ -184,8 +185,9 @@ export default function SpecialtyCard({ specialty }) {
           </p>
         </div>
 
-        <div className="mt-8 flex items-center justify-end pt-5 border-t border-border">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+        <div className="mt-8 flex items-center justify-between gap-3 pt-5 border-t border-border">
+          <TrialChip specialty={specialty} />
+          <div className="ml-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <ArrowRight className="h-4 w-4" />
           </div>
         </div>
@@ -301,6 +303,7 @@ export function SpecialtyCardList({ specialty }) {
               <Heart className={`w-4 h-4 ${isLiked ? "text-rose-500 fill-rose-500" : "text-muted-foreground"}`} />
               <span className={`text-[11px] font-black ${isLiked ? "text-rose-500" : ""}`}>{likesCount}</span>
             </button>
+            <TrialChip specialty={specialty} />
           </div>
           <ArrowRight className="w-4 h-4 text-primary" />
         </div>

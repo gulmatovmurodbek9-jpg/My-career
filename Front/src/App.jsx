@@ -8,6 +8,8 @@ import { ProtectedRoute, PublicRoute, AdminRoute } from "./components/RouteGuard
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/about/about"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Trial = lazy(() => import("./pages/trial/Trial"));
+const TrialHub = lazy(() => import("./pages/trial/TrialHub"));
 const Careers = lazy(() => import("./pages/careers/careers"));
 const Universities = lazy(() => import("./pages/universities/Universities"));
 const UniversityDetail = lazy(() => import("./pages/universities/UniversityDetail"));
@@ -45,6 +47,8 @@ const App = () => {
               <Route index element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/trial" element={<TrialHub />} />
+              <Route path="/trial/:family" element={<Trial />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/universities" element={<Universities />} />
               <Route path="/universities/:id" element={<UniversityDetail />} />

@@ -22,13 +22,35 @@ export function fixText(text: string, lang: Lang): string {
         // Калимаи кириллӣ бо як ҳарфи лотинии «ҳамшакл» дар дохилаш: «бояoед» → «бояоед» → (AI «бояд»-ро ислоҳ кардааст).
         // Танҳо як ҳарф, ки ҳарду тарафаш кириллӣ аст («стабилитронoв»); «PLCҳо» — ихтисора, бетағйир.
         .replace(/([а-яёӣӯқғҳҷ])([aeopcxyAEOPCXHKMTB])(?=[а-яёӣӯқғҳҷ])/gi, (_, before, ch) => before + (LATIN_TO_CYR[ch] || ch));
+    // Нохунакҳои дохили ҳам бе пӯшиш: «Корти бонкӣ «Наврӯз» → «Корти бонкӣ „Наврӯз“».
+    const balance = (s: string) => (s.match(/«/g) || []).length - (s.match(/»/g) || []).length;
+    if (balance(out) > 0) out = out.replace(/«([^«»]*)«([^«»]*)»/g, '«$1„$2“»');
+    if (balance(out) === 1 && out.lastIndexOf('«') > out.lastIndexOf('»')) out = out.replace(/([.!?…]?)\s*$/, '»$1');
+    // Ихтисораи лотинӣ бо ҳарфи кириллии ҳамшакл: «VТ» → «VT».
+    out = out.replace(/\b[A-Z]+[АВЕКМНОРСТХ][A-ZАВЕКМНОРСТХ]*(?![A-Za-zА-Яа-яЁё])/g, (word) => word.replace(/[АВЕКМНОРСТХ]/g, (ch) => CYR_TO_LATIN[ch] || ch));
+    // Як ҳарфи лотинӣ дар калимаи кириллӣ, ки ҳамшакл нест: «Дарzмол» → «Дарзмол».
+    out = out.replace(/([а-яёӣӯқғҳҷ])([zdfgijlqrsvw])(?=[а-яёӣӯқғҳҷ])/gi, (_, before, ch) => before + (LATIN_LETTER_TO_CYR[ch.toLowerCase()] || ch));
+    // Калимаи такрорӣ (ҳарфҳо айнан якхела — «В в» дар «точки В в точку» дуруст аст):
+    // пешояндҳо ва пайвандакҳо ҳеҷ гоҳ дукарата намеоянд. «муҳим муҳим», «калон калон» — метавонад дуруст бошад.
+    out = out.replace(/(^|[\s(«“])(ба|аз|бо|дар|ва|то|and|an|or|to|the|a|in|of|и|на)\s+\2(?=[\s,.!?;:»”)]|$)/g, '$1$2');
+    // «бинобар ин ин иҷозатнома» = «бинобар ин, ин иҷозатнома».
+    out = out.replace(/([Бб]инобар|[Бб]арои|[Аа]з) ин ин(?=\s)/g, '$1 ин, ин');
     if (lang === 'en') {
         // «Vaҳdat», «Dustӣ» → «Vahdat», «Dusti» (танҳо дар калимаҳои лотинӣ).
         out = out.replace(/[A-Za-z]+[ӣӯқғҳҷӢӮҚҒҲҶ][A-Za-zӣӯқғҳҷӢӮҚҒҲҶ]*|[ӣӯқғҳҷӢӮҚҒҲҶ][A-Za-z]+/g, (word) =>
             word.replace(/[ӣӯқғҳҷӢӮҚҒҲҶ]/g, (ch) => TJ_TO_LATIN[ch] || ch));
+        // «Guldaст», «Oriyоn», «Voх» → «Guldast», «Oriyon», «Vox» (калимаи лотинӣ бо ҳарфҳои кириллӣ дар охир/мобайн).
+        out = out.replace(/\b[A-Za-z]{2,}[а-яё]+[A-Za-zа-яё]*(?![A-Za-zА-Яа-яЁё])/g, (word) => word.replace(/[а-яё]/g, (ch) => CYR_LETTER_TO_LATIN[ch] ?? ch));
     }
     return out;
 }
+
+const CYR_TO_LATIN: Record<string, string> = { А: 'A', В: 'B', Е: 'E', К: 'K', М: 'M', Н: 'H', О: 'O', Р: 'P', С: 'C', Т: 'T', Х: 'X' };
+const LATIN_LETTER_TO_CYR: Record<string, string> = { z: 'з', d: 'д', f: 'ф', g: 'г', i: 'и', j: 'ҷ', l: 'л', q: 'қ', r: 'р', s: 'с', v: 'в', w: 'в' };
+const CYR_LETTER_TO_LATIN: Record<string, string> = {
+    а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o',
+    п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ы: 'y', э: 'e', ю: 'yu', я: 'ya', ь: '', ъ: '',
+};
 
 function walk(value: any, lang: Lang, onChange: (before: string, after: string) => void): any {
     if (typeof value === 'string') {

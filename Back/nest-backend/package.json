@@ -15,6 +15,7 @@
     "seed:list": "ts-node --transpileOnly src/seed/list-careers.ts",
     "trials:generate": "ts-node --transpileOnly src/trial/generate-career-trials.ts",
     "trials:proofread": "ts-node --transpileOnly src/trial/proofread-career-trials.ts",
+    "trials:tables": "ts-node --transpileOnly src/trial/translate-tables.ts",
     "trials:fix": "ts-node --transpileOnly src/trial/fix-career-trials.ts",
     "trials:scan": "ts-node --transpileOnly src/trial/scan-career-trials.ts",
     "trials:export": "ts-node --transpileOnly src/trial/transfer-career-trials.ts export",

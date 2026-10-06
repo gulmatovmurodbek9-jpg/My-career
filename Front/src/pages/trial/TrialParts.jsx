@@ -11,7 +11,7 @@ import { useAuthStore } from "../../store/authStore";
 import { loginUrl } from "../../components/RouteGuards";
 import { clusterLabelNumbered } from "../../lib/clusterLabel";
 import { languageLabel, paymentTypeLabel, studyFormLabel } from "../../lib/offeringLabels";
-import { fillText } from "../../lib/trialText";
+import { fillText, langCode, plural } from "../../lib/trialText";
 
 // Қисмҳои саҳифаи «Як рӯз дар ихтисос».
 export const MOOD = [Frown, Meh, Smile, Laugh];
@@ -278,7 +278,8 @@ export function ProsCons({ scenario, text }) {
 
 // Хулоса барои ихтисос: захира, кластер, рамз ва дар куҷо хондан (нарх) + нақшаи ҳуҷҷатсупорӣ.
 export function CareerBlock({ career, text }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const lang = langCode(i18n.language);
     const location = useLocation();
     const { token, user, updateUser } = useAuthStore();
     const [saved, setSaved] = useState(() => !!user?.savedCareers?.some((c) => c.id === career.id));
@@ -335,7 +336,7 @@ export function CareerBlock({ career, text }) {
                         </span>
                     )}
                     {career.code && <span className="rounded-full bg-muted px-3 py-1.5 font-mono text-foreground">{text.codeLabel}: {career.code}</span>}
-                    {career.degreeType && <span className="rounded-full bg-muted px-3 py-1.5 text-foreground">{career.degreeType}{career.durationYears ? ` · ${career.durationYears} ${text.years}` : ""}</span>}
+                    {career.degreeType && <span className="rounded-full bg-muted px-3 py-1.5 text-foreground">{career.degreeType}{career.durationYears ? ` · ${career.durationYears} ${plural(text.years, career.durationYears, lang)}` : ""}</span>}
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3">
                     {token ? (
@@ -369,7 +370,7 @@ export function CareerBlock({ career, text }) {
                                             {o.city && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden />{o.city}</span>}
                                             <span>{studyFormLabel(t, o.studyForm)}</span>
                                             <span>{languageLabel(t, o.language)}</span>
-                                            {o.seats ? <span>{fillText(text.seats, { n: o.seats })}</span> : null}
+                                            {o.seats ? <span>{plural(text.seats, o.seats, lang)}</span> : null}
                                             {career.code && <span className="font-mono">{text.codeLabel}: {career.code}</span>}
                                         </div>
                                     </div>

@@ -2,14 +2,15 @@ import React from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Clock, Users, Wrench } from "lucide-react";
-import { familyForCareer, fillText, langCode, trialText } from "../lib/trialText";
+import { familyForCareer, fillText, langCode, plural, trialText } from "../lib/trialText";
 import TrialIcon from "./TrialIcon";
 
 // «Як рӯз дар ихтисос» дар саҳифаи ҳар ихтисос — сенарияи худи ҳамин ихтисос (8 вазифа).
 // Агар ҳанӯз тайёр набошад, саҳифаи сенария худаш наздиктарини оиларо нишон медиҳад.
 export default function TrialCta({ career }) {
     const { i18n } = useTranslation();
-    const text = trialText(langCode(i18n.language));
+    const lang = langCode(i18n.language);
+    const text = trialText(lang);
     if (!career?.id) return null;
 
     return (
@@ -21,8 +22,8 @@ export default function TrialCta({ career }) {
                     <p className="mt-1 text-[15px] text-muted-foreground">{text.ctaText}</p>
                     <div className="mt-2 flex flex-wrap gap-2 text-[12px] font-semibold text-muted-foreground">
                         <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden /> {fillText(text.minutes, { n: 20 })}</span>
-                        <span className="inline-flex items-center gap-1"><Wrench className="h-3.5 w-3.5" aria-hidden /> {fillText(text.hardCount, { n: 5 })}</span>
-                        <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden /> {fillText(text.softCount, { n: 3 })}</span>
+                        <span className="inline-flex items-center gap-1"><Wrench className="h-3.5 w-3.5" aria-hidden /> {plural(text.hardCount, 5, lang)}</span>
+                        <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden /> {plural(text.softCount, 3, lang)}</span>
                     </div>
                 </div>
             </div>

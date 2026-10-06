@@ -188,8 +188,8 @@ export const TRIAL_TEXT = {
         correctOrder: "Правильный порядок:",
         correctNumber: "Правильный ответ: {{n}}",
         whyTitle: "Почему так",
-        hardCount: "{{n}} профессиональных задач",
-        softCount: "{{n}} задачи с людьми",
+        hardCount: { one: "{{n}} профессиональная задача", few: "{{n}} профессиональные задачи", many: "{{n}} профессиональных задач", other: "{{n}} профессиональной задачи" },
+        softCount: { one: "{{n}} задача с людьми", few: "{{n}} задачи с людьми", many: "{{n}} задач с людьми", other: "{{n}} задачи с людьми" },
         aiNote: "Этот сценарий составлен AI по официальным данным специальности (НЦТ); специалист его ещё не проверял.",
         dayTitle: "Рабочий день — с утра до вечера",
         tipTitle: "Тренируйтесь уже сейчас:",
@@ -204,7 +204,7 @@ export const TRIAL_TEXT = {
         careerTitle: "Ваша специальность",
         clusterLabel: "Кластер",
         codeLabel: "Код",
-        years: "лет",
+        years: { one: "год", few: "года", many: "лет", other: "года" },
         save: "Сохранить",
         saved: "Сохранено",
         saveLogin: "Войдите, чтобы сохранить",
@@ -213,7 +213,7 @@ export const TRIAL_TEXT = {
         fullPage: "Полная страница специальности",
         whereTitle: "Где можно учиться",
         whereHint: "Учебное заведение, город, форма, язык и цена за год. Для подачи документов добавьте в план.",
-        seats: "{{n}} мест",
+        seats: { one: "{{n}} место", few: "{{n}} места", many: "{{n}} мест", other: "{{n}} места" },
         perYear: "в год",
         addPlan: "В план подачи документов",
         inPlan: "В плане",
@@ -310,8 +310,8 @@ export const TRIAL_TEXT = {
         correctOrder: "The correct order:",
         correctNumber: "The correct answer: {{n}}",
         whyTitle: "Why it works this way",
-        hardCount: "{{n}} professional tasks",
-        softCount: "{{n}} tasks with people",
+        hardCount: { one: "{{n}} professional task", other: "{{n}} professional tasks" },
+        softCount: { one: "{{n}} task with people", other: "{{n}} tasks with people" },
         aiNote: "This scenario was written by AI from the specialty's official data (NTC); a specialist has not reviewed it yet.",
         dayTitle: "A working day — morning to evening",
         tipTitle: "Practise it now:",
@@ -326,7 +326,7 @@ export const TRIAL_TEXT = {
         careerTitle: "Your specialty",
         clusterLabel: "Cluster",
         codeLabel: "Code",
-        years: "years",
+        years: { one: "year", other: "years" },
         save: "Save",
         saved: "Saved",
         saveLogin: "Sign in to save",
@@ -335,7 +335,7 @@ export const TRIAL_TEXT = {
         fullPage: "Full specialty page",
         whereTitle: "Where you can study",
         whereHint: "Institution, city, form, language and price per year. Add to your plan to apply.",
-        seats: "{{n}} places",
+        seats: { one: "{{n}} place", other: "{{n}} places" },
         perYear: "per year",
         addPlan: "Add to application plan",
         inPlan: "In plan",
@@ -343,7 +343,7 @@ export const TRIAL_TEXT = {
         planOk: "Added to your application plan.",
         openPlan: "Open the application plan",
         noOfferings: "No data on institutions for this specialty yet.",
-        actionError: "Something went wrong. Try later.",
+        actionError: "Something went wrong. Please try again later.",
         suggestOtherCareer: "This specialty does not seem very close to you — that is an important result too. Try another one.",
         tryOtherCareers: "Try another specialty",
         realLifeTitle: "In real work:",
@@ -375,7 +375,7 @@ export const TRIAL_TEXT = {
             strong: "You solved it and enjoyed it — a good sign.",
             interest: "Hard, but interesting. Interest grows with learning — the skill can be learned.",
             ability: "You can do it but are not interested. A neighbouring specialty may suit you better.",
-            other: "This part is not for you — and that is an important result too.",
+            other: "This part does not seem to suit you — and that is an important result too.",
         },
         relatedTitle: "Specialties close to this part:",
         suggestOther: "This field does not seem close to you. Try another direction:",
@@ -398,6 +398,12 @@ export const TRIAL_TEXT = {
 
 export const trialText = (lang) => TRIAL_TEXT[String(lang || "tj").slice(0, 2)] || TRIAL_TEXT.tj;
 export const fillText = (text, values) => String(text).replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
+// Шакли дурусти ҷамъ: «1 место / 2 места / 5 мест», «1 place / 2 places». Тоҷикӣ — як шакл (сатр).
+export const plural = (forms, n, lang) => {
+    if (typeof forms === "string") return fillText(forms, { n });
+    const rule = new Intl.PluralRules(lang === "ru" ? "ru" : "en").select(Number(n) || 0);
+    return fillText(forms[rule] ?? forms.other ?? forms.many, { n });
+};
 export const langCode = (lang) => {
     const code = String(lang || "tj").slice(0, 2);
     return code === "ru" || code === "en" ? code : "tj";

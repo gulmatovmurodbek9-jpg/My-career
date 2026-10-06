@@ -6,7 +6,7 @@ import { ArrowRight, Bot, CheckCircle2, Clock, Info, ListChecks, MapPin, RotateC
 import TrialIcon from "../../components/TrialIcon";
 import { API } from "../../lib/config";
 import { usePageMeta } from "../../lib/usePageMeta";
-import { familyForCareer, fillText, langCode, trialText } from "../../lib/trialText";
+import { familyForCareer, fillText, langCode, plural, trialText } from "../../lib/trialText";
 import { AnswerInput, CareerBlock, DayTimeline, FeedbackPanel, MOOD, ProsCons, RatingScale, TaskBody, answerReady } from "./TrialParts";
 
 // «Як рӯз дар ихтисос»: муқаддима (рӯзи корӣ) → вазифаҳо (ҷавоб → шарҳ → «шавқовар буд?») →
@@ -198,8 +198,8 @@ export default function Trial() {
                             <div className="mt-4 flex flex-wrap gap-2 text-[13px] font-semibold text-muted-foreground">
                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5"><MapPin className="h-3.5 w-3.5 text-primary" aria-hidden /> {scenario.place}</span>
                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5"><Clock className="h-3.5 w-3.5 text-primary" aria-hidden /> {fillText(text.minutes, { n: scenario.minutes })}</span>
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5"><Wrench className="h-3.5 w-3.5 text-primary" aria-hidden /> {fillText(text.hardCount, { n: hardCount })}</span>
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5"><Users className="h-3.5 w-3.5 text-primary" aria-hidden /> {fillText(text.softCount, { n: softCount })}</span>
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5"><Wrench className="h-3.5 w-3.5 text-primary" aria-hidden /> {plural(text.hardCount, hardCount, lang)}</span>
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5"><Users className="h-3.5 w-3.5 text-primary" aria-hidden /> {plural(text.softCount, softCount, lang)}</span>
                             </div>
                             <p className="mt-5 text-lg leading-relaxed text-foreground">{scenario.intro}</p>
                         </div>

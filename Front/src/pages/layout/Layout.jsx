@@ -471,7 +471,9 @@ const Layout = () => {
         </footer>
       )}
 
-      <LazyVoiceAssistant />
+      {/* Дар чати AI майдони навиштан ва тугмаи «Фиристодан» дар ҳамон кунҷанд — микрофони
+          шинокунанда онро мепӯшонд (хонанда саволро фиристода натавонист). Чат микрофони худро дорад. */}
+      {!location.pathname.startsWith("/dashboard/ai-chat") && <LazyVoiceAssistant />}
     </div>
   );
 };

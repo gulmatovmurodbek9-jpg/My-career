@@ -47,10 +47,12 @@ describe('Сенарияи ихтисос: санҷиш', () => {
     it('рақами маош ва моддаи қонун манъ аст', () => {
         const content = fixture();
         content.text.tj.pros[0] = 'Маош аз 5000 сомонӣ сар мешавад';
+        content.text.en.tasks[0].prompt = 'Calculate the salary: 3000 somoni minus 12% tax';
         content.text.ru.tasks[0].prompt = 'Согласно статье 125 кодекса';
         const errors = validateCareerTrial(content).join();
         expect(errors).toMatch(/tj: рақами маош/);
         expect(errors).toMatch(/ru: рақами моддаи қонун/);
+        expect(errors).not.toMatch(/en: рақами маош/); // ҳисоби маош дар вазифа — мумкин
     });
 
     it('плюс/минус камтар аз 7 — хато', () => {

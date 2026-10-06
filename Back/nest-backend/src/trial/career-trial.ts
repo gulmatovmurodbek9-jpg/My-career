@@ -91,7 +91,13 @@ export function validateLanguage(t: any, keys: TaskKey[], lang: Lang, reference?
         }
     });
     const blob = JSON.stringify(t);
-    for (const [pattern, label] of BANNED) if (pattern.test(blob)) errors.push(`${lang}: ${label}`);
+    // Рақами маош — танҳо дар иддаоҳо дар бораи касб манъ аст; дар вазифа (масалан ҳисоби
+    // музди меҳнат барои иқтисодчӣ) ин маълумоти масъала аст, на ваъда ба хонанда.
+    const claims = JSON.stringify([t.role, t.intro, t.day, t.pros, t.cons, t.goodFor, t.hardFor]);
+    for (const [pattern, label] of BANNED) {
+        const text = label === 'рақами маош' ? claims : blob;
+        if (pattern.test(text)) errors.push(`${lang}: ${label}`);
+    }
     if (lang === 'tj' && !/[ӣӯқғҳҷ]/i.test(blob)) errors.push('tj: ҳарфҳои тоҷикӣ (ӣ ӯ қ ғ ҳ ҷ) нест');
     // Ба хонанда — «шумо», на «ту» (дар матни роҳнамо; дар суханони одамон дар quote мумкин).
     if (lang === 'tj') {

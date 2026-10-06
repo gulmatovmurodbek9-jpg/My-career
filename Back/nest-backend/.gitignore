@@ -15,4 +15,5 @@ yarn-debug.log*
 # Логи тавлиди сенарияҳо ва файлҳои интиқол
 trials-generate.log
 trials-overnight.log
+trials-proofread.log
 trials*.json

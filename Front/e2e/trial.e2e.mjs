@@ -85,7 +85,7 @@ try {
 
     check("Ҳақиқати касб", (await text()).includes("Ҳақиқати касб"));
     await clickOption("Хуб");
-    await clickOption("Бештар ҳа");
+    await clickOption("Асосан ҳа");
     await click("Хулосаро бинед");
     await sleep(1500);
     const result = await text();

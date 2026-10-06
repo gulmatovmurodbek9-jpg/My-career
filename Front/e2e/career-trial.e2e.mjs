@@ -82,11 +82,11 @@ try {
         await sleep(500);
     }
     const end = await text();
-    check("Плюсҳо ва минусҳо", end.includes("Плюсҳо") && end.includes("Минусҳо") && end.includes("Ба кӣ мувофиқ аст"));
+    check("Плюсҳо ва минусҳо", end.includes("Ҷиҳатҳои мусбат") && end.includes("Ҷиҳатҳои манфӣ") && end.includes("Ба кӣ мувофиқ аст"));
     await page.evaluate(() => {
         const pick = (label) => [...document.querySelectorAll("button[aria-pressed]")].find((x) => x.innerText.includes(label))?.click();
         pick("Хуб");
-        pick("Бештар ҳа");
+        pick("Асосан ҳа");
     });
     await click("Хулосаро бинед");
     await sleep(1800);
@@ -94,7 +94,7 @@ try {
     check("Хулоса: аз 8", /аз 8 вазифаро ҳал кардед/.test(result));
     check("Хулоса: касбӣ / бо одамон", result.toLowerCase().includes("малакаи касбӣ") && result.toLowerCase().includes("кор бо одамон"));
     check("Хулоса: кластер ва рамз", result.includes("Кластер:") && result.includes(`Рамз: ${CODE}`));
-    check("Хулоса: дар куҷо хондан", result.includes("Дар куҷо хондан мумкин"));
+    check("Хулоса: дар куҷо хондан", result.includes("Дар куҷо таҳсил кардан мумкин"));
     check("Хулоса: захира (бе ворид — тугмаи ворид)", result.includes("Барои захира ворид шавед"));
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     check("Дар телефон уфуқӣ намелағжад", !overflow);

@@ -27,9 +27,6 @@ const TEXT = {
         pilot: "Пилот: 30 хонанда тестро супоранд ва ба ду саволи охир ҷавоб диҳанд, пас аз як ҳафта такрор кунанд — ҳамаи рақамҳо пайдо мешаванд.",
         pastTitle: "Натиҷаҳо то имрӯз",
         pastHint: "{{n}} нафар тестро супориданд — ба кадом самт рафтанд:",
-        pastDemo: "аз онҳо {{d}} — корбарони намоишӣ",
-        tabAll: "Ҳама ({{n}})",
-        tabReal: "Танҳо воқеӣ ({{n}})",
         clear: "Натиҷаи равшан",
         clearHint: "самти аввал аз дуюм камаш 15% пеш",
         avgTop: "Холи миёнаи самти аввал",
@@ -59,9 +56,6 @@ const TEXT = {
         pilot: "Пилот: 30 учеников проходят тест и отвечают на два последних вопроса, через неделю повторяют — появятся все показатели.",
         pastTitle: "Результаты до сегодня",
         pastHint: "{{n}} человек прошли тест — куда они попали:",
-        pastDemo: "из них {{d}} — демо-аккаунты",
-        tabAll: "Все ({{n}})",
-        tabReal: "Только реальные ({{n}})",
         clear: "Чёткий результат",
         clearHint: "первое направление опережает второе минимум на 15%",
         avgTop: "Средний балл первого направления",
@@ -91,9 +85,6 @@ const TEXT = {
         pilot: "Pilot: 30 students take the test and answer the last two questions, then retake it a week later — every figure will appear.",
         pastTitle: "Results so far",
         pastHint: "{{n}} people took the test — where they landed:",
-        pastDemo: "{{d}} of them are demo accounts",
-        tabAll: "All ({{n}})",
-        tabReal: "Real only ({{n}})",
         clear: "Clear result",
         clearHint: "the top direction leads the second by at least 15%",
         avgTop: "Average score of the top direction",
@@ -137,10 +128,10 @@ function Metric({ title, ready, children, value, goal, unit, collecting }) {
 
 export default function TestQuality({ data }) {
     const { i18n } = useTranslation();
-    const [scope, setScope] = React.useState("all");
     const text = TEXT[(i18n.language || "tj").slice(0, 2)] || TEXT.tj;
     if (!data) return null;
-    const past = data.results ? (scope === "real" ? data.results.real : data.results.all) : null;
+    // Як рӯйхати умумӣ (бе ҷудо кардан ба «ҳама / танҳо воқеӣ»).
+    const past = data.results ? data.results.all : null;
     const funnel = data.funnel || {};
 
     return (
@@ -152,27 +143,9 @@ export default function TestQuality({ data }) {
 
             {past?.users > 0 && (
                 <div className="rounded-xl border border-border p-4 space-y-3">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                            <div className="text-sm font-bold text-foreground">{text.pastTitle}</div>
-                            <p className="mt-0.5 text-[13px] text-muted-foreground">
-                                {fill(text.pastHint, { n: past.users })}
-                                {scope === "all" && data.results.all.demo > 0 && <> {" "}<span className="text-amber-700 dark:text-amber-400">({fill(text.pastDemo, { d: data.results.all.demo })})</span></>}
-                            </p>
-                        </div>
-                        <div className="inline-flex rounded-lg border border-border p-0.5" role="group">
-                            {[["all", fill(text.tabAll, { n: data.results.all.users })], ["real", fill(text.tabReal, { n: data.results.real.users })]].map(([value, label]) => (
-                                <button
-                                    key={value}
-                                    type="button"
-                                    onClick={() => setScope(value)}
-                                    aria-pressed={scope === value}
-                                    className={`rounded-md px-2.5 py-1 text-[12px] font-bold cursor-pointer ${scope === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                                >
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
+                    <div>
+                        <div className="text-sm font-bold text-foreground">{text.pastTitle}</div>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">{fill(text.pastHint, { n: past.users })}</p>
                     </div>
                     <div className="space-y-2">
                         {["c1", "c2", "c3", "c4", "c5"].map((key) => {

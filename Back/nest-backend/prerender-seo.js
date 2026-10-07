@@ -171,6 +171,32 @@ const links = (items) => `<ul>${items.map(([href, text]) => `<li><a href="${esc(
         description: `Санҷиши касбӣ, ${careers.length} ихтисоси ММТ, ${universities.length} донишгоҳ, маош ва балҳои гузариш — ҳама дар як ҷо барои хатмкунандагони Тоҷикистон.`,
         body: nav + `<h1>${SITE} — кадом касб ба шумо мувофиқ аст?</h1><p>Дар Тоҷикистон ${careers.length} ихтисоси расмии ММТ ва ${universities.length} донишгоҳу коллеҷ ҳаст. Санҷиш гузаред, ихтисосҳоро муқоиса кунед ва донишгоҳи наздиктаринро ёбед.</p>`
             + [...clusters].map(([name, items]) => `<h2>${esc(name)}</h2>${links(items.slice(0, 12).map((c) => [`/info/${c.id}`, c.name]))}`).join(''),
+        // Бренд барои Google: ҷустуҷӯи «Ихтисоси ман» / «Ikhtisosi man» → ҳамин сайт.
+        jsonLd: [
+            {
+                '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: SITE,
+                alternateName: ['Ikhtisosi man', 'Ихтисоси ман TJ', 'ikhtisosiman', 'Мой выбор профессии'],
+                url: `${ORIGIN}/`,
+                inLanguage: ['tg', 'ru', 'en'],
+                potentialAction: {
+                    '@type': 'SearchAction',
+                    target: `${ORIGIN}/careers?search={search_term_string}`,
+                    'query-input': 'required name=search_term_string',
+                },
+            },
+            {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: SITE,
+                alternateName: 'Ikhtisosi man',
+                url: `${ORIGIN}/`,
+                logo: `${ORIGIN}/logo.png`,
+                description: 'Платформаи роҳнамоии касбӣ барои ҷавонони Тоҷикистон: санҷиш, 884 ихтисоси ММТ, донишгоҳҳо ва балҳои гузариш.',
+                areaServed: 'TJ',
+            },
+        ],
     });
 
     console.log(`noindex (тавсифи қолабӣ): ${careers.filter((c) => !c.contentWritten).length}`);

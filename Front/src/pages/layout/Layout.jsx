@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router";
 import LazyVoiceAssistant from "../../components/voice/LazyVoiceAssistant";
+import MobileTabBar, { tabBarVisible } from "../../components/MobileTabBar";
 import {
   ArrowRight,
   Github,
@@ -160,7 +161,7 @@ const Layout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary-foreground">
+    <div className={`min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary-foreground ${tabBarVisible(location.pathname) ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}>
       <a href="#main" className="skip-link">
         {t("common.skip_to_content", "Ба мазмун гузаштан")}
       </a>
@@ -353,9 +354,14 @@ const Layout = () => {
 
                   {isAuthenticated ? (
                     <div className="mt-4 space-y-2 border-t border-border/50 pt-4">
-                      <div className="rounded-xl bg-primary/10 px-4 py-3 text-xs font-bold text-primary border border-primary/20">
-                        {userLabel}
-                      </div>
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-between rounded-xl bg-primary/10 px-4 py-3 text-xs font-bold text-primary border border-primary/20"
+                      >
+                        <span className="truncate">{userLabel}</span>
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+                      </Link>
                       <button
                         onClick={() => {
                           logout();
@@ -474,6 +480,8 @@ const Layout = () => {
       {/* Дар чати AI майдони навиштан ва тугмаи «Фиристодан» дар ҳамон кунҷанд — микрофони
           шинокунанда онро мепӯшонд (хонанда саволро фиристода натавонист). Чат микрофони худро дорад. */}
       {!location.pathname.startsWith("/dashboard/ai-chat") && <LazyVoiceAssistant />}
+
+      <MobileTabBar />
     </div>
   );
 };

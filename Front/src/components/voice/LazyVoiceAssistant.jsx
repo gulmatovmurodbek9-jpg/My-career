@@ -10,6 +10,17 @@ export default function LazyVoiceAssistant() {
     const { t } = useTranslation();
     const [load, setLoad] = useState(false);
 
+    // Тугмаи мобайнии панели поён (телефон): то бор шудани ёвар — дархости кушодан.
+    useEffect(() => {
+        if (load) return undefined;
+        const open = () => {
+            window.__voiceOpenRequested = true;
+            setLoad(true);
+        };
+        window.addEventListener("voice:toggle", open);
+        return () => window.removeEventListener("voice:toggle", open);
+    }, [load]);
+
     useEffect(() => {
         const start = () => setLoad(true);
         const idle = window.requestIdleCallback
@@ -27,7 +38,7 @@ export default function LazyVoiceAssistant() {
             }}
             aria-label={t("assistant.title", "Ёвари овозӣ")}
             data-voice-panel
-            className="no-print fixed bottom-6 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring"
+            className="no-print fixed bottom-6 right-5 z-[60] hidden md:flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring"
         >
             <Mic className="h-6 w-6" aria-hidden />
         </button>

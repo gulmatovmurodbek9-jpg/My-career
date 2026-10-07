@@ -1036,6 +1036,13 @@ export default function VoiceAssistant() {
         setOpen(false);
     }, [stopConversation]);
 
+    // Тугмаи мобайнии панели поён (телефон) ёварро мекушояд / мепӯшад.
+    useEffect(() => {
+        const toggle = () => (open ? close() : setOpen(true));
+        window.addEventListener("voice:toggle", toggle);
+        return () => window.removeEventListener("voice:toggle", toggle);
+    }, [open, close]);
+
     // Панел кушода шуд ва сӯҳбат аллакай сар шуда буд — худаш боз гӯш мекунад.
     useEffect(() => {
         if (open && started && !handsFreeRef.current && !busyRef.current) {
@@ -1261,7 +1268,7 @@ export default function VoiceAssistant() {
                 onClick={() => (open ? close() : setOpen(true))}
                 aria-label={t("assistant.title", "Ёвари овозӣ")}
                 data-voice-panel
-                className={`no-print fixed bottom-6 right-5 z-[60] h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring ${open ? "hidden sm:flex" : "flex"}`}
+                className={`no-print fixed bottom-6 right-5 z-[60] h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(15,23,42,0.5)] focus-ring hidden md:flex`}
             >
                 {open ? <X className="h-6 w-6" aria-hidden /> : <Mic className="h-6 w-6" aria-hidden />}
             </button>

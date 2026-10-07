@@ -290,13 +290,8 @@ const Layout = () => {
                 )}
               </div>
 
+              {/* Телефон: танҳо аватар — забон, мавзӯъ ва ҳисоб дар менюи он. */}
               <div className="md:hidden flex items-center gap-2 flex-shrink-0">
-                <button type="button" aria-label={A11Y.lang} onClick={() => setIsOpen(true)} className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/50 text-muted-foreground">
-                  <Languages className="w-4 h-4" />
-                </button>
-                <button onClick={toggleTheme} className="theme-toggle w-10 h-10 rounded-xl cursor-pointer" aria-label={A11Y.theme} aria-pressed={theme === "dark"}>
-                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </button>
                 <button
                   type="button"
                   aria-label={A11Y.menu}
@@ -322,77 +317,120 @@ const Layout = () => {
 
           <AnimatePresence>
             {isOpen && (
-              <motion.div
-                id="mobile-menu"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="md:hidden absolute top-full left-3 right-3 mt-2 rounded-3xl border border-border bg-card shadow-2xl z-50 p-4 max-h-[calc(100vh-88px)] overflow-y-auto overscroll-contain"
-              >
-                <div className="space-y-1">
-                  {[...navLinks, ...accountLinks].map((link) => (
+              <>
+                <motion.div
+                  key="menu-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsOpen(false)}
+                  className="md:hidden fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[2px]"
+                  aria-hidden
+                />
+                <motion.div
+                  key="menu-sheet"
+                  id="mobile-menu"
+                  initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -12, scale: 0.98 }}
+                  transition={{ duration: 0.18 }}
+                  className="md:hidden absolute top-full left-3 right-3 mt-2 z-50 rounded-[1.75rem] border border-border bg-card p-3 shadow-2xl max-h-[calc(100dvh-110px)] overflow-y-auto overscroll-contain"
+                >
+                  {/* Ҳисоб: корти корбар → «Панел»; меҳмон → «Вуруд». */}
+                  {isAuthenticated ? (
                     <Link
-                      key={link.to}
-                      to={link.to}
-                      aria-current={location.pathname === link.to ? "page" : undefined}
+                      to="/dashboard"
                       onClick={() => setIsOpen(false)}
-                      className={`block px-5 py-3 rounded-xl text-sm font-bold transition-all ${
-                        location.pathname === link.to ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                      }`}
+                      className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/12 to-indigo-500/5 p-3"
                     >
-                      {link.label}
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-600 text-base font-black uppercase text-white shadow-md shadow-primary/30">
+                        {(userLabel || "?").slice(0, 1)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-black text-foreground">{userLabel}</span>
+                        {user?.email && <span className="block truncate text-xs text-muted-foreground">{user.email}</span>}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-primary">
+                        {t("nav.dashboard", "Панел")} <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
                     </Link>
-                  ))}
+                  ) : (
+                    <Link to="/login" onClick={() => setIsOpen(false)} className="btn-primary w-full !px-5 !py-3 !text-sm !rounded-2xl">
+                      {t("nav.login", "Login")}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
 
-                  <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-border/50">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        type="button"
-                        aria-label={lang.name}
-                        aria-pressed={currentLang === lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`p-3 rounded-xl text-[11px] font-black cursor-pointer ${
-                          currentLang === lang.code ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-                        }`}
+                  {/* Танзимот: забон ва мавзӯъ. */}
+                  <div className="mt-3 rounded-2xl bg-muted/40 p-1.5">
+                    <div className="flex items-center gap-2 px-2.5 pb-1.5 pt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      <Languages className="h-3.5 w-3.5" /> {A11Y.lang}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {languages.map((lang) => (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          lang={lang.code === "tj" ? "tg" : lang.code}
+                          aria-pressed={currentLang === lang.code}
+                          onClick={() => changeLanguage(lang.code)}
+                          className={`rounded-xl px-2 py-2.5 text-xs font-black transition-colors cursor-pointer ${currentLang === lang.code ? "bg-primary text-primary-foreground shadow-sm" : "bg-card text-muted-foreground"}`}
+                        >
+                          {lang.name}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={toggleTheme}
+                      aria-pressed={theme === "dark"}
+                      className="mt-1.5 flex w-full items-center justify-between rounded-xl bg-card px-3 py-2.5 text-sm font-bold text-foreground cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        {theme === "dark" ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                        {A11Y.theme}
+                      </span>
+                      <span className={`relative h-6 w-11 rounded-full transition-colors ${theme === "dark" ? "bg-primary" : "bg-muted"}`}>
+                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${theme === "dark" ? "left-[22px]" : "left-0.5"}`} />
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Саҳифаҳое, ки дар панели поён нестанд. */}
+                  <div className="mt-3 space-y-0.5">
+                    {[
+                      { to: "/#cluster-groups", label: t("nav.clusters", "Кластерҳо") },
+                      { to: "/trial", label: t("nav.trial", "Як рӯз дар ихтисос") },
+                      { to: "/about", label: t("nav.about", "Дар бора") },
+                    ].map((link) => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-bold text-foreground hover:bg-muted"
                       >
-                        {lang.label}
-                      </button>
+                        {link.label}
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      </Link>
                     ))}
                   </div>
 
-                  {isAuthenticated ? (
-                    <div className="mt-4 space-y-2 border-t border-border/50 pt-4">
-                      <Link
-                        to="/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center justify-between rounded-xl bg-primary/10 px-4 py-3 text-xs font-bold text-primary border border-primary/20"
-                      >
-                        <span className="truncate">{userLabel}</span>
-                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setIsOpen(false);
-                          navigate("/");
-                        }}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-500"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        {t("nav.logout", localizedNav[currentLang].logout)}
-                      </button>
-                    </div>
-                  ) : (
-                    <Link to="/login" onClick={() => setIsOpen(false)} className="mt-4 block border-t border-border/50 pt-4">
-                      <button className="btn-primary w-full !px-5 !py-3 !text-sm !rounded-xl cursor-pointer">
-                        {t("nav.login", "Login")}
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </Link>
+                  {isAuthenticated && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setIsOpen(false);
+                        navigate("/");
+                      }}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-500 cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {t("nav.logout", localizedNav[currentLang].logout)}
+                    </button>
                   )}
-                </div>
-              </motion.div>
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
         </nav>

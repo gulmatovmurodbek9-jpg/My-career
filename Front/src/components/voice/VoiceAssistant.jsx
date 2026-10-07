@@ -5,6 +5,7 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
 import { prefetchSttToken, RealtimeStt } from "./realtimeStt";
+import { createVoiceGate } from "./voiceGate";
 import { getGrade, setGrade } from "../../lib/grade";
 import { voiceLog } from "./voiceLog";
 import { guideFor, splitForSpeech } from "./pageGuide";
@@ -40,7 +41,6 @@ const fetchVoice = (text, lang) => fetch(voiceUrl(text, lang)).then(async (respo
 const SILENT_WAV =
     "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
-const SPEECH_RMS = 0.035;      // аз ин баланд — яъне гап зада истодааст
 // ── Санҷиш бо овоз ──────────────────────────────────────────────
 // Ёвар саволро бо ҷавобҳо мехонад; корбар рақам, ҳарф ё худи ҷавобро мегӯяд.
 const QUIZ_ORDINALS = {
@@ -599,6 +599,7 @@ export default function VoiceAssistant() {
         source.connect(analyser);
 
         const samples = new Uint8Array(analyser.fftSize);
+        const gate = createVoiceGate();
         const startedAt = Date.now();
         let quietSince = startedAt;
 
@@ -622,11 +623,12 @@ export default function VoiceAssistant() {
             const now = Date.now();
 
             setOrbLevel(Math.min(1, rms * 7));
-            if (rms > SPEECH_RMS) {
-                meta.spoke = true;
-                quietSince = now;
-            }
-            if (meta.spoke && now - quietSince > SILENCE_MS) return finish();
+            // Ҳадди гап аз садои атроф вобаста аст (voiceGate), на рақами доимӣ.
+            const step = gate.push(rms, now, null);
+            if (step.event === "start") meta.spoke = true;
+            if (gate.speaking) quietSince = now;
+            if (meta.spoke && (step.event === "end" || step.event === "max")) return finish();
+            if (meta.spoke && now - quietSince > SILENCE_MS + 2000) return finish();
             if (!meta.spoke && now - startedAt > NO_SPEECH_MS) return finish();
             if (now - startedAt > MAX_RECORD_MS) return finish();
             requestAnimationFrame(tick);

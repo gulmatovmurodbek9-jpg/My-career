@@ -1,5 +1,6 @@
 import { API } from "../../lib/config";
 import { voiceLog } from "./voiceLog";
+import { GATE, createVoiceGate } from "./voiceGate";
 
 // Шинохти ҷараёнии нутқ: садо ҳангоми гап задан пора-пора фиристода мешавад
 // ва матн ҳамон лаҳза бармегардад. Пештар мо интизор мешудем, то корбар
@@ -124,6 +125,8 @@ export class RealtimeStt {
         url.searchParams.set("audio_format", `pcm_${SAMPLE_RATE}`);
         url.searchParams.set("commit_strategy", "vad");
         url.searchParams.set("vad_silence_threshold_secs", "0.5");
+        // Сервер садоро сахттар аз гап ҷудо кунад (пешфарз 0.4) — садои атроф камтар «гап» мешавад.
+        url.searchParams.set("vad_threshold", "0.6");
         // Сервер танҳо такрори параметрро қабул мекунад, на рӯйхати JSON.
         KEYTERMS.forEach((word) => url.searchParams.append("keyterms", word));
 
@@ -182,7 +185,7 @@ export class RealtimeStt {
 
     async openMicrophone() {
         this.stream = await navigator.mediaDevices.getUserMedia({
-            audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+            audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         });
 
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -208,11 +211,32 @@ export class RealtimeStt {
         // ScriptProcessor кӯҳна аст, вале дар ҳамаи браузерҳо кор мекунад
         // ва барои фиристодани пораҳои хом кифоя мебошад.
         this.node = this.context.createScriptProcessor(CHUNK_SAMPLES, 1, 1);
+        // Танҳо гап фиристода мешавад (бо пораи пеш аз он); охири гапро худамон мегӯем
+        // (commit) — садои мошин ё кӯча ёварро беохир «гӯш кунонда» наметавонад, ва дар
+        // интернети суст навбати садо ҷамъ намешавад (пештар ~340 кбит/с ҳамеша мерафт).
+        this.gate = createVoiceGate();
+        const sendChunk = (pcm, commit = false) => {
+            if (!this.active) return;
+            this.ws.send(JSON.stringify({
+                message_type: "input_audio_chunk",
+                audio_base_64: toBase64(pcm),
+                commit,
+                sample_rate: SAMPLE_RATE,
+            }));
+        };
         this.node.onaudioprocess = (event) => {
             if (!this.active) return;
-            const samples = this.paused
-                ? new Float32Array(event.inputBuffer.length)
-                : event.inputBuffer.getChannelData(0);
+            const now = Date.now();
+            if (this.paused) {
+                // Ҳангоми гапи ёвар: на садо, на гап — танҳо нигоҳ доштани пайваст.
+                this.gate.reset();
+                if (now - (this.lastKeepalive || 0) > GATE.KEEPALIVE_MS) {
+                    this.lastKeepalive = now;
+                    sendChunk(new Uint8Array(320));
+                }
+                return;
+            }
+            const samples = event.inputBuffer.getChannelData(0);
 
             let sum = 0;
             for (let index = 0; index < samples.length; index += 1) sum += samples[index] * samples[index];
@@ -220,12 +244,10 @@ export class RealtimeStt {
             this.peak = Math.max(this.peak || 0, rms);
             this.onLevel(rms);
 
-            this.ws.send(JSON.stringify({
-                message_type: "input_audio_chunk",
-                audio_base_64: toBase64(toPcm16(samples)),
-                commit: false,
-                sample_rate: SAMPLE_RATE,
-            }));
+            const step = this.gate.push(rms, now, toPcm16(samples));
+            if (step.event) voiceLog(`gate-${step.event}`, { rms: Number(rms.toFixed(3)), floor: Number(this.gate.floor.toFixed(3)) });
+            step.send.forEach((pcm, index) => sendChunk(pcm, step.commit && index === step.send.length - 1));
+            if (step.keepalive) sendChunk(new Uint8Array(320));
         };
 
         source.connect(this.node);

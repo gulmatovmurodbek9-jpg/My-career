@@ -72,9 +72,11 @@ const DashboardSidebar = () => {
         </nav>
     );
 
+    // Чати AI дар телефон экрани пурра аст (тугмаи ← дорад) — сатри плиткаҳо зери он намемонад.
+    const chat = location.pathname.startsWith('/dashboard/ai-chat');
     return (
         <>
-        {mobile}
+        {!chat && mobile}
         <aside className="hidden md:flex w-full md:w-20 lg:w-64 xl:w-72 md:h-[calc(100vh-136px)] md:sticky md:top-[112px] mb-2 md:mb-0 md:flex-col sidebar-glass rounded-[1.5rem] p-2 md:p-4 lg:p-5 xl:p-6 md:overflow-y-auto shrink-0">
             <div className="flex md:flex-col flex-1 gap-2 md:gap-2">
                 {menuItems.map((item, idx) => {

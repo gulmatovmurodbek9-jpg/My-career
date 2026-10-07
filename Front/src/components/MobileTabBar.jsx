@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Briefcase, GraduationCap, Home, LayoutDashboard, LogIn, Mic } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
+import { preloadPath } from "../lib/routePreload";
 
 // Панели поёни телефон (мисли барномаҳои мобилӣ): панели шинокунандаи мудаввар болои хатти
 // поёни iPhone (safe-area), саҳифаҳои асосӣ доим дар зери ангушт, ёвари овозӣ — тугмаи мобайнӣ.
@@ -23,7 +24,9 @@ function Tab({ to, label, Icon, active }) {
         <Link
             to={to}
             aria-current={active ? "page" : undefined}
-            className={`flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[10.5px] font-bold transition-colors ${active ? "text-primary" : "text-muted-foreground active:text-foreground"}`}
+            // Ламс — саҳифа бор шуданро сар мекунад, то ангушт раҳо шавад.
+            onPointerDown={() => preloadPath(to)}
+            className={`flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[10.5px] font-bold transition-[color,transform] duration-150 active:scale-90 [touch-action:manipulation] ${active ? "text-primary" : "text-muted-foreground active:text-foreground"}`}
         >
             <span className={`flex h-7 w-11 items-center justify-center rounded-full transition-all duration-200 ${active ? "bg-primary/12 scale-105" : ""}`}>
                 <Icon className="h-[19px] w-[19px]" aria-hidden strokeWidth={active ? 2.4 : 2} />

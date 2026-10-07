@@ -9,6 +9,7 @@ import { useAuthStore } from "../../store/authStore";
 import axios from "axios";
 import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { Link } from "react-router";
+import { useChatViewport } from "../../hooks/useChatViewport";
 
 const formatTime = (d) =>
     new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -209,6 +210,9 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
 };
 
 const AiChat = () => {
+    // Телефон: чат андозаро аз қисми намоёни экран мегирад (клавиатураи iPhone онро намепӯшонад).
+    useChatViewport();
+
     const { t, i18n } = useTranslation();
     const { user, token } = useAuthStore();
 
@@ -744,7 +748,7 @@ const AiChat = () => {
                         onKeyDown={handleKeyDown}
                         placeholder={currentDict.placeholder}
                         rows={1} disabled={loading || isRecording}
-                        className="flex-1 bg-transparent text-[14px] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]/35 font-medium resize-none focus:outline-none disabled:opacity-40 py-2.5"
+                        className="flex-1 bg-transparent text-[16px] sm:text-[14px] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]/35 font-medium resize-none focus:outline-none disabled:opacity-40 py-2.5"
                         style={{ minHeight: "40px", maxHeight: "100px" }}
                         onInput={e => { e.target.style.height = "40px"; e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px"; }}
                     />

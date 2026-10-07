@@ -6,6 +6,7 @@ import i18n, { i18nReady } from './lib/i18n'
 import { loginUrl } from './components/RouteGuards'
 import { REQUEST_TIMEOUT_MS } from './lib/config'
 import App, { preloadRoute } from './App.jsx'
+import { preloadMainRoutes } from './lib/routePreload'
 import { ToastProvider } from './components/toast/ToastProvider'
 import { useAuthStore } from './store/authStore'
 
@@ -63,4 +64,6 @@ Promise.all([i18nReady.catch(() => { }), ssrReady]).finally(() => {
       </ToastProvider>
     </StrictMode>,
   );
+  // Саҳифаҳои панели поён пешакӣ — тугмаҳо фавран кор мекунанд.
+  preloadMainRoutes(['/careers', '/universities', '/dashboard', '/info/x', '/trial', '/quiz', '/favorites', '/dashboard/ai-chat']);
 });

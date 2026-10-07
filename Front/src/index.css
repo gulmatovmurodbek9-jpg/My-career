@@ -526,6 +526,29 @@
   background: hsl(var(--background) / 0.5);
 }
 
+/* Телефон: чат — экрани пурра аз зери header то поёни ҚИСМИ НАМОЁН (visualViewport).
+   Клавиатураи iPhone экранро кам намекунад, балки болои саҳифа мебарояд — бе ин чат
+   баланд мемонд, саҳифа ба боло мелағжид ва сарлавҳа/майдони навиштан гум мешуд.
+   --chat-top ва --chat-height аз hooks/useChatViewport.js. */
+@media (max-width: 767px) {
+  .ai-chat-wrapper {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: var(--chat-top, 76px);
+    height: var(--chat-height, calc(100dvh - 76px));
+    min-height: 0;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    z-index: 40;
+  }
+  .ai-chat-input-area {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
 .ai-chat-bg {
   position: absolute;
   inset: 0;

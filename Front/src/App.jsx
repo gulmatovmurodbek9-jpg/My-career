@@ -4,6 +4,7 @@ import ErrorBoundary from "./components/error/ErrorBoundary";
 import Layout from "./pages/layout/Layout";
 import Home from "./pages/home/home";
 import { ProtectedRoute, PublicRoute, AdminRoute } from "./components/RouteGuards";
+import { registerPreload } from "./lib/routePreload";
 
 // lazy бо «пешбор»: агар модул аллакай бор шуда бошад, бе Suspense нишон дода мешавад.
 // Барои саҳифаҳои пешсохта (SSR) — main.jsx аввал модулро бор мекунад, баъд React-ро:
@@ -22,10 +23,10 @@ function lazyPreload(factory) {
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/about/about"));
 const Privacy = lazy(() => import("./pages/Privacy"));
-const Trial = lazy(() => import("./pages/trial/Trial"));
-const TrialHub = lazy(() => import("./pages/trial/TrialHub"));
-const Careers = lazy(() => import("./pages/careers/careers"));
-const Universities = lazy(() => import("./pages/universities/Universities"));
+const Trial = lazyPreload(() => import("./pages/trial/Trial"));
+const TrialHub = lazyPreload(() => import("./pages/trial/TrialHub"));
+const Careers = lazyPreload(() => import("./pages/careers/careers"));
+const Universities = lazyPreload(() => import("./pages/universities/Universities"));
 const UniversityDetail = lazyPreload(() => import("./pages/universities/UniversityDetail"));
 const Info = lazyPreload(() => import("./pages/info/info"));
 
@@ -35,22 +36,36 @@ export function preloadRoute(pathname) {
   if (/^\/universities\/[^/]+\/?$/.test(pathname)) return UniversityDetail.preload();
   return Promise.resolve();
 }
-const Login = lazy(() => import("./pages/auth/Login"));
+const Login = lazyPreload(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
-const Quiz = lazy(() => import("./pages/quiz/Quiz"));
-const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
-const AiChat = lazy(() => import("./pages/dashboard/AiChat"));
+const Quiz = lazyPreload(() => import("./pages/quiz/Quiz"));
+const Dashboard = lazyPreload(() => import("./pages/dashboard/Dashboard"));
+const AiChat = lazyPreload(() => import("./pages/dashboard/AiChat"));
 const CareerAdvisorReport = lazy(() => import("./pages/dashboard/CareerAdvisorReport"));
 const CareerCompare = lazy(() => import("./pages/dashboard/CareerCompare"));
 const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
-const Favorites = lazy(() => import("./pages/favorites/Favorites"));
+const Favorites = lazyPreload(() => import("./pages/favorites/Favorites"));
 
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminCareers = lazy(() => import("./pages/admin/AdminCareers"));
 const AdminClusters = lazy(() => import("./pages/admin/AdminClusters"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+
+// Пешбор: панели поён (ламс) ва браузер (вақти холӣ) — ниг. lib/routePreload.js.
+registerPreload(/^\/$/, () => Promise.resolve());
+registerPreload(/^\/careers/, Careers.preload);
+registerPreload(/^\/universities\/?$/, Universities.preload);
+registerPreload(/^\/universities\/[^/]+/, UniversityDetail.preload);
+registerPreload(/^\/info\//, Info.preload);
+registerPreload(/^\/trial\/?$/, TrialHub.preload);
+registerPreload(/^\/trial\/.+/, Trial.preload);
+registerPreload(/^\/quiz/, Quiz.preload);
+registerPreload(/^\/dashboard\/ai-chat/, AiChat.preload);
+registerPreload(/^\/dashboard\/?$/, Dashboard.preload);
+registerPreload(/^\/favorites/, Favorites.preload);
+registerPreload(/^\/login/, Login.preload);
 
 const RouteFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">

@@ -20,17 +20,30 @@ export function useChatViewport() {
             root.style.setProperty("--chat-height", `${Math.max(240, height - (keyboardShift ? 0 : top))}px`);
         };
         update();
-        // Саҳифаи паси чат набояд лағжад (вагарна iPhone онро ҳам бо клавиатура мекашад).
-        const previous = document.body.style.overflow;
+        // Саҳифаи паси чат набояд лағжад. iPhone `overflow: hidden`-и body-ро нодида мегирад ва
+        // ҳангоми клавиатура саҳифаро мекашад (сарлавҳа ва тугмаи ← гум мешуданд) — бинобар ин
+        // html ва body ҳарду қуфл мешаванд ва баъди пӯшидани клавиатура саҳифа ба боло бармегардад.
+        const previous = { html: root.style.overflow, body: document.body.style.overflow, overscroll: document.body.style.overscrollBehavior };
+        root.style.overflow = "hidden";
         document.body.style.overflow = "hidden";
+        document.body.style.overscrollBehavior = "none";
+        window.scrollTo(0, 0);
+        const settle = () => window.setTimeout(() => {
+            window.scrollTo(0, 0);
+            update();
+        }, 60);
         viewport?.addEventListener("resize", update);
         viewport?.addEventListener("scroll", update);
         window.addEventListener("resize", update);
+        document.addEventListener("focusout", settle);
         return () => {
             viewport?.removeEventListener("resize", update);
             viewport?.removeEventListener("scroll", update);
             window.removeEventListener("resize", update);
-            document.body.style.overflow = previous;
+            document.removeEventListener("focusout", settle);
+            root.style.overflow = previous.html;
+            document.body.style.overflow = previous.body;
+            document.body.style.overscrollBehavior = previous.overscroll;
             root.style.removeProperty("--chat-top");
             root.style.removeProperty("--chat-height");
         };

@@ -547,6 +547,12 @@
   .ai-chat-input-area {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
+  /* Лағжиши ангушт дар iPhone: танҳо паёмҳо, бе «кашидани» саҳифа. */
+  .ai-chat-messages {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
 }
 
 .ai-chat-bg {
@@ -584,7 +590,8 @@
 .ai-chat-messages {
   @apply relative z-10 flex-1 overflow-y-auto px-4 py-5 space-y-3;
   min-height: 0;
-  scroll-behavior: smooth;
+  /* scroll-behavior: smooth НЕСТ: ҳар лағжиш аниматсия мешуд ва ҳангоми кушодани чат
+     саҳифа дароз ба поён «мерафт» — ангушти корбар бо он мубориза мебурд (iPhone). */
   overscroll-behavior: contain;
 }
 

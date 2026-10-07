@@ -347,8 +347,31 @@ const AiChat = () => {
         }
     }, []);
 
+    // Танҳо майдони паёмҳо лағжонда мешавад (на тамоми саҳифа — scrollIntoView дар iPhone
+    // саҳифаро ҳам мекашид ва чат «гум» мешуд). Агар корбар паёмҳои пештараро хонда истода
+    // бошад (дуртар аз поён), маҷбуран ба поён намебарем — паёми худи ӯ истисно.
+    const stickToBottom = useRef(true);
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const box = chatContainerRef.current;
+        if (!box) return undefined;
+        const onScroll = () => {
+            stickToBottom.current = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+        };
+        box.addEventListener("scroll", onScroll, { passive: true });
+        return () => box.removeEventListener("scroll", onScroll);
+    }, []);
+    const shownCount = useRef(0);
+    useEffect(() => {
+        const box = chatContainerRef.current;
+        if (!box) return;
+        const last = messages[messages.length - 1];
+        // Кушодани чат (таърих) — фавран ба поён; паёми нав — нарм.
+        const first = shownCount.current === 0 && messages.length > 0;
+        shownCount.current = messages.length;
+        if (first || stickToBottom.current || last?.role === "user") {
+            box.scrollTo({ top: box.scrollHeight, behavior: first ? "auto" : "smooth" });
+            stickToBottom.current = true;
+        }
     }, [messages, loading]);
 
     const MIC_ERRORS = {

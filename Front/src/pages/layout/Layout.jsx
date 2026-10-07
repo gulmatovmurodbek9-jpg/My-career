@@ -8,7 +8,6 @@ import {
   Linkedin,
   Mail,
   MapPin,
-  MenuIcon,
   Moon,
   Phone,
   Sun,
@@ -161,7 +160,7 @@ const Layout = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary-foreground ${tabBarVisible(location.pathname) ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}>
+    <div className={`min-h-screen flex flex-col selection:bg-primary/30 selection:text-primary-foreground ${tabBarVisible(location.pathname) ? "pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}>
       <a href="#main" className="skip-link">
         {t("common.skip_to_content", "Ба мазмун гузаштан")}
       </a>
@@ -180,7 +179,8 @@ const Layout = () => {
                   height={40}
                   className="h-9 w-9 lg:h-10 lg:w-10 flex-shrink-0 transition-transform duration-500 group-hover:scale-110"
                 />
-                <span className="hidden 2xl:block max-w-[210px] font-extrabold text-xl text-foreground tracking-normal uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+                {/* Дар телефон ҷой ҳаст — ном ҳамроҳи логотип; дар планшет/компютер меню ҷояшро мегирад. */}
+                <span className="block md:hidden 2xl:block max-w-[210px] font-extrabold text-lg 2xl:text-xl text-foreground tracking-normal uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                   {t("common.brand", "Ikhtisosiman")}
                 </span>
               </Link>
@@ -303,9 +303,18 @@ const Layout = () => {
                   aria-expanded={isOpen}
                   aria-controls="mobile-menu"
                   onClick={() => setIsOpen(!isOpen)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ring-2 ring-offset-2 ring-offset-background ${isOpen
+                    ? "bg-muted text-foreground ring-border"
+                    : isAuthenticated
+                      ? "bg-gradient-to-br from-primary to-indigo-600 text-white ring-primary/30 shadow-md shadow-primary/30"
+                      : "bg-primary/10 text-primary ring-primary/20"}`}
                 >
-                  {isOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+                  {/* Аватар ба ҷои ☰: менюи ҳисоб (ном, забон, баромадан, саҳифаҳои дигар). */}
+                  {isOpen
+                    ? <X className="h-5 w-5" />
+                    : isAuthenticated && userLabel
+                      ? <span className="text-sm font-black uppercase">{userLabel.slice(0, 1)}</span>
+                      : <UserIcon className="h-5 w-5" />}
                 </button>
               </div>
             </div>

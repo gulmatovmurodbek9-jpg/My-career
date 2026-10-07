@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 
 const DashboardSidebar = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const location = useLocation();
     const { user } = useAuthStore();
 
@@ -34,9 +34,19 @@ const DashboardSidebar = () => {
     // Телефон: плиткаҳои ранга (мисли барнома). Дар саҳифаи асосии «Панел» — тӯри калон;
     // дар саҳифаҳои дохилӣ — ҳамон плиткаҳо хурд ва дар як сатр, то ҷойи кам гиранд.
     const home = location.pathname === '/dashboard';
+    // Номҳои кӯтоҳ барои сатри саҳифаҳои дохилӣ — ҳама дар як сатр ҷой мегиранд, бе лағжиш.
+    const lang = String(i18n.language || 'tj').slice(0, 2);
+    const SHORT = {
+        tj: { '/dashboard': 'Панел', '/quiz': 'Санҷиш', '/dashboard/ai-chat': 'AI', '/dashboard/compare': 'Муқоиса', '/dashboard/plan': 'Нақша', '/favorites': 'Захира', '/admin': 'Админ' },
+        ru: { '/dashboard': 'Кабинет', '/quiz': 'Тест', '/dashboard/ai-chat': 'AI', '/dashboard/compare': 'Сравнить', '/dashboard/plan': 'План', '/favorites': 'Сохран.', '/admin': 'Админ' },
+        en: { '/dashboard': 'Home', '/quiz': 'Test', '/dashboard/ai-chat': 'AI', '/dashboard/compare': 'Compare', '/dashboard/plan': 'Plan', '/favorites': 'Saved', '/admin': 'Admin' },
+    }[lang] || {};
     const mobile = (
-        <nav aria-label={t('nav.dashboard')} className={`md:hidden ${home ? 'mb-3' : 'mb-2 -mx-4 px-4 overflow-x-auto overscroll-x-contain'}`}>
-            <div className={home ? 'grid grid-cols-3 gap-2.5' : 'flex gap-2 pb-1 snap-x'}>
+        <nav aria-label={t('nav.dashboard')} className={`md:hidden ${home ? 'mb-3' : 'mb-3'}`}>
+            <div
+                className={home ? 'grid grid-cols-3 gap-2.5' : 'grid gap-1 rounded-2xl border border-border bg-card p-1.5 shadow-sm'}
+                style={home ? undefined : { gridTemplateColumns: `repeat(${menuItems.length}, minmax(0, 1fr))` }}
+            >
                 {menuItems.map((item) => {
                     const isActive = location.pathname === item.to;
                     return (
@@ -44,12 +54,17 @@ const DashboardSidebar = () => {
                             key={item.to}
                             to={item.to}
                             aria-current={isActive ? 'page' : undefined}
-                            className={`snap-start flex flex-col items-center justify-center text-center rounded-2xl border transition-all active:scale-95 ${home ? 'gap-2 px-1.5 py-3.5' : 'w-[76px] shrink-0 gap-1.5 px-1 py-2.5'} ${isActive ? 'border-primary/40 bg-primary/10 shadow-sm' : 'border-border bg-card shadow-sm'}`}
+                            title={item.label}
+                            className={`flex min-w-0 flex-col items-center justify-center text-center transition-all active:scale-95 ${home
+                                ? `gap-2 rounded-2xl border px-1.5 py-3.5 shadow-sm ${isActive ? 'border-primary/40 bg-primary/10' : 'border-border bg-card'}`
+                                : `gap-1 rounded-xl px-0.5 py-2 ${isActive ? 'bg-primary/10' : ''}`}`}
                         >
-                            <span className={`flex items-center justify-center rounded-xl bg-gradient-to-br ${item.tone} text-white shadow-md ${home ? 'h-11 w-11' : 'h-9 w-9'}`}>
+                            <span className={`flex items-center justify-center rounded-xl bg-gradient-to-br ${item.tone} text-white shadow-md ${home ? 'h-11 w-11' : `h-9 w-9 ${isActive ? 'ring-2 ring-primary/40 ring-offset-1 ring-offset-card' : ''}`}`}>
                                 <item.icon className={home ? 'h-5 w-5' : 'h-[18px] w-[18px]'} aria-hidden />
                             </span>
-                            <span className={`font-bold leading-tight line-clamp-2 ${home ? 'text-[12px]' : 'text-[10.5px]'} ${isActive ? 'text-primary' : 'text-foreground'}`}>{item.label}</span>
+                            <span className={`w-full font-bold leading-tight ${home ? 'text-[12px] line-clamp-2' : 'truncate text-[10px]'} ${isActive ? 'text-primary' : home ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                {home ? item.label : (SHORT[item.to] || item.label)}
+                            </span>
                         </Link>
                     );
                 })}

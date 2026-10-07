@@ -40,8 +40,11 @@ export class SitemapController {
     @Header('Cache-Control', 'public, max-age=3600')
     async getSitemap(): Promise<string> {
         const [careers, universities] = await Promise.all([
-            // Танҳо ихтисосҳо бо тавсифи воқеӣ; қолабӣ — noindex ва дар sitemap нестанд.
-            this.careerRepository.find({ select: ['id'], where: { contentWritten: true } }),
+            // Ихтисосҳое, ки матни беназир доранд: тавсифи воқеӣ ё сенарияи «Як рӯз дар ихтисос»
+            // (рӯзи корӣ, ҷиҳатҳо — дар саҳифаи пешсохта). Бе ҳардуяш — noindex ва дар sitemap нест.
+            this.careerRepository.query(
+                `SELECT c.id FROM career c WHERE c."contentWritten" OR EXISTS (SELECT 1 FROM career_trials t WHERE t."careerId" = c.id)`,
+            ).catch(() => this.careerRepository.find({ select: ['id'], where: { contentWritten: true } })),
             this.universityRepository.find({ select: ['id', 'updatedAt'] }),
         ]);
 

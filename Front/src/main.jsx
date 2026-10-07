@@ -5,7 +5,7 @@ import './index.css'
 import i18n, { i18nReady } from './lib/i18n'
 import { loginUrl } from './components/RouteGuards'
 import { REQUEST_TIMEOUT_MS } from './lib/config'
-import App from './App.jsx'
+import App, { preloadRoute } from './App.jsx'
 import { ToastProvider } from './components/toast/ToastProvider'
 import { useAuthStore } from './store/authStore'
 
@@ -52,7 +52,10 @@ const AppWithToast = () => {
 
 // Забони русӣ/англисӣ аз файли алоҳида меояд — то он бор нашавад, сайт нишон дода
 // намешавад (вагарна як лаҳза матни тоҷикӣ медурахшид).
-i18nReady.finally(() => {
+// Саҳифаи пешсохта (SSR): аввал модули саҳифа, баъд React — HTML-и тайёр бе спиннер иваз мешавад.
+const ssrReady = window.__SSR_DATA__ ? preloadRoute(window.location.pathname).catch(() => { }) : Promise.resolve();
+
+Promise.all([i18nReady.catch(() => { }), ssrReady]).finally(() => {
   createRoot(document.getElementById('root')).render(
     <StrictMode>
       <ToastProvider>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { displayName } from "../../lib/careerName";
+import { ssrData, ssrKey } from "../../lib/ssrData";
 
 const CLUSTER_COLORS = {
   1: { bg: "#FAEEDA", text: "#633806" },
@@ -30,17 +31,25 @@ export default function UniversityDetail() {
   const { t, i18n } = useTranslation();
   const grade = useGrade();
   
-  const [university, setUniversity] = useState(null);
-  const [specialties, setSpecialties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Пешсозӣ (SSR): маълумоти тайёр аз HTML.
+  const initial = ssrData(ssrKey("university", id, i18n.language));
+  const [university, setUniversity] = useState(initial?.university ?? null);
+  const [specialties, setSpecialties] = useState(initial?.specialties ?? []);
+  const [loading, setLoading] = useState(!initial);
   const [activeCluster, setActiveCluster] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const pre = ssrData(ssrKey("university", id, i18n.language));
+    if (pre) {
+      setUniversity(pre.university);
+      setSpecialties(pre.specialties || []);
+      setLoading(false);
+    }
     const fetchData = async () => {
       try {
-        setLoading(true);
+        if (!pre) setLoading(true);
         const [uniRes, specRes] = await Promise.all([
           axios.get(`${API}/universities/${id}`, { params: withLang() }),
           axios.get(`${API}/universities/${id}/specialties`, { params: withLang(grade ? { grade } : {}) }),

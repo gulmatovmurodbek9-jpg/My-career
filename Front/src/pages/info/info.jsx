@@ -47,6 +47,8 @@ import { studyFormLabel, paymentTypeLabel, languageLabel } from "../../lib/offer
 import CareerChat from "../../components/CareerChat";
 import SalarySection from "../../components/SalarySection";
 import TrialCta from "../../components/TrialCta";
+import TrialPreview from "../../components/TrialPreview";
+import { ssrData, ssrKey } from "../../lib/ssrData";
 import { displayName } from "../../lib/careerName";
 
 const fadeIn = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
@@ -141,12 +143,15 @@ const Info = () => {
   const { user, token, updateUser, refreshProfile } = useAuthStore();
   const { error: showError, success: showSuccess } = useToast();
   const navigate = useNavigate();
-  const [career, setCareer] = useState(null);
-  const [offerings, setOfferings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Пешсозӣ (SSR): маълумоти тайёр аз HTML — Google матнро мебинад, корбар спиннерро не.
+  const initial = ssrData(ssrKey("career", id, i18n.language));
+  const [career, setCareer] = useState(initial?.career ?? null);
+  const [offerings, setOfferings] = useState(initial?.offerings ?? []);
+  const [trial, setTrial] = useState(initial?.trial ?? null);
+  const [loading, setLoading] = useState(!initial);
 
   const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
+  const [likesCount, setLikesCount] = useState(initial?.career?.likesCount || 0);
   const [isSaved, setIsSaved] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -214,9 +219,16 @@ const Info = () => {
   };
 
   useEffect(() => {
+    const pre = ssrData(ssrKey("career", id, i18n.language));
+    if (pre) {
+      setCareer(pre.career);
+      setOfferings(pre.offerings || []);
+      setTrial(pre.trial || null);
+      setLoading(false);
+    }
     async function fetchCareer() {
       try {
-        setLoading(true);
+        if (!pre) setLoading(true);
         const { data } = await axios.get(`${API}/careers/${id}`, { params: withLang() });
         setCareer(data);
         setLikesCount(data.likesCount || 0);
@@ -234,8 +246,17 @@ const Info = () => {
         setOfferings([]);
       }
     }
+    async function fetchTrial() {
+      try {
+        const { data } = await axios.get(`${API}/trial/career/${id}`, { params: { lang: i18n.language } });
+        setTrial(data);
+      } catch {
+        if (!pre) setTrial(null);
+      }
+    }
     fetchCareer();
     fetchOfferings();
+    fetchTrial();
     window.scrollTo(0, 0);
   }, [id, i18n.language, grade]);
 
@@ -559,6 +580,8 @@ const Info = () => {
         <div className="space-y-5">
 
           <TrialCta career={career} />
+
+          <TrialPreview trial={trial} careerId={id} />
 
           {career.purpose && (
             <Section icon={Target} title={t("career_page.purpose_title")} subtitle={t("career_page.purpose_sub")} gradient="from-blue-500 to-indigo-500">

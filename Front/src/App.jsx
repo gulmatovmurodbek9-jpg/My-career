@@ -5,6 +5,20 @@ import Layout from "./pages/layout/Layout";
 import Home from "./pages/home/home";
 import { ProtectedRoute, PublicRoute, AdminRoute } from "./components/RouteGuards";
 
+// lazy бо «пешбор»: агар модул аллакай бор шуда бошад, бе Suspense нишон дода мешавад.
+// Барои саҳифаҳои пешсохта (SSR) — main.jsx аввал модулро бор мекунад, баъд React-ро:
+// он гоҳ HTML-и тайёр бевосита бо ҳамон саҳифа иваз мешавад, бе спиннер дар байн.
+function lazyPreload(factory) {
+  let loaded = null;
+  const Lazy = lazy(factory);
+  const Component = (props) => (loaded ? <loaded.default {...props} /> : <Lazy {...props} />);
+  Component.preload = () => factory().then((module) => {
+    loaded = module;
+    return module;
+  });
+  return Component;
+}
+
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/about/about"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -12,8 +26,15 @@ const Trial = lazy(() => import("./pages/trial/Trial"));
 const TrialHub = lazy(() => import("./pages/trial/TrialHub"));
 const Careers = lazy(() => import("./pages/careers/careers"));
 const Universities = lazy(() => import("./pages/universities/Universities"));
-const UniversityDetail = lazy(() => import("./pages/universities/UniversityDetail"));
-const Info = lazy(() => import("./pages/info/info"));
+const UniversityDetail = lazyPreload(() => import("./pages/universities/UniversityDetail"));
+const Info = lazyPreload(() => import("./pages/info/info"));
+
+// Саҳифаи пешсохта: модули ҳамин масирро пеш аз оғози React бор мекунем.
+export function preloadRoute(pathname) {
+  if (/^\/info\/[^/]+\/?$/.test(pathname)) return Info.preload();
+  if (/^\/universities\/[^/]+\/?$/.test(pathname)) return UniversityDetail.preload();
+  return Promise.resolve();
+}
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
@@ -37,10 +58,8 @@ const RouteFallback = () => (
   </div>
 );
 
-const App = () => {
-  return (
-    <ErrorBoundary>
-      <BrowserRouter>
+// Масирҳо алоҳида: браузер онҳоро дар BrowserRouter, пешсозӣ (SSR) дар StaticRouter истифода мебарад.
+export const AppRoutes = () => (
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route element={<Layout />}>
@@ -88,6 +107,13 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+);
+
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppRoutes />
       </BrowserRouter>
     </ErrorBoundary>
   );

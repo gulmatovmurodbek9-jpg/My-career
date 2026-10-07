@@ -116,13 +116,14 @@ export class CareerService {
         const anyTerms = (query.searchAny || [])
             .map((term) => foldTajik(String(term).trim()))
             .filter((term) => term.length >= 3);
+        // Аз АВВАЛИ калима: «араб» — «арабӣ», на «т-араб-хона» ё «сам-араб-ахш».
+        const startsWord = (index: number) => `${TAJIK_FOLD('career.name')} ~ ('(^|[^а-яёa-z])' || :anyTerm${index})`;
         if (anyTerms.length) {
             qb.andWhere(new Brackets((where) => {
                 anyTerms.forEach((term, index) => {
-                    const condition = `${TAJIK_FOLD('career.name')} LIKE :anyTerm${index}`;
-                    const params = { [`anyTerm${index}`]: `%${term}%` };
-                    if (index === 0) where.where(condition, params);
-                    else where.orWhere(condition, params);
+                    const params = { [`anyTerm${index}`]: term.replace(/[^а-яёa-z0-9]/g, '') };
+                    if (index === 0) where.where(startsWord(index), params);
+                    else where.orWhere(startsWord(index), params);
                 });
             }));
         }
@@ -165,7 +166,13 @@ export class CareerService {
         if (grade) qb.andWhere(offeredForGrade('career'), { grade });
 
         qb.addSelect('career.codeSort');
-        qb.orderBy('career.codeSort', 'ASC').addOrderBy('career.name', 'ASC');
+        if (anyTerms.length > 1) {
+            // «англисӣ ва арабӣ»: аввал ихтисосҳое, ки ҳарду калимаро доранд.
+            qb.addSelect(anyTerms.map((_, index) => `(CASE WHEN ${startsWord(index)} THEN 1 ELSE 0 END)`).join(' + '), 'match_rank');
+            qb.orderBy('match_rank', 'DESC').addOrderBy('career.codeSort', 'ASC').addOrderBy('career.name', 'ASC');
+        } else {
+            qb.orderBy('career.codeSort', 'ASC').addOrderBy('career.name', 'ASC');
+        }
 
         qb.skip(skip).take(limit);
 
@@ -293,6 +300,11 @@ export class CareerService {
             '  «юрист», «ҳуқуқшинос» → ["ҳуқуқ"]',
             '  «муҳандис», «инженер» → ["муҳандис"]',
             '  «духтур», «врач» (бе касби мушаххас) → ["табобат", "педиатр", "стоматолог"]',
+            '  «тарҷумони англисӣ ва арабӣ», «переводчик» → ["тарҷума", "англис", "араб"]',
+            '  «бо кӯдакон кор кардан» → ["томактаб", "ибтидоӣ", "кӯдак"]',
+            '- Намунаҳои боло ТАНҲО намуна ҳастанд: калимаҳоро аз САВОЛИ КОРБАР гир.',
+            '  Агар корбар дар бораи забон, тарҷума ё касби дигар пурсад — «муҳандис»',
+            '  ё «духтур» НАНАВИС.',
             '- Барои духтури ОДАМ калимаи «тиб»-ро НАГУЗОР: вай «Тибби байторӣ»',
             '  (ветеринария)-ро низ меёбад.',
             '- Агар касб тахассуси танг бошад — уролог, кардиолог, ҷарроҳ, невролог,',
@@ -309,10 +321,15 @@ export class CareerService {
             '- Агар чизе маълум набошад, null гузор. Тахмин назан.',
         ].join('\n');
 
+        // Калимаҳои худи корбар, ки дар номи ихтисосҳо ҳастанд («англиси» → «англис», «арабади» → «араб»).
+        // AI баъзан калимаҳоро аз намунаҳои промпт нусха мекард («тарҷумон» → «муҳандис»).
+        const direct = await this.directStems(question);
+
         let parsed: any = null;
         try {
             parsed = readJson(await this.aiService.generateContent(filterPrompt));
         } catch (error) {
+            if (direct.length) return finish(true, { searchAny: direct, keywords: direct });
             return finish(false, { search: question });
         }
 
@@ -328,7 +345,7 @@ export class CareerService {
         const rawKeywords: unknown[] = Array.isArray(parsed?.keywords)
             ? parsed.keywords
             : typeof parsed?.search === 'string' ? [parsed.search] : [];
-        const keywords = [...new Set(
+        const aiKeywords = [...new Set(
             rawKeywords
                 .filter((k): k is string => typeof k === 'string')
                 .map((k) => k.trim().slice(0, 40))
@@ -336,8 +353,33 @@ export class CareerService {
         )]
             .filter((k, index) => index === 0 || !CareerService.BROAD_STEMS.has(foldTajik(k)))
             .slice(0, 3);
+        // Калимаҳои худи корбар бартарӣ доранд. Калимаи AI илова мешавад, агар бо калимаи корбар
+        // реша дошта бошад («ҳуқуқ» ↔ «ҳуқуқшинос»); агар натиҷа кам бошад — ҳамаи калимаҳои AI
+        // (маъно: «кӯдакон» → «томактабӣ»). Калимаҳои умумӣ («забон») илова намешаванд.
+        // Тартиб аз рӯи шумораи калимаҳои мувофиқ аст — беҳтаринҳо боло мемонанд.
+        let keywords = aiKeywords;
+        if (direct.length) {
+            const queryWords = foldTajik(question).split(/[^а-яёa-z]+/).filter((word) => word.length >= 4);
+            const aiUseful = aiKeywords.filter((k) => !CareerService.QUERY_STOP.has(foldTajik(k)));
+            const related = aiUseful.filter((k) => queryWords.some((word) => word.startsWith(foldTajik(k).slice(0, 4)) || foldTajik(k).startsWith(word.slice(0, 4))));
+            keywords = [...new Set([...direct, ...related])];
+            const found = await this.findAll(toDto({ searchAny: keywords }, 1, 1));
+            if (found.meta.total < 3) keywords = [...new Set([...keywords, ...aiUseful])];
+        }
+        // Як реша — як калима: «муҳандис» ва «мухандиси», «англис» ва «англиси» ду бор ҳисоб
+        // намешаванд (вагарна тартиб каҷ мешуд). Решаи кӯтоҳтар (умумитар) мемонад.
+        const roots: string[] = [];
+        keywords = [...keywords]
+            .sort((a, b) => foldTajik(a).length - foldTajik(b).length)
+            .filter((k) => {
+                const folded = foldTajik(k);
+                if (roots.some((root) => folded.startsWith(root))) return false;
+                roots.push(folded);
+                return true;
+            })
+            .slice(0, 5);
 
-        const clusterNumber = Number(parsed?.clusterNumber);
+        const clusterNumber = direct.length ? NaN : Number(parsed?.clusterNumber);
         if (clusterNumber >= 1 && clusterNumber <= 5) {
             const cluster = await this.clusterRepository.findOne({ where: { clusterId: clusterNumber } });
             if (cluster) {
@@ -544,6 +586,38 @@ export class CareerService {
 
         const note = typeof parsed?.note === 'string' ? parsed.note.trim().slice(0, 240) : '';
         return { names: Array.from(new Set<string>(names)), note };
+    }
+
+    // Калимаҳое, ки дар саволҳо зиёданд, вале касбро нишон намедиҳанд.
+    private static readonly QUERY_STOP = new Set(
+        ['забон', 'забони', 'забонҳо', 'забонҳои', 'мехоҳам', 'мехохам', 'шавам', 'шудан', 'шавад', 'ихтисос', 'ихтисоси', 'ихтисосҳо',
+            'касб', 'касби', 'донишгоҳ', 'донишгоҳи', 'донишгоҳҳо', 'коллеҷ', 'хондан', 'хонам', 'омӯхтан', 'мутахассис', 'мутахассиси',
+            'таҳсил', 'сомонӣ', 'сомони', 'ройгон', 'арзон', 'барои', 'кадом', 'беҳтар', 'хуб', 'мешавад', 'кунам', 'кор', 'кори',
+            'хоҳам', 'метавонам', 'дорам', 'дар', 'бо', 'аз', 'ва', 'ё', 'то', 'шаҳр', 'шаҳри', 'душанбе', 'хуҷанд',
+            'хочу', 'стать', 'работать', 'учиться', 'want', 'become', 'study']
+            .map((word) => foldTajik(word)),
+    );
+
+    // Решаҳои калимаҳои худи корбар, ки дар аввали калимаи номи ихтисос ҳастанд.
+    // Барои ҳар калима — дарозтарин префикс (камаш 4 ҳарф ва нисфи калима), ки ёфт мешавад:
+    // «тарҷумони» → «тарчум», «англиси» → «англис», «арабади» (ғалат) → «араб».
+    private async directStems(question: string): Promise<string[]> {
+        const words = [...new Set(foldTajik(question).split(/[^а-яёa-z]+/).filter((word) => word.length >= 4 && !CareerService.QUERY_STOP.has(word)))].slice(0, 6);
+        const stems: string[] = [];
+        for (const word of words) {
+            for (let length = word.length; length >= Math.max(4, Math.ceil(word.length / 2)); length -= 1) {
+                const stem = word.slice(0, length);
+                const [row] = await this.careerRepository.query(
+                    `SELECT EXISTS (SELECT 1 FROM career WHERE ${TAJIK_FOLD('name')} ~ ('(^|[^а-яёa-z])' || $1)) AS hit`,
+                    [stem],
+                );
+                if (row?.hit) {
+                    if (!stems.includes(stem)) stems.push(stem);
+                    break;
+                }
+            }
+        }
+        return stems.slice(0, 4);
     }
 
     private static readonly BROAD_STEMS = new Set(

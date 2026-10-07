@@ -84,20 +84,27 @@ async function main() {
     const edit = async (lang: Lang, text: any) => {
         for (let attempt = 1, waits = 0; attempt <= 3; attempt += 1) {
             try {
-                const response = await ai.models.generateContent({
+                // Ҷараён: шабака пайвасти хомӯшро баъди ~1 дақиқа мебурад (ECONNRESET).
+                const stream = await ai.models.generateContentStream({
                     model: MODEL,
                     contents: [{ role: 'user', parts: [{ text: prompt(lang, text) }] }],
-                    config: { responseMimeType: 'application/json', temperature: 0.2, maxOutputTokens: 60000, thinkingConfig: { thinkingBudget: 1024 } },
+                    config: { responseMimeType: 'application/json', temperature: 0.2, maxOutputTokens: 60000, thinkingConfig: { thinkingBudget: 1024, includeThoughts: true } },
                 });
-                const result = parseAiJson(response.text || '');
+                let raw = '';
+                for await (const chunk of stream) {
+                    for (const part of chunk.candidates?.[0]?.content?.parts || []) if (!part.thought && part.text) raw += part.text;
+                }
+                const result = parseAiJson(raw);
                 const problem = checkEdit(text, result);
                 if (!problem) return { text: result, kept: false };
                 console.log(`  ↻ ${lang} (кӯшиши ${attempt}): ${problem}`);
             } catch (error) {
-                if (/429|RESOURCE_EXHAUSTED/i.test(String((error as any)?.message)) && waits < 12) {
+                const message = `${(error as any)?.message} ${(error as any)?.cause?.code}`;
+                const network = /fetch failed|terminated|ECONNRESET|ETIMEDOUT|socket hang up/i.test(message);
+                if ((/429|RESOURCE_EXHAUSTED/i.test(message) || network) && waits < 12) {
                     waits += 1;
                     attempt -= 1;
-                    await sleep(30000 + Math.random() * 60000);
+                    await sleep(network ? 3000 : 30000 + Math.random() * 60000);
                     continue;
                 }
                 console.log(`  ✗ ${lang} (кӯшиши ${attempt}): ${String((error as any)?.message || error).slice(0, 140)}`);

@@ -29,7 +29,7 @@ const CODES = value('codes')?.split(',').map((code) => code.trim()).filter(Boole
 const FORCE = flag('force');
 const CONCURRENCY = Math.max(1, Math.min(8, Number(value('concurrency')) || 4));
 const MODEL = process.env.TRIAL_MODEL || process.env.VERTEX_MODEL || 'gemini-2.5-flash';
-const ATTEMPTS = 3;
+const ATTEMPTS = Math.max(1, Number(value('attempts')) || 3);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -73,22 +73,32 @@ async function main() {
     console.log(`Тавлид: ${queue.length} ихтисос · модел ${MODEL} · ҳамзамон ${CONCURRENCY}`);
 
     const ask = async (prompt: string, thinking: number) => {
-        const response = await ai.models.generateContent({
+        // Ҷараён (stream): шабака пайвасти бекорро баъди ~1 дақиқа мебурад (ECONNRESET),
+        // бинобар ин ҷавоб қисм-қисм меояд; фикрҳои модел ҳам фиристода мешаванд, то пайваст хомӯш намонад.
+        const stream = await ai.models.generateContentStream({
             model: MODEL,
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {
                 responseMimeType: 'application/json',
                 temperature: 0.8,
                 maxOutputTokens: 60000,
-                thinkingConfig: { thinkingBudget: thinking },
+                thinkingConfig: { thinkingBudget: thinking, includeThoughts: thinking > 0 },
             },
         });
-        return parseAiJson(response.text || '');
+        let text = '';
+        for await (const chunk of stream) {
+            for (const part of chunk.candidates?.[0]?.content?.parts || []) {
+                if (!part.thought && part.text) text += part.text;
+            }
+        }
+        return parseAiJson(text);
     };
 
     // Як қадам бо такрор: агар validate хато ёбад — хатоҳо ба промпт илова мешаванд.
     // Лимити суръат (429): интизор мешавем ва кӯшишро ҳисоб намекунем (то 12 бор).
     const isRateLimit = (error: any) => /429|RESOURCE_EXHAUSTED|Resource exhausted/i.test(String(error?.message || error));
+    // Канда шудани пайваст (ECONNRESET) — айби шабака, на модел: кӯшиш ҳисоб намешавад.
+    const isNetwork = (error: any) => /fetch failed|terminated|ECONNRESET|ETIMEDOUT|socket hang up/i.test(`${error?.message} ${error?.cause?.code}`);
     const step = async <T>(label: string, code: string, prompt: string, thinking: number, check: (value: any) => string[], fix?: (value: any) => any): Promise<T> => {
         let feedback = '';
         let lastError = '';
@@ -102,13 +112,13 @@ async function main() {
                 feedback = `\n\nДАФЪАИ ПЕШТАРА ИН ХАТОҲО БУДАНД — ҳатман ислоҳ кун:\n- ${errors.slice(0, 20).join('\n- ')}`;
                 console.log(`  ↻ ${code} ${label} (кӯшиши ${attempt}): ${lastError}`);
             } catch (error) {
-                if (isRateLimit(error) && waits < 12) {
+                if ((isRateLimit(error) || isNetwork(error)) && waits < 12) {
                     waits += 1;
                     attempt -= 1;
-                    await sleep(30000 + Math.random() * 60000);
+                    await sleep(isRateLimit(error) ? 30000 + Math.random() * 60000 : 3000);
                     continue;
                 }
-                lastError = (error as any)?.message?.slice(0, 160) || String(error);
+                lastError = `${(error as any)?.message?.slice(0, 160) || String(error)}${(error as any)?.cause ? ` (${(error as any).cause.code || ""} ${(error as any).cause.message || ""})` : ""}`;
                 console.log(`  ✗ ${code} ${label} (кӯшиши ${attempt}): ${lastError}`);
                 await sleep(4000 * attempt);
             }

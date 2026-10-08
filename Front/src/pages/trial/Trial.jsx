@@ -226,6 +226,7 @@ export default function Trial() {
                         <p className="font-bold text-foreground">{text.confBefore}</p>
                         <div className="mt-3"><RatingScale count={5} value={confBefore} onChange={setConfBefore} labels={text.confScale} /></div>
                     </div>
+                    <p className="text-center text-sm font-bold text-muted-foreground">{fillText(text.quickInfo, { n: total, m: scenario.minutes })}</p>
                     <button
                         type="button"
                         disabled={!confBefore}
@@ -335,6 +336,11 @@ export default function Trial() {
                 return (
                     <section className="mt-6 space-y-5">
                         <div className="rounded-3xl bg-gradient-to-br from-primary to-indigo-600 p-6 text-white shadow-xl shadow-primary/20">
+                            {/* Баҳои калон: писанд омад ва баҳо хуб — мувофиқ; вагарна — касби дигарро санҷед. */}
+                            <div className="mb-4 flex items-center gap-4 rounded-2xl bg-white/15 p-4">
+                                <span className="text-5xl leading-none sm:text-6xl" aria-hidden>{summary.suggestOther ? "🤔" : "😊"}</span>
+                                <p className="text-xl font-black leading-tight sm:text-2xl">{summary.suggestOther ? text.fitOther : text.fitGood}</p>
+                            </div>
                             <p className="text-sm font-semibold opacity-80">{text.resultTitle} · {summary.role}</p>
                             <p className="mt-1 text-2xl font-black sm:text-3xl">{fillText(text.solved, { n: summary.solved, total: summary.total })}</p>
                             {summary.confBefore && summary.confAfter && (
@@ -405,14 +411,16 @@ export default function Trial() {
                             </div>
                         )}
 
-                        <div className="flex flex-col gap-3 sm:flex-row">
-                            <button type="button" onClick={reset} className="btn-secondary flex flex-1 items-center justify-center gap-2 !py-3.5">
-                                <RotateCcw className="h-4 w-4" aria-hidden /> {text.again}
-                            </button>
-                            <Link to="/careers" className="btn-primary flex-1 !py-3.5">
-                                <ListChecks className="h-4 w-4" aria-hidden /> {text.tryOtherCareers}
+                        {/* Касби дигар: ба рӯйхати ихтисосҳо бо ҷустуҷӯ — дарҳол дигарашро санҷад. */}
+                        <div className="rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/10 to-indigo-500/5 p-5">
+                            <p className="text-[15px] font-semibold text-foreground">{text.tryOtherHint}</p>
+                            <Link to="/trial" className="btn-primary mt-3 w-full !py-4 text-base">
+                                <ListChecks className="h-5 w-5" aria-hidden /> {text.tryOtherCareers} <ArrowRight className="h-5 w-5" aria-hidden />
                             </Link>
                         </div>
+                        <button type="button" onClick={reset} className="btn-secondary flex w-full items-center justify-center gap-2 !py-3.5">
+                            <RotateCcw className="h-4 w-4" aria-hidden /> {text.again}
+                        </button>
                     </section>
                 );
             })()}

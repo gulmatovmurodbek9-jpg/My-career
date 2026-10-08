@@ -18,6 +18,7 @@
     "trials:tables": "ts-node --transpileOnly src/trial/translate-tables.ts",
     "trials:fix": "ts-node --transpileOnly src/trial/fix-career-trials.ts",
     "trials:scan": "ts-node --transpileOnly src/trial/scan-career-trials.ts",
+    "trials:shrink": "ts-node --transpileOnly src/trial/shrink-career-trials.ts",
     "trials:export": "ts-node --transpileOnly src/trial/transfer-career-trials.ts export",
     "trials:import": "ts-node --transpileOnly src/trial/transfer-career-trials.ts import",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

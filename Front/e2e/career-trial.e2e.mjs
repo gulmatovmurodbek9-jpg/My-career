@@ -1,5 +1,5 @@
-// E2E: «Як рӯз дар ихтисос» барои ихтисоси мушаххас (8 вазифа) — аз корти ихтисос то хулоса:
-// рӯзи корӣ → 8 вазифа (ҷавоб → шарҳ, «аз ҳозир машқ кунед» → 👍/👎) → плюс/минус → хулоса
+// E2E: «Як рӯз дар ихтисос» барои ихтисоси мушаххас (4 вазифа) — аз корти ихтисос то хулоса:
+// рӯзи корӣ → 4 вазифа (ҷавоб → шарҳ, «аз ҳозир машқ кунед» → 👍/👎) → плюс/минус → хулоса
 // (кластер, рамз, дар куҷо хондан, захира). Бе ворид шудан.
 //
 //   npm run e2e:career-trial                         (маҳаллӣ)
@@ -28,7 +28,7 @@ if (!career) {
     process.exit(2);
 }
 const scenario = await fetch(`${API}/trial/career/${career.id}?lang=tj`).then((r) => r.json());
-check("API: 8 вазифа (5 + 3)", scenario.tasks?.length === 8 && scenario.tasks.filter((t) => t.skill === "soft").length === 3);
+check("API: 4 вазифа (2 + 2)", scenario.tasks?.length === 4 && scenario.tasks.filter((t) => t.skill === "soft").length === 2);
 check("API: ҷавобҳо пинҳон", !/"feedback"|"answer"|"steps"|"tip"/.test(JSON.stringify(scenario)));
 check("API: рӯзи корӣ ва плюс/минус", scenario.day?.length >= 5 && scenario.pros?.length >= 7 && scenario.cons?.length >= 7);
 
@@ -49,7 +49,7 @@ try {
     // Аз корти ихтисос (рӯйхат) — тугмаи «Як рӯз дар ихтисос».
     await page.goto(`${BASE}/careers`, { waitUntil: "networkidle2" });
     await sleep(1200);
-    const chips = await page.evaluate(() => [...document.querySelectorAll("button")].filter((x) => x.innerText.includes("Як рӯз дар ихтисос")).length);
+    const chips = await page.evaluate(() => [...document.querySelectorAll("button")].filter((x) => x.innerText.includes("Худро дар касб санҷед")).length);
     check("Тугма дар ҳар корт", chips >= 6, `${chips} корт`);
 
     await page.goto(`${BASE}/trial/career/${career.id}`, { waitUntil: "networkidle2" });
@@ -91,7 +91,7 @@ try {
     await click("Хулосаро бинед");
     await sleep(1800);
     const result = await text();
-    check("Хулоса: аз 8", /аз 8 вазифаро ҳал кардед/.test(result));
+    check("Хулоса: аз 4", /аз 4 вазифаро ҳал кардед/.test(result));
     check("Хулоса: касбӣ / бо одамон", result.toLowerCase().includes("малакаи касбӣ") && result.toLowerCase().includes("кор бо одамон"));
     check("Хулоса: кластер ва рамз", result.includes("Кластер:") && result.includes(`Рамз: ${CODE}`));
     check("Хулоса: дар куҷо хондан", result.includes("Дар куҷо таҳсил кардан мумкин"));

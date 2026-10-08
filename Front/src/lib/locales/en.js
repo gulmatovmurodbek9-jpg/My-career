@@ -256,7 +256,7 @@ const resources = {
                 about: "About",
                 dashboard: "Dashboard",
                 quiz: "Quiz",
-                trial: "A day in the job",
+                trial: "Try yourself in a career",
                 login: "Login",
                 about_desc: "Supporting students in Tajikistan to find their best career path.",
                 ai_advisor: "AI Advisor",

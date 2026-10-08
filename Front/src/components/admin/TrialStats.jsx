@@ -10,7 +10,7 @@ import TrialIcon from "../TrialIcon";
 // ва боварӣ ба интихоб пеш → баъд чӣ гуна тағйир ёфт.
 const TEXT = {
     tj: {
-        title: "Як рӯз дар ихтисос",
+        title: "Худро дар касб санҷед",
         empty: "Ҳанӯз касе сенарияро нагузаштааст. Дар пилот хонандагонро ба /trial фиристед.",
         coverage: "Сенарияҳои ихтисосҳо: {{ready}} аз {{total}} тайёр",
         careerRow: "Сенарияҳои ихтисосҳо",
@@ -23,7 +23,7 @@ const TEXT = {
         hint: "Тағйири боварӣ ба ҳар ду тараф фоида аст: «кам шуд» — хонанда пеш аз 4 соли таҳсил фаҳмид, ки ин самт барояш нест.",
     },
     ru: {
-        title: "День в профессии",
+        title: "Попробуйте себя в профессии",
         empty: "Пока никто не прошёл сценарий. На пилоте отправьте учеников на /trial.",
         coverage: "Сценарии специальностей: готово {{ready}} из {{total}}",
         careerRow: "Сценарии специальностей",
@@ -36,7 +36,7 @@ const TEXT = {
         hint: "Изменение уверенности полезно в обе стороны: «снизилась» — ученик понял до 4 лет учёбы, что это направление не для него.",
     },
     en: {
-        title: "A day in the job",
+        title: "Try yourself in a career",
         empty: "Nobody has completed a scenario yet. During the pilot, send students to /trial.",
         coverage: "Specialty scenarios: {{ready}} of {{total}} ready",
         careerRow: "Specialty scenarios",

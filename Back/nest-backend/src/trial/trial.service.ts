@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, OnModuleDestroy, OnModuleInit } from '@n
 import { DataSource } from 'typeorm';
 import { FAMILIES, resolveFamily } from './families';
 import { Lang, Scenario, TaskKey } from './trial.types';
-import { CareerTrialContent, publicTask } from './career-trial';
+import { CAREER_TRIAL_MINUTES, CareerTrialContent, publicTask } from './career-trial';
 import { CREATE_TABLE as CREATE_CAREER_TRIALS } from './career-trials.table';
 import { IT } from './scenarios/it';
 import { ECONOMICS } from './scenarios/economics';
@@ -132,7 +132,7 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
         const [row] = await this.dataSource.query('SELECT content FROM career_trials WHERE "careerId" = $1', [careerId]);
         if (!row?.content) throw new NotFoundException('Сенарияи ин ихтисос ҳанӯз тайёр нест');
         const content = row.content as CareerTrialContent;
-        return { family: 'career', minutes: 20, keys: content.keys, text: content.text } as any;
+        return { family: 'career', minutes: CAREER_TRIAL_MINUTES, keys: content.keys, text: content.text } as any;
     }
 
     // Маълумоти ихтисос барои хулоса: кластер, рамз ва дар куҷо хондан (нарх, ҷой, шакл).

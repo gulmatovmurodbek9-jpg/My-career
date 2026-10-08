@@ -5,7 +5,7 @@ import { ArrowRight, Clock, Users, Wrench } from "lucide-react";
 import { familyForCareer, fillText, langCode, plural, trialText } from "../lib/trialText";
 import TrialIcon from "./TrialIcon";
 
-// «Як рӯз дар ихтисос» дар саҳифаи ҳар ихтисос — сенарияи худи ҳамин ихтисос (8 вазифа).
+// «Як рӯз дар ихтисос» дар саҳифаи ҳар ихтисос — сенарияи худи ҳамин ихтисос (4 вазифа).
 // Агар ҳанӯз тайёр набошад, саҳифаи сенария худаш наздиктарини оиларо нишон медиҳад.
 export default function TrialCta({ career }) {
     const { i18n } = useTranslation();
@@ -21,9 +21,9 @@ export default function TrialCta({ career }) {
                     <h2 className="text-lg font-black text-foreground">{text.ctaTitle}</h2>
                     <p className="mt-1 text-[15px] text-muted-foreground">{text.ctaText}</p>
                     <div className="mt-2 flex flex-wrap gap-2 text-[12px] font-semibold text-muted-foreground">
-                        <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden /> {fillText(text.minutes, { n: 20 })}</span>
-                        <span className="inline-flex items-center gap-1"><Wrench className="h-3.5 w-3.5" aria-hidden /> {plural(text.hardCount, 5, lang)}</span>
-                        <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden /> {plural(text.softCount, 3, lang)}</span>
+                        <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden /> {fillText(text.minutes, { n: 10 })}</span>
+                        <span className="inline-flex items-center gap-1"><Wrench className="h-3.5 w-3.5" aria-hidden /> {plural(text.hardCount, 2, lang)}</span>
+                        <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden /> {plural(text.softCount, 2, lang)}</span>
                     </div>
                 </div>
             </div>

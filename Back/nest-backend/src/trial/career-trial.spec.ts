@@ -32,10 +32,10 @@ describe('Сенарияи ихтисос: санҷиш', () => {
         expect(validateCareerTrial(fixture())).toEqual([]);
     });
 
-    it('3 вазифа кам аст — 8 лозим', () => {
+    it('3 вазифа кам аст — 4 лозим', () => {
         const content = fixture();
         content.keys = content.keys.slice(0, 3);
-        expect(validateCareerTrial(content).join()).toMatch(/keys бояд 8/);
+        expect(validateCareerTrial(content).join()).toMatch(/keys бояд 4/);
     });
 
     it('ҷавоби дуруст дар вариантҳо набошад — хато', () => {
@@ -85,8 +85,8 @@ describe('Сенарияи ихтисос: омехтан', () => {
     });
 
     it('ҷавоби дуруст на ҳамеша дар як ҷой', () => {
-        const shuffled = shuffleCareerTrial(fixture(), 'career-uuid-2');
-        const positions = new Set(shuffled.keys.filter((key: any) => key.kind === 'choice').map((key: any) => key.answer));
+        const positions = new Set(['career-uuid-1', 'career-uuid-2', 'career-uuid-3'].flatMap((seed) =>
+            shuffleCareerTrial(fixture(), seed).keys.filter((key: any) => key.kind === 'choice').map((key: any) => key.answer)));
         expect(positions.size).toBeGreaterThan(1);
     });
 
@@ -121,5 +121,22 @@ describe('parseAiJson: сохтор', () => {
     });
     it('вергули иловагиро нест мекунад', () => {
         expect(parseAiJson('{"a": [1, 2,], "b": {"c": 3,},}')).toEqual({ a: [1, 2], b: { c: 3 } });
+    });
+});
+
+describe('Кӯтоҳ кардан ба 4 вазифа', () => {
+    const { shrinkTrial } = require('./shrink-career-trials');
+    it('аз 8 вазифа 2 касбӣ + 2 бо одамон, соддатаринҳо, бо ҳамон тартиб', () => {
+        const options = ['a', 'b', 'c'].map((id) => ({ id, text: id, feedback: 'шарҳи кӯтоҳ' }));
+        const keys = Array.from({ length: 8 }, (_, i) => ({ id: `t${i + 1}`, kind: i === 6 ? 'order' : 'choice', skill: i < 5 ? 'hard' : 'soft', answer: i === 6 ? ['a', 'b', 'c'] : 'a' }));
+        const tasks = keys.map((_, i) => ({ title: `T${i}`, prompt: 'x'.repeat(i === 1 || i === 3 ? 10 : 500), question: '?', options }));
+        const text = { tj: { tasks }, ru: { tasks }, en: { tasks } };
+        const out = shrinkTrial({ keys, text });
+        expect(out.keys.map((key: any) => key.id)).toEqual(['t1', 't2', 't3', 't4']);
+        const titles = out.text.tj.tasks.map((task: any) => task.title);
+        expect(titles.slice(0, 2)).toEqual(['T1', 'T3']);
+        // Камаш як «тартиб»: T6 ба ҷои яке аз вазифаҳои «интихоб» меояд.
+        expect(titles).toContain('T6');
+        expect(out.keys.map((key: any) => key.skill)).toEqual(['hard', 'hard', 'soft', 'soft']);
     });
 });

@@ -202,9 +202,6 @@ export default function Home() {
     path: "/",
   });
 
-  useEffect(() => {
-    if (!window.location.hash) window.scrollTo(0, 0);
-  }, []);
 
   return (
     <>

@@ -257,7 +257,6 @@ const Info = () => {
     fetchCareer();
     fetchOfferings();
     fetchTrial();
-    window.scrollTo(0, 0);
   }, [id, i18n.language, grade]);
 
   useEffect(() => {

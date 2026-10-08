@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { usePageState } from "../../lib/pageState";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Heart,
@@ -106,7 +107,7 @@ const Favorites = () => {
 
     const [likedCareers, setLikedCareers] = useState([]);
     const [savedCareers, setSavedCareers] = useState([]);
-    const [activeTab, setActiveTab] = useState("liked");
+    const [activeTab, setActiveTab] = usePageState("favorites.tab", "liked");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -135,7 +136,6 @@ const Favorites = () => {
         }
 
         loadData();
-        window.scrollTo(0, 0);
         return () => { didCancel = true; };
     }, [token]);
 

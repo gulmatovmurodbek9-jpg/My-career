@@ -122,10 +122,6 @@ export default function Universities() {
     if (params.get("view") === "list") setViewMode("list");
   }, [location.search]);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   // Бо забони интихобшуда; баъди иваз кардани забон аз нав мегирем
   // (пештар номҳо ва шаҳрҳо то F5 бо забони кӯҳна мемонданд).
   useEffect(() => {

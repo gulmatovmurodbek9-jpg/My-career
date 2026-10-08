@@ -40,7 +40,6 @@ export default function UniversityDetail() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    window.scrollTo(0, 0);
     const pre = ssrData(ssrKey("university", id, i18n.language));
     if (pre) {
       setUniversity(pre.university);

@@ -2,7 +2,7 @@ import {
   ArrowRight, ChevronLeft, ChevronRight,
   ChevronDown, Grid3X3, LayoutList, Search, SlidersHorizontal,
 } from "lucide-react";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "react-router";
 import axios from "axios";
 import { API } from "../../lib/config";
@@ -17,8 +17,18 @@ import FilterSelect from "../../components/FilterSelect";
 import { withLang, currentApiLang } from "../../lib/apiLang";
 import { useGrade } from "../../lib/grade";
 import GradeSwitch from "../../components/GradeSwitch";
+import { readEntry, saveEntry, usePageState } from "../../lib/pageState";
 
 const LIMIT = 12;
+
+// Ҷавобҳои охирин дар хотира: баъди «Ба қафо» рӯйхат фавран (бе дархост ва бе
+// даъвати нави AI) нишон дода мешавад ва scroll ба ҳамон ҷо бармегардад.
+const responseCache = new Map();
+const cacheGet = (key) => responseCache.get(key);
+const cacheSet = (key, value) => {
+  responseCache.set(key, value);
+  if (responseCache.size > 40) responseCache.delete(responseCache.keys().next().value);
+};
 
 const Pagination = ({ currentPage, lastPage, onPageChange }) => {
   if (lastPage <= 1) return null;
@@ -119,7 +129,8 @@ const Careers = () => {
   const [careers, setCareers] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: LIMIT, lastPage: 1 });
-  const [searchQuery, setSearchQuery] = useState(
+  const [searchQuery, setSearchQuery] = usePageState(
+    "careers.search",
     () => new URLSearchParams(window.location.search).get("search") ?? "",
   );
   const [searchParams, setSearchParams] = useSearchParams();
@@ -139,19 +150,25 @@ const Careers = () => {
     },
     [setSearchParams]
   );
-  const [minPriceInput, setMinPriceInput] = useState("");
-  const [maxPriceInput, setMaxPriceInput] = useState("");
-  const [priceRange, setPriceRange] = useState({ min: null, max: null });
-  const [cityFilter, setCityFilter] = useState("all");
+  const [minPriceInput, setMinPriceInput] = usePageState("careers.minPrice", "");
+  const [maxPriceInput, setMaxPriceInput] = usePageState("careers.maxPrice", "");
+  const [priceRange, setPriceRange] = usePageState("careers.priceRange", { min: null, max: null });
+  const [cityFilter, setCityFilter] = usePageState("careers.city", "all");
   const [cities, setCities] = useState([]);
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = usePageState("careers.view", "list");
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = usePageState("careers.page", 1);
 
   // Ёвари овозӣ бо ?ai= ё ?search= меояд — ҳатто вақте саҳифа аллакай кушода бошад.
+  // Ҳамон ?ai=/?search=, ки аллакай иҷро шуда буд (баъди «Ба қафо»), саҳифаро ба 1 барнамегардонад.
+  const handledAsk = useRef(readEntry()["careers.asked"]);
   useEffect(() => {
     const askedAi = searchParams.get("ai");
     const askedPlain = searchParams.get("search");
+    const signature = `${askedAi || ""}|${askedPlain || ""}`;
+    if (signature === handledAsk.current) return;
+    handledAsk.current = signature;
+    saveEntry({ "careers.asked": signature });
     if (askedAi) {
       // Ёвар калимаҳои худи корбарро ҳам мефиристад — дар сатр онҳо, на тарҷумаи тоҷикӣ.
       setSearchQuery(searchParams.get("said") || askedAi);
@@ -171,9 +188,10 @@ const Careers = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { refreshProfile } = useAuthStore();
 
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
 
-  const [aiQuery, setAiQuery] = useState(
+  const [aiQuery, setAiQuery] = usePageState(
+    "careers.ai",
     () => new URLSearchParams(window.location.search).get("ai") ?? "",
   );
   const [aiFilters, setAiFilters] = useState(null);
@@ -181,7 +199,7 @@ const Careers = () => {
   const [aiError, setAiError] = useState(false);
   const [aiQuestion, setAiQuestion] = useState(null);
   const [aiOptions, setAiOptions] = useState([]);
-  const [aiChoice, setAiChoice] = useState(null);
+  const [aiChoice, setAiChoice] = usePageState("careers.aiChoice", null);
   const [aiLang, setAiLang] = useState(null);
 
   const aiT = (key, options) => t(key, { ...(options || {}), lng: aiLang || undefined });
@@ -205,9 +223,14 @@ const Careers = () => {
     return () => clearTimeout(timer);
   }, [minPriceInput, maxPriceInput]);
 
+  // Филтр иваз шуд — аз саҳифаи 1. Дар бори аввал (ва баъди «Ба қафо») саҳифаи нигоҳдошта мемонад.
+  const filterSignature = JSON.stringify([debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter]);
+  const lastFilters = useRef(filterSignature);
   useEffect(() => {
+    if (lastFilters.current === filterSignature) return;
+    lastFilters.current = filterSignature;
     setCurrentPage(1);
-  }, [debouncedSearch, selectedCluster, priceRange.min, priceRange.max, cityFilter]);
+  }, [filterSignature]);
 
   useEffect(() => {
     if (aiActive) return;
@@ -226,9 +249,19 @@ const Careers = () => {
       ...(grade && { grade }),
     };
 
+    const cacheKey = JSON.stringify(["list", withLang(params)]);
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      setCareers(cached.data || []);
+      setMeta(cached.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
+      setLoading(false);
+      return undefined;
+    }
+
     axios
       .get(`${API}/careers`, { params: withLang(params), signal: controller.signal })
       .then(({ data }) => {
+        cacheSet(cacheKey, data);
         setCareers(data.data || []);
         setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
         setLoading(false);
@@ -249,6 +282,14 @@ const Careers = () => {
     setLoading(true);
 
     if (aiChoice) {
+      const choiceKey = JSON.stringify(["choice", aiChoice, currentPage, i18n.language]);
+      const cachedChoice = cacheGet(choiceKey);
+      if (cachedChoice) {
+        setCareers(cachedChoice.data || []);
+        setMeta(cachedChoice.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
+        setLoading(false);
+        return undefined;
+      }
       axios
         .get(`${API}/careers`, {
           params: withLang({
@@ -266,6 +307,7 @@ const Careers = () => {
           signal: controller.signal,
         })
         .then(({ data }) => {
+          cacheSet(choiceKey, data);
           setCareers(data.data || []);
           setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
           setLoading(false);
@@ -279,23 +321,39 @@ const Careers = () => {
       return () => controller.abort();
     }
 
+    const body = {
+      query: aiQuery,
+      lang: currentApiLang() || "tj",
+      page: currentPage,
+      limit: LIMIT,
+      keepLang: searchParams.get("voice") === "1" && searchParams.get("ai") === aiQuery,
+      ...(grade && { grade }),
+    };
+    const applyAi = (data) => {
+      setCareers(data.data || []);
+      setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
+      setAiFilters({ ...(data.filters || {}), understood: data.understood });
+      setAiQuestion(data.question || null);
+      setAiLang(data.answerLang || null);
+      setAiOptions(Array.isArray(data.options) ? data.options : []);
+      setAiLoading(false);
+      setLoading(false);
+    };
+    // Ҳамон савол боз (масалан баъди «Ба қафо») — бе даъвати нави AI.
+    const aiKey = JSON.stringify(["ai", body]);
+    const cachedAi = cacheGet(aiKey);
+    if (cachedAi) {
+      applyAi(cachedAi);
+      return undefined;
+    }
+
     setAiLoading(true);
     setAiError(false);
 
     axios
-      .post(
-        `${API}/careers/ai-search`,
-        {
-          query: aiQuery,
-          lang: currentApiLang() || "tj",
-          page: currentPage,
-          limit: LIMIT,
-          keepLang: searchParams.get("voice") === "1" && searchParams.get("ai") === aiQuery,
-          ...(grade && { grade }),
-        },
-        { signal: controller.signal },
-      )
+      .post(`${API}/careers/ai-search`, body, { signal: controller.signal })
       .then(({ data }) => {
+        cacheSet(aiKey, data);
         setCareers(data.data || []);
         setMeta(data.meta || { total: 0, page: 1, limit: LIMIT, lastPage: 1 });
         setAiFilters({ ...(data.filters || {}), understood: data.understood });
@@ -351,7 +409,6 @@ const Careers = () => {
       .then(r => setCities(Array.isArray(r.data) ? r.data : []))
       .catch(() => setCities([]));
     refreshProfile();
-    window.scrollTo(0, 0);
   }, []);
 
   const handlePageChange = (page) => {

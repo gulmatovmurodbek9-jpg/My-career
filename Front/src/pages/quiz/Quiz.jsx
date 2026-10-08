@@ -578,7 +578,7 @@ const Quiz = () => {
                 setClusterIds(ids);
             }
             const id = ids[number];
-            if (!id) return;
+            if (!id) throw new Error("cluster");
             const { data } = await axios.get(`${API}/careers`, { params: { clusterId: id, limit: 6, page: 1, ...(results?.grade ? { grade: results.grade } : {}) } });
             setClusterPreview((old) => ({ ...old, [key]: { id, careers: data?.data || [], total: data?.meta?.total || 0 } }));
         } catch {
@@ -935,16 +935,25 @@ const Quiz = () => {
         const reasonsFor = (key) => {
             const gave = [];
             const missed = [];
+            // Аввал аз худи натиҷа (дар он савол, ҷавоб ва холҳо нигоҳ дошта шудаанд) — то натиҷаи
+            // кӯҳна низ фаҳмо бошад, ҳатто агар саволҳо баъдтар иваз шуда бошанд.
             for (const answer of results.answers || results.rawAnswers || []) {
                 const question = questions.find((q) => q.id === answer.questionId);
-                if (!question || question.part !== "mmt") continue;
-                const chosen = question.options?.[Number(answer.selectedValue)];
-                if (!chosen) continue;
-                const points = Number(chosen.scores?.[key]) || 0;
-                const best = question.options
+                const part = answer.part || question?.part;
+                if (part !== "mmt") continue;
+                const chosen = question?.options?.[Number(answer.selectedValue)];
+                const scores = answer.scores || chosen?.scores;
+                if (!scores) continue;
+                const points = Number(scores[key]) || 0;
+                const best = (question?.options || [])
                     .map((option) => ({ option, points: Number(option.scores?.[key]) || 0 }))
                     .sort((a, b) => b.points - a.points)[0];
-                const item = { id: question.id, question: pickText(question.question), chosen: pickText(chosen.text) };
+                const item = {
+                    id: answer.questionId,
+                    question: pickText(answer.question || question?.question),
+                    chosen: pickText(answer.selectedText || chosen?.text),
+                };
+                if (!item.question || !item.chosen) continue;
                 if (points > 0) gave.push({ ...item, points });
                 else if (best?.points > 0) missed.push({ ...item, other: pickText(best.option.text), points: best.points });
             }
@@ -989,22 +998,22 @@ const Quiz = () => {
                 <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
                     <h2 className="text-lg font-black text-foreground">{t('quiz.all_directions', 'Ҳамаи панҷ самт')}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{t('quiz.all_directions_hint', 'Чӣ қадар ҷавобҳои шумо ба ҳар самт мувофиқ омаданд.')}</p>
-                    <ul className="mt-5 space-y-2">
+                    <ul className="mt-5 space-y-2.5">
                         {rankedClusters.map((cluster, index) => {
                             const isOpen = openCluster === cluster.key;
                             const reasons = isOpen ? reasonsFor(cluster.key) : null;
                             const preview = clusterPreview[cluster.key];
                             const limit = showAllReasons ? 99 : 3;
                             return (
-                                <li key={cluster.key} className={`rounded-2xl ${isOpen ? "bg-muted/40" : ""}`}>
+                                <li key={cluster.key} className={`rounded-2xl border transition-colors ${isOpen ? "border-primary/30 bg-primary/[0.04]" : "border-border"}`}>
                                     <button
                                         type="button"
                                         onClick={() => toggleCluster(cluster.key, cluster.number)}
                                         aria-expanded={isOpen}
-                                        className="w-full rounded-2xl px-3 py-2.5 text-left cursor-pointer hover:bg-muted/40 focus-ring"
+                                        className="w-full rounded-2xl px-4 py-3 text-left cursor-pointer hover:bg-muted/40 focus-ring"
                                     >
                                         <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
-                                            <span className={`font-bold ${index === 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                                            <span className="font-bold text-foreground">
                                                 {cluster.number}. {cluster.label}
                                             </span>
                                             <span className="flex items-center gap-1.5 font-black tabular-nums text-foreground">
@@ -1026,7 +1035,7 @@ const Quiz = () => {
                                     </button>
 
                                     {isOpen && (
-                                        <div className="space-y-4 px-3 pb-4 pt-1 text-sm">
+                                        <div className="space-y-4 px-4 pb-4 pt-1 text-sm">
                                             <p className="text-[13px] text-muted-foreground">{explain.why}</p>
 
                                             {reasons.gave.length > 0 ? (
@@ -1041,9 +1050,9 @@ const Quiz = () => {
                                                         ))}
                                                     </ul>
                                                 </div>
-                                            ) : (
+                                            ) : cluster.raw === 0 ? (
                                                 <p className="font-semibold text-muted-foreground">{explain.none}</p>
-                                            )}
+                                            ) : null}
 
                                             {reasons.missed.length > 0 && (
                                                 <div>
@@ -1071,6 +1080,11 @@ const Quiz = () => {
                                                     <Loader2 className="mt-2 w-4 h-4 animate-spin text-muted-foreground" />
                                                 ) : (
                                                     <>
+                                                        {preview.careers.length === 0 && (
+                                                            <Link to="/careers" className="mt-2 inline-flex items-center gap-1 text-[13px] font-bold text-primary">
+                                                                {explain.allCareers} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                                                            </Link>
+                                                        )}
                                                         <div className="mt-2 flex flex-wrap gap-2">
                                                             {preview.careers.map((career) => (
                                                                 <Link

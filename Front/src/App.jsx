@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import ScrollRestorer from "./components/ScrollRestorer";
 import ErrorBoundary from "./components/error/ErrorBoundary";
 import Layout from "./pages/layout/Layout";
 import Home from "./pages/home/home";
@@ -128,6 +129,7 @@ const App = () => {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <ScrollRestorer />
         <AppRoutes />
       </BrowserRouter>
     </ErrorBoundary>

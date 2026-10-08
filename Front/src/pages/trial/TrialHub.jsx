@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { usePageState } from "../../lib/pageState";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -16,8 +17,8 @@ export default function TrialHub() {
     const text = trialText(lang);
     const [data, setData] = useState(null);
     const [error, setError] = useState(false);
-    const [query, setQuery] = useState("");
-    const [found, setFound] = useState(null);
+    const [query, setQuery] = usePageState("trial.query", "");
+    const [found, setFound] = usePageState("trial.found", null);
 
     usePageMeta({ title: text.name, description: text.hubIntro, path: "/trial" });
 

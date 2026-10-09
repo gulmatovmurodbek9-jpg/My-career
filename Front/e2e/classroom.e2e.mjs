@@ -2,7 +2,7 @@
 // тест ва санҷиши касбро мегузарад (тавассути API бо калиди браузер), омӯзгор натиҷаро мебинад.
 //   TEACHER_TOKEN=… TEACHER_USER='{"id":…}' BASE_URL=http://localhost:5173 node e2e/classroom.e2e.mjs
 // Дар охир CLASS_ID ва GUEST_ID чоп мешаванд — барои нест кардани сатрҳои санҷишӣ.
-import puppeteer from "puppeteer-core";
+import puppeteer, { KnownDevices } from "puppeteer-core";
 
 const BASE = process.env.BASE_URL || "http://localhost:5173";
 const API = process.env.API_URL || (BASE.includes("localhost") ? "http://localhost:3005/api" : `${BASE}/api`);
@@ -53,7 +53,8 @@ check("Синф сохта шуд, рамз ва QR ҳаст", Boolean(code), co
 const context = await browser.createBrowserContext();
 const student = await context.newPage();
 student.on("pageerror", (e) => errors.push(e.message));
-await student.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+// Хонанда — iPhone (андоза, ламс ва User-Agent-и Safari; муҳаррики Chrome).
+await student.emulate(KnownDevices["iPhone 13"]);
 await student.goto(`${BASE}/class/${code}`, { waitUntil: "networkidle2" });
 await student.waitForSelector("#class-name");
 check("Саҳифаи ҳамроҳшавӣ: номи синф", await student.evaluate(() => document.body.innerText.includes("11 «Б» (санҷиш)")));

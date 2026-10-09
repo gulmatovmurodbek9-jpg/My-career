@@ -343,7 +343,7 @@ export default function Trial() {
                         <div className="rounded-3xl bg-gradient-to-br from-primary to-indigo-600 p-6 text-white shadow-xl shadow-primary/20">
                             {/* Баҳои калон: писанд омад ва баҳо хуб — мувофиқ; вагарна — касби дигарро санҷед. */}
                             <div className="mb-4 flex items-center gap-4 rounded-2xl bg-white/15 p-4">
-                                <span className="text-5xl leading-none sm:text-6xl" aria-hidden>{summary.suggestOther ? "🤔" : "😊"}</span>
+                                <img src={summary.suggestOther ? "/emoji/1f914.png" : "/emoji/1f60a.png"} alt="" aria-hidden width="64" height="64" className="h-14 w-14 shrink-0 sm:h-16 sm:w-16" />
                                 <p className="text-xl font-black leading-tight sm:text-2xl">{summary.suggestOther ? text.fitOther : text.fitGood}</p>
                             </div>
                             <ShareResult

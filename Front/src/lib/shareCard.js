@@ -253,12 +253,19 @@ export async function drawShareCard(options) {
             });
         }
     } else {
-        const emoji = options.fit ? "😊" : "🤔";
-        ctx.font = `${story ? 220 : 120}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-        ctx.textAlign = story ? "center" : "left";
-        ctx.fillText(emoji, story ? W / 2 : pad, y + (story ? 200 : 100));
-        ctx.textAlign = "left";
-        y += story ? 300 : 150;
+        // Смайлик тасвир аст (Google Noto Emoji), на ҳарфи система — дар ҳама телефонҳо якхела.
+        const emojiSize = story ? 230 : 120;
+        const emojiX = story ? (W - emojiSize) / 2 : pad;
+        try {
+            const img = new Image();
+            img.src = options.fit ? "/emoji/1f60a.png" : "/emoji/1f914.png";
+            await img.decode();
+            ctx.drawImage(img, emojiX, y, emojiSize, emojiSize);
+        } catch {
+            ctx.font = `${emojiSize}px system-ui, sans-serif`;
+            ctx.fillText(options.fit ? "😊" : "🤔", emojiX, y + emojiSize * 0.85);
+        }
+        y += emojiSize + (story ? 70 : 30);
 
         if (options.fit) {
             ctx.font = `700 ${story ? 48 : 40}px ${BODY}`;

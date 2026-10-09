@@ -38,6 +38,7 @@ import { withLang } from "../../lib/apiLang";
 import QuizFeedback from "../../components/QuizFeedback";
 import { CLUSTER_FAMILY, FAMILY_ROLE, fillText, langCode, trialText } from "../../lib/trialText";
 import TrialIcon from "../../components/TrialIcon";
+import ShareResult from "../../components/ShareResult";
 import { CLUSTER_SUBJECTS, SUBJECTS, getQuizContext, setQuizContext, subjectName } from "../../lib/quizContext";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
@@ -992,6 +993,19 @@ const Quiz = () => {
                         <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
                             {t('quiz.close_second', { defaultValue: 'Самти «{{name}}» низ ба шумо хеле наздик аст — бо ихтисосҳои он ҳам шинос шавед.', name: second.label })}
                         </p>
+                    )}
+                    {topCluster && first && (
+                        <div className="mt-5 flex justify-center">
+                            <ShareResult
+                                card={{
+                                    kind: "quiz",
+                                    cluster: first.key,
+                                    title: clusterLabel(t, topCluster),
+                                    percent: first.percent,
+                                    careers: [...new Set(matched.map((career) => displayName(careerName(career, i18n.language))))].slice(0, 3),
+                                }}
+                            />
+                        </div>
                     )}
                 </motion.section>
 

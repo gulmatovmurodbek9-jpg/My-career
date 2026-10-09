@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { QuizStatsService } from '../quiz/quiz-stats.service';
 
@@ -12,9 +12,31 @@ type TrialRow = { careerId: string | null; family: string; solved: number; ratin
 const average = (list: number[]) => (list.length ? Math.round((list.reduce((sum, value) => sum + value, 0) / list.length) * 10) / 10 : null);
 const percent = (part: number, total: number) => (total ? Math.round((part / total) * 100) : null);
 
+// Аз куҷо омаданд (?ref=…): танҳо ин номҳо — ҳисоб дар рӯз, бе маълумоти шахсӣ.
+export const REFS = ['card'] as const;
+
 @Injectable()
-export class ImpactService {
+export class ImpactService implements OnModuleInit {
     constructor(private readonly dataSource: DataSource) { }
+
+    async onModuleInit(): Promise<void> {
+        await this.dataSource.query(`
+            CREATE TABLE IF NOT EXISTS ref_visits (
+                day date NOT NULL,
+                ref varchar(20) NOT NULL,
+                count int NOT NULL DEFAULT 0,
+                PRIMARY KEY (day, ref)
+            )`);
+    }
+
+    async visit(ref: unknown) {
+        const name = String(ref || '');
+        if (!(REFS as readonly string[]).includes(name)) return { ok: false };
+        await this.dataSource.query(
+            `INSERT INTO ref_visits (day, ref, count) VALUES (CURRENT_DATE, $1, 1)
+             ON CONFLICT (day, ref) DO UPDATE SET count = ref_visits.count + 1`, [name]);
+        return { ok: true };
+    }
 
     // Ҳамон қоидаи «касби дигарро санҷед» дар хулосаи санҷиш (trial.service finishScenario).
     static notForMe(row: Pick<TrialRow, 'rating' | 'tasks'>): boolean {
@@ -62,6 +84,8 @@ export class ImpactService {
             SELECT (SELECT count(*)::int FROM classrooms WHERE archived = false) AS classrooms,
                    (SELECT count(*)::int FROM classroom_members) AS members,
                    (SELECT count(*)::int FROM "user" WHERE role = 'teacher') AS teachers`).catch(() => [{ classrooms: 0, members: 0, teachers: 0 }]);
+        const refs: Array<{ ref: string; count: number }> = await this.dataSource.query(
+            'SELECT ref, sum(count)::int AS count FROM ref_visits GROUP BY ref').catch(() => []);
         const rated = quiz.filter((row) => row.rating);
         const since = Date.now() - DAYS * 24 * 60 * 60 * 1000;
         const day = (value: string) => new Date(value).toISOString().slice(0, 10);
@@ -87,6 +111,7 @@ export class ImpactService {
             trials: ImpactService.summarizeTrials(trials),
             users,
             classes,
+            fromCard: refs.find((row) => row.ref === 'card')?.count || 0,
             activity,
             generatedAt: new Date().toISOString(),
         };

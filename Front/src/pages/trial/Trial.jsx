@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from "reac
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Bot, CheckCircle2, Clock, Info, ListChecks, MapPin, RotateCcw, ShieldAlert, ThumbsDown, ThumbsUp, Users, Wrench, XCircle } from "lucide-react";
 import TrialIcon from "../../components/TrialIcon";
+import ShareResult from "../../components/ShareResult";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { usePageMeta } from "../../lib/usePageMeta";
@@ -345,6 +346,20 @@ export default function Trial() {
                                 <span className="text-5xl leading-none sm:text-6xl" aria-hidden>{summary.suggestOther ? "🤔" : "😊"}</span>
                                 <p className="text-xl font-black leading-tight sm:text-2xl">{summary.suggestOther ? text.fitOther : text.fitGood}</p>
                             </div>
+                            <ShareResult
+                                variant="light"
+                                className="mb-4 w-full"
+                                card={{
+                                    kind: "trial",
+                                    cluster: summary.career?.mmtCluster ? `c${summary.career.mmtCluster}` : undefined,
+                                    career: summary.career?.name || summary.role,
+                                    fit: !summary.suggestOther,
+                                    solved: summary.solved,
+                                    total: summary.total,
+                                    confBefore: summary.confBefore,
+                                    confAfter: summary.confAfter,
+                                }}
+                            />
                             <p className="text-sm font-semibold opacity-80">{text.resultTitle} · {summary.role}</p>
                             <p className="mt-1 text-2xl font-black sm:text-3xl">{fillText(text.solved, { n: summary.solved, total: summary.total })}</p>
                             {summary.confBefore && summary.confAfter && (

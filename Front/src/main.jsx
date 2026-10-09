@@ -14,6 +14,15 @@ import { useAuthStore } from './store/authStore'
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
 installGuestHeader(axios, API);
 
+// Аз корти натиҷа омад (?ref=card) — як бор дар сессия ҳисоб мешавад (барои лавҳаи таъсир).
+try {
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  if (ref === 'card' && !sessionStorage.getItem('ref_sent')) {
+    sessionStorage.setItem('ref_sent', '1');
+    axios.post(`${API}/impact/ref`, { ref }).catch(() => {});
+  }
+} catch { /* sessionStorage баста */ }
+
 const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/quiz', '/profile', '/settings', '/favorites'];
 let handlingExpiredSession = false;
 // Агар сервер токенро рад кунад (401), корбар худкор хориҷ мешавад.

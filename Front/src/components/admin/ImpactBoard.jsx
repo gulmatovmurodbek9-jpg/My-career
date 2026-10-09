@@ -37,6 +37,7 @@ const TEXT = {
         classrooms: "синф дар сайт",
         classMembers: "хонанда дар синфҳо",
         teachers: "омӯзгор",
+        fromCard: "нафар аз корти натиҷа омаданд",
         activity: "14 рӯзи охир",
         quiz: "Тест",
         trial: "Санҷиши касб",
@@ -70,6 +71,7 @@ const TEXT = {
         classrooms: "классов на сайте",
         classMembers: "учеников в классах",
         teachers: "учителей",
+        fromCard: "пришли по карточке результата",
         activity: "Последние 14 дней",
         quiz: "Тест",
         trial: "Проба профессии",
@@ -103,6 +105,7 @@ const TEXT = {
         classrooms: "classes on the site",
         classMembers: "students in classes",
         teachers: "teachers",
+        fromCard: "came from a result card",
         activity: "Last 14 days",
         quiz: "Test",
         trial: "Career try",
@@ -255,6 +258,7 @@ export default function ImpactBoard({ big = false }) {
                         <Metric big={big} value={show(quiz.satisfiedShare, "%")} label={text.satisfied} />
                         <Metric big={big} value={show(users.saved)} label={text.saved} />
                         <Metric big={big} value={show(users.withPlan)} label={text.plans} />
+                        {data.fromCard > 0 && <Metric big={big} value={show(data.fromCard)} label={text.fromCard} />}
                         {data.classes?.classrooms > 0 && (
                             <>
                                 <Metric big={big} value={show(data.classes.classrooms)} label={text.classrooms} />

@@ -95,6 +95,15 @@ try {
     check("Хулоса: касбӣ / бо одамон", result.toLowerCase().includes("малакаи касбӣ") && result.toLowerCase().includes("кор бо одамон"));
     check("Хулоса: кластер ва рамз", result.includes("Кластер:") && result.includes(`Рамз: ${CODE}`));
     check("Хулоса: дар куҷо хондан", result.includes("Дар куҷо таҳсил кардан мумкин"));
+    // Корти натиҷа: тугма → тиреза бо пешнамоиши PNG.
+    await click("Натиҷаро фиристед");
+    await page.waitForSelector('[role="dialog"] img[src^="data:image/png"]', { timeout: 10000 }).catch(() => {});
+    const card = await page.evaluate(() => {
+        const img = document.querySelector('[role="dialog"] img[src^="data:image/png"]');
+        return img ? { w: img.naturalWidth, h: img.naturalHeight } : null;
+    });
+    check("Корти натиҷа: пешнамоиши Story 1080×1920", card?.w === 1080 && card?.h === 1920, JSON.stringify(card));
+    await page.keyboard.press("Escape");
     check("Хулоса: захира (бе ворид — тугмаи ворид)", result.includes("Барои захира ворид шавед"));
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     check("Дар телефон уфуқӣ намелағжад", !overflow);

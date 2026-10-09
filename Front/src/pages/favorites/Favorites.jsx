@@ -8,6 +8,7 @@ import {
     ArrowRight,
     Loader2,
     Search,
+    Target,
 } from "lucide-react";
 import { Link } from "react-router";
 import { useAuthStore } from "../../store/authStore";
@@ -16,68 +17,103 @@ import { API } from "../../lib/config";
 import { useTranslation } from "react-i18next";
 import { clusterLabel } from "../../lib/clusterLabel";
 import { displayName } from "../../lib/careerName";
+import { degreeLabel } from "../../lib/offeringLabels";
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.07 } },
+// Ҷадвал (компютер) ва рӯйхати фишурда (телефон): ном ва рамз, самт, дараҷа, донишгоҳҳо, амалҳо.
+const TABLE_TEXT = {
+    tj: { career: "Ихтисос", cluster: "Самт", degree: "Дараҷа", unis: "Донишгоҳҳо", more: "Бештар", trial: "Санҷед", remove: "Аз рӯйхат бароред" },
+    ru: { career: "Специальность", cluster: "Направление", degree: "Уровень", unis: "Вузы", more: "Подробнее", trial: "Попробовать", remove: "Убрать из списка" },
+    en: { career: "Specialty", cluster: "Direction", degree: "Level", unis: "Universities", more: "Details", trial: "Try", remove: "Remove from list" },
 };
 
-const itemVariants = {
-    hidden: { opacity: 0, y: 18 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-};
+const CareerTable = ({ list, type, onRemove }) => {
+    const { t, i18n } = useTranslation();
+    const text = TABLE_TEXT[(i18n.language || "tj").slice(0, 2)] || TABLE_TEXT.tj;
+    const RemoveIcon = type === "liked" ? Heart : Bookmark;
+    const tone = type === "liked" ? "text-rose-500 hover:bg-rose-500/10" : "text-secondary hover:bg-secondary/10";
+    const degree = (career) => [career.degreeType ? degreeLabel(t, career.degreeType) : null, career.durationYears ? t("misc.years", { count: career.durationYears }) : null].filter(Boolean).join(" · ") || "—";
+    const removeButton = (career) => (
+        <button type="button" onClick={() => onRemove(career.id)} title={text.remove} aria-label={text.remove}
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl cursor-pointer transition-colors ${tone}`}>
+            <RemoveIcon className="h-4 w-4 fill-current" />
+        </button>
+    );
 
-const CareerCard = ({ career, onUnlike, onUnsave, type }) => {
-    const { t } = useTranslation();
     return (
-        <motion.div
-            layout
-            variants={itemVariants}
-            exit={{ opacity: 0, scale: 0.92 }}
-            className="glass-card p-6 flex flex-col gap-4 group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
-        >
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/5 blur-[60px] group-hover:bg-primary/15 transition-all duration-700" />
+        <div className="overflow-hidden rounded-3xl border border-border bg-card">
+            {/* Компютер: ҷадвал */}
+            <table className="hidden w-full text-left md:table">
+                <thead className="border-b border-border bg-muted/40 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                        <th scope="col" className="w-12 px-4 py-3 text-center">№</th>
+                        <th scope="col" className="px-4 py-3">{text.career}</th>
+                        <th scope="col" className="px-4 py-3">{text.cluster}</th>
+                        <th scope="col" className="px-4 py-3">{text.degree}</th>
+                        <th scope="col" className="px-4 py-3 text-center">{text.unis}</th>
+                        <th scope="col" className="px-4 py-3"><span className="sr-only">{text.more}</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <AnimatePresence initial={false}>
+                        {list.map((career, index) => (
+                            <motion.tr key={career.id} layout exit={{ opacity: 0 }} className="border-b border-border last:border-0 hover:bg-muted/30">
+                                <td className="px-4 py-3.5 text-center text-sm font-black tabular-nums text-muted-foreground">{index + 1}</td>
+                                <td className="max-w-[22rem] px-4 py-3.5">
+                                    <Link to={`/info/${career.id}`} className="font-bold leading-snug text-foreground hover:text-primary">{displayName(career.name)}</Link>
+                                    {career.code && <div className="mt-0.5 font-mono text-[12px] tracking-wider text-muted-foreground">{career.code}</div>}
+                                </td>
+                                <td className="px-4 py-3.5">
+                                    {career.cluster?.clusterName
+                                        ? <span className="inline-flex rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-[12px] font-bold leading-snug text-primary">{clusterLabel(t, career.cluster)}</span>
+                                        : "—"}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3.5 text-sm text-muted-foreground">{degree(career)}</td>
+                                <td className="px-4 py-3.5 text-center text-sm font-bold tabular-nums text-foreground">{career.universities?.length || "—"}</td>
+                                <td className="px-4 py-3.5">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                        <Link to={`/trial/career/${career.id}`} className="inline-flex items-center gap-1 whitespace-nowrap rounded-xl border border-border px-3 py-2 text-[12px] font-bold text-foreground hover:border-primary hover:text-primary">
+                                            <Target className="h-3.5 w-3.5" /> {text.trial}
+                                        </Link>
+                                        <Link to={`/info/${career.id}`} className="inline-flex items-center gap-1 whitespace-nowrap rounded-xl bg-primary/10 px-3 py-2 text-[12px] font-bold text-primary hover:bg-primary/20">
+                                            {text.more} <ArrowRight className="h-3.5 w-3.5" />
+                                        </Link>
+                                        {removeButton(career)}
+                                    </div>
+                                </td>
+                            </motion.tr>
+                        ))}
+                    </AnimatePresence>
+                </tbody>
+            </table>
 
-            <div className="flex items-start justify-between">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-[0.15em] bg-primary/10 text-primary border border-primary/20">
-                    {career.cluster?.clusterName ? clusterLabel(t, career.cluster) : t('common.specialty', "Ихтисос")}
-                </span>
-                <button
-                    onClick={() => type === "liked" ? onUnlike(career.id) : onUnsave(career.id)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all z-10 ${type === "liked"
-                        ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500/20"
-                        : "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20"
-                        }`}
-                >
-                    {type === "liked"
-                        ? <Heart className="w-4 h-4 fill-current" />
-                        : <Bookmark className="w-4 h-4 fill-current" />
-                    }
-                </button>
-            </div>
-
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-white/10 flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <h3 className="font-extrabold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
-                        {displayName(career.name)}
-                    </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
-                        {career.description || career.purpose || t('favorites.default_desc', "Ихтисоси ҷолиб барои оянда.")}
-                    </p>
-                </div>
-            </div>
-
-            <Link
-                to={`/info/${career.id}`}
-                className="mt-auto flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary/70 hover:text-primary transition-colors group/link"
-            >
-                {t('common.read_more', "Бештар бидонед")}
-                <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
-            </Link>
-        </motion.div>
+            {/* Телефон: рӯйхати фишурда */}
+            <ul className="divide-y divide-border md:hidden">
+                <AnimatePresence initial={false}>
+                    {list.map((career, index) => (
+                        <motion.li key={career.id} layout exit={{ opacity: 0 }} className="flex items-start gap-3 p-4">
+                            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-black text-primary">{index + 1}</span>
+                            <div className="min-w-0 flex-1">
+                                <Link to={`/info/${career.id}`} className="font-bold leading-snug text-foreground">{displayName(career.name)}</Link>
+                                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted-foreground">
+                                    {career.code && <span className="font-mono">{career.code}</span>}
+                                    {career.cluster?.clusterName && <span className="font-semibold text-primary">{clusterLabel(t, career.cluster)}</span>}
+                                    {career.universities?.length > 0 && <span>{t("misc2.universities_count", { count: career.universities.length })}</span>}
+                                </div>
+                                <div className="mt-2 flex gap-2">
+                                    <Link to={`/trial/career/${career.id}`} className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[12px] font-bold text-foreground">
+                                        <Target className="h-3.5 w-3.5" /> {text.trial}
+                                    </Link>
+                                    <Link to={`/info/${career.id}`} className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-[12px] font-bold text-primary">
+                                        {text.more} <ArrowRight className="h-3.5 w-3.5" />
+                                    </Link>
+                                </div>
+                            </div>
+                            {removeButton(career)}
+                        </motion.li>
+                    ))}
+                </AnimatePresence>
+            </ul>
+        </div>
     );
 };
 
@@ -230,25 +266,12 @@ const Favorites = () => {
                         linkText={t('favorites.view_careers', "Ихтисосҳоро бубинед")}
                     />
                 ) : (
-                    <AnimatePresence mode="popLayout">
-                        <motion.div
-                            key={activeTab}
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="show"
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-                        >
-                            {activeList.map((career) => (
-                                <CareerCard
-                                    key={career.id}
-                                    career={career}
-                                    type={activeTab}
-                                    onUnlike={handleUnlike}
-                                    onUnsave={handleUnsave}
-                                />
-                            ))}
-                        </motion.div>
-                    </AnimatePresence>
+                    <CareerTable
+                        key={activeTab}
+                        list={activeList}
+                        type={activeTab}
+                        onRemove={activeTab === "liked" ? handleUnlike : handleUnsave}
+                    />
                 )}
             </section>
         </div>

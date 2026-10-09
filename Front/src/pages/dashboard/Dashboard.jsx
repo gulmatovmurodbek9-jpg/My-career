@@ -1,3 +1,4 @@
+import ClassCard from "../../components/ClassCard";
 import React, { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
@@ -118,6 +119,7 @@ const Dashboard = () => {
     return (
         <div className="pb-20">
             <div className="space-y-12">
+                <ClassCard />
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-4">
                     <div className="space-y-2">
                         <motion.div

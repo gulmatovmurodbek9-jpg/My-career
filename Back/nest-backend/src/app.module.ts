@@ -12,6 +12,8 @@ import { AiModule } from './ai/ai.module';
 import { UniversityModule } from './university/university.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { VoiceModule } from './voice/voice.module';
+import { ImpactModule } from './impact/impact.module';
+import { ClassroomModule } from './classroom/classroom.module';
 import { TrialModule } from './trial/trial.module';
 
 @Module({
@@ -50,6 +52,8 @@ import { TrialModule } from './trial/trial.module';
         AppointmentModule,
         VoiceModule,
         TrialModule,
+        ImpactModule,
+        ClassroomModule,
     ],
     controllers: [HealthController],
 })

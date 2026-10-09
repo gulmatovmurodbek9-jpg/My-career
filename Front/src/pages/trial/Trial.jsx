@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, Bot, CheckCircle2, Clock, Info, ListChecks, MapPin, RotateCcw, ShieldAlert, ThumbsDown, ThumbsUp, Users, Wrench, XCircle } from "lucide-react";
 import TrialIcon from "../../components/TrialIcon";
 import { API } from "../../lib/config";
+import { useAuthStore } from "../../store/authStore";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { familyForCareer, fillText, langCode, plural, trialText } from "../../lib/trialText";
 import { AnswerInput, CareerBlock, DayTimeline, FeedbackPanel, MOOD, ProsCons, RatingScale, TaskBody, answerReady } from "./TrialParts";
@@ -129,6 +130,9 @@ export default function Trial() {
                 confBefore,
                 confAfter,
                 tasks: tasks.map((item) => ({ id: item.id, answer: answers[item.id], liked: liked[item.id] === true })),
+            }, {
+                // Корбари воридшуда: натиҷа ба ӯ навишта мешавад (масалан, барои омӯзгори синф).
+                headers: useAuthStore.getState().token ? { Authorization: `Bearer ${useAuthStore.getState().token}` } : {},
             });
             setSummary(data);
             setStage("result");

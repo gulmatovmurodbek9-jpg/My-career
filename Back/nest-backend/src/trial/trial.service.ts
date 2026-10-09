@@ -30,6 +30,9 @@ export interface FinishInput {
     rating?: number;
     confBefore?: number;
     confAfter?: number;
+    // Аз сервер (на аз браузер): корбари воридшуда ё хонандаи бе почта дар синф.
+    userId?: string | null;
+    guestId?: string | null;
 }
 
 const toLang = (lang: unknown): Lang => (lang === 'ru' || lang === 'en' ? lang : 'tj');
@@ -58,6 +61,11 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
                 "confAfter" smallint NULL CHECK ("confAfter" BETWEEN 1 AND 5),
                 "createdAt" timestamptz NOT NULL DEFAULT now()
             )`);
+        // Хонанда дар синф: санҷиш ба корбар (ё ба хонандаи бе почта) навишта мешавад.
+        await this.dataSource.query('ALTER TABLE trial_attempts ADD COLUMN IF NOT EXISTS "userId" uuid NULL');
+        await this.dataSource.query('ALTER TABLE trial_attempts ADD COLUMN IF NOT EXISTS "guestId" uuid NULL');
+        await this.dataSource.query('CREATE INDEX IF NOT EXISTS trial_attempts_user ON trial_attempts ("userId")');
+        await this.dataSource.query('CREATE INDEX IF NOT EXISTS trial_attempts_guest ON trial_attempts ("guestId")');
         await this.dataSource.query(CREATE_CAREER_TRIALS);
         await this.cleanup();
         this.cleanupTimer = setInterval(() => void this.cleanup(), 24 * 60 * 60 * 1000);
@@ -297,7 +305,7 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
 
         try {
             await this.dataSource.query(
-                `INSERT INTO trial_attempts (family, "careerId", solved, tasks, rating, "confBefore", "confAfter") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                `INSERT INTO trial_attempts (family, "careerId", solved, tasks, rating, "confBefore", "confAfter", "userId", "guestId") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                 [
                     scenario.family,
                     isUuid(input?.careerId) ? input.careerId : null,
@@ -306,6 +314,8 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
                     rating,
                     confBefore,
                     confAfter,
+                    isUuid(input?.userId) ? input.userId : null,
+                    isUuid(input?.guestId) ? input.guestId : null,
                 ],
             );
         } catch (error) {

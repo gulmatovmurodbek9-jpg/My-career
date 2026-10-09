@@ -5,6 +5,8 @@ export enum UserRole {
     USER = 'user',
     ADMIN = 'admin',
     SPECIALIST = 'specialist',
+    // Омӯзгор: синф месозад ва натиҷаи хонандагони худро мебинад (нақшро админ медиҳад).
+    TEACHER = 'teacher',
 }
 
 export interface ChatMessage {

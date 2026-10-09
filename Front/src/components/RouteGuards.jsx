@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuthStore } from "../store/authStore";
+import { hasGuest } from "../lib/classGuest";
 
 // Баъд аз вуруд корбар ба ҳамон ҷое бармегардад, ки мехост (?next=/quiz).
 // Танҳо роҳҳои дохилӣ: «//evil.com» ва «https://…» қабул намешаванд.
@@ -15,6 +16,18 @@ export const ProtectedRoute = () => {
     const location = useLocation();
 
     if (!isAuthenticated) {
+        return <Navigate to={loginUrl(location.pathname + location.search)} replace />;
+    }
+
+    return <Outlet />;
+};
+
+// Тест: хонандаи синф бе почта ҳам мегузарад (натиҷа ба омӯзгор меравад); дигарон — бо вуруд.
+export const QuizRoute = () => {
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const location = useLocation();
+
+    if (!isAuthenticated && !hasGuest()) {
         return <Navigate to={loginUrl(location.pathname + location.search)} replace />;
     }
 

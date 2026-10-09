@@ -36,6 +36,10 @@ export class QuizStatsService implements OnModuleInit, OnModuleDestroy {
             )`);
         await this.dataSource.query('ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS "ntcChoice" smallint NULL');
         await this.dataSource.query('CREATE INDEX IF NOT EXISTS quiz_attempts_user ON quiz_attempts ("userId")');
+        // Хонандаи бе почта дар синф ва 3 ихтисоси беҳтарин — барои саҳифаи омӯзгор.
+        await this.dataSource.query('ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS "guestId" uuid NULL');
+        await this.dataSource.query('ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS "topCareers" jsonb NULL');
+        await this.dataSource.query('CREATE INDEX IF NOT EXISTS quiz_attempts_guest ON quiz_attempts ("guestId")');
         await this.dataSource.query(`
             CREATE TABLE IF NOT EXISTS quiz_sessions (
                 id varchar(40) PRIMARY KEY,
@@ -62,14 +66,15 @@ export class QuizStatsService implements OnModuleInit, OnModuleDestroy {
         }
     }
 
-    async record(answers: any[], scores: any, topCluster: string | null, grade: number | null, userId?: string): Promise<string | null> {
+    async record(answers: any[], scores: any, topCluster: string | null, grade: number | null, userId?: string, extra: { guestId?: string | null; topCareers?: Array<{ id: string; name: string }> } = {}): Promise<string | null> {
         try {
             const clean = (Array.isArray(answers) ? answers : [])
                 .map((a) => ({ questionId: String(a?.questionId || '').slice(0, 40), selectedValue: a?.selectedValue }))
                 .slice(0, 80);
             const [row] = await this.dataSource.query(
-                `INSERT INTO quiz_attempts ("userId", answers, scores, "topCluster", grade) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-                [userId || null, JSON.stringify(clean), JSON.stringify(scores?.mmtClusters || {}), topCluster, grade],
+                `INSERT INTO quiz_attempts ("userId", answers, scores, "topCluster", grade, "guestId", "topCareers") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+                [userId || null, JSON.stringify(clean), JSON.stringify(scores?.mmtClusters || {}), topCluster, grade,
+                    extra.guestId || null, extra.topCareers?.length ? JSON.stringify(extra.topCareers.slice(0, 3)) : null],
             );
             return row?.id || null;
         } catch (error) {

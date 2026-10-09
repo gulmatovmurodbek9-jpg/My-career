@@ -399,8 +399,12 @@ const Layout = () => {
                   {/* Саҳифаҳое, ки дар панели поён нестанд. */}
                   <div className="mt-3 space-y-0.5">
                     {[
+                      ...(user?.role === "teacher" || user?.role === "admin"
+                        ? [{ to: "/dashboard/teacher", label: { tj: "Ҳуҷраи омӯзгор", ru: "Кабинет учителя", en: "Teacher room" }[currentLang] || "Ҳуҷраи омӯзгор" }]
+                        : []),
                       { to: "/#cluster-groups", label: t("nav.clusters", "Кластерҳо") },
                       { to: "/trial", label: t("nav.trial", "Худро дар касб санҷед") },
+                      { to: "/class", label: { tj: "Рамзи синф", ru: "Код класса", en: "Class code" }[currentLang] || "Рамзи синф" },
                       { to: "/about", label: t("nav.about", "Дар бора") },
                     ].map((link) => (
                       <Link

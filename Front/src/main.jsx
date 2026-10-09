@@ -4,13 +4,15 @@ import axios from 'axios'
 import './index.css'
 import i18n, { i18nReady } from './lib/i18n'
 import { loginUrl } from './components/RouteGuards'
-import { REQUEST_TIMEOUT_MS } from './lib/config'
+import { API, REQUEST_TIMEOUT_MS } from './lib/config'
+import { installGuestHeader } from './lib/classGuest'
 import App, { preloadRoute } from './App.jsx'
 import { preloadMainRoutes } from './lib/routePreload'
 import { ToastProvider } from './components/toast/ToastProvider'
 import { useAuthStore } from './store/authStore'
 
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
+installGuestHeader(axios, API);
 
 const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/quiz', '/profile', '/settings', '/favorites'];
 let handlingExpiredSession = false;

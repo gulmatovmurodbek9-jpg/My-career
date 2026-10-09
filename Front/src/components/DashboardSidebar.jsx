@@ -8,7 +8,8 @@ import {
     FileCheck,
     Bookmark,
     ChevronRight,
-    ShieldCheck
+    ShieldCheck,
+    School
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +27,9 @@ const DashboardSidebar = () => {
         { icon: Scale, label: t('nav.compare'), to: '/dashboard/compare', tone: 'from-amber-500 to-orange-600' },
         { icon: FileCheck, label: t('nav.plan'), to: '/dashboard/plan', tone: 'from-sky-500 to-cyan-600' },
         { icon: Bookmark, label: t('nav.favorites'), to: '/favorites', tone: 'from-rose-500 to-pink-600' },
+        ...(user?.role === 'teacher' || user?.role === 'admin'
+            ? [{ icon: School, label: { tj: 'Синфҳо', ru: 'Классы', en: 'Classes' }[String(i18n.language || 'tj').slice(0, 2)] || 'Синфҳо', to: '/dashboard/teacher', tone: 'from-teal-500 to-emerald-600' }]
+            : []),
         ...(user?.role === 'admin'
             ? [{ icon: ShieldCheck, label: t('nav.admin', 'Панели админ'), to: '/admin', tone: 'from-slate-500 to-slate-700' }]
             : []),

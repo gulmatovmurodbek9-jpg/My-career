@@ -9,6 +9,17 @@ import { QuizStatsService } from './quiz-stats.service';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { parseGrade } from '../common/grade';
+import { ClassroomService } from '../classroom/classroom.service';
+
+// 3 ихтисоси беҳтарин (id + ном) — барои саҳифаи омӯзгор.
+const topCareers = (result: any) => {
+    const seen = new Set<string>();
+    return (result?.topCluster?.specializations || [])
+        .map((career: any) => ({ id: String(career.id), name: String(career.name || '') }))
+        // Як ихтисос дар якчанд донишгоҳ — номҳои такрорӣ як бор.
+        .filter((career: { name: string }) => !seen.has(career.name) && seen.add(career.name))
+        .slice(0, 3);
+};
 
 @ApiTags('quiz')
 @Controller('quiz')
@@ -17,6 +28,7 @@ export class QuizController {
         private readonly quizService: QuizService,
         private readonly usersService: UsersService,
         private readonly stats: QuizStatsService,
+        private readonly classrooms: ClassroomService,
     ) { }
 
     // Баъди тест: «Натиҷа ба шумо мувофиқ буд? 1–5».
@@ -87,11 +99,13 @@ export class QuizController {
 
     @Post('submit')
     @ApiOperation({ summary: 'Фиристодани ҷавобҳо ва гирифтани TOP 12 ихтисосҳо' })
-    async submitQuiz(@Body() dto: SubmitQuizDto) {
+    async submitQuiz(@Body() dto: SubmitQuizDto, @Req() req: any) {
         const scores = this.quizService.calculateScores(dto);
 
         const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context);
-        const attemptId = await this.stats.record(dto.answers, scores, result?.topCluster?.clusterNumber ? `c${result.topCluster.clusterNumber}` : null, parseGrade(dto.grade));
+        // Хонандаи бе почта дар синф — натиҷа ба омӯзгор намоён мешавад.
+        const guestId = await this.classrooms.resolveGuest(req.headers?.['x-class-guest']);
+        const attemptId = await this.stats.record(dto.answers, scores, result?.topCluster?.clusterNumber ? `c${result.topCluster.clusterNumber}` : null, parseGrade(dto.grade), undefined, { guestId, topCareers: topCareers(result) });
 
         return {
             scores,
@@ -109,7 +123,7 @@ export class QuizController {
         const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context);
 
         await this.usersService.saveQuizResults(req.user.userId, scores);
-        const attemptId = await this.stats.record(dto.answers, scores, result?.topCluster?.clusterNumber ? `c${result.topCluster.clusterNumber}` : null, parseGrade(dto.grade), req.user.userId);
+        const attemptId = await this.stats.record(dto.answers, scores, result?.topCluster?.clusterNumber ? `c${result.topCluster.clusterNumber}` : null, parseGrade(dto.grade), req.user.userId, { topCareers: topCareers(result) });
 
         return {
             userId: req.user.userId,

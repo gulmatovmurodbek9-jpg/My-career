@@ -1,15 +1,22 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { FinishInput, TrialService } from './trial.service';
+import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
+import { ClassroomService } from '../classroom/classroom.service';
 
 // «Як рӯз дар ихтисос» — бе бақайдгирӣ, то ҳар хонанда (ва журӣ) зуд санҷад.
 @ApiTags('trial')
 @Controller('trial')
 export class TrialController {
-    constructor(private readonly trial: TrialService) { }
+    constructor(private readonly trial: TrialService, private readonly classrooms: ClassroomService) { }
+
+    // Кӣ санҷид: корбари воридшуда ё хонандаи бе почта дар синф (аз сарлавҳа, на аз body).
+    private async who(req: any) {
+        return { userId: req.user?.userId || null, guestId: await this.classrooms.resolveGuest(req.headers?.['x-class-guest']) };
+    }
 
     @Get()
     @ApiOperation({ summary: 'Рӯйхати сенарияҳо ва оилаҳои ихтисос' })
@@ -49,9 +56,10 @@ export class TrialController {
 
     @Post('career/:careerId/finish')
     @HttpCode(HttpStatus.OK)
+    @UseGuards(OptionalJwtGuard)
     @ApiOperation({ summary: 'Анҷоми сенарияи ихтисос' })
-    finishCareer(@Param('careerId') careerId: string, @Body() body: FinishInput) {
-        return this.trial.finishCareer(careerId, { ...body, family: 'career' });
+    async finishCareer(@Param('careerId') careerId: string, @Body() body: FinishInput, @Req() req: any) {
+        return this.trial.finishCareer(careerId, { ...body, family: 'career', ...(await this.who(req)) });
     }
 
     @Get(':family')
@@ -70,7 +78,8 @@ export class TrialController {
     @Post(':family/finish')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Анҷом: хулоса ва нигоҳ доштани натиҷа (бе маълумоти шахсӣ)' })
-    finish(@Param('family') family: string, @Body() body: FinishInput) {
-        return this.trial.finish({ ...body, family });
+    @UseGuards(OptionalJwtGuard)
+    async finish(@Param('family') family: string, @Body() body: FinishInput, @Req() req: any) {
+        return this.trial.finish({ ...body, family, ...(await this.who(req)) });
     }
 }

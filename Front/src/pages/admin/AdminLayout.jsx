@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, Link } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
+  TrendingUp,
   Briefcase,
   FolderKanban,
   Users,
@@ -36,6 +37,7 @@ const AdminLayout = () => {
 
   const navItems = [
     { path: "/admin", label: t("admin.nav.dashboard"), icon: LayoutDashboard, end: true },
+    { path: "/admin/impact", label: { tj: "Таъсир", ru: "Влияние", en: "Impact" }[currentLang] || "Таъсир", icon: TrendingUp },
     { path: "/admin/careers", label: t("admin.nav.careers"), icon: Briefcase },
     { path: "/admin/clusters", label: t("admin.nav.clusters"), icon: FolderKanban },
     { path: "/admin/users", label: t("admin.nav.users"), icon: Users },

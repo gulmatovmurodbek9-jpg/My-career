@@ -92,6 +92,7 @@ export class UsersService {
             throw new NotFoundException('Корбар ёфт нашуд');
         }
         if (newRole === UserRole.ADMIN) user.role = UserRole.ADMIN;
+        else if (newRole === UserRole.TEACHER) user.role = UserRole.TEACHER;
         else if (newRole === UserRole.SPECIALIST) {
             user.role = UserRole.SPECIALIST;
             this.applyDefaultSpecialistProfile(user);

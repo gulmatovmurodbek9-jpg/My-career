@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import TestQuality from "../../components/admin/TestQuality";
 import TrialStats from "../../components/admin/TrialStats";
+import ImpactBoard from "../../components/admin/ImpactBoard";
+import TeacherRequests from "../../components/admin/TeacherRequests";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -211,6 +213,10 @@ const AdminDashboard = () => {
         </h1>
         <p className="text-[15px] text-muted-foreground mt-1">{t("admin.dashboard.subtitle")}</p>
       </motion.div>
+
+      <ImpactBoard />
+
+      <TeacherRequests />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard

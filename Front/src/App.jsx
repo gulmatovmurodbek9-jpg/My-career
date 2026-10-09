@@ -4,7 +4,7 @@ import ScrollRestorer from "./components/ScrollRestorer";
 import ErrorBoundary from "./components/error/ErrorBoundary";
 import Layout from "./pages/layout/Layout";
 import Home from "./pages/home/home";
-import { ProtectedRoute, PublicRoute, AdminRoute } from "./components/RouteGuards";
+import { ProtectedRoute, PublicRoute, AdminRoute, QuizRoute } from "./components/RouteGuards";
 import { registerPreload } from "./lib/routePreload";
 
 // lazy бо «пешбор»: агар модул аллакай бор шуда бошад, бе Suspense нишон дода мешавад.
@@ -46,10 +46,14 @@ const AiChat = lazyPreload(() => import("./pages/dashboard/AiChat"));
 const CareerAdvisorReport = lazy(() => import("./pages/dashboard/CareerAdvisorReport"));
 const CareerCompare = lazy(() => import("./pages/dashboard/CareerCompare"));
 const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
+const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
+const TeacherClass = lazy(() => import("./pages/teacher/TeacherClass"));
+const ClassJoin = lazy(() => import("./pages/teacher/ClassJoin"));
 const Favorites = lazyPreload(() => import("./pages/favorites/Favorites"));
 
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminImpact = lazy(() => import("./pages/admin/AdminImpact"));
 const AdminCareers = lazy(() => import("./pages/admin/AdminCareers"));
 const AdminClusters = lazy(() => import("./pages/admin/AdminClusters"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
@@ -91,9 +95,16 @@ export const AppRoutes = () => (
               <Route path="/clusters" element={<Navigate to="/#cluster-groups" replace />} />
               <Route path="/info/:id" element={<Info />} />
 
-              <Route element={<ProtectedRoute />}>
+              <Route path="/class" element={<ClassJoin />} />
+              <Route path="/class/:code" element={<ClassJoin />} />
+              <Route element={<QuizRoute />}>
                 <Route path="/quiz" element={<Quiz />} />
+              </Route>
+
+              <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/teacher" element={<TeacherHome />} />
+                <Route path="/dashboard/teacher/:id" element={<TeacherClass />} />
                 <Route path="/dashboard/ai-chat" element={<AiChat />} />
                 <Route path="/dashboard/ai-advisor" element={<CareerAdvisorReport />} />
                 <Route path="/dashboard/compare" element={<CareerCompare />} />
@@ -106,6 +117,7 @@ export const AppRoutes = () => (
             <Route element={<AdminRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/impact" element={<AdminImpact />} />
                 <Route path="/admin/careers" element={<AdminCareers />} />
                 <Route path="/admin/clusters" element={<AdminClusters />} />
                 <Route path="/admin/specialists" element={<Navigate to="/admin" replace />} />

@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   ChevronLeft,
   ChevronRight,
+  GraduationCap,
 } from "lucide-react";
 import axios from "axios";
 import { API } from "../../lib/config";
@@ -43,7 +44,7 @@ const ONLINE_MINUTES = 5;
 const AdminUsers = () => {
   const { token, user: currentUser } = useAuthStore();
   const toast = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,21 @@ const AdminUsers = () => {
       toast.error("Error");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  // Омӯзгор ↔ корбар (админ ин тугмаро надорад).
+  const handleTeacherToggle = async (user) => {
+    const newRole = user.role === "teacher" ? "user" : "teacher";
+    setRoleLoading(user.id);
+    try {
+      await axios.patch(`${API}/users/${user.id}/role`, { role: newRole }, authHeaders);
+      toast.success(t("admin.users.role_changed", { name: user.name || user.email, role: newRole }));
+      fetchUsers();
+    } catch (err) {
+      toast.error("Error");
+    } finally {
+      setRoleLoading(null);
     }
   };
 
@@ -214,6 +230,10 @@ const AdminUsers = () => {
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[13px] font-bold">
                               <Shield className="w-3 h-3" /> Admin
                             </span>
+                          ) : user.role === "teacher" ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 text-[13px] font-bold">
+                              <GraduationCap className="w-3 h-3" /> {{ tj: "Омӯзгор", ru: "Учитель", en: "Teacher" }[String(i18n.language || "tj").slice(0, 2)] || "Омӯзгор"}
+                            </span>
                           ) : user.role === "specialist" ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[13px] font-bold">
                               <BadgeCheck className="w-3 h-3" /> {t("admin.users.specialist", "Мутахассис")}
@@ -247,6 +267,16 @@ const AdminUsers = () => {
                         </td>
                         <td className="px-6 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                            {user.role !== "admin" && (
+                              <button
+                                onClick={() => handleTeacherToggle(user)}
+                                disabled={isSelf || roleLoading === user.id}
+                                className={`p-2 rounded-lg transition-all cursor-pointer ${user.role === "teacher" ? "text-teal-600 hover:bg-teal-500/10" : "text-muted-foreground hover:bg-teal-500/10 hover:text-teal-600"}`}
+                                title={user.role === "teacher" ? "Омӯзгор → Корбар" : "Омӯзгор кардан"}
+                              >
+                                <GraduationCap className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleRoleChange(user)}
                               disabled={isSelf || roleLoading === user.id}

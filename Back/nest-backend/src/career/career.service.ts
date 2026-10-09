@@ -1898,6 +1898,7 @@ export class CareerService {
         careerRanks: Map<string, number>;
         careerReasons: Map<string, string[]>;
         careerContext?: Map<string, { local: boolean; free: boolean }>;
+        careerPercents: Map<string, number>;
     }> {
         const mmtScores = userScores?.mmtClusters || { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
         const clusters = await this.clusterRepository.find();
@@ -1913,7 +1914,7 @@ export class CareerService {
         const chosen = String(userScores?.chosenCluster || '');
         const top = clusterScores.find((entry) => `c${entry.cluster.clusterId}` === chosen) || clusterScores[0];
         if (!top) {
-            return { cluster: null, matchPercentage: 0, careers: [], clusterScores, careerRanks: new Map(), careerReasons: new Map() };
+            return { cluster: null, matchPercentage: 0, careers: [], clusterScores, careerRanks: new Map(), careerReasons: new Map(), careerPercents: new Map() };
         }
 
         const matchPercentage = Math.min(
@@ -1979,6 +1980,8 @@ export class CareerService {
         }
         const bonus = (id: string) => (extra.get(id)?.local ? 2 : 0) + (wantsFree && extra.get(id)?.free ? 2 : 0);
 
+        // Як ном дар якчанд рамз (донишгоҳҳои гуногун) — як бор, то ҳамеша 12 ихтисоси гуногун бошад.
+        const seenNames = new Set<string>();
         const ranked = pool
             .map(career => ({ career, rank: scoreOf(career) + bonus(career.id) }))
             // Лайкҳо ба тартиб таъсир намекунанд (вагарна «ҳалқаи маъруфият» мешуд):
@@ -1986,7 +1989,21 @@ export class CareerService {
             .sort((a, b) =>
                 b.rank - a.rank ||
                 (a.career.name || '').localeCompare(b.career.name || ''))
+            .filter(({ career }) => {
+                const key = (career.name || '').trim().toLowerCase();
+                if (seenNames.has(key)) return false;
+                seenNames.add(key);
+                return true;
+            })
             .slice(0, 12);
+
+        // Фоизи ҳар ихтисос = нисфаш мувофиқати самт (тести қисми 1), нисфаш мувофиқат бо
+        // ҷавобҳои қисми 2 (калимаҳо) нисбат ба мувофиқтарин ихтисос. Бе калимаҳо — фоизи самт.
+        const bestRank = Math.max(0, ...ranked.map((r) => r.rank));
+        const careerPercents = new Map(ranked.map((r) => [
+            r.career.id,
+            bestRank > 0 ? Math.round(matchPercentage * 0.5 + (r.rank / bestRank) * 50) : matchPercentage,
+        ]));
 
         const topCareers = ranked.length
             ? await this.careerRepository.find({
@@ -2006,6 +2023,7 @@ export class CareerService {
             careerRanks: new Map(ranked.map((r) => [r.career.id, r.rank])),
             careerReasons: reasons,
             careerContext: extra,
+            careerPercents,
         };
     }
 
@@ -2014,7 +2032,7 @@ export class CareerService {
     // ҳамон калимаҳо ҳамчун «чаро ин ихтисос» дода мешаванд. Cosine/Euclidean бардошта шуд:
     // профили ихтисос танҳо як кластер дошт ва онҳо маълумоти нав намедоданд.
     async matchCareers(userScores: any): Promise<any[]> {
-        const { careers, matchPercentage, clusterScores, careerRanks, careerReasons } =
+        const { careers, matchPercentage, clusterScores, careerRanks, careerReasons, careerPercents } =
             await this.selectMatchedCareers(userScores);
 
         const userProfile: Record<string, number> = {};
@@ -2030,7 +2048,7 @@ export class CareerService {
                 name: career.name,
                 description: career.description,
                 purpose: career.purpose,
-                matchPercentage,
+                matchPercentage: careerPercents.get(career.id) ?? matchPercentage,
                 clusterMatch: matchPercentage,
                 rank: index + 1,
                 keywordScore: careerRanks.get(career.id) ?? 0,

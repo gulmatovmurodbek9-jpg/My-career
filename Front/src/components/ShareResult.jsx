@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Download, Loader2, Share2, X } from "lucide-react";
-import { canvasToBlob, CARD_LINK, downloadBlob, drawShareCard, shareOrDownload } from "../lib/shareCard";
+import { canvasToBlob, CARD_COLORS, CARD_LINK, CLUSTER_GRADIENT, downloadBlob, drawShareCard, shareOrDownload } from "../lib/shareCard";
 
 // «📤 Натиҷаро фиристед»: пешнамоиши корт, андоза (Story / мураббаъ), номи ихтиёрӣ,
 // «Фиристодан» (менюи телефон) ва «Боргирӣ».
 const TEXT = {
-    tj: { button: "Натиҷаро фиристед", title: "Корти натиҷа", story: "Story", square: "Мураббаъ", name: "Номи шумо (ихтиёрӣ)", share: "Фиристодан", download: "Боргирӣ", hint: "Ба Telegram, Instagram Story ё ба гурӯҳи синф фиристед — дӯстонатон ҳам бисанҷанд.", done: "Тасвир боргирӣ шуд — онро аз галерея фиристед.", close: "Пӯшидан", shareText: "Натиҷаи ман дар «Ихтисоси ман» — ту ҳам бисанҷ:" },
-    ru: { button: "Поделиться результатом", title: "Карточка результата", story: "Story", square: "Квадрат", name: "Ваше имя (необязательно)", share: "Поделиться", download: "Скачать", hint: "Отправьте в Telegram, Instagram Story или в группу класса — пусть друзья тоже попробуют.", done: "Картинка скачана — отправьте её из галереи.", close: "Закрыть", shareText: "Мой результат в «Ихтисоси ман» — попробуй и ты:" },
-    en: { button: "Share your result", title: "Result card", story: "Story", square: "Square", name: "Your name (optional)", share: "Share", download: "Download", hint: "Send it to Telegram, an Instagram Story or your class group — let friends try too.", done: "Image downloaded — send it from your gallery.", close: "Close", shareText: "My result on “Ikhtisosi man” — try it too:" },
+    tj: { button: "Натиҷаро фиристед", title: "Корти натиҷа", story: "Story", square: "Мураббаъ", name: "Номи шумо (ихтиёрӣ)", color: "Ранг", auto: "Ранги самт", share: "Фиристодан", download: "Боргирӣ", hint: "Ба Telegram, Instagram Story ё ба гурӯҳи синф фиристед — дӯстонатон ҳам бисанҷанд.", done: "Тасвир боргирӣ шуд — онро аз галерея фиристед.", close: "Пӯшидан", shareText: "Натиҷаи ман дар «Ихтисоси ман» — ту ҳам бисанҷ:" },
+    ru: { button: "Поделиться результатом", title: "Карточка результата", story: "Story", square: "Квадрат", name: "Ваше имя (необязательно)", color: "Цвет", auto: "Цвет направления", share: "Поделиться", download: "Скачать", hint: "Отправьте в Telegram, Instagram Story или в группу класса — пусть друзья тоже попробуют.", done: "Картинка скачана — отправьте её из галереи.", close: "Закрыть", shareText: "Мой результат в «Ихтисоси ман» — попробуй и ты:" },
+    en: { button: "Share your result", title: "Result card", story: "Story", square: "Square", name: "Your name (optional)", color: "Color", auto: "Direction color", share: "Share", download: "Download", hint: "Send it to Telegram, an Instagram Story or your class group — let friends try too.", done: "Image downloaded — send it from your gallery.", close: "Close", shareText: "My result on “Ikhtisosi man” — try it too:" },
 };
 
 export default function ShareResult({ card, className = "", variant = "primary" }) {
@@ -19,6 +19,7 @@ export default function ShareResult({ card, className = "", variant = "primary" 
     const [open, setOpen] = useState(false);
     const [size, setSize] = useState("story");
     const [name, setName] = useState("");
+    const [color, setColor] = useState(() => { try { return localStorage.getItem("card_color") || "auto"; } catch { return "auto"; } });
     const [preview, setPreview] = useState("");
     const [busy, setBusy] = useState(false);
     const [note, setNote] = useState("");
@@ -30,13 +31,13 @@ export default function ShareResult({ card, className = "", variant = "primary" 
         if (!open) return undefined;
         let alive = true;
         const timer = setTimeout(async () => {
-            const canvas = await drawShareCard({ ...JSON.parse(cardKey), size, lang, name: name.trim() });
+            const canvas = await drawShareCard({ ...JSON.parse(cardKey), size, lang, name: name.trim(), color: color === "auto" ? undefined : color });
             if (!alive) return;
             canvasRef.current = canvas;
             setPreview(canvas.toDataURL("image/png"));
         }, name ? 250 : 0);
         return () => { alive = false; clearTimeout(timer); };
-    }, [open, size, name, lang, cardKey]);
+    }, [open, size, name, lang, cardKey, color]);
 
     useEffect(() => {
         if (!open) return undefined;
@@ -101,6 +102,28 @@ export default function ShareResult({ card, className = "", variant = "primary" 
                                     {text[value]}
                                 </button>
                             ))}
+                        </div>
+                        <div>
+                            <div className="mb-1.5 text-[13px] font-bold text-foreground">{text.color}</div>
+                            <div className="flex flex-wrap gap-2">
+                                {["auto", ...Object.keys(CARD_COLORS)].map((key) => {
+                                    const [a, b] = key === "auto" ? (CLUSTER_GRADIENT[card.cluster] || CARD_COLORS.blue) : CARD_COLORS[key];
+                                    return (
+                                        <button
+                                            key={key}
+                                            type="button"
+                                            onClick={() => { setColor(key); try { localStorage.setItem("card_color", key); } catch { /* холӣ */ } }}
+                                            aria-pressed={color === key}
+                                            aria-label={key === "auto" ? text.auto : key}
+                                            title={key === "auto" ? text.auto : key}
+                                            className={`h-9 w-9 rounded-full cursor-pointer ring-offset-2 ring-offset-card transition-transform active:scale-90 ${color === key ? "ring-2 ring-primary scale-110" : ""}`}
+                                            style={{ background: `linear-gradient(135deg, ${a}, ${b})` }}
+                                        >
+                                            {key === "auto" && <span className="text-[10px] font-black text-white">A</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                         <input
                             value={name}

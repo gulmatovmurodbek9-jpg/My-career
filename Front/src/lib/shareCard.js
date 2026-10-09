@@ -16,6 +16,19 @@ export const CLUSTER_GRADIENT = {
 };
 const DEFAULT_GRADIENT = ["#1d4ed8", "#312e81"];
 
+// Рангҳое, ки хонанда худаш интихоб мекунад («auto» — ранги самт).
+export const CARD_COLORS = {
+    blue: ["#2563eb", "#1e3a8a"],
+    sky: ["#0ea5e9", "#0c4a6e"],
+    teal: ["#14b8a6", "#134e4a"],
+    green: ["#22c55e", "#14532d"],
+    orange: ["#f97316", "#7c2d12"],
+    red: ["#ef4444", "#7f1d1d"],
+    pink: ["#ec4899", "#701a75"],
+    purple: ["#8b5cf6", "#312e81"],
+    dark: ["#334155", "#020617"],
+};
+
 export const CARD_TEXT = {
     tj: {
         direction: "Самти ман",
@@ -144,7 +157,7 @@ export async function drawShareCard(options) {
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext("2d");
-    const [from, to] = CLUSTER_GRADIENT[options.cluster] || DEFAULT_GRADIENT;
+    const [from, to] = CARD_COLORS[options.color] || CLUSTER_GRADIENT[options.cluster] || DEFAULT_GRADIENT;
 
     // Замина: градиент ва доираҳои нарм.
     const bg = ctx.createLinearGradient(0, 0, W, H);

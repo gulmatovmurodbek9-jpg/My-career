@@ -125,7 +125,8 @@ export class QuizService {
             name: c.name,
             description: c.description,
             purpose: c.purpose,
-            matchPercentage: clusterMatchPct,
+            matchPercentage: selection.careerPercents.get(c.id) ?? clusterMatchPct,
+            clusterMatch: clusterMatchPct,
             tuitionFee: c.tuitionFee,
             // Номи ихтисос бо забони корбар — фронтенд аз ин тарҷума мегирад.
             translations: c.translations,

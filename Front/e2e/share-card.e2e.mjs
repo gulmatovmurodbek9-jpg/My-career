@@ -16,7 +16,7 @@ const check = (name, ok, detail = "") => {
 };
 
 const CARDS = {
-    "quiz-story": { kind: "quiz", size: "story", lang: "tj", cluster: "c3", title: "Филология, педагогика ва санъат", percent: 72, careers: ["Тарҷумони забони англисӣ ва арабӣ", "Журналистика", "Забон ва адабиёти тоҷик. Забони англисӣ"] },
+    "quiz-story": { kind: "quiz", size: "story", lang: "tj", cluster: "c5", color: "blue", title: "Филология, педагогика ва санъат", percent: 72, careers: ["Тарҷумони забони англисӣ ва арабӣ", "Журналистика", "Забон ва адабиёти тоҷик. Забони англисӣ"] },
     "quiz-square": { kind: "quiz", size: "square", lang: "ru", cluster: "c1", title: "Естественно-технические науки", percent: 64, careers: ["Программная инженерия", "Электроэнергетика"], name: "Джамшед" },
     "trial-fit-story": { kind: "trial", size: "story", lang: "tj", cluster: "c5", career: "Технологияи иттилоотии ҳисоби бухгалтерӣ ва аудит дар соҳаи бонкӣ", fit: true, solved: 3, total: 4, confBefore: 2, confAfter: 4, name: "Ҷамшед Раҳимов" },
     "trial-notfit-square": { kind: "trial", size: "square", lang: "en", cluster: "c2", career: "Accounting", fit: false, solved: 1, total: 4, confBefore: 4, confAfter: 2 },

@@ -124,12 +124,25 @@ function roundRect(ctx, x, y, w, h, r) {
     ctx.closePath();
 }
 
+// Нишонаи барнома (512×512, гӯшаҳои мудаввар) — равшан дар корти 1080 пиксел; сояи нарм.
 async function drawLogo(ctx, x, y, size) {
     try {
         const img = new Image();
-        img.src = "/logo.png";
+        img.src = "/icon-512.png";
         await img.decode();
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 8;
+        roundRect(ctx, x, y, size, size, size * 0.22);
+        ctx.fillStyle = "#05060a";
+        ctx.fill();
+        ctx.restore();
+        ctx.save();
+        roundRect(ctx, x, y, size, size, size * 0.22);
+        ctx.clip();
         ctx.drawImage(img, x, y, size, size);
+        ctx.restore();
         return true;
     } catch {
         return false;
@@ -178,13 +191,14 @@ export async function drawShareCard(options) {
     const limit = footY - (story ? 60 : 40);
 
     // Сарлавҳа: логотип + «ИХТИСОСИ МАН».
-    const logo = await drawLogo(ctx, pad, y, 84);
+    const logoSize = story ? 120 : 100;
+    const logo = await drawLogo(ctx, pad, y, logoSize);
     ctx.fillStyle = "#ffffff";
-    ctx.font = `900 46px ${DISPLAY}`;
+    ctx.font = `900 ${story ? 54 : 48}px ${DISPLAY}`;
     ctx.textBaseline = "middle";
-    ctx.fillText("ИХТИСОСИ МАН", pad + (logo ? 104 : 0), y + 44);
+    ctx.fillText("ИХТИСОСИ МАН", pad + (logo ? logoSize + 28 : 0), y + logoSize / 2);
     ctx.textBaseline = "alphabetic";
-    y += story ? 200 : 140;
+    y += story ? 230 : 175;
 
     if (options.name) {
         ctx.font = `600 40px ${BODY}`;

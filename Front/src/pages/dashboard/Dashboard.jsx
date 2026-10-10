@@ -402,6 +402,8 @@ const Dashboard = () => {
                 )}
             </div>
 
+            <div className="mt-12"><ClassCard part="promo" /></div>
+
             <MatchExplainModal
                 isOpen={explainOpen}
                 onClose={() => setExplainOpen(false)}

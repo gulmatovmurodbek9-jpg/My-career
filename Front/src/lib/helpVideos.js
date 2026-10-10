@@ -38,8 +38,11 @@ const ROUTES = [
 ];
 
 export const videoForPath = (pathname) => ROUTES.find(([pattern]) => pattern.test(pathname))?.[1] || null;
-export const videoSrc = (id, lang) => `/videos/${id}-${lang}.mp4`;
-export const videoPoster = (id, lang) => `/videos/${id}-${lang}.jpg`;
+// Дар компютер (localhost) файлҳои видео нестанд — аз сервер бор мешаванд.
+const VIDEO_BASE = import.meta.env.VITE_VIDEO_BASE
+    || (typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? "https://ikhtisosiman.qobus.tj" : "");
+export const videoSrc = (id, lang) => `${VIDEO_BASE}/videos/${id}-${lang}.mp4`;
+export const videoPoster = (id, lang) => `${VIDEO_BASE}/videos/${id}-${lang}.jpg`;
 
 export const HELP_TEXT = {
     tj: { button: "Чӣ тавр кор мекунад?", title: "Видеоҳои омӯзишӣ", intro: "Барои ҳар саҳифаи сайт видеои кӯтоҳ: чӣ кор мекунад ва чӣ тавр истифода бурдан мумкин аст.", close: "Пӯшидан", all: "Ҳамаи видеоҳо", watch: "Тамошо" },

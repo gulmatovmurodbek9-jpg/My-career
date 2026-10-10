@@ -39,6 +39,7 @@ import QuizFeedback from "../../components/QuizFeedback";
 import { CLUSTER_FAMILY, FAMILY_ROLE, fillText, langCode, trialText } from "../../lib/trialText";
 import TrialIcon from "../../components/TrialIcon";
 import ShareResult from "../../components/ShareResult";
+import ParentInvite from "../../components/ParentInvite";
 import QuickApply, { QUICK_TEXT } from "../../components/QuickApply";
 import { CLUSTER_SUBJECTS, SUBJECTS, getQuizContext, setQuizContext, subjectName } from "../../lib/quizContext";
 
@@ -1140,6 +1141,8 @@ const Quiz = () => {
                         })}
                     </ul>
                 </section>
+
+                {results.scores?.mmtClusters && <ParentInvite scores={results.scores.mmtClusters} />}
 
                 {(() => {
                     const ctx = CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj;

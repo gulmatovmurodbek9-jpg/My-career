@@ -49,6 +49,7 @@ const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
 const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
 const TeacherClass = lazy(() => import("./pages/teacher/TeacherClass"));
 const ClassJoin = lazy(() => import("./pages/teacher/ClassJoin"));
+const ParentSurvey = lazy(() => import("./pages/parent/ParentSurvey"));
 const Favorites = lazyPreload(() => import("./pages/favorites/Favorites"));
 
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
@@ -95,6 +96,7 @@ export const AppRoutes = () => (
               <Route path="/clusters" element={<Navigate to="/#cluster-groups" replace />} />
               <Route path="/info/:id" element={<Info />} />
 
+              <Route path="/parent/:code" element={<ParentSurvey />} />
               <Route path="/class" element={<ClassJoin />} />
               <Route path="/class/:code" element={<ClassJoin />} />
               <Route element={<QuizRoute />}>

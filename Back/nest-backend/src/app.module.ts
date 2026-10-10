@@ -14,6 +14,8 @@ import { AppointmentModule } from './appointment/appointment.module';
 import { VoiceModule } from './voice/voice.module';
 import { ImpactModule } from './impact/impact.module';
 import { ClassroomModule } from './classroom/classroom.module';
+import { InterviewModule } from './interview/interview.module';
+import { ParentModule } from './parent/parent.module';
 import { TrialModule } from './trial/trial.module';
 
 @Module({
@@ -54,6 +56,8 @@ import { TrialModule } from './trial/trial.module';
         TrialModule,
         ImpactModule,
         ClassroomModule,
+        InterviewModule,
+        ParentModule,
     ],
     controllers: [HealthController],
 })

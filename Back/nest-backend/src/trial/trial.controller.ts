@@ -31,6 +31,14 @@ export class TrialController {
     }
 
     // Танҳо админ; пеш аз ':family' — то «stats» ҳамчун номи сенария хонда нашавад.
+    // Пеш аз ':family' — то «mine» ҳамчун номи сенария хонда нашавад.
+    @Get('mine')
+    @UseGuards(OptionalJwtGuard)
+    @ApiOperation({ summary: 'Касбҳои санҷидашудаи ман (барои муқоиса)' })
+    async mine(@Query('lang') lang: string, @Req() req: any) {
+        return this.trial.mine(await this.who(req), lang);
+    }
+
     @Get('stats')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles('admin')

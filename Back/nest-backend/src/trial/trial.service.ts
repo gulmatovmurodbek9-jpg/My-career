@@ -354,6 +354,38 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
         };
     }
 
+    // Муқоисаи касбҳои санҷидашуда: охирин санҷиши ҳар касби корбар (ё хонандаи бе почта).
+    async mine(who: { userId?: string | null; guestId?: string | null }, rawLang?: string) {
+        if (!who.userId && !who.guestId) return [];
+        const lang = toLang(rawLang);
+        const rows: Array<{ family: string; careerId: string | null; solved: number; tasks: Array<{ liked?: boolean }>; rating: number | null; confBefore: number | null; confAfter: number | null; createdAt: string; name: string | null; tr: string | null }> =
+            await this.dataSource.query(`
+                SELECT DISTINCT ON (COALESCE(a."careerId"::text, a.family)) a.family, a."careerId", a.solved, a.tasks, a.rating,
+                       a."confBefore", a."confAfter", a."createdAt", c.name, c.translations -> $3::text ->> 'name' AS tr
+                FROM trial_attempts a LEFT JOIN career c ON c.id = a."careerId"
+                WHERE a."userId" = $1 OR a."guestId" = $2
+                ORDER BY COALESCE(a."careerId"::text, a.family), a."createdAt" DESC`,
+                [who.userId || null, who.guestId || null, lang]);
+        return rows.map((row) => {
+            const tasks = row.tasks || [];
+            const liked = tasks.filter((task) => task.liked).length;
+            return {
+                key: row.careerId ? `c:${row.careerId}` : `f:${row.family}`,
+                careerId: row.careerId,
+                family: row.family,
+                name: row.tr || row.name || SCENARIOS[row.family]?.text[lang]?.role || row.family,
+                solved: Number(row.solved),
+                total: tasks.length,
+                liked,
+                rating: row.rating,
+                confBefore: row.confBefore,
+                confAfter: row.confAfter,
+                fit: !((row.rating !== null && row.rating <= 2) || liked < tasks.length / 3),
+                at: row.createdAt,
+            };
+        });
+    }
+
     // Барои админ ва ҳимоя: чанд нафар, писанд омадан ва тағйири боварӣ.
     async stats() {
         const rows: Array<{ family: string; solved: number; rating: number | null; confBefore: number | null; confAfter: number | null; tasks: Array<{ liked: boolean }> }> =

@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, Bot, CheckCircle2, Clock, Info, ListChecks, MapPin, RotateCcw, ShieldAlert, ThumbsDown, ThumbsUp, Users, Wrench, XCircle } from "lucide-react";
 import TrialIcon from "../../components/TrialIcon";
 import ShareResult from "../../components/ShareResult";
+import TrialCompare from "../../components/TrialCompare";
+import { historyKey, saveTrialResult } from "../../lib/trialHistory";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { usePageMeta } from "../../lib/usePageMeta";
@@ -183,6 +185,20 @@ export default function Trial() {
             });
             setSummary(data);
             setStage("result");
+            // Барои «Муқоисаи касбҳои санҷидашуда» (дар браузер, ҳатто бе ворид шудан).
+            saveTrialResult({
+                key: historyKey(careerParam, family),
+                careerId: careerParam || null,
+                family: careerParam ? "career" : family,
+                name: data.career?.name || data.role,
+                solved: data.solved,
+                total: data.total,
+                liked: (data.tasks || []).filter((t) => t.liked).length,
+                rating: data.rating,
+                confBefore: data.confBefore,
+                confAfter: data.confAfter,
+                fit: !data.suggestOther,
+            });
             setError(false);
         } catch {
             setError(true);
@@ -475,6 +491,8 @@ export default function Trial() {
                                 </div>
                             </div>
                         )}
+
+                        <TrialCompare compact minCount={2} highlight={historyKey(careerParam, family)} />
 
                         {/* Касби дигар: ба рӯйхати ихтисосҳо бо ҷустуҷӯ — дарҳол дигарашро санҷад. */}
                         <div className="rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/10 to-indigo-500/5 p-5">

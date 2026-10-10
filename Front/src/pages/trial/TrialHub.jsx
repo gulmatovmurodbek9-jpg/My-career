@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { usePageState } from "../../lib/pageState";
+import TrialCompare from "../../components/TrialCompare";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -51,6 +52,9 @@ export default function TrialHub() {
             </span>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-5xl">{text.name}</h1>
             <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg">{text.hubIntro}</p>
+
+            {/* Агар аллакай касб санҷида бошад — муқоиса дар боло. */}
+            <TrialCompare className="mt-6" />
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {text.why.map(([title, desc]) => (

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router";
 import LazyVoiceAssistant from "../../components/voice/LazyVoiceAssistant";
 import MobileTabBar, { tabBarVisible } from "../../components/MobileTabBar";
+import HelpVideo from "../../components/HelpVideo";
 import {
   ArrowRight,
   Github,
@@ -405,6 +406,7 @@ const Layout = () => {
                       { to: "/#cluster-groups", label: t("nav.clusters", "Кластерҳо") },
                       { to: "/trial", label: t("nav.trial", "Худро дар касб санҷед") },
                       { to: "/class", label: { tj: "Рамзи синф", ru: "Код класса", en: "Class code" }[currentLang] || "Рамзи синф" },
+                      { to: "/help", label: { tj: "Видеоҳои омӯзишӣ", ru: "Обучающие видео", en: "Tutorial videos" }[currentLang] || "Видеоҳои омӯзишӣ" },
                       { to: "/about", label: t("nav.about", "Дар бора") },
                     ].map((link) => (
                       <Link
@@ -533,6 +535,7 @@ const Layout = () => {
       {!location.pathname.startsWith("/dashboard/ai-chat") && <LazyVoiceAssistant />}
 
       <MobileTabBar />
+      <HelpVideo />
     </div>
   );
 };

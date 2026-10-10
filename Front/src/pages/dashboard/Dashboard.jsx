@@ -163,7 +163,7 @@ const Dashboard = () => {
                         animate="visible"
                         className="bento-grid"
                     >
-                        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-4 glass-card flex flex-col p-6">
+                        <motion.div variants={itemVariants} initial="hidden" animate="visible" className="col-span-12 lg:col-span-4 glass-card flex flex-col p-6">
                             <div className="flex items-center gap-4">
                                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
                                     {displayName.charAt(0).toUpperCase()}
@@ -204,7 +204,7 @@ const Dashboard = () => {
                             </div>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-8">
+                        <motion.div variants={itemVariants} initial="hidden" animate="visible" className="col-span-12 lg:col-span-8">
                             <Suspense fallback={
                                 <div className="glass-card p-6 flex items-center justify-center min-h-[300px]">
                                     <div className="flex flex-col items-center gap-3">
@@ -217,7 +217,7 @@ const Dashboard = () => {
                             </Suspense>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="col-span-12">
+                        <motion.div variants={itemVariants} initial="hidden" animate="visible" className="col-span-12">
                             <Link to="/dashboard/ai-advisor">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
@@ -236,7 +236,7 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="col-span-12">
+                        <motion.div variants={itemVariants} initial="hidden" animate="visible" className="col-span-12">
                             <Link to="/dashboard/ai-chat">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
@@ -257,7 +257,7 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="col-span-12">
+                        <motion.div variants={itemVariants} initial="hidden" animate="visible" className="col-span-12">
                             <Link to="/dashboard/compare">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
@@ -278,7 +278,7 @@ const Dashboard = () => {
                             </Link>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="col-span-12">
+                        <motion.div variants={itemVariants} initial="hidden" animate="visible" className="col-span-12">
                             <Link to="/dashboard/plan">
                                 <div className="glass-card p-5 md:p-6 flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden">
                                     <div className="flex items-center gap-4 relative">
@@ -300,7 +300,7 @@ const Dashboard = () => {
                         </motion.div>
 
 
-                        <motion.div id="recommendations" variants={itemVariants} className="col-span-12 pt-8">
+                        <motion.div id="recommendations" variants={itemVariants} initial="hidden" animate="visible" className="col-span-12 pt-8">
                             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
                                 <div className="flex items-center gap-3">
                                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/10">
@@ -325,7 +325,7 @@ const Dashboard = () => {
                         {matches.map((career, idx) => (
                             <motion.div
                                 key={career.id}
-                                variants={itemVariants}
+                                variants={itemVariants} initial="hidden" animate="visible"
                                 className="col-span-12 md:col-span-6 lg:col-span-4"
                             >
                                 <MatchCard
@@ -364,8 +364,8 @@ const Dashboard = () => {
                     </motion.div>
                 )}
                 {savedCareers.length > 0 && (
-                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="col-span-12 grid grid-cols-12 gap-5">
-                        <motion.div variants={itemVariants} className="col-span-12 pt-8">
+                    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="col-span-12 grid grid-cols-12 gap-5">
+                        <motion.div variants={itemVariants} initial="hidden" animate="visible" className="col-span-12 pt-8">
                             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
                                 <div className="flex items-center gap-3">
                                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -392,7 +392,7 @@ const Dashboard = () => {
                         {savedCareers.map((career) => (
                             <motion.div
                                 key={career.id}
-                                variants={itemVariants}
+                                variants={itemVariants} initial="hidden" animate="visible"
                                 className="col-span-12 md:col-span-6 lg:col-span-4"
                             >
                                 <SpecialtyCard specialty={career} />

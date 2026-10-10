@@ -24,6 +24,7 @@ function lazyPreload(factory) {
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/about/about"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Help = lazy(() => import("./pages/Help"));
 const Trial = lazyPreload(() => import("./pages/trial/Trial"));
 const TrialHub = lazyPreload(() => import("./pages/trial/TrialHub"));
 const Careers = lazyPreload(() => import("./pages/careers/careers"));
@@ -86,6 +87,7 @@ export const AppRoutes = () => (
               <Route index element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/help" element={<Help />} />
               <Route path="/trial" element={<TrialHub />} />
               <Route path="/trial/career/:careerId" element={<Trial />} />
               <Route path="/trial/:family" element={<Trial />} />

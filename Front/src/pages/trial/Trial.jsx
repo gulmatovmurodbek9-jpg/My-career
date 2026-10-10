@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,19 @@ import { AnswerInput, CareerBlock, DayTimeline, FeedbackPanel, MOOD, ProsCons, R
 //   /trial/career/:careerId   — сенарияи худи ихтисос (8 вазифа). Агар ҳанӯз тайёр набошад —
 //                               ба сенарияи наздиктарини оила мегузарем.
 // Ҷавобҳои дуруст танҳо баъди ҷавоб аз сервер меоянд.
+// Пешрафт дар браузер (то 7 рӯз): ба саҳифаи дигар рафта баргардед — аз ҳамон ҷо давом медиҳад.
+const PROGRESS_DAYS = 7;
+const progressKey = (careerParam, family) => `trial_progress_v1:${careerParam ? `c:${careerParam}` : `f:${family}`}`;
+function readProgress(key) {
+    try {
+        const data = JSON.parse(localStorage.getItem(key) || "null");
+        if (!data || Date.now() - (data.savedAt || 0) > PROGRESS_DAYS * 86400000) return null;
+        return data;
+    } catch {
+        return null;
+    }
+}
+
 export default function Trial() {
     const { family, careerId: careerParam } = useParams();
     const [search] = useSearchParams();
@@ -51,19 +64,31 @@ export default function Trial() {
         path: location.pathname,
     });
 
+    const key = progressKey(careerParam, family);
+    const restored = useRef(null);
+    const apply = (data) => {
+        setStage(data?.stage || "intro");
+        setIndex(data?.index || 0);
+        setAnswers(data?.answers || {});
+        setChecks(data?.checks || {});
+        setLiked(data?.liked || {});
+        setConfBefore(data?.confBefore ?? null);
+        setConfAfter(data?.confAfter ?? null);
+        setRating(data?.rating ?? null);
+        setSummary(data?.summary || null);
+    };
     const reset = () => {
-        setStage("intro");
-        setIndex(0);
-        setAnswers({});
-        setChecks({});
-        setLiked({});
-        setConfBefore(null);
-        setConfAfter(null);
-        setRating(null);
-        setSummary(null);
+        try { localStorage.removeItem(key); } catch { /* холӣ */ }
+        restored.current = null;
+        apply(null);
     };
 
-    useEffect(reset, [family, careerParam]);
+    // Ихтисос иваз шуд — пешрафти нигоҳдоштаи ҳамон ихтисос (агар бошад).
+    useEffect(() => {
+        const saved = readProgress(key);
+        restored.current = saved;
+        apply(saved);
+    }, [key]);
 
     useEffect(() => {
         let alive = true;
@@ -94,6 +119,27 @@ export default function Trial() {
     }, [base, lang, reload, careerMode, careerParam, navigate]);
 
     useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [stage, index]);
+
+    // Сенария иваз шуда бошад (вазифаҳои дигар) — пешрафти кӯҳна ба он мувофиқ нест.
+    useEffect(() => {
+        const saved = restored.current;
+        if (!scenario || !saved) return;
+        const ids = (scenario.tasks || []).map((t) => t.id).join(",");
+        if (saved.taskIds && saved.taskIds !== ids) reset();
+        restored.current = null;
+    }, [scenario]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        if (!scenario) return;
+        if (stage === "intro" && !confBefore && !Object.keys(answers).length) return;
+        try {
+            localStorage.setItem(key, JSON.stringify({
+                savedAt: Date.now(),
+                taskIds: (scenario.tasks || []).map((t) => t.id).join(","),
+                stage, index, answers, checks, liked, confBefore, confAfter, rating, summary,
+            }));
+        } catch { /* хотира пур */ }
+    }, [key, scenario, stage, index, answers, checks, liked, confBefore, confAfter, rating, summary]);
 
     const tasks = scenario?.tasks || [];
     const total = tasks.length;

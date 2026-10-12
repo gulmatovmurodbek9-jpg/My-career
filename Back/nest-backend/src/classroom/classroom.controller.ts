@@ -202,6 +202,32 @@ export class ClassroomController {
         return this.classrooms.teacherPost(req.user, id, memberId, body?.body);
     }
 
+    @Post(':id/teachers')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Омӯзгори ёрирасонро ба синф илова кардан (роҳбари синф)' })
+    addTeacher(@Param('id') id: string, @Body() body: { email?: string; subject?: string; focus?: string }, @Req() req: any) {
+        return this.classrooms.addTeacher(req.user, id, body);
+    }
+
+    @Delete(':id/teachers/:teacherId')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Омӯзгорро аз синф баровардан' })
+    removeTeacher(@Param('id') id: string, @Param('teacherId') teacherId: string, @Req() req: any) {
+        return this.classrooms.removeTeacher(req.user, id, teacherId);
+    }
+
+    @Post(':id/broadcast')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Як паём ба якчанд хонанда (масалан, ба хонандагони як самт)' })
+    broadcast(@Param('id') id: string, @Body() body: { memberIds?: string[]; body?: string }, @Req() req: any) {
+        return this.classrooms.broadcast(req.user, id, body);
+    }
+
     @Delete(':id/members/:memberId')
     @UseGuards(AuthGuard('jwt'))
     @ApiBearerAuth()

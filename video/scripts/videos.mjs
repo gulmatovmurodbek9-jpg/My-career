@@ -233,7 +233,7 @@ export const VIDEOS = [
                 "Type a specialty name — results appear as you type.") },
             { do: async (h, lang) => {
                 await h.type("input[placeholder]", { tj: "Тарҷумони забони англисӣ ва арабӣ", ru: "Переводчик английского и арабского", en: "Translator of English and Arabic" }[lang]);
-            }, focus: T("Ҷустуҷӯи AI", "AI-поиск", "AI search"), click: true, after: async (h) => { await h.click(T("Ҷустуҷӯи AI", "AI-поиск", "AI search")); await h.wait(2500); await h.page.waitForFunction(() => document.querySelectorAll('main a[href^="/info/"]').length > 0, { timeout: 90000 }).catch(() => {}); await h.wait(1500); await h.show('main a[href^="/info/"]'); }, narr: N(
+            }, focus: "[data-ai-search]", click: true, after: async (h) => { await h.click("[data-ai-search]"); await h.wait(2500); await h.page.waitForFunction(() => document.querySelectorAll('main a[href^="/info/"]').length > 0, { timeout: 90000 }).catch(() => {}); await h.wait(1500); await h.show('main a[href^="/info/"]'); }, narr: N(
                 "Агар номи ихтисосро намедонед, хоҳиши худро бо калимаҳои оддӣ нависед ва «Ҷустуҷӯи AI»-ро пахш кунед.",
                 "Если не знаете названия, опишите желание простыми словами и нажмите «AI-поиск».",
                 "If you do not know the name, describe what you want in plain words and press “AI search”.") },

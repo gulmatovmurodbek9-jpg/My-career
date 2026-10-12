@@ -497,6 +497,8 @@ const Careers = () => {
                 type="button"
                 onClick={runAiSearch}
                 disabled={!searchQuery.trim() || aiLoading}
+                aria-label={t("ai_search.button")}
+                data-ai-search
                 className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40 focus-ring"
               >
                 <Sparkles className="h-4 w-4" />

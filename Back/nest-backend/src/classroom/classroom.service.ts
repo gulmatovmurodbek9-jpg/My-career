@@ -136,6 +136,18 @@ export class ClassroomService implements OnModuleInit {
                 "readAt" timestamptz NULL
             )`);
         await this.dataSource.query('CREATE INDEX IF NOT EXISTS classroom_messages_member ON classroom_messages ("memberId", "createdAt")');
+        await this.dataSource.query('ALTER TABLE classroom_messages ADD COLUMN IF NOT EXISTS "authorId" uuid NULL');
+        // Омӯзгорони ёрирасон (масалан, омӯзгори технология дар синфи роҳбари синф).
+        await this.dataSource.query(`
+            CREATE TABLE IF NOT EXISTS classroom_teachers (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                "classroomId" uuid NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                "teacherId" uuid NOT NULL,
+                subject varchar(60) NULL,
+                focus varchar(4) NULL,
+                "addedAt" timestamptz NOT NULL DEFAULT now(),
+                UNIQUE ("classroomId", "teacherId")
+            )`);
         await this.archiveFinished();
         // Сервер моҳҳо бе бозоғоз кор мекунад — ҳар 6 соат месанҷем.
         setInterval(() => void this.archiveFinished().catch(() => undefined), 6 * 3600_000).unref();
@@ -176,12 +188,23 @@ export class ClassroomService implements OnModuleInit {
         return role;
     }
 
+    // Танҳо соҳиби синф (ё админ): иваз, бойгонӣ, нест кардан, хориҷи хонанда, идораи омӯзгорон.
     private async ownClassroom(actor: Actor, id: string) {
+        const { room, owner } = await this.classroomAccess(actor, id);
+        if (!owner) throw new ForbiddenException('Танҳо роҳбари синф ин корро карда метавонад');
+        return room;
+    }
+
+    // Соҳиб ё омӯзгори ёрирасон: дидан, омор ва паёмҳо.
+    private async classroomAccess(actor: Actor, id: string) {
         if (!UUID.test(id)) throw new NotFoundException('Синф ёфт нашуд');
         const role = await this.assertTeacher(actor);
         const [room] = await this.dataSource.query('SELECT * FROM classrooms WHERE id = $1', [id]);
-        if (!room || (room.teacherId !== actor.userId && role !== 'admin')) throw new NotFoundException('Синф ёфт нашуд');
-        return room;
+        if (!room) throw new NotFoundException('Синф ёфт нашуд');
+        if (room.teacherId === actor.userId || role === 'admin') return { room, owner: true, co: null as any };
+        const [co] = await this.dataSource.query('SELECT * FROM classroom_teachers WHERE "classroomId" = $1 AND "teacherId" = $2', [id, actor.userId]);
+        if (!co) throw new NotFoundException('Синф ёфт нашуд');
+        return { room, owner: false, co };
     }
 
     private async newCode(): Promise<string> {
@@ -249,8 +272,13 @@ export class ClassroomService implements OnModuleInit {
     async mine(actor: Actor) {
         await this.assertTeacher(actor);
         await this.archiveFinished();
-        const rooms = await this.dataSource.query(
-            'SELECT * FROM classrooms WHERE "teacherId" = $1 ORDER BY archived, "createdAt" DESC', [actor.userId]);
+        const rooms = await this.dataSource.query(`
+            SELECT c.*, t.subject AS "coSubject", t.focus AS "coFocus", (t.id IS NOT NULL) AS "isCo", o.name AS "ownerName"
+            FROM classrooms c
+            LEFT JOIN classroom_teachers t ON t."classroomId" = c.id AND t."teacherId" = $1
+            LEFT JOIN "user" o ON o.id = c."teacherId"
+            WHERE c."teacherId" = $1 OR t.id IS NOT NULL
+            ORDER BY c.archived, (t.id IS NOT NULL), c."createdAt" DESC`, [actor.userId]);
         const result = [];
         for (const room of rooms) {
             const { summary } = await this.build(room);
@@ -260,8 +288,68 @@ export class ClassroomService implements OnModuleInit {
     }
 
     async detail(actor: Actor, id: string) {
+        const { room, owner, co } = await this.classroomAccess(actor, id);
+        const teachers = await this.dataSource.query(`
+            SELECT t."teacherId" AS id, u.name, u.email, t.subject, t.focus, t."addedAt"
+            FROM classroom_teachers t JOIN "user" u ON u.id = t."teacherId"
+            WHERE t."classroomId" = $1 ORDER BY t."addedAt"`, [id]);
+        const [ownerRow] = await this.dataSource.query('SELECT name FROM "user" WHERE id = $1', [room.teacherId]);
+        return {
+            ...room,
+            ...(await this.build(room)),
+            access: owner ? 'owner' : 'co',
+            myFocus: co?.focus || null,
+            mySubject: co?.subject || null,
+            ownerName: ownerRow?.name || null,
+            teachers: owner ? teachers : teachers.map(({ email, ...rest }: any) => rest),
+        };
+    }
+
+    // ---------- Омӯзгорони ёрирасон ----------
+
+    async addTeacher(actor: Actor, id: string, input: { email?: string; subject?: string; focus?: string }) {
         const room = await this.ownClassroom(actor, id);
-        return { ...room, ...(await this.build(room)) };
+        const email = clean(input?.email, 120).toLowerCase();
+        if (!email.includes('@')) throw new BadRequestException('Почтаи омӯзгорро нависед');
+        const [user] = await this.dataSource.query('SELECT id, name, role FROM "user" WHERE lower(email) = $1', [email]);
+        if (!user) throw new BadRequestException('Корбар бо ин почта ёфт нашуд. Бигӯед, ки аввал дар сайт ба қайд гирад.');
+        if (user.role !== 'teacher' && user.role !== 'admin') throw new BadRequestException('Ин корбар ҳанӯз омӯзгор нест — бигӯед, ки дар «Ҳуҷраи омӯзгор» дархост фиристад.');
+        if (user.id === room.teacherId) throw new BadRequestException('Шумо аллакай роҳбари ин синф ҳастед');
+        const [{ count }] = await this.dataSource.query('SELECT count(*)::int AS count FROM classroom_teachers WHERE "classroomId" = $1', [id]);
+        if (count >= 15) throw new BadRequestException('Ҳадди аксар 15 омӯзгор');
+        const focus = ['c1', 'c2', 'c3', 'c4', 'c5'].includes(String(input?.focus)) ? String(input?.focus) : null;
+        await this.dataSource.query(
+            `INSERT INTO classroom_teachers ("classroomId", "teacherId", subject, focus) VALUES ($1, $2, $3, $4)
+             ON CONFLICT ("classroomId", "teacherId") DO UPDATE SET subject = EXCLUDED.subject, focus = EXCLUDED.focus`,
+            [id, user.id, clean(input?.subject, 60) || null, focus]);
+        return { ok: true, name: user.name };
+    }
+
+    // Соҳиб ҳар омӯзгорро мебарорад; ёрирасон — танҳо худашро.
+    async removeTeacher(actor: Actor, id: string, teacherId: string) {
+        const { owner } = await this.classroomAccess(actor, id);
+        if (!UUID.test(teacherId)) throw new NotFoundException();
+        if (!owner && teacherId !== actor.userId) throw new ForbiddenException('Танҳо роҳбари синф');
+        await this.dataSource.query('DELETE FROM classroom_teachers WHERE "classroomId" = $1 AND "teacherId" = $2', [id, teacherId]);
+        return { ok: true };
+    }
+
+    // Як паём ба якчанд хонанда (масалан, ба ҳамаи хонандагони самти техникӣ).
+    async broadcast(actor: Actor, id: string, input: { memberIds?: string[]; body?: string }) {
+        await this.classroomAccess(actor, id);
+        const ids = [...new Set((Array.isArray(input?.memberIds) ? input.memberIds : []).map(String).filter((m) => UUID.test(m)))].slice(0, MAX_MEMBERS);
+        if (!ids.length) throw new BadRequestException('Хонандагонро интихоб кунед');
+        const members: Array<{ id: string }> = await this.dataSource.query(
+            'SELECT id FROM classroom_members WHERE "classroomId" = $1 AND id = ANY($2::uuid[])', [id, ids]);
+        if (!members.length) throw new BadRequestException('Хонандагон ёфт нашуданд');
+        const text = ClassroomService.cleanBody(input?.body);
+        ClassroomService.assertRate(`broadcast:${actor.userId}`);
+        for (const member of members) {
+            await this.dataSource.query(
+                `INSERT INTO classroom_messages ("classroomId", "memberId", author, body, "authorId") VALUES ($1, $2, 'teacher', $3, $4)`,
+                [id, member.id, text, actor.userId]);
+        }
+        return { sent: members.length };
     }
 
     // Натиҷаи охирини тест ва ҳамаи санҷишҳои ҳар хонанда (натиҷаи пеш аз ҳамроҳ шудан ҳам).
@@ -395,6 +483,7 @@ export class ClassroomService implements OnModuleInit {
     }
 
     async csv(actor: Actor, id: string): Promise<string> {
+        await this.classroomAccess(actor, id);
         const data = await this.detail(actor, id);
         const cell = (value: unknown) => {
             const text = String(value ?? '');
@@ -573,21 +662,33 @@ export class ClassroomService implements OnModuleInit {
         await this.dataSource.query(
             `UPDATE classroom_messages SET "readAt" = now() WHERE "memberId" = $1 AND author <> $2 AND "readAt" IS NULL`, [memberId, reader]);
         return this.dataSource.query(
-            `SELECT id, author, body, "createdAt", "readAt" FROM classroom_messages WHERE "memberId" = $1 ORDER BY "createdAt" LIMIT 300`, [memberId]);
+            `SELECT m.id, m.author, m.body, m."createdAt", m."readAt", m."authorId", u.name AS "authorName"
+             FROM classroom_messages m LEFT JOIN "user" u ON u.id = m."authorId"
+             WHERE m."memberId" = $1 ORDER BY m."createdAt" LIMIT 300`, [memberId]);
     }
 
-    private async post(roomId: string, memberId: string, author: 'teacher' | 'student', body: unknown) {
+    private static cleanBody(body: unknown) {
         const text = String(body ?? '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, MAX_MESSAGE);
         if (!text) throw new BadRequestException('Паём холӣ аст');
-        ClassroomService.assertRate(`${author}:${memberId}`);
+        return text;
+    }
+
+    private async post(roomId: string, memberId: string, author: 'teacher' | 'student', body: unknown, authorId: string | null = null) {
+        const text = ClassroomService.cleanBody(body);
+        ClassroomService.assertRate(`${author}:${authorId || ''}:${memberId}`);
         const [row] = await this.dataSource.query(
-            `INSERT INTO classroom_messages ("classroomId", "memberId", author, body) VALUES ($1, $2, $3, $4) RETURNING id, author, body, "createdAt", "readAt"`,
-            [roomId, memberId, author, text]);
+            `INSERT INTO classroom_messages ("classroomId", "memberId", author, body, "authorId") VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, author, body, "createdAt", "readAt", "authorId"`,
+            [roomId, memberId, author, text, authorId]);
+        if (authorId) {
+            const [user] = await this.dataSource.query('SELECT name FROM "user" WHERE id = $1', [authorId]);
+            row.authorName = user?.name || null;
+        }
         return row;
     }
 
     private async ownMember(actor: Actor, id: string, memberId: string) {
-        const room = await this.ownClassroom(actor, id);
+        const { room } = await this.classroomAccess(actor, id);
         if (!UUID.test(memberId)) throw new NotFoundException();
         const [member] = await this.dataSource.query('SELECT id FROM classroom_members WHERE id = $1 AND "classroomId" = $2', [memberId, id]);
         if (!member) throw new NotFoundException('Хонанда ёфт нашуд');
@@ -601,7 +702,7 @@ export class ClassroomService implements OnModuleInit {
 
     async teacherPost(actor: Actor, id: string, memberId: string, body: unknown) {
         await this.ownMember(actor, id, memberId);
-        return this.post(id, memberId, 'teacher', body);
+        return this.post(id, memberId, 'teacher', body, actor.userId);
     }
 
     async studentThread(user: Actor | null, guestHeader: unknown, memberId: string) {

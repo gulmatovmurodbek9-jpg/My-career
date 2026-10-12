@@ -179,7 +179,66 @@ export const PARENT_TEXT = {
     },
 };
 
-export const parentText = (lang) => PARENT_TEXT[String(lang || "tj").slice(0, 2)] || PARENT_TEXT.tj;
+// Илова (12.10): ихтисосҳои фарзанд ва саволҳо ба AI.
+const PARENT_MORE = {
+    tj: {
+        careersTitle: "Ихтисосҳое, ки {{name}} интихоб кардааст",
+        careersTitleNoName: "Ихтисосҳое, ки фарзандатон интихоб кардааст",
+        careersTitleChild: "Ихтисосҳои шумо — аз AI пурсед",
+        careersText: "Дар назди ҳар ихтисос «Аз AI пурсед»-ро пахш кунед: ин ихтисос чист, чаро мувофиқ аст, дар куҷо мехонанд ва ояндааш чӣ гуна.",
+        groupPlan: "Дар рӯйхати ҳуҷҷатсупорӣ",
+        groupSaved: "Захира кардааст",
+        groupTried: "Худаш санҷидааст",
+        groupTest: "Аз натиҷаи тест",
+        triedMeta: "ҳал кард: {{s}}/{{t}} · писанд омад: {{l}}/{{t}}",
+        askAi: "Аз AI пурсед",
+        askQuick: ["Ин ихтисос чист?", "Чаро ба фарзандам мувофиқ аст?", "Дар куҷо хондан мумкин?", "Кор ва ояндааш чӣ гуна?"],
+        askPlaceholder: "Саволи худро нависед…",
+        askSend: "Пурсидан",
+        askThinking: "AI фикр мекунад…",
+        askError: "Ҷавоб нашуд. Баъдтар боз кӯшиш кунед.",
+    },
+    ru: {
+        careersTitle: "Специальности, которые выбрал(а) {{name}}",
+        careersTitleNoName: "Специальности, которые выбрал ваш ребёнок",
+        careersTitleChild: "Ваши специальности — спросите AI",
+        careersText: "Нажмите «Спросить AI» рядом с любой специальностью: что это, почему подходит, где учиться и какие перспективы.",
+        groupPlan: "В списке подачи",
+        groupSaved: "Сохранил(а)",
+        groupTried: "Попробовал(а) сам(а)",
+        groupTest: "По результату теста",
+        triedMeta: "решил(а): {{s}}/{{t}} · понравилось: {{l}}/{{t}}",
+        askAi: "Спросить AI",
+        askQuick: ["Что это за специальность?", "Почему она подходит моему ребёнку?", "Где можно учиться?", "Какая работа и перспективы?"],
+        askPlaceholder: "Напишите свой вопрос…",
+        askSend: "Спросить",
+        askThinking: "AI думает…",
+        askError: "Не удалось получить ответ. Попробуйте позже.",
+    },
+    en: {
+        careersTitle: "Specialties {{name}} has chosen",
+        careersTitleNoName: "Specialties your child has chosen",
+        careersTitleChild: "Your specialties — ask the AI",
+        careersText: "Press “Ask AI” next to any specialty: what it is, why it fits, where to study and what the future looks like.",
+        groupPlan: "In the application list",
+        groupSaved: "Saved",
+        groupTried: "Tried it",
+        groupTest: "From the test result",
+        triedMeta: "solved: {{s}}/{{t}} · liked: {{l}}/{{t}}",
+        askAi: "Ask AI",
+        askQuick: ["What is this specialty?", "Why does it suit my child?", "Where can one study it?", "What are the jobs and prospects?"],
+        askPlaceholder: "Type your question…",
+        askSend: "Ask",
+        askThinking: "The AI is thinking…",
+        askError: "No answer. Please try again later.",
+    },
+};
+const parentCache = {};
+export const parentText = (lang) => {
+    const key = PARENT_TEXT[String(lang || "tj").slice(0, 2)] ? String(lang).slice(0, 2) : "tj";
+    parentCache[key] ??= { ...PARENT_TEXT[key], ...PARENT_MORE[key] };
+    return parentCache[key];
+};
 export const fill = (text, values) => String(text).replace(/\{\{(\w+)\}\}/g, (_, key) => values?.[key] ?? "");
 
 // Мувофиқат: ҳарду тақсимот ба ҳиссаҳо (ҷамъ = 1) табдил ёфта, 1 − ½·Σ|a−b|.

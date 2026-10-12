@@ -5,7 +5,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
     Archive, ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, ClipboardCheck, Copy, Download, Eye, EyeOff,
-    FileText, MessageCircle, Printer, RefreshCw, Send, Target, Trash2, Users,
+    FileText, Loader2, Megaphone, MessageCircle, Printer, RefreshCw, Send, Target, Trash2, Users,
 } from "lucide-react";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
@@ -14,6 +14,7 @@ import { classLink, classText, fill, initials } from "../../lib/classText";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { useToast } from "../../components/toast/ToastProvider";
 import ClassChat from "../../components/ClassChat";
+import ClassTeachers from "../../components/ClassTeachers";
 
 // Палитра: як ранг (primary). Самти асосӣ — пурра, дигарон — шаффоф; бе панҷ ранги тез.
 const toneFor = (isTop) => (isTop ? "bg-primary" : "bg-primary/35");
@@ -106,7 +107,7 @@ function Stat({ label, value }) {
     );
 }
 
-function StudentRow({ member, text, clusterName, hideNames, onRemove, roomId, auth, onRead }) {
+function StudentRow({ member, text, clusterName, hideNames, onRemove, roomId, auth, onRead, myId, canRemove }) {
     const [open, setOpen] = useState(false);
     const [tab, setTab] = useState("result");
     const name = hideNames ? initials(member.displayName) : member.displayName;
@@ -253,6 +254,7 @@ function StudentRow({ member, text, clusterName, hideNames, onRemove, roomId, au
                                 url={`${API}/classrooms/${roomId}/members/${member.id}/messages`}
                                 headers={auth.headers}
                                 me="teacher"
+                                myId={myId}
                                 text={text}
                                 otherLabel={name}
                                 emptyText={text.chatEmpty}
@@ -262,14 +264,66 @@ function StudentRow({ member, text, clusterName, hideNames, onRemove, roomId, au
                         </div>
                     )}
 
-                    <div className="border-t border-border px-4 py-3 print:hidden">
-                        <button type="button" onClick={() => onRemove(member)} className="inline-flex items-center gap-1.5 text-[13px] font-bold text-rose-600 hover:underline cursor-pointer">
-                            <Trash2 className="h-4 w-4" aria-hidden /> {text.remove}
-                        </button>
-                    </div>
+                    {canRemove && (
+                        <div className="border-t border-border px-4 py-3 print:hidden">
+                            <button type="button" onClick={() => onRemove(member)} className="inline-flex items-center gap-1.5 text-[13px] font-bold text-rose-600 hover:underline cursor-pointer">
+                                <Trash2 className="h-4 w-4" aria-hidden /> {text.remove}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </li>
+    );
+}
+
+// Як паём ба ҳамаи хонандагони интихобшуда (масалан, ба ҳамаи самти техникӣ).
+function Broadcast({ roomId, members, auth, text, onSent }) {
+    const [open, setOpen] = useState(false);
+    const [body, setBody] = useState("");
+    const [busy, setBusy] = useState(false);
+    const [done, setDone] = useState(null);
+    const send = async (event) => {
+        event.preventDefault();
+        if (!body.trim() || busy) return;
+        setBusy(true);
+        try {
+            const { data } = await axios.post(`${API}/classrooms/${roomId}/broadcast`, { memberIds: members.map((m) => m.id), body }, auth);
+            setDone(data.sent);
+            setBody("");
+            setOpen(false);
+            onSent?.();
+        } catch {
+            setDone(-1);
+        } finally {
+            setBusy(false);
+        }
+    };
+    if (!members.length) return null;
+    return (
+        <div className="print:hidden" data-broadcast>
+            {!open ? (
+                <div className="flex flex-wrap items-center gap-3">
+                    <button type="button" onClick={() => { setOpen(true); setDone(null); }} className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-primary-foreground shadow-md shadow-primary/20 hover:opacity-90 cursor-pointer">
+                        <Megaphone className="h-4 w-4" aria-hidden /> {fill(text.broadcastButton, { n: members.length })}
+                    </button>
+                    {done > 0 && <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400">✓ {fill(text.broadcastDone, { n: done })}</span>}
+                    {done === -1 && <span className="text-[13px] font-bold text-rose-600">{text.error}</span>}
+                </div>
+            ) : (
+                <form onSubmit={send} className="space-y-2 rounded-2xl border border-primary/25 bg-primary/[0.04] p-3.5">
+                    <div className="text-[13px] font-bold text-foreground">{fill(text.broadcastTo, { n: members.length })}</div>
+                    <textarea value={body} onChange={(event) => setBody(event.target.value.slice(0, 1000))} rows={3} autoFocus placeholder={text.broadcastPlaceholder}
+                        className="w-full resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-[15px] text-foreground placeholder:text-muted-foreground focus-ring" />
+                    <div className="flex gap-2">
+                        <button type="submit" disabled={busy || !body.trim()} className="btn-primary !py-2.5 disabled:opacity-50">
+                            {busy ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <><Send className="h-4 w-4" aria-hidden /> {text.sendMessage}</>}
+                        </button>
+                        <button type="button" onClick={() => setOpen(false)} className="btn-secondary !py-2.5">✕</button>
+                    </div>
+                </form>
+            )}
+        </div>
     );
 }
 
@@ -286,6 +340,8 @@ export default function TeacherClass() {
     const [loading, setLoading] = useState(false);
     const [filter, setFilter] = useState("all");
     const [hideNames, setHideNames] = useState(false);
+    const [cluster, setCluster] = useState(null); // null — ҳанӯз бор нашуд; "" — ҳамаи самтҳо
+    const { user } = useAuthStore();
     const auth = useMemo(() => ({ headers: { Authorization: `Bearer ${token}` } }), [token]);
 
     usePageMeta({ title: room?.name || text.teacherRoom, description: text.teacherIntro, path: `/dashboard/teacher/${id}`, noIndex: true });
@@ -293,7 +349,12 @@ export default function TeacherClass() {
     const load = useCallback(() => {
         setLoading(true);
         axios.get(`${API}/classrooms/${id}`, auth)
-            .then(({ data }) => { setRoom(data); setFailed(false); })
+            .then(({ data }) => {
+                setRoom(data);
+                setFailed(false);
+                // Омӯзгори ёрирасон синфро бо самти худ мебинад (масалан, технология → техникӣ).
+                setCluster((old) => (old === null ? data.myFocus || "" : old));
+            })
             .catch(() => setFailed(true))
             .finally(() => setLoading(false));
     }, [id, auth]);
@@ -313,7 +374,10 @@ export default function TeacherClass() {
     if (!room) return <div className="h-64 animate-pulse rounded-3xl bg-muted/50" />;
 
     const s = room.summary;
-    const members = room.members.filter((member) => (filter === "noQuiz" ? !member.quiz : filter === "noTrial" ? !member.trials.length : true));
+    const owner = room.access !== "co";
+    const members = room.members
+        .filter((member) => (filter === "noQuiz" ? !member.quiz : filter === "noTrial" ? !member.trials.length : true))
+        .filter((member) => !cluster || member.quiz?.topCluster === cluster);
     const maxCluster = Math.max(1, ...Object.values(s.clusters));
     const topClusterKey = Object.entries(s.clusters).sort((x, y) => y[1] - x[1])[0]?.[1] > 0 ? Object.entries(s.clusters).sort((x, y) => y[1] - x[1])[0][0] : null;
     // Паёмҳои хонда шуданд — нишонаи «нав»-ро бе боркунии нав пок мекунем.
@@ -366,6 +430,11 @@ export default function TeacherClass() {
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                     <h1 className="text-3xl font-black tracking-tight text-foreground">{room.name} {room.archived && <span className="align-middle text-sm font-bold text-muted-foreground">· {text.archived}</span>}</h1>
+                    {!owner && (
+                        <p className="mt-1 inline-flex flex-wrap items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                            {text.coTeacher}{room.mySubject ? ` · ${room.mySubject}` : ""}{room.ownerName ? ` · ${text.homeroomTeacher}: ${room.ownerName}` : ""}
+                        </p>
+                    )}
                     {s.unread > 0 && <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-3 py-1 text-[13px] font-bold text-rose-600 dark:text-rose-400"><MessageCircle className="h-4 w-4" aria-hidden /> {fill(text.unreadN, { n: s.unread })}</p>}
                     <p className="text-[15px] text-muted-foreground">{[room.school, room.district, room.city, room.grade ? fill(text.gradeLabel, { n: room.grade }) : null, room.schoolYear ? fill(text.yearLabel, { y: room.schoolYear.replace("-", "–") }) : null].filter(Boolean).join(" · ")}</p>
                 </div>
@@ -376,12 +445,14 @@ export default function TeacherClass() {
                     </button>
                     <button type="button" onClick={downloadCsv} className={tool}><Download className="h-4 w-4" aria-hidden /> {text.csv}</button>
                     <button type="button" onClick={() => window.print()} className={tool}><Printer className="h-4 w-4" aria-hidden /> {text.print}</button>
-                    <button type="button" onClick={toggleArchive} className={tool}><Archive className="h-4 w-4" aria-hidden /> {room.archived ? text.unarchive : text.archive}</button>
+                    {owner && <button type="button" onClick={toggleArchive} className={tool}><Archive className="h-4 w-4" aria-hidden /> {room.archived ? text.unarchive : text.archive}</button>}
                 </div>
             </div>
             {hideNames && <p className="text-[13px] font-semibold text-amber-700 dark:text-amber-400">{text.demoNote}</p>}
 
-            <SharePanel room={room} text={text} />
+            {owner && <SharePanel room={room} text={text} />}
+
+            <ClassTeachers room={{ ...room, myId: user?.id }} text={text} auth={auth} clusterName={clusterName} onChange={load} onLeft={() => navigate("/dashboard/teacher")} />
 
             <div className="grid gap-4 lg:grid-cols-3">
                 <section className="rounded-3xl border border-border bg-card p-5">
@@ -397,12 +468,14 @@ export default function TeacherClass() {
                 </section>
                 <section className="rounded-3xl border border-border bg-card p-5">
                     <h2 className="font-black text-foreground">{text.directions}</h2>
-                    <div className="mt-3 space-y-2.5">
-                        {MMT_CLUSTERS.map((cluster) => (
-                            <div key={cluster.key}>
-                                <div className="flex justify-between text-[13px]"><span className="text-foreground">{clusterName(cluster.key)}</span><b className="tabular-nums text-foreground">{s.clusters[cluster.key]}</b></div>
-                                <Bar value={s.clusters[cluster.key]} max={maxCluster} tone={toneFor(cluster.key === topClusterKey)} />
-                            </div>
+                    <p className="text-[12px] text-muted-foreground">{text.directionsHint}</p>
+                    <div className="mt-2 space-y-1">
+                        {MMT_CLUSTERS.map((item) => (
+                            <button key={item.key} type="button" onClick={() => setCluster(cluster === item.key ? "" : item.key)} aria-pressed={cluster === item.key}
+                                className={`block w-full rounded-xl px-2 py-1.5 text-left transition-colors cursor-pointer ${cluster === item.key ? "bg-primary/10 ring-1 ring-primary/40" : "hover:bg-muted/60"}`}>
+                                <div className="flex justify-between text-[13px]"><span className={cluster === item.key ? "font-bold text-primary" : "text-foreground"}>{clusterName(item.key)}</span><b className="tabular-nums text-foreground">{s.clusters[item.key]}</b></div>
+                                <Bar value={s.clusters[item.key]} max={maxCluster} tone={toneFor(item.key === topClusterKey || cluster === item.key)} />
+                            </button>
                         ))}
                     </div>
                 </section>
@@ -432,8 +505,17 @@ export default function TeacherClass() {
                             </button>
                         ))}
                     </div>
+                    <label className="inline-flex items-center gap-2 text-[13px] font-bold text-muted-foreground">
+                        {text.directionFilter}
+                        <select value={cluster || ""} onChange={(event) => setCluster(event.target.value)} data-cluster-filter
+                            className="rounded-xl border border-border bg-card px-3 py-2 text-[13px] font-bold text-foreground focus-ring">
+                            <option value="">{text.allDirections}</option>
+                            {MMT_CLUSTERS.map((item) => <option key={item.key} value={item.key}>{clusterName(item.key)} ({s.clusters[item.key]})</option>)}
+                        </select>
+                    </label>
                     {filter !== "all" && members.length > 0 && <CopyButton value={reminder} label={text.copyReminder} text={text} />}
                 </div>
+                {(cluster || filter !== "all") && <Broadcast roomId={id} members={members} auth={auth} text={text} onSent={load} />}
                 {room.members.length === 0 ? (
                     <p className="flex items-center gap-2 rounded-3xl border border-dashed border-border p-6 text-muted-foreground"><Users className="h-5 w-5" aria-hidden /> {text.noStudents}</p>
                 ) : members.length === 0 ? (
@@ -441,7 +523,7 @@ export default function TeacherClass() {
                 ) : (
                     <ul className="grid gap-2.5 md:grid-cols-2">
                         {members.map((member) => (
-                            <StudentRow key={member.id} member={member} text={text} clusterName={clusterName} hideNames={hideNames} onRemove={removeMember} roomId={id} auth={auth} onRead={markRead} />
+                            <StudentRow key={member.id} member={member} text={text} clusterName={clusterName} hideNames={hideNames} onRemove={removeMember} roomId={id} auth={auth} onRead={markRead} myId={user?.id} canRemove={owner} />
                         ))}
                     </ul>
                 )}

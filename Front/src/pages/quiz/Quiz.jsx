@@ -1142,7 +1142,12 @@ const Quiz = () => {
                     </ul>
                 </section>
 
-                {results.scores?.mmtClusters && <ParentInvite scores={results.scores.mmtClusters} />}
+                {results.scores?.mmtClusters && (
+                    <ParentInvite
+                        scores={results.scores.mmtClusters}
+                        careers={matched.filter((career) => career.id).map((career) => ({ id: career.id, name: displayName(careerName(career, i18n.language)), percent: career.matchPercentage }))}
+                    />
+                )}
 
                 {(() => {
                     const ctx = CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj;

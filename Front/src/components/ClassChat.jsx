@@ -4,7 +4,7 @@ import { Loader2, MessageCircle, Send } from "lucide-react";
 
 // Фидбеки омӯзгор ↔ хонанда: як риштаи паёмҳо дар доираи синф. Ҳамон як компонент барои
 // ҳарду тараф; `me` — «teacher» ё «student». Ҳар 20 сония нав мешавад.
-export default function ClassChat({ url, me, headers, text, otherLabel, emptyText, placeholder, onRead }) {
+export default function ClassChat({ url, me, myId, headers, text, otherLabel, emptyText, placeholder, onRead }) {
     const [messages, setMessages] = useState(null);
     const [draft, setDraft] = useState("");
     const [busy, setBusy] = useState(false);
@@ -57,12 +57,13 @@ export default function ClassChat({ url, me, headers, text, otherLabel, emptyTex
                     </p>
                 )}
                 {messages?.map((message) => {
-                    const mine = message.author === me;
+                    // Дар синф якчанд омӯзгор: паёми омӯзгори дигар «аз ман» нест.
+                    const mine = message.author === me && (!myId || !message.authorId || message.authorId === myId);
                     return (
                         <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 ${mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-muted/50 text-foreground"}`}>
                                 <div className={`mb-0.5 text-[11px] font-bold ${mine ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                                    {mine ? text.you : otherLabel} · {time(message.createdAt)}
+                                    {mine ? text.you : (message.author === "teacher" && message.authorName) || otherLabel} · {time(message.createdAt)}
                                 </div>
                                 <p className="whitespace-pre-wrap break-words text-[14.5px] leading-relaxed">{message.body}</p>
                             </div>

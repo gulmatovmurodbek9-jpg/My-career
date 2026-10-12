@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle2, HeartHandshake, Loader2 } from "lucide-react";
 import { API } from "../../lib/config";
 import { CLUSTER_KEYS, PARENT_QUESTIONS, PARENT_WISH, fill, parentText } from "../../lib/parentSurvey";
 import ParentCompare from "../../components/ParentCompare";
+import ParentCareers from "../../components/ParentCareers";
 import { usePageMeta } from "../../lib/usePageMeta";
 
 // /parent/:code — волид бе ворид шудан 10 савол дар бораи фарзанд ҷавоб медиҳад → муқоиса.
@@ -62,6 +63,7 @@ export default function ParentSurvey() {
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden /> {text.thanks}
                 </p>
                 {done.childScores && <ParentCompare invite={done} />}
+                <ParentCareers invite={done} code={code} />
             </div>
         );
     }

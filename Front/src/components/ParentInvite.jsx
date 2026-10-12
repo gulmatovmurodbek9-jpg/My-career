@@ -6,6 +6,7 @@ import { API } from "../lib/config";
 import { useAuthStore } from "../store/authStore";
 import { fill, parentText } from "../lib/parentSurvey";
 import ParentCompare from "./ParentCompare";
+import ParentCareers from "./ParentCareers";
 
 // Дар натиҷаи тест: «Волидайн чӣ фикр доранд?» → пайванд → Telegram/WhatsApp → муқоиса.
 // Пайванд ва калид дар браузер нигоҳ дошта мешаванд; ҷавоб худкор санҷида мешавад.
@@ -13,11 +14,12 @@ const KEY = "parent_invite_v1";
 const readInvite = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
 const saveInvite = (value) => { try { if (value) localStorage.setItem(KEY, JSON.stringify(value)); else localStorage.removeItem(KEY); } catch { /* холӣ */ } };
 
-export default function ParentInvite({ scores }) {
+export default function ParentInvite({ scores, careers = [] }) {
     const { i18n } = useTranslation();
     const lang = (i18n.language || "tj").slice(0, 2);
     const text = parentText(lang);
     const user = useAuthStore((state) => state.user);
+    const token = useAuthStore((state) => state.token);
     const [saved, setSaved] = useState(readInvite);
     const [name, setName] = useState(() => user?.name?.split(" ")[0] || "");
     const [result, setResult] = useState(null);
@@ -46,7 +48,8 @@ export default function ParentInvite({ scores }) {
     const create = async () => {
         setBusy(true);
         try {
-            const { data } = await axios.post(`${API}/parents/invites`, { childName: name.trim(), scores, lang });
+            // Бо ҳисоб — волид ихтисосҳои захирашуда ва рӯйхати ҳуҷҷатсупориро ҳам мебинад (зинда).
+            const { data } = await axios.post(`${API}/parents/invites`, { childName: name.trim(), scores, lang, careers }, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
             const value = { ...data, childName: name.trim() };
             saveInvite(value);
             setSaved(value);
@@ -69,6 +72,7 @@ export default function ParentInvite({ scores }) {
         return (
             <div className="space-y-2">
                 <ParentCompare invite={result} />
+                <ParentCareers invite={result} code={saved.code} secret={saved.secret} forChild />
                 <button type="button" onClick={() => { saveInvite(null); setSaved(null); setResult(null); }} className="text-[13px] font-bold text-muted-foreground hover:text-primary cursor-pointer">{text.newLink}</button>
             </div>
         );

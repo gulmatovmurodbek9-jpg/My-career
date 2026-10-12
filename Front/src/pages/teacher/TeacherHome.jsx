@@ -231,6 +231,7 @@ export default function TeacherHome() {
                                     <Link key={room.id} to={`/dashboard/teacher/${room.id}`} className={`group rounded-3xl border bg-card p-5 transition-colors hover:border-primary ${room.archived ? "border-dashed border-border opacity-70" : "border-border"}`}>
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
+                                                {room.isCo && <div className="mb-1 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-black text-primary">{text.coTeacher}{room.coSubject ? ` · ${room.coSubject}` : ""}</div>}
                                                 <div className="flex items-center gap-2">
                                                     <GraduationCap className="h-5 w-5 shrink-0 text-primary" aria-hidden />
                                                     <span className="truncate text-xl font-black text-foreground">{room.name}</span>

@@ -325,7 +325,13 @@ export const VIDEOS = [
                 "Then say whether you liked this work.") ,
                 // Се вазифаи дигар ҳамин тавр ҳал мешаванд — онҳоро сабт намекунем.
                 cut: async (h) => {
-                    for (let i = 0; i < 3; i += 1) { await answerTask(h); await h.click(CHECK).catch(() => {}); await h.click(LIKE_YES).catch(() => {}); }
+                    // То пайдо шудани саволҳои охир (на маҳз 3 давр — як қадами хато тартибро вайрон намекунад).
+                    for (let i = 0; i < 10; i += 1) {
+                        if (await h.find(T("Хеле!", "Очень!", "A lot!"))) break;
+                        await answerTask(h);
+                        await h.click(CHECK).catch(() => {});
+                        await h.click(LIKE_YES).catch(() => {});
+                    }
                     await h.click(T("Хеле!", "Очень!", "A lot!")).catch(() => {});
                     await h.click(T("Асосан ҳа", "Скорее да", "Mostly yes")).catch(() => {});
                     await h.show(T("Хулосаро бинед", "Посмотреть итог", "See the result"));

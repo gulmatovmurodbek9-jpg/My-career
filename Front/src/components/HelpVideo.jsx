@@ -3,12 +3,13 @@ import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { PlayCircle, X } from "lucide-react";
-import { HELP_TEXT, HELP_VIDEOS, videoForPath, videoPoster, videoSrc } from "../lib/helpVideos";
+import { HELP_TEXT, HELP_VIDEOS, isPhone, videoAvailable, videoForPath, videoPoster, videoSrc } from "../lib/helpVideos";
 import { tabBarVisible } from "./MobileTabBar";
 
 export function VideoModal({ id, lang, onClose }) {
     const text = HELP_TEXT[lang] || HELP_TEXT.tj;
     const video = HELP_VIDEOS.find((v) => v.id === id);
+    const [mobile] = useState(isPhone);
     useEffect(() => {
         const onKey = (event) => event.key === "Escape" && onClose();
         document.addEventListener("keydown", onKey);
@@ -18,20 +19,20 @@ export function VideoModal({ id, lang, onClose }) {
     }, [onClose]);
     return createPortal(
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={video?.title[lang]} onClick={onClose}>
-            <div className="w-full max-w-5xl" onClick={(event) => event.stopPropagation()}>
+            <div className={mobile ? "w-auto" : "w-full max-w-5xl"} onClick={(event) => event.stopPropagation()}>
                 <div className="mb-2 flex items-center justify-between gap-3 text-white">
                     <h2 className="truncate text-lg font-black">{video?.title[lang]}</h2>
                     <button type="button" onClick={onClose} aria-label={text.close} className="rounded-xl p-2 hover:bg-white/10 cursor-pointer"><X className="h-6 w-6" aria-hidden /></button>
                 </div>
                 <video
-                    key={`${id}-${lang}`}
-                    src={videoSrc(id, lang)}
-                    poster={videoPoster(id, lang)}
+                    key={`${id}-${lang}-${mobile}`}
+                    src={videoSrc(id, lang, mobile)}
+                    poster={videoPoster(id, lang, mobile)}
                     controls
                     autoPlay
                     playsInline
                     preload="auto"
-                    className="aspect-video w-full rounded-2xl bg-black shadow-2xl"
+                    className={mobile ? "mx-auto aspect-[9/16] h-[78vh] max-w-full rounded-2xl bg-black shadow-2xl" : "aspect-video w-full rounded-2xl bg-black shadow-2xl"}
                 />
                 <div className="mt-2 text-right">
                     <Link to="/help" onClick={onClose} className="text-sm font-bold text-white/80 hover:text-white">{text.all} →</Link>
@@ -50,8 +51,15 @@ export default function HelpVideo() {
     const text = HELP_TEXT[lang] || HELP_TEXT.tj;
     const [open, setOpen] = useState(false);
     const id = videoForPath(pathname);
+    const [ready, setReady] = useState(false);
     useEffect(() => setOpen(false), [pathname]);
-    if (!id || pathname.startsWith("/dashboard/ai-chat")) return null;
+    useEffect(() => {
+        let alive = true;
+        setReady(false);
+        if (id) videoAvailable(id, lang).then((ok) => alive && setReady(ok));
+        return () => { alive = false; };
+    }, [id, lang]);
+    if (!id || !ready || pathname.startsWith("/dashboard/ai-chat")) return null;
     const above = tabBarVisible(pathname) ? "bottom-[calc(env(safe-area-inset-bottom)+92px)]" : "bottom-4";
 
     return (

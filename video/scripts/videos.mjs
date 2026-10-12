@@ -5,14 +5,70 @@ export { setup } from "./setup.mjs";
 const T = (tj, ru, en) => ({ text: [tj, ru, en] });
 const N = (tj, ru, en) => ({ tj, ru, en });
 
-// Ёрдамчӣ: дар вазифаи санҷиш вариантҳоро интихоб мекунад, то тугмаи «Санҷидан» фаъол шавад.
+// Ҷавобҳои дурусти санҷиши ихтисос (аз /check — он ҳеҷ чиз сабт намекунад), то дар видео
+// ҷавоби дуруст интихоб шавад ва натиҷа «0 аз 4» набошад.
+const API_URL = process.env.API_URL || "http://localhost:3005/api";
+const keysCache = {};
+async function trialKeys(careerId, lang) {
+    const cacheKey = `${careerId}:${lang}`;
+    if (!keysCache[cacheKey]) {
+        const sc = await (await fetch(`${API_URL}/trial/career/${careerId}?lang=${lang}`)).json();
+        keysCache[cacheKey] = [];
+        for (const task of sc.tasks || []) {
+            const r = await (await fetch(`${API_URL}/trial/career/${careerId}/check`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id, answer: null, lang }) })).json();
+            keysCache[cacheKey].push({ kind: task.kind, title: task.title, answer: r.answer, options: (task.options || []).map((o) => ({ id: o.id, text: o.text })) });
+        }
+    }
+    return keysCache[cacheKey];
+}
+// Вазифаи ҳозира (аз рӯи сарлавҳа) ва матни вариантҳои дуруст бо тартиб.
+async function currentKey(h) {
+    const m = h.page.url().match(/\/trial\/career\/([0-9a-f-]{36})/);
+    if (!m) return null;
+    const lang = await h.page.evaluate(() => localStorage.getItem("app_lang") || "tj");
+    const keys = await trialKeys(m[1], lang).catch(() => []);
+    const body = await h.page.evaluate(() => document.querySelector("main")?.innerText || "");
+    const key = keys.find((k) => k.title && body.includes(k.title));
+    if (!key) return null;
+    const ids = Array.isArray(key.answer) ? key.answer : [key.answer];
+    return { ...key, texts: ids.map((id) => key.options.find((o) => o.id === id)?.text).filter(Boolean) };
+}
+// Варианти дурусти аввалро бо data-v="opt" қайд мекунад (барои курсор ва зум).
+async function markAnswer(h) {
+    const key = await currentKey(h);
+    await h.page.evaluate((text) => {
+        const buttons = [...document.querySelectorAll("main button")].filter((b) => /^([A-FА-Г]|·)\s/.test(b.innerText.trim()));
+        const pick = (text && buttons.find((b) => b.innerText.includes(text))) || buttons[0];
+        if (pick) pick.dataset.v = "opt";
+    }, key?.texts?.[0] || null);
+}
+
+// Ёрдамчӣ: дар вазифаи санҷиш ҷавоби дурустро интихоб мекунад (ё ягон вариантро), то тугмаи
+// «Санҷидан» фаъол шавад.
 async function answerTask(h) {
+    const key = await currentKey(h);
+    if (key?.kind === "number") {
+        const input = await h.page.$("main input");
+        if (input) { await input.click({ clickCount: 3 }); await h.page.keyboard.type(String(key.answer)); await h.wait(300); return; }
+    } else if (key?.texts?.length) {
+        for (const text of key.texts) {
+            await h.page.evaluate((text) => {
+                const b = [...document.querySelectorAll("main button")].find((x) => x.innerText.includes(text));
+                if (b && b.getAttribute("aria-pressed") !== "true") b.click();
+            }, text);
+            await h.wait(300);
+        }
+        return;
+    }
+    // Вазифаи рақамӣ: ягон рақам менависем.
+    const num = await h.page.$('main input[type="number"], main input[inputmode="decimal"], main input[inputmode="numeric"]');
+    if (num && !(await num.evaluate((n) => n.value))) { await num.click(); await h.page.keyboard.type("10"); await h.wait(300); }
     for (let i = 0; i < 5; i += 1) {
         const done = await h.page.evaluate(() => {
             const check = [...document.querySelectorAll("button")].find((b) => /^(санҷидан|проверить|check)$/i.test(b.innerText.trim()));
             if (!check) return true;
             if (!check.disabled) return true;
-            const options = [...document.querySelectorAll("main button")].filter((b) => /^[A-DА-Г]\s/.test(b.innerText.trim()) && b.getAttribute("aria-pressed") !== "true" && !b.dataset.picked);
+            const options = [...document.querySelectorAll("main button")].filter((b) => /^([A-FА-Г]|·)\s/.test(b.innerText.trim()) && b.getAttribute("aria-pressed") !== "true" && !b.dataset.picked);
             const next = options[0];
             if (!next) return true;
             next.dataset.picked = "1";
@@ -36,7 +92,7 @@ async function viewPrevious(h) {
 // Тест: як саволро ҷавоб медиҳад (варианти аввал) ва ба саволи навбатӣ мегузарад.
 async function answerQuestion(h, index = 0) {
     await h.page.evaluate((index) => {
-        const buttons = [...document.querySelectorAll("main button")].filter((b) => /^[A-DА-Г]\s/.test(b.innerText.trim()) || b.dataset.option);
+        const buttons = [...document.querySelectorAll("main button")].filter((b) => /^([A-FА-Г]|·)\s/.test(b.innerText.trim()) || b.dataset.option);
         (buttons[index] || buttons[0])?.click();
     }, index);
     await h.wait(900);
@@ -219,38 +275,71 @@ export const VIDEOS = [
         id: "06",
         title: N("«Худро дар касб санҷед»", "«Попробуйте себя в профессии»", "“Try yourself in a career”"),
         next: N("Касби дигарро санҷед ва муқоиса кунед", "Попробуйте другую профессию и сравните", "Try another career and compare"),
+        // Тарзи нав: як ҷумла — як амал. hint — дастури кӯтоҳ дар болои экран; target — элементе,
+        // ки зум ва равшан мешавад; action — click / type / point.
         scenes: [
-            { go: "/trial", do: async (h, lang) => { await h.type("input[placeholder]", { tj: "Информатика", ru: "Информатика", en: "Informatics" }[lang]); await h.wait(1500); }, focus: "input[placeholder]", narr: N(
-                "Ҳар яке аз 884 ихтисос санҷиши худро дорад. Ихтисосро ҷустуҷӯ кунед.",
-                "У каждой из 884 специальностей своя проба. Найдите специальность.",
-                "Each of the 884 specialties has its own try-out. Search for one.") },
-            { go: (ctx) => `/trial/career/${ctx.trialCareerId}`, focus: "main h1", narr: N(
-                "Аввал рӯзи кориро бинед. Санҷиш 4 вазифа дорад ва тақрибан 10 дақиқа мегирад.",
-                "Сначала посмотрите рабочий день. В пробе 4 задачи, около 10 минут.",
-                "First look at the working day. The try-out has 4 tasks and takes about 10 minutes.") },
-            { do: async (h) => { await h.show(T("Намедонам", "Не знаю", "Not sure"), "center"); await h.click(T("Намедонам", "Не знаю", "Not sure")); }, focus: T("Оғоз", "Начать", "Start"), click: true, narr: N(
-                "Гӯед, ки ба ин касб чӣ қадар боварӣ доред, ва «Оғоз»-ро пахш кунед.",
-                "Отметьте, насколько вы уверены в этой профессии, и нажмите «Начать».",
-                "Say how confident you are about this career and press “Start”.") },
-            { do: async (h) => { await h.click(T("Оғоз", "Начать", "Start")); await answerTask(h); }, focus: CHECK, click: true, narr: N(
-                "Вазифаро ҳал кунед. Ҳамаи маълумоти лозимӣ дар худи вазифа ҳаст.",
-                "Решите задачу. Вся нужная информация есть в самой задаче.",
-                "Solve the task. Everything you need is in the task itself.") },
-            { do: async (h) => { await h.click(CHECK); await h.wait(800); await h.show(LIKE_YES, "center"); }, focus: LIKE_YES, click: true, narr: N(
-                "Баъд мебинед, ки чаро ҷавоб дуруст аст ва мутахассис чӣ тавр фикр мекунад. Сипас бигӯед: ин кор писанд омад ё не?",
-                "Затем вы увидите, почему ответ верный и как думает специалист. После скажите: понравилась ли эта работа?",
-                "Then you see why the answer is right and how a specialist thinks. After that, say whether you liked this work.") },
-            { do: async (h) => {
-                await h.click(LIKE_YES);
-                for (let i = 0; i < 3; i += 1) { await answerTask(h); await h.click(CHECK).catch(() => {}); await h.click(LIKE_YES).catch(() => {}); }
-                await h.click(T("Хеле!", "Очень!", "A lot!")).catch(() => {});
-                await h.click(T("Асосан ҳа", "Скорее да", "Mostly yes")).catch(() => {});
-                await h.click(T("Хулосаро бинед", "Посмотреть итог", "See the result"));
-                await h.wait(2000); await h.top();
-            }, focus: T("Ба шумо мувофиқ аст", "Вам подходит", "This suits you"), narr: N(
-                "Дар охир мебинед, ки касб ба шумо мувофиқ аст ё не. Агар не — ин ҳам натиҷаи муҳим аст.",
-                "В конце вы узнаете, подходит ли вам профессия. Если нет — это тоже важный результат.",
-                "At the end you learn whether the career suits you. If not, that is an important result too.") },
+            { go: "/trial", target: "input[placeholder]", action: "type", text: N("Информатика", "Информатика", "Informatics"),
+                hint: N("Номи ихтисосро нависед", "Введите название специальности", "Type a specialty name"), narr: N(
+                "Дар сатри ҷустуҷӯ номи ихтисосро нависед. Масалан, «Информатика».",
+                "В строке поиска введите название специальности. Например, «Информатика».",
+                "Type a specialty name in the search box. For example, “Informatics”.") },
+            { prep: async (h) => { await h.wait(800); }, target: 'main a[href^="/trial/career/"]', action: "click",
+                hint: N("Ихтисосро интихоб кунед", "Выберите специальность", "Choose the specialty"), narr: N(
+                "Аз рӯйхат ихтисосро интихоб кунед.",
+                "Выберите специальность из списка.",
+                "Choose the specialty from the list.") },
+            { prep: async (h) => { await h.wait(1200); }, target: "main h1", action: "point",
+                hint: N("Рӯзи кориро хонед", "Прочитайте о рабочем дне", "Read about the working day"), narr: N(
+                "Аввал мехонед, ки рӯзи кории ин мутахассис чӣ гуна мегузарад.",
+                "Сначала вы читаете, как проходит рабочий день этого специалиста.",
+                "First, you read how this specialist’s working day goes.") },
+            { target: { text: ["Намедонам", "Не знаю", "Not sure"], tag: "button" }, action: "click",
+                hint: N("Боварии худро интихоб кунед", "Отметьте свою уверенность", "Pick how sure you are"), narr: N(
+                "Интихоб кунед, ки ба ин касб чӣ қадар боварӣ доред.",
+                "Отметьте, насколько вы уверены в этой профессии.",
+                "Pick how sure you are about this career.") },
+            { target: T("Оғоз", "Начать", "Start"), action: "click",
+                hint: N("«Оғоз»-ро пахш кунед", "Нажмите «Начать»", "Press “Start”"), narr: N(
+                "Тугмаи «Оғоз»-ро пахш кунед. Санҷиш чор вазифа дорад.",
+                "Нажмите кнопку «Начать». В пробе четыре задачи.",
+                "Press the “Start” button. The try-out has four tasks.") },
+            { prep: async (h) => { await h.wait(1200); await markAnswer(h); }, target: 'main button[data-v="opt"]', action: "click",
+                hint: N("Ҷавобро интихоб кунед", "Выберите ответ", "Choose an answer"), narr: N(
+                "Вазифаро хонед ва ҷавобро интихоб кунед.",
+                "Прочитайте задачу и выберите ответ.",
+                "Read the task and choose an answer.") },
+            { prep: async (h) => { await answerTask(h); }, target: CHECK, action: "click",
+                hint: N("«Санҷидан»-ро пахш кунед", "Нажмите «Проверить»", "Press “Check”"), narr: N(
+                "Тугмаи «Санҷидан»-ро пахш кунед.",
+                "Нажмите кнопку «Проверить».",
+                "Press the “Check” button.") },
+            { prep: async (h) => { await h.wait(600); }, target: LIKE_YES, action: "point",
+                hint: N("Шарҳро хонед", "Прочитайте объяснение", "Read the explanation"), narr: N(
+                "Ин ҷо мебинед, ки ҷавоби дуруст кадом аст ва мутахассис чӣ тавр фикр мекунад.",
+                "Здесь вы видите правильный ответ и как рассуждает специалист.",
+                "Here you see the right answer and how a specialist thinks.") },
+            { target: LIKE_YES, action: "click",
+                hint: N("Бигӯед: писанд омад?", "Скажите: понравилось?", "Say: did you like it?"), narr: N(
+                "Баъд бигӯед, ки ин кор ба шумо писанд омад ё не.",
+                "Затем скажите, понравилась ли вам эта работа.",
+                "Then say whether you liked this work.") ,
+                // Се вазифаи дигар ҳамин тавр ҳал мешаванд — онҳоро сабт намекунем.
+                cut: async (h) => {
+                    for (let i = 0; i < 3; i += 1) { await answerTask(h); await h.click(CHECK).catch(() => {}); await h.click(LIKE_YES).catch(() => {}); }
+                    await h.click(T("Хеле!", "Очень!", "A lot!")).catch(() => {});
+                    await h.click(T("Асосан ҳа", "Скорее да", "Mostly yes")).catch(() => {});
+                    await h.show(T("Хулосаро бинед", "Посмотреть итог", "See the result"));
+                } },
+            { target: T("Хулосаро бинед", "Посмотреть итог", "See the result"), action: "click",
+                hint: N("Хулосаро бинед", "Посмотрите итог", "See the result"), narr: N(
+                "Баъди чор вазифа тугмаи «Хулосаро бинед»-ро пахш кунед.",
+                "После четырёх задач нажмите «Посмотреть итог».",
+                "After four tasks, press “See the result”.") },
+            { prep: async (h) => { await h.wait(1500); await h.top(); }, target: T("Ба шумо мувофиқ аст", "Вам подходит", "This suits you"), action: "point",
+                hint: N("Натиҷаи шумо", "Ваш результат", "Your result"), narr: N(
+                "Ин ҷо мебинед, ки касб ба шумо мувофиқ аст ё не. Агар не, ин ҳам натиҷаи муҳим аст.",
+                "Здесь вы видите, подходит ли вам профессия. Если нет, это тоже важный результат.",
+                "Here you see whether the career suits you. If not, that is an important result too.") },
         ],
     },
     {
@@ -473,3 +562,30 @@ export const VIDEOS = [
         ],
     },
 ];
+
+// Дастурҳои кӯтоҳ (зард, дар болои экран) барои ҳар саҳна — то бинанда донад, ки чӣ кор кунад.
+const H = (tj, ru, en) => ({ tj, ru, en });
+const HINTS = {
+    "00": [H("«Ихтисоси ман» — ройгон", "«Ихтисоси ман» — бесплатно", "“Ikhtisosi man” is free"), H("Тестро гузаред", "Пройдите тест", "Take the test"), H("Натиҷаи тест", "Результат теста", "Your test result"), H("Касбро худатон санҷед", "Попробуйте профессию", "Try the career"), H("Донишгоҳро интихоб кунед", "Выберите вуз", "Choose a university"), H("Ба AI савол диҳед", "Спросите AI", "Ask the AI")],
+    "01": [H("Саҳифаи асосӣ", "Главная страница", "Home page"), H("«Тестро оғоз кунед»", "«Начать тест»", "“Start the test”"), H("Панҷ самти ММТ", "Пять направлений ЕГЭ", "Five exam directions"), H("Менюи сайт", "Меню сайта", "Site menu")],
+    "02": [H("Синфи худро интихоб кунед", "Выберите свой класс", "Choose your grade"), H("Ҷавоберо интихоб кунед", "Выберите ответ", "Pick an answer"), H("Ё бо калимаҳои худ нависед", "Или напишите своими словами", "Or write in your own words"), H("Пешрафти тест", "Прогресс теста", "Test progress"), H("Ростқавлона ҷавоб диҳед", "Отвечайте честно", "Answer honestly")],
+    "03": [H("Самти шумо", "Ваше направление", "Your direction"), H("«Чаро ин фоиз?»", "«Почему такой процент?»", "“Why this percentage?”"), H("12 ихтисоси мувофиқ", "12 подходящих специальностей", "12 matching specialties"), H("Ба рӯйхат илова кунед", "Добавьте в список", "Add to your list"), H("Натиҷаро фиристед", "Поделитесь результатом", "Share your result")],
+    "04": [H("884 ихтисос", "884 специальности", "884 specialties"), H("Номи ихтисосро нависед", "Введите название", "Type a specialty name"), H("«Ҷустуҷӯи AI»-ро пахш кунед", "Нажмите «AI-поиск»", "Press “AI search”"), H("Натиҷаи AI", "Результат AI", "AI results"), H("Филтрҳо", "Фильтры", "Filters")],
+    "05": [H("Маълумоти ихтисос", "О специальности", "About the specialty"), H("Рӯзи корӣ", "Рабочий день", "Working day"), H("Дар куҷо хондан мумкин", "Где учиться", "Where to study"), H("Ихтисосро захира кунед", "Сохраните специальность", "Save the specialty")],
+    "07": [H("Харитаи донишгоҳҳо", "Карта вузов", "University map"), H("Шаҳрро ҷустуҷӯ кунед", "Найдите город", "Search for a city"), H("Коллеҷ ё донишгоҳ", "Колледж или вуз", "College or university"), H("Саҳифаи донишгоҳ", "Страница вуза", "University page")],
+    "08": [H("Тугмаи микрофонро пахш кунед", "Нажмите кнопку микрофона", "Press the microphone"), H("Бо овоз пурсед", "Спросите голосом", "Ask by voice"), H("Се забон", "Три языка", "Three languages")],
+    "09": [H("Ба қайд гиред — ройгон", "Регистрация — бесплатно", "Sign up — it’s free"), H("Рамзи 6-рақамаро ворид кунед", "Введите 6-значный код", "Enter the 6-digit code"), H("Паролро фаромӯш кардед?", "Забыли пароль?", "Forgot your password?")],
+    "10": [H("Панели шахсӣ", "Личный кабинет", "Your dashboard"), H("Ҳамаи абзорҳо", "Все инструменты", "All tools"), H("Натиҷаи тести шумо", "Ваш результат теста", "Your test result"), H("Рамзи синф", "Код класса", "Class code")],
+    "11": [H("Саволи худро нависед", "Напишите вопрос", "Type your question"), H("Ё саволи тайёрро пахш кунед", "Или нажмите готовый вопрос", "Or press a ready question"), H("Ҷавоби AI", "Ответ AI", "The AI answer")],
+    "12": [H("Муқоисаи ихтисосҳо", "Сравнение специальностей", "Compare specialties"), H("Ихтисосҳоро интихоб кунед", "Выберите специальности", "Pick specialties"), H("«Муқоиса кунед»-ро пахш кунед", "Нажмите «Сравнить»", "Press “Compare”")],
+    "13": [H("Рӯйхати ҳуҷҷатсупорӣ", "Список подачи", "Application list"), H("Аввал буҷетӣ, баъд пулакӣ", "Сначала бюджет, потом платно", "State-funded first"), H("Чоп ё PDF", "Печать или PDF", "Print or PDF")],
+    "14": [H("Ихтисосҳои захирашуда", "Сохранённые специальности", "Saved specialties"), H("Санҷед ё кушоед", "Попробуйте или откройте", "Try or open")],
+    "15": [H("Рамзи синфро нависед", "Введите код класса", "Enter the class code"), H("Номи худро нависед", "Введите своё имя", "Type your name"), H("Тестро гузаред", "Пройдите тест", "Take the test")],
+    "16": [H("Ҳуҷраи омӯзгор", "Кабинет учителя", "Teacher room"), H("Синф созед", "Создайте класс", "Create a class"), H("Рамз ва QR-ро диҳед", "Дайте код и QR", "Share the code and QR"), H("Пешрафти синф", "Прогресс класса", "Class progress"), H("Натиҷаи ҳар хонанда", "Результат каждого ученика", "Each student’s result"), H("Excel ё чоп", "Excel или печать", "Excel or print")],
+};
+for (const video of VIDEOS) {
+    const list = HINTS[video.id];
+    if (!list) continue;
+    if (list.length !== video.scenes.length) throw new Error(`HINTS ${video.id}: ${list.length} ≠ ${video.scenes.length}`);
+    video.scenes.forEach((scene, i) => { if (!scene.hint) scene.hint = list[i]; });
+}

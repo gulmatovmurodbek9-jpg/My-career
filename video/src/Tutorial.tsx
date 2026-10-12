@@ -4,21 +4,21 @@ import { Audio } from "@remotion/media";
 import { loadFont } from "@remotion/google-fonts/GolosText";
 
 // Видеои омӯзишӣ: муқаддима → саҳнаҳо (скриншоти сайт, курсор, клик, зум, зерсарлавҳа, садо) → охир.
-const { fontFamily } = loadFont("normal", { subsets: ["cyrillic", "cyrillic-ext", "latin"], weights: ["500", "700", "800"] });
+export const { fontFamily } = loadFont("normal", { subsets: ["cyrillic", "cyrillic-ext", "latin"], weights: ["500", "700", "800"] });
 
 export const FPS = 30;
-const INTRO = 75;
+export const INTRO = 75;
 const OUTRO_MIN = 105;
 const SCALE = 1.5; // скриншот 1280×720 CSS → 1920×1080
-const PRIMARY = "#2563eb";
-const FRAME = { s: 0.92, x: 77, y: 64 };
+export const PRIMARY = "#2563eb";
+export const FRAME = { s: 0.92, x: 77, y: 64 };
 
 type Rect = { x: number; y: number; w: number; h: number } | null;
 type Scene = { img: string; rect: Rect; click: boolean; zoom: number; narr: string; audio?: string; duration?: number };
 type Manifest = { id: string; lang: string; title: string; next: string | null; nextAudio?: string; nextDuration?: number; scenes: Scene[] };
 export type TutorialProps = { manifest: Manifest };
 
-const LABELS: Record<string, { step: string; next: string; site: string }> = {
+export const LABELS: Record<string, { step: string; next: string; site: string }> = {
     tj: { step: "Қадам", next: "Қадами навбатӣ", site: "ikhtisosiman.qobus.tj" },
     ru: { step: "Шаг", next: "Следующий шаг", site: "ikhtisosiman.qobus.tj" },
     en: { step: "Step", next: "Next step", site: "ikhtisosiman.qobus.tj" },
@@ -112,7 +112,7 @@ const SceneView: React.FC<{ manifest: Manifest; index: number; length: number }>
     );
 };
 
-const Card: React.FC<{ manifest: Manifest; kind: "intro" | "outro" }> = ({ manifest, kind }) => {
+export const Card: React.FC<{ manifest: Manifest; kind: "intro" | "outro" }> = ({ manifest, kind }) => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
     const pop = spring({ frame, fps, config: { damping: 14 } });

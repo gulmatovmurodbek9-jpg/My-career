@@ -108,7 +108,9 @@ export class CareerService {
             qb.andWhere(
                 `(${TAJIK_FOLD('career.name')} LIKE :search
                   OR ${TAJIK_FOLD('career.description')} LIKE :search
-                  OR career.code LIKE :rawSearch)`,
+                  OR career.code LIKE :rawSearch
+                  OR (career.translations::jsonb -> 'ru' ->> 'name') ILIKE :rawSearch
+                  OR (career.translations::jsonb -> 'en' ->> 'name') ILIKE :rawSearch)`,
                 { search: `%${foldTajik(search)}%`, rawSearch: `%${search}%` },
             );
         }

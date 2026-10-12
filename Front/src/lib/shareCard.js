@@ -63,10 +63,10 @@ export const CARD_TEXT = {
 };
 const fill = (text, values) => String(text).replace(/\{\{(\w+)\}\}/g, (_, key) => values?.[key] ?? "");
 
-const DISPLAY = "Geologica, 'Golos Text', system-ui, sans-serif";
-const BODY = "'Golos Text', system-ui, sans-serif";
+export const DISPLAY = "Geologica, 'Golos Text', system-ui, sans-serif";
+export const BODY = "'Golos Text', system-ui, sans-serif";
 
-async function fontsReady() {
+export async function fontsReady() {
     try {
         await Promise.all([
             document.fonts.load(`900 80px ${DISPLAY}`),
@@ -79,7 +79,7 @@ async function fontsReady() {
 }
 
 // Матнро ба сатрҳо дар паҳнои max тақсим мекунад (то maxLines; охирин бо «…»).
-function wrap(ctx, text, max, maxLines = 3) {
+export function wrap(ctx, text, max, maxLines = 3) {
     const words = String(text || "").split(/\s+/).filter(Boolean);
     const lines = [];
     let line = "";
@@ -114,7 +114,7 @@ function fitFont(ctx, text, max, maxLines, from, to, weight, family) {
     return { size: to, lines: wrap(ctx, text, max, maxLines) };
 }
 
-function roundRect(ctx, x, y, w, h, r) {
+export function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -125,7 +125,7 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 // Нишонаи барнома (512×512, гӯшаҳои мудаввар) — равшан дар корти 1080 пиксел; сояи нарм.
-async function drawLogo(ctx, x, y, size) {
+export async function drawLogo(ctx, x, y, size) {
     try {
         const img = new Image();
         img.src = "/icon-512.png";

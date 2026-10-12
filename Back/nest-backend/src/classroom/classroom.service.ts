@@ -478,6 +478,17 @@ export class ClassroomService implements OnModuleInit {
                 confAfter: average(paired.map((t) => Number(t.confAfter))),
                 notForMe: allTrials.filter((t) => !t.fit).length,
                 unread: rows.reduce((sum, row) => sum + row.messages.unread, 0),
+                paired: paired.length,
+                // Барои «Ҳисоботи мактаб»: 10 ихтисоси маъмул (3-тои аввали натиҷаи ҳар хонанда).
+                topCareers: (() => {
+                    const counts = new Map<string, { id: string; name: string; count: number }>();
+                    rows.forEach((row) => (row.quiz?.topCareers || []).slice(0, 3).forEach((career: { id: string; name: string }) => {
+                        const entry = counts.get(career.id) || { id: career.id, name: career.name, count: 0 };
+                        entry.count += 1;
+                        counts.set(career.id, entry);
+                    }));
+                    return [...counts.values()].sort((a, b) => b.count - a.count).slice(0, 10);
+                })(),
             },
         };
     }

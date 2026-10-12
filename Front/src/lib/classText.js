@@ -376,6 +376,7 @@ const MORE = {
         broadcastPlaceholder: "Масалан: Ба шумо, ки самти техникиро гирифтед — пагоҳ соати 14:00 дар кабинети технология ҷамъ мешавем.",
         broadcastDone: "Ба {{n}} хонанда фиристода шуд",
         copyFailed: "Нашуд — пайвандро интихоб карда, нусха гиред",
+        schoolReport: "Ҳисоботи мактаб (PDF)",
     },
     ru: {
         fullName: "Полное ФИО",
@@ -451,6 +452,7 @@ const MORE = {
         broadcastPlaceholder: "Например: Тем, у кого техническое направление, — завтра в 14:00 собираемся в кабинете технологии.",
         broadcastDone: "Отправлено {{n}} ученикам",
         copyFailed: "Не вышло — выделите ссылку и скопируйте",
+        schoolReport: "Отчёт школы (PDF)",
     },
     en: {
         fullName: "Full name",
@@ -526,6 +528,7 @@ const MORE = {
         broadcastPlaceholder: "For example: Students in the technical direction — let’s meet tomorrow at 2 pm in the technology room.",
         broadcastDone: "Sent to {{n}} students",
         copyFailed: "Failed — select the link and copy it",
+        schoolReport: "School report (PDF)",
     },
 };
 

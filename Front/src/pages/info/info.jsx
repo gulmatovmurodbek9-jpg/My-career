@@ -49,6 +49,8 @@ import SalarySection from "../../components/SalarySection";
 import TrialCta from "../../components/TrialCta";
 import TrialPreview from "../../components/TrialPreview";
 import SpecialistInterview from "../../components/SpecialistInterview";
+import CareerWhy from "../../components/CareerWhy";
+import CareerFuture from "../../components/CareerFuture";
 import { ssrData, ssrKey } from "../../lib/ssrData";
 import { displayName } from "../../lib/careerName";
 
@@ -584,6 +586,10 @@ const Info = () => {
           <TrialPreview trial={trial} careerId={id} />
 
           <SpecialistInterview careerId={id} />
+
+          <CareerWhy careerId={id} />
+
+          <CareerFuture careerId={id} />
 
           {career.purpose && (
             <Section icon={Target} title={t("career_page.purpose_title")} subtitle={t("career_page.purpose_sub")} gradient="from-blue-500 to-indigo-500">

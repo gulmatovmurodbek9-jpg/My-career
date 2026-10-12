@@ -48,10 +48,12 @@ const CareerAdvisorReport = lazy(() => import("./pages/dashboard/CareerAdvisorRe
 const CareerCompare = lazy(() => import("./pages/dashboard/CareerCompare"));
 const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
 const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
+const SchoolReport = lazy(() => import("./pages/teacher/SchoolReport"));
 const TeacherClass = lazy(() => import("./pages/teacher/TeacherClass"));
 const ClassJoin = lazy(() => import("./pages/teacher/ClassJoin"));
 const MyClass = lazy(() => import("./pages/teacher/MyClass"));
 const Swipe = lazy(() => import("./pages/swipe/Swipe"));
+const CertVerify = lazy(() => import("./pages/CertVerify"));
 const Peers = lazy(() => import("./pages/peers/Peers"));
 const PeerAnswer = lazy(() => import("./pages/peers/PeerAnswer"));
 const ParentSurvey = lazy(() => import("./pages/parent/ParentSurvey"));
@@ -94,6 +96,7 @@ export const AppRoutes = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/help" element={<Help />} />
               <Route path="/swipe" element={<Swipe />} />
+              <Route path="/cert/:code" element={<CertVerify />} />
               <Route path="/peers" element={<Peers />} />
               <Route path="/peer/:code" element={<PeerAnswer />} />
               <Route path="/trial" element={<TrialHub />} />
@@ -117,6 +120,7 @@ export const AppRoutes = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/teacher" element={<TeacherHome />} />
                 <Route path="/dashboard/teacher/:id" element={<TeacherClass />} />
+                <Route path="/dashboard/school" element={<SchoolReport />} />
                 <Route path="/dashboard/ai-chat" element={<AiChat />} />
                 <Route path="/dashboard/ai-advisor" element={<CareerAdvisorReport />} />
                 <Route path="/dashboard/compare" element={<CareerCompare />} />

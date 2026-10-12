@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Clock, GraduationCap, Loader2, PhoneCall, Plus, School, XCircle } from "lucide-react";
+import { ArrowRight, Clock, FileText, GraduationCap, Loader2, PhoneCall, Plus, School, XCircle } from "lucide-react";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { classText, fill } from "../../lib/classText";
@@ -217,7 +217,14 @@ export default function TeacherHome() {
 
             {status === "approved" && (
                 <>
-                    <NewClass text={text} token={token} onCreated={(room) => setClasses((old) => [{ ...room, summary: { members: 0, withQuiz: 0, withTrial: 0 } }, ...(old || [])])} />
+                    <div className="flex flex-wrap items-start gap-3">
+                        <NewClass text={text} token={token} onCreated={(room) => setClasses((old) => [{ ...room, summary: { members: 0, withQuiz: 0, withTrial: 0 } }, ...(old || [])])} />
+                        {classes?.length > 0 && (
+                            <Link to="/dashboard/school" className="btn-secondary inline-flex items-center gap-2 !py-3.5" data-school-report-link>
+                                <FileText className="h-5 w-5" aria-hidden /> {text.schoolReport}
+                            </Link>
+                        )}
+                    </div>
                     {classes === null ? (
                         <div className="h-32 animate-pulse rounded-3xl bg-muted/50" />
                     ) : classes.length === 0 ? (

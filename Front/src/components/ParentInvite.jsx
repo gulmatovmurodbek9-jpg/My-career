@@ -7,6 +7,7 @@ import { useAuthStore } from "../store/authStore";
 import { fill, parentText } from "../lib/parentSurvey";
 import ParentCompare from "./ParentCompare";
 import ParentCareers from "./ParentCareers";
+import { copyText } from "../lib/copyText";
 
 // Дар натиҷаи тест: «Волидайн чӣ фикр доранд?» → пайванд → Telegram/WhatsApp → муқоиса.
 // Пайванд ва калид дар браузер нигоҳ дошта мешаванд; ҷавоб худкор санҷида мешавад.
@@ -59,7 +60,7 @@ export default function ParentInvite({ scores, careers = [] }) {
         }
     };
     const copy = async () => {
-        try { await navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { window.prompt(text.copy, message); }
+        if (await copyText(message)) { setCopied(true); setTimeout(() => setCopied(false), 1800); }
     };
     const share = async () => {
         if (navigator.share) {

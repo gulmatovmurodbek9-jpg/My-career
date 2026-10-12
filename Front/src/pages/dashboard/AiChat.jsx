@@ -10,6 +10,7 @@ import axios from "axios";
 import { API, AI_TIMEOUT_MS, isTimeout } from "../../lib/config";
 import { Link } from "react-router";
 import { useChatViewport } from "../../hooks/useChatViewport";
+import { copyText as copyToClipboard } from "../../lib/copyText";
 
 const formatTime = (d) =>
     new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -134,7 +135,7 @@ const MessageBubble = ({ msg, user, speakText, isSpeaking, speakingMsgId, voiceE
     const [copied, setCopied] = useState(false);
 
     const copyText = () => {
-        navigator.clipboard.writeText(msg.text);
+        copyToClipboard(msg.text);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };

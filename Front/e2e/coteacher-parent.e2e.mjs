@@ -91,13 +91,11 @@ const parent = await open(browser, null, true);
 await parent.goto(`${BASE}/parent/${process.env.PARENT_CODE}`, { waitUntil: "networkidle2" });
 await parent.waitForSelector("[data-parent-careers]", { timeout: 20000 });
 const parentText = await text(parent);
-check("Волид: ихтисосҳои Ҷамшед (рӯйхати ҳуҷҷатсупорӣ, захира, тест)", /Ихтисосҳое, ки Ҷамшед интихоб кардааст/.test(parentText) && /рӯйхати ҳуҷҷатсупорӣ/i.test(parentText));
-await parent.evaluate(() => [...document.querySelectorAll("[data-parent-careers] button")].find((b) => /Аз AI пурсед/.test(b.innerText)).click());
-await parent.waitForSelector("[data-parent-ask]");
-await parent.evaluate(() => [...document.querySelectorAll("[data-parent-ask] button")].find((b) => /Чаро ба фарзандам/.test(b.innerText)).click());
+check("Волид: ихтисосҳои Ҷамшед (рӯйхати ҳуҷҷатсупорӣ, захира, тест)", /Ихтисосҳое, ки Ҷамшед интихоб кардааст/.test(parentText) && /рӯйхати ҳуҷҷатсупорӣ/i.test(parentText) && parentText.includes("захира кардааст"));
+await parent.evaluate(() => [...document.querySelectorAll("[data-parent-ask] button")].find((b) => /Чаро мувофиқ/.test(b.innerText)).click());
 await parent.waitForFunction(() => {
     const box = document.querySelector("[data-parent-ask]");
-    return box && !/AI фикр мекунад/.test(box.innerText) && box.querySelectorAll("p").length >= 2;
+    return box && !/AI фикр мекунад/.test(box.innerText) && box.querySelectorAll("p").length >= 1;
 }, { timeout: 60000 });
 const answer = await parent.$eval("[data-parent-ask]", (n) => n.innerText);
 check("Волид: AI ҷавоб дод", answer.length > 120, answer.replace(/\n/g, " ").slice(0, 160));

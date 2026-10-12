@@ -2,25 +2,26 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Bookmark, ChevronDown, ClipboardList, FileText, Loader2, Send, Sparkles, Target } from "lucide-react";
+import { Loader2, PenLine, Send, Sparkles } from "lucide-react";
 import { API } from "../lib/config";
 import { fill, parentText } from "../lib/parentSurvey";
 
-// Ихтисосҳои фарзанд барои волид: аз тест, захирашуда, рӯйхати ҳуҷҷатсупорӣ, санҷидашуда.
-// Дар назди ҳар ихтисос — «Аз AI пурсед»: саволҳои тайёр ё саволи озод.
-// Барои фарзанд ҳам кор мекунад (бо `secret`).
-function AskBox({ code, secret, career, text, lang }) {
+// Ихтисосҳои фарзанд барои волид — як рӯйхат (бе такрор) бо нишонаҳо: дар рӯйхати
+// ҳуҷҷатсупорӣ, захира, санҷид, аз тест. Зери ҳар ихтисос 4 саволи кӯтоҳ ҳамеша намоён:
+// як пахш — ҷавоби AI. Барои фарзанд ҳам кор мекунад (бо `secret`).
+function Ask({ code, secret, career, text, lang }) {
     const [items, setItems] = useState([]);
     const [draft, setDraft] = useState("");
+    const [writing, setWriting] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
 
-    const ask = async (question) => {
+    const ask = async (question, label = question) => {
         const q = question.trim();
         if (!q || busy) return;
         setBusy(true);
         setError("");
-        setItems((old) => [...old, { q, a: null }]);
+        setItems((old) => [...old, { q: label, a: null }]);
         setDraft("");
         try {
             const { data } = await axios.post(`${API}/parents/invites/${code}/ask`, { careerId: career.id, question: q, lang, secret }, { timeout: 45000 });
@@ -33,36 +34,44 @@ function AskBox({ code, secret, career, text, lang }) {
         }
     };
 
-    const quick = text.askQuick.map((q) => fill(q, { name: career.name }));
+    const asked = new Set(items.map((item) => item.q));
     return (
-        <div className="mt-3 space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.04] p-3.5" data-parent-ask>
+        <div className="mt-3 space-y-3" data-parent-ask>
+            <div className="flex flex-wrap gap-2">
+                {text.askChips.map((chip) => (
+                    <button key={chip.label} type="button" disabled={busy || asked.has(chip.label)} onClick={() => ask(chip.q, chip.label)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/[0.06] px-3 py-2 text-[13.5px] font-bold text-foreground transition hover:border-primary hover:bg-primary/10 active:scale-[0.98] disabled:opacity-45 cursor-pointer">
+                        <span aria-hidden>{chip.icon}</span> {chip.label}
+                    </button>
+                ))}
+                {!writing && (
+                    <button type="button" onClick={() => setWriting(true)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-2 text-[13.5px] font-bold text-muted-foreground hover:border-primary hover:text-primary cursor-pointer">
+                        <PenLine className="h-4 w-4" aria-hidden /> {text.askOwn}
+                    </button>
+                )}
+            </div>
+
             {items.map((item, index) => (
-                <div key={index} className="space-y-2">
-                    <p className="ml-auto w-fit max-w-[90%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-[14px] font-semibold text-primary-foreground">{item.q}</p>
+                <div key={index} className="rounded-2xl border border-primary/15 bg-card p-3.5">
+                    <div className="mb-1.5 text-[13px] font-black text-primary">{item.q}</div>
                     {item.a ? (
-                        <p className="w-fit max-w-[95%] whitespace-pre-wrap rounded-2xl rounded-bl-md border border-border bg-card px-3.5 py-2.5 text-[14.5px] leading-relaxed text-foreground">
-                            <Sparkles className="mr-1.5 inline h-4 w-4 text-primary" aria-hidden />{item.a}
-                        </p>
+                        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground">{item.a}</p>
                     ) : (
-                        <p className="flex items-center gap-2 text-[13px] font-semibold text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {text.askThinking}</p>
+                        <p className="flex items-center gap-2 text-[14px] font-semibold text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {text.askThinking}</p>
                     )}
                 </div>
             ))}
-            <div className="flex flex-wrap gap-2">
-                {quick.map((q) => (
-                    <button key={q} type="button" disabled={busy} onClick={() => ask(q)}
-                        className="rounded-full border border-primary/30 bg-card px-3 py-1.5 text-[13px] font-semibold text-foreground hover:border-primary disabled:opacity-50 cursor-pointer">
-                        {q}
+
+            {writing && (
+                <form onSubmit={(event) => { event.preventDefault(); ask(draft); }} className="flex gap-2">
+                    <input value={draft} autoFocus onChange={(event) => setDraft(event.target.value.slice(0, 500))} placeholder={text.askPlaceholder} aria-label={text.askPlaceholder}
+                        className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-[15px] text-foreground placeholder:text-muted-foreground focus-ring" />
+                    <button type="submit" disabled={busy || draft.trim().length < 3} aria-label={text.askSend} className="btn-primary !h-11 !w-11 !p-0 disabled:opacity-50">
+                        {busy ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <Send className="h-5 w-5" aria-hidden />}
                     </button>
-                ))}
-            </div>
-            <form onSubmit={(event) => { event.preventDefault(); ask(draft); }} className="flex gap-2">
-                <input value={draft} onChange={(event) => setDraft(event.target.value.slice(0, 500))} placeholder={text.askPlaceholder} aria-label={text.askPlaceholder}
-                    className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-[15px] text-foreground placeholder:text-muted-foreground focus-ring" />
-                <button type="submit" disabled={busy || draft.trim().length < 3} aria-label={text.askSend} className="btn-primary !h-11 !w-11 !p-0 disabled:opacity-50">
-                    {busy ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <Send className="h-5 w-5" aria-hidden />}
-                </button>
-            </form>
+                </form>
+            )}
             {error && <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{error}</p>}
         </div>
     );
@@ -72,17 +81,24 @@ export default function ParentCareers({ invite, code, secret, forChild = false }
     const { i18n } = useTranslation();
     const lang = (i18n.language || "tj").slice(0, 2);
     const text = parentText(lang);
-    const [open, setOpen] = useState(null);
     const data = invite?.careers;
     if (!data) return null;
 
-    const groups = [
-        { key: "plan", title: text.groupPlan, icon: FileText, items: data.plan || [], meta: (c) => [c.university, c.paymentType].filter(Boolean).join(" · ") },
-        { key: "saved", title: text.groupSaved, icon: Bookmark, items: data.saved || [] },
-        { key: "tried", title: text.groupTried, icon: Target, items: data.tried || [], meta: (c) => fill(text.triedMeta, { s: c.solved, l: c.liked, t: c.total }) },
-        { key: "test", title: text.groupTest, icon: ClipboardList, items: (data.fromTest || []).slice(0, 6), meta: (c) => (c.percent != null ? `${c.percent}%` : "") },
-    ].filter((group) => group.items.length);
-    if (!groups.length) return null;
+    // Як ихтисос — як корт: ҳамаи манбаъҳо ҳамчун нишона.
+    const merged = new Map();
+    const add = (career, tag, extra = {}) => {
+        if (!career?.id) return;
+        const entry = merged.get(career.id) || { id: career.id, name: career.name, tags: [] };
+        entry.tags.push(tag);
+        Object.assign(entry, extra);
+        merged.set(career.id, entry);
+    };
+    (data.plan || []).forEach((c) => add(c, text.tagPlan, { plan: [c.university, c.paymentType].filter(Boolean).join(" · ") }));
+    (data.saved || []).forEach((c) => add(c, text.tagSaved));
+    (data.tried || []).forEach((c) => add(c, text.tagTried, { tried: fill(text.triedMeta, { s: c.solved, l: c.liked, t: c.total }) }));
+    (data.fromTest || []).slice(0, 6).forEach((c) => add(c, c.percent != null ? fill(text.tagTest, { p: c.percent }) : text.groupTest));
+    const careers = [...merged.values()];
+    if (!careers.length) return null;
 
     const name = invite.childName;
     return (
@@ -95,37 +111,22 @@ export default function ParentCareers({ invite, code, secret, forChild = false }
                 </div>
             </div>
 
-            <div className="mt-5 space-y-5">
-                {groups.map((group) => (
-                    <div key={group.key}>
-                        <h3 className="mb-2 flex items-center gap-1.5 text-[13px] font-black uppercase tracking-wide text-muted-foreground">
-                            <group.icon className="h-4 w-4 text-primary" aria-hidden /> {group.title} <span className="font-bold">({group.items.length})</span>
-                        </h3>
-                        <ul className="space-y-2">
-                            {group.items.map((career, index) => {
-                                const id = `${group.key}:${career.id}:${index}`;
-                                const isOpen = open === id;
-                                return (
-                                    <li key={id} className={`rounded-2xl border bg-card p-3 transition-colors ${isOpen ? "border-primary/40" : "border-border"}`}>
-                                        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                            <div className="min-w-0 flex-1">
-                                                <Link to={`/info/${career.id}`} className="block font-bold leading-snug text-foreground hover:text-primary">{career.name}</Link>
-                                                {group.meta?.(career) && <span className="block text-[12.5px] text-muted-foreground">{group.meta(career)}</span>}
-                                            </div>
-                                            <button type="button" onClick={() => setOpen(isOpen ? null : id)} aria-expanded={isOpen}
-                                                className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-bold cursor-pointer ${isOpen ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/15"}`}>
-                                                <Sparkles className="h-4 w-4" aria-hidden /> <span>{text.askAi}</span>
-                                                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden />
-                                            </button>
-                                        </div>
-                                        {isOpen && <AskBox code={code} secret={secret} career={career} text={text} lang={lang} />}
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
+            <ul className="mt-5 space-y-3">
+                {careers.map((career) => (
+                    <li key={career.id} className="rounded-2xl border border-border bg-card p-4">
+                        <Link to={`/info/${career.id}`} className="block text-[16px] font-black leading-snug text-foreground hover:text-primary">{career.name}</Link>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            {career.tags.map((tag) => (
+                                <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-[11.5px] font-bold text-muted-foreground">{tag}</span>
+                            ))}
+                        </div>
+                        {(career.plan || career.tried) && (
+                            <p className="mt-1.5 text-[12.5px] text-muted-foreground">{[career.plan, career.tried].filter(Boolean).join(" · ")}</p>
+                        )}
+                        <Ask code={code} secret={secret} career={career} text={text} lang={lang} />
+                    </li>
                 ))}
-            </div>
+            </ul>
         </section>
     );
 }

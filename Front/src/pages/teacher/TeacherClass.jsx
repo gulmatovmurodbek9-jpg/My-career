@@ -14,6 +14,7 @@ import { classLink, classText, fill, initials } from "../../lib/classText";
 import { usePageMeta } from "../../lib/usePageMeta";
 import { useToast } from "../../components/toast/ToastProvider";
 import ClassChat from "../../components/ClassChat";
+import { copyText } from "../../lib/copyText";
 import ClassTeachers from "../../components/ClassTeachers";
 
 // Палитра: як ранг (primary). Самти асосӣ — пурра, дигарон — шаффоф; бе панҷ ранги тез.
@@ -22,19 +23,17 @@ const AVATAR = "bg-gradient-to-br from-primary to-indigo-600";
 
 function CopyButton({ value, label, text }) {
     const [done, setDone] = useState(false);
+    const [failed, setFailed] = useState(false);
     const copy = async () => {
-        try {
-            await navigator.clipboard.writeText(value);
-            setDone(true);
-            setTimeout(() => setDone(false), 1800);
-        } catch {
-            window.prompt(label, value);
-        }
+        const ok = await copyText(value);
+        setDone(ok);
+        setFailed(!ok);
+        setTimeout(() => { setDone(false); setFailed(false); }, 2200);
     };
     return (
         <button type="button" onClick={copy} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-[13px] font-bold text-foreground hover:border-primary cursor-pointer">
             {done ? <Check className="h-4 w-4 text-emerald-600" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
-            {done ? text.copied : label}
+            {done ? text.copied : failed ? text.copyFailed : label}
         </button>
     );
 }

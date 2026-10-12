@@ -2,12 +2,20 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Clock, GraduationCap, Loader2, Plus, School, XCircle } from "lucide-react";
+import { ArrowRight, Clock, GraduationCap, Loader2, PhoneCall, Plus, School, XCircle } from "lucide-react";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
-import { classText } from "../../lib/classText";
+import { classText, fill } from "../../lib/classText";
 import { usePageMeta } from "../../lib/usePageMeta";
 
+// Соли таҳсил: ҷорӣ ва оянда (аз 1 август соли нав).
+const schoolYears = () => {
+    const now = new Date();
+    const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+    return [`${start}-${start + 1}`, `${start + 1}-${start + 2}`];
+};
+const TJ_CITIES = ["Душанбе", "Хуҷанд", "Бохтар", "Кӯлоб", "Хоруғ", "Истаравшан", "Панҷакент", "Исфара", "Турсунзода", "Ваҳдат", "Ҳисор", "Норак", "Бӯстон", "Гулистон", "Конибодом", "Рогун", "Левакант", "Гуливор"];
+const TJ_DISTRICTS = ["Исмоили Сомонӣ", "Сино", "Фирдавсӣ", "Шоҳмансур", "Б. Ғафуров", "Спитамен", "Ҷаббор Расулов", "Зафаробод", "Ашт", "Мастчоҳ", "Айнӣ", "Шаҳристон", "Деваштич", "Рӯдакӣ", "Варзоб", "Шаҳринав", "Файзобод", "Рашт", "Тоҷикобод", "Лахш", "Сангвор", "Нуробод", "Ёвон", "Хуросон", "Ҷалолиддини Румӣ", "Кушониён", "Вахш", "Левакант", "Дӯстӣ", "Қубодиён", "Шаҳритус", "Носири Хусрав", "Ҷайҳун", "Пянҷ", "Фархор", "Восеъ", "Ҳамадонӣ", "Мӯминобод", "Шӯрообод", "Ховалинг", "Балҷувон", "Темурмалик", "Дарвоз", "Ванҷ", "Рӯшон", "Шуғнон", "Ишкошим", "Роштқалъа", "Мурғоб"];
 const input = "w-full rounded-xl border border-border bg-background px-3.5 py-3 text-[15px] text-foreground placeholder:text-muted-foreground focus-ring";
 
 function Field({ label, children }) {
@@ -19,9 +27,13 @@ function Field({ label, children }) {
     );
 }
 
-// Корбари оддӣ: «Шумо омӯзгор ҳастед?» → дархост ба админ.
+const digits = (value) => value.replace(/\D/g, "").length;
+
+// Корбари оддӣ: «Шумо омӯзгор ҳастед?» → дархости пурра ба админ (ному насаб, телефон,
+// директор ё котиба барои тасдиқ). Админ дар давоми 1 рӯз занг мезанад.
 function TeacherRequest({ text, token, status, onSent }) {
-    const [form, setForm] = useState({ school: "", subject: "", city: "", phone: "" });
+    const { user } = useAuthStore();
+    const [form, setForm] = useState({ fullName: user?.name || "", school: "", city: "", subject: "", homeroom: "", phone: "", contactName: "", contactPhone: "" });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const set = (key) => (event) => setForm((old) => ({ ...old, [key]: event.target.value }));
@@ -62,14 +74,28 @@ function TeacherRequest({ text, token, status, onSent }) {
             )}
             <div className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                    <Field label={text.school}><input required minLength={2} maxLength={120} value={form.school} onChange={set("school")} placeholder={text.schoolPlaceholder} className={input} /></Field>
+                    <Field label={`${text.fullName} *`}><input id="tr-fullname" required minLength={3} maxLength={100} value={form.fullName} onChange={set("fullName")} placeholder={text.fullNamePlaceholder} autoComplete="name" className={input} /></Field>
                 </div>
-                <Field label={text.subject}><input maxLength={80} value={form.subject} onChange={set("subject")} className={input} /></Field>
+                <Field label={`${text.phone} *`}><input id="tr-phone" required maxLength={30} inputMode="tel" autoComplete="tel" value={form.phone} onChange={set("phone")} placeholder="+992 …" className={input} /></Field>
                 <Field label={text.city}><input maxLength={60} value={form.city} onChange={set("city")} className={input} /></Field>
-                <Field label={text.phone}><input maxLength={30} inputMode="tel" value={form.phone} onChange={set("phone")} className={input} /></Field>
+                <div className="sm:col-span-2">
+                    <Field label={`${text.school} *`}><input id="tr-school" required minLength={2} maxLength={120} value={form.school} onChange={set("school")} placeholder={text.schoolPlaceholder} className={input} /></Field>
+                </div>
+                <Field label={text.homeroom}><input maxLength={40} value={form.homeroom} onChange={set("homeroom")} placeholder={text.homeroomPlaceholder} className={input} /></Field>
+                <Field label={text.subject}><input maxLength={80} value={form.subject} onChange={set("subject")} className={input} /></Field>
             </div>
+            <fieldset className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                <legend className="px-1 text-[14px] font-black text-foreground">{text.contactTitle}</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label={`${text.contactName} *`}><input id="tr-contact-name" required minLength={3} maxLength={100} value={form.contactName} onChange={set("contactName")} className={input} /></Field>
+                    <Field label={`${text.contactPhone} *`}><input id="tr-contact-phone" required maxLength={30} inputMode="tel" value={form.contactPhone} onChange={set("contactPhone")} placeholder="+992 …" className={input} /></Field>
+                </div>
+                <p className="flex items-start gap-2 text-[13.5px] text-foreground">
+                    <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden /> {text.contactHint}
+                </p>
+            </fieldset>
             {error && <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{error}</p>}
-            <button type="submit" disabled={busy || form.school.trim().length < 2} className="btn-primary w-full !py-3.5 sm:w-auto disabled:opacity-50">
+            <button type="submit" disabled={busy || form.fullName.trim().length < 3 || form.school.trim().length < 2 || digits(form.phone) < 7 || form.contactName.trim().length < 3 || digits(form.contactPhone) < 7} className="btn-primary w-full !py-3.5 sm:w-auto disabled:opacity-50">
                 {busy ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <>{text.send} <ArrowRight className="h-4 w-4" aria-hidden /></>}
             </button>
         </form>
@@ -78,7 +104,8 @@ function TeacherRequest({ text, token, status, onSent }) {
 
 function NewClass({ text, token, onCreated }) {
     const [open, setOpen] = useState(false);
-    const [form, setForm] = useState({ name: "", school: "", city: "", grade: "11" });
+    const years = schoolYears();
+    const [form, setForm] = useState({ name: "", school: "", district: "", city: "", grade: "11", schoolYear: years[0] });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const set = (key) => (event) => setForm((old) => ({ ...old, [key]: event.target.value }));
@@ -115,8 +142,17 @@ function NewClass({ text, token, onCreated }) {
                     </select>
                 </Field>
                 <Field label={text.school}><input maxLength={120} value={form.school} onChange={set("school")} placeholder={text.schoolPlaceholder} className={input} /></Field>
-                <Field label={text.city}><input maxLength={60} value={form.city} onChange={set("city")} className={input} /></Field>
+                <Field label={text.schoolYear}>
+                    <select value={form.schoolYear} onChange={set("schoolYear")} className={input}>
+                        {years.map((year) => <option key={year} value={year}>{year.replace("-", "–")}</option>)}
+                    </select>
+                </Field>
+                <Field label={text.city}><input maxLength={60} value={form.city} onChange={set("city")} placeholder={text.cityPlaceholder} list="tj-cities" className={input} /></Field>
+                <Field label={text.district}><input maxLength={60} value={form.district} onChange={set("district")} placeholder={text.districtPlaceholder} list="tj-districts" className={input} /></Field>
+                <datalist id="tj-cities">{TJ_CITIES.map((city) => <option key={city} value={city} />)}</datalist>
+                <datalist id="tj-districts">{TJ_DISTRICTS.map((district) => <option key={district} value={district} />)}</datalist>
             </div>
+            <p className="text-[13px] text-muted-foreground">{text.yearHint}</p>
             {error && <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{error}</p>}
             <div className="flex gap-2">
                 <button type="submit" disabled={busy || !form.name.trim()} className="btn-primary !py-3 disabled:opacity-50">
@@ -143,7 +179,8 @@ export default function TeacherHome() {
         axios.get(`${API}/classrooms/teacher-request`, { headers: { Authorization: `Bearer ${token}` } })
             .then(({ data }) => {
                 if (!alive) return;
-                setStatus(data.status);
+                // Дархост нест — «none» (сервери кӯҳна null медод ва скелет то абад мемонд).
+                setStatus(data.status || "none");
                 // Нақш дар сервер иваз шуда бошад — профилро нав мекунем (меню ва тугмаҳо).
                 if (data.status === "approved") refreshProfile?.();
             })
@@ -172,7 +209,7 @@ export default function TeacherHome() {
                 </div>
             </div>
 
-            {status === null && <div className="h-40 animate-pulse rounded-3xl bg-muted/50" />}
+            {status === null && <div className="h-40 animate-pulse rounded-3xl bg-muted/60 dark:bg-muted/30" />}
             {status && status !== "approved" && status !== "error" && (
                 <TeacherRequest text={text} token={token} status={status} onSent={setStatus} />
             )}
@@ -198,7 +235,8 @@ export default function TeacherHome() {
                                                     <GraduationCap className="h-5 w-5 shrink-0 text-primary" aria-hidden />
                                                     <span className="truncate text-xl font-black text-foreground">{room.name}</span>
                                                 </div>
-                                                <div className="mt-0.5 truncate text-[13px] text-muted-foreground">{[room.school, room.city].filter(Boolean).join(" · ") || " "}</div>
+                                                <div className="mt-0.5 truncate text-[13px] text-muted-foreground">{[room.school, room.district, room.city].filter(Boolean).join(" · ") || " "}</div>
+                                                {room.schoolYear && <div className="mt-1.5 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">{fill(text.yearLabel, { y: room.schoolYear.replace("-", "–") })}</div>}
                                             </div>
                                             <span className="shrink-0 rounded-xl bg-muted px-2.5 py-1 font-mono text-sm font-black tracking-widest text-foreground">{room.code}</span>
                                         </div>

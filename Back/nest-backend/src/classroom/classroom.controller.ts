@@ -62,6 +62,28 @@ export class ClassroomController {
         return this.classrooms.leave(req.user || null, guestHeader(req), memberId);
     }
 
+    @Get('joined/:memberId/overview')
+    @UseGuards(OptionalJwtGuard)
+    @ApiOperation({ summary: 'Синфи ман: омори умумии синф (бе номҳо) барои хонанда' })
+    overview(@Param('memberId') memberId: string, @Req() req: any) {
+        return this.classrooms.overview(req.user || null, guestHeader(req), memberId);
+    }
+
+    @Get('joined/:memberId/messages')
+    @UseGuards(OptionalJwtGuard)
+    @ApiOperation({ summary: 'Паёмҳои омӯзгор ба хонанда' })
+    studentThread(@Param('memberId') memberId: string, @Req() req: any) {
+        return this.classrooms.studentThread(req.user || null, guestHeader(req), memberId);
+    }
+
+    @Post('joined/:memberId/messages')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(OptionalJwtGuard)
+    @ApiOperation({ summary: 'Ҷавоби хонанда ба омӯзгор' })
+    studentPost(@Param('memberId') memberId: string, @Body() body: { body?: string }, @Req() req: any) {
+        return this.classrooms.studentPost(req.user || null, guestHeader(req), memberId, body?.body);
+    }
+
     // ---------- Дархости «Ман омӯзгор ҳастам» ----------
 
     @Post('teacher-request')
@@ -161,6 +183,23 @@ export class ClassroomController {
     @ApiOperation({ summary: 'Нест кардани синф (омӯзгор)' })
     remove(@Param('id') id: string, @Req() req: any) {
         return this.classrooms.remove(req.user, id);
+    }
+
+    @Get(':id/members/:memberId/messages')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Фидбек: паёмҳо бо хонанда (омӯзгор)' })
+    teacherThread(@Param('id') id: string, @Param('memberId') memberId: string, @Req() req: any) {
+        return this.classrooms.teacherThread(req.user, id, memberId);
+    }
+
+    @Post(':id/members/:memberId/messages')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Фидбек ба хонанда навиштан (омӯзгор)' })
+    teacherPost(@Param('id') id: string, @Param('memberId') memberId: string, @Body() body: { body?: string }, @Req() req: any) {
+        return this.classrooms.teacherPost(req.user, id, memberId, body?.body);
     }
 
     @Delete(':id/members/:memberId')

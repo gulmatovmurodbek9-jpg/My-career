@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, CheckCircle2, ClipboardCheck, GraduationCap, Loader2, ShieldCheck, Target, Users } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardCheck, GraduationCap, Loader2, MessageCircle, ShieldCheck, Target, Users } from "lucide-react";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { readGuest, saveGuest } from "../../lib/classGuest";
@@ -22,6 +22,17 @@ export default function ClassJoin() {
     const [name, setName] = useState(() => readGuest()?.displayName || "");
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
+    const [mine, setMine] = useState([]);
+
+    // Синфҳое, ки хонанда аллакай дар онҳост (бо ҳисоб ё бе почта) — пайванд ба «Синфи ман».
+    useEffect(() => {
+        let alive = true;
+        axios.get(`${API}/classrooms/joined`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+            .then(({ data }) => alive && setMine(Array.isArray(data) ? data : []))
+            .catch(() => {});
+        return () => { alive = false; };
+    }, [token, state]);
+    const current = info ? mine.find((room) => room.code === info.code) : null;
 
     usePageMeta({ title: text.joinTitle, description: text.consent, path: routeCode ? `/class/${routeCode}` : "/class" });
 
@@ -88,6 +99,23 @@ export default function ClassJoin() {
                 </span>
                 <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">{text.joinTitle}</h1>
             </div>
+
+            {(state === "code" || state === "missing") && mine.length > 0 && (
+                <div className="mt-6 space-y-2">
+                    <div className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{text.myClasses2}</div>
+                    {mine.map((room) => (
+                        <Link key={room.memberId} to={`/class/my/${room.memberId}`} className="flex items-center gap-3 rounded-3xl border border-border bg-card p-4 hover:border-primary">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><GraduationCap className="h-5 w-5" aria-hidden /></span>
+                            <span className="min-w-0 flex-1">
+                                <span className="block truncate font-black text-foreground">{room.name}{room.school ? ` · ${room.school}` : ""}</span>
+                                <span className="block truncate text-[13px] text-muted-foreground">{room.teacher ? `${text.teacher}: ${room.teacher}` : text.openMyClass}</span>
+                            </span>
+                            {room.unread > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-black text-white">{room.unread}</span>}
+                            <ArrowRight className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                        </Link>
+                    ))}
+                </div>
+            )}
 
             {(state === "code" || state === "missing") && (
                 <form onSubmit={find} className="mt-6 space-y-3 rounded-3xl border border-border bg-card p-5">
@@ -170,6 +198,12 @@ export default function ClassJoin() {
                             <Link to="/trial" className="btn-secondary flex w-full items-center justify-center gap-2 !py-3.5">
                                 <Target className="h-5 w-5" aria-hidden /> {text.tryCareer}
                             </Link>
+                            {current && (
+                                <Link to={`/class/my/${current.memberId}`} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3.5 font-bold text-primary hover:border-primary">
+                                    <MessageCircle className="h-5 w-5" aria-hidden /> {text.openMyClass}
+                                    {current.unread > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-black text-white">{current.unread}</span>}
+                                </Link>
+                            )}
                             {!isAuthenticated && <p className="text-[13px] text-muted-foreground">{text.sameDevice}</p>}
                         </div>
                     )}

@@ -24,6 +24,7 @@ function lazyPreload(factory) {
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/about/about"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Help = lazy(() => import("./pages/Help"));
 const Trial = lazyPreload(() => import("./pages/trial/Trial"));
 const TrialHub = lazyPreload(() => import("./pages/trial/TrialHub"));
 const Careers = lazyPreload(() => import("./pages/careers/careers"));
@@ -49,6 +50,7 @@ const ApplicationPlan = lazy(() => import("./pages/dashboard/ApplicationPlan"));
 const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
 const TeacherClass = lazy(() => import("./pages/teacher/TeacherClass"));
 const ClassJoin = lazy(() => import("./pages/teacher/ClassJoin"));
+const MyClass = lazy(() => import("./pages/teacher/MyClass"));
 const ParentSurvey = lazy(() => import("./pages/parent/ParentSurvey"));
 const Favorites = lazyPreload(() => import("./pages/favorites/Favorites"));
 
@@ -87,6 +89,7 @@ export const AppRoutes = () => (
               <Route index element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/help" element={<Help />} />
               <Route path="/trial" element={<TrialHub />} />
               <Route path="/trial/career/:careerId" element={<Trial />} />
               <Route path="/trial/:family" element={<Trial />} />
@@ -98,6 +101,7 @@ export const AppRoutes = () => (
 
               <Route path="/parent/:code" element={<ParentSurvey />} />
               <Route path="/class" element={<ClassJoin />} />
+              <Route path="/class/my/:memberId" element={<MyClass />} />
               <Route path="/class/:code" element={<ClassJoin />} />
               <Route element={<QuizRoute />}>
                 <Route path="/quiz" element={<Quiz />} />

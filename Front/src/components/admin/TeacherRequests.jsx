@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { Check, GraduationCap, School, X } from "lucide-react";
+import { Check, GraduationCap, Phone, School, X } from "lucide-react";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 
 // Админ: дархостҳои «Ман омӯзгор ҳастам» (Тасдиқ / Рад) ва рӯйхати синфҳо.
 const TEXT = {
-    tj: { title: "Омӯзгорон ва синфҳо", requests: "Дархостҳо", none: "Дархости нав нест.", approve: "Тасдиқ", reject: "Рад", approved: "Тасдиқ шуд", rejected: "Рад шуд", pending: "Интизор", classes: "Синфҳо", noClasses: "Ҳанӯз синф нест.", members: "хонанда" },
-    ru: { title: "Учителя и классы", requests: "Заявки", none: "Новых заявок нет.", approve: "Подтвердить", reject: "Отклонить", approved: "Подтверждено", rejected: "Отклонено", pending: "Ожидает", classes: "Классы", noClasses: "Классов пока нет.", members: "учеников" },
-    en: { title: "Teachers and classes", requests: "Requests", none: "No new requests.", approve: "Approve", reject: "Reject", approved: "Approved", rejected: "Rejected", pending: "Pending", classes: "Classes", noClasses: "No classes yet.", members: "students" },
+    tj: { title: "Омӯзгорон ва синфҳо", requests: "Дархостҳо", none: "Дархости нав нест.", approve: "Тасдиқ", reject: "Рад", approved: "Тасдиқ шуд", rejected: "Рад шуд", pending: "Интизор", classes: "Синфҳо", noClasses: "Ҳанӯз синф нест.", members: "хонанда", homeroom: "роҳбари синф", contact: "Директор/котиба" },
+    ru: { title: "Учителя и классы", requests: "Заявки", none: "Новых заявок нет.", approve: "Подтвердить", reject: "Отклонить", approved: "Подтверждено", rejected: "Отклонено", pending: "Ожидает", classes: "Классы", noClasses: "Классов пока нет.", members: "учеников", homeroom: "кл. руководитель", contact: "Директор/секретарь" },
+    en: { title: "Teachers and classes", requests: "Requests", none: "No new requests.", approve: "Approve", reject: "Reject", approved: "Approved", rejected: "Rejected", pending: "Pending", classes: "Classes", noClasses: "No classes yet.", members: "students", homeroom: "homeroom", contact: "Principal/secretary" },
 };
 
 export default function TeacherRequests() {
@@ -52,11 +52,19 @@ export default function TeacherRequests() {
                 <ul className="mt-2 space-y-2">
                     {[...pending, ...decided].map((request) => (
                         <li key={request.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3">
-                            <div className="min-w-0 flex-1">
-                                <div className="font-bold text-foreground">{request.name || request.email} <span className="font-normal text-muted-foreground">· {request.email}</span></div>
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                                <div className="font-bold text-foreground">{request.fullName || request.name || request.email} <span className="font-normal text-muted-foreground">· {request.email}</span></div>
                                 <div className="text-[13px] text-muted-foreground">
                                     <School className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-                                    {[request.school, request.subject, request.city, request.phone].filter(Boolean).join(" · ")}
+                                    {[request.school, request.city, request.subject, request.homeroom && `${text.homeroom}: ${request.homeroom}`].filter(Boolean).join(" · ")}
+                                </div>
+                                <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[13px]">
+                                    {request.phone && <a href={`tel:${request.phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"><Phone className="h-3.5 w-3.5" aria-hidden /> {request.phone}</a>}
+                                    {request.contactPhone && (
+                                        <a href={`tel:${request.contactPhone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 font-semibold text-foreground hover:text-primary">
+                                            <Phone className="h-3.5 w-3.5" aria-hidden /> {text.contact}: {request.contactName} · {request.contactPhone}
+                                        </a>
+                                    )}
                                 </div>
                             </div>
                             {request.status === "pending" ? (

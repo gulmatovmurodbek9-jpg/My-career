@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, GraduationCap, KeyRound, School } from "lucide-react";
+import { ArrowRight, GraduationCap, KeyRound, MessageCircle, School } from "lucide-react";
 import { API } from "../lib/config";
 import { useAuthStore } from "../store/authStore";
-import { classText } from "../lib/classText";
+import { classText, fill } from "../lib/classText";
 
 // Дар «Панел»: синфе, ки хонанда дар он аст; барои омӯзгор — «Ҳуҷраи омӯзгор»;
 // барои дигарон — пайвандҳои хурд «Рамзи синф доред?» ва «Шумо омӯзгор ҳастед?».
@@ -49,14 +49,22 @@ export default function ClassCard({ part = "top" }) {
                 </Link>
             )}
             {part === "top" && classes.map((room) => (
-                <div key={room.memberId} className="flex items-center gap-3 rounded-3xl border border-border bg-card p-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600"><GraduationCap className="h-5 w-5" aria-hidden /></span>
-                    <span className="min-w-0 flex-1">
-                        <span className="block text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{text.myClasses}</span>
-                        <span className="block truncate font-black text-foreground">{room.name}{room.school ? ` · ${room.school}` : ""}</span>
-                        {room.teacher && <span className="block truncate text-[13px] text-muted-foreground">{text.teacher}: {room.teacher}</span>}
-                    </span>
-                    <button type="button" onClick={() => leave(room)} className="shrink-0 text-[12px] font-bold text-muted-foreground hover:text-rose-600 cursor-pointer">{text.leave}</button>
+                <div key={room.memberId} className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/8 via-card to-card p-4">
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md shadow-primary/25"><GraduationCap className="h-5 w-5" aria-hidden /></span>
+                        <span className="min-w-0 flex-1">
+                            <span className="block text-[12px] font-bold uppercase tracking-wide text-primary">{text.myClasses}</span>
+                            <span className="block truncate font-black text-foreground">{room.name}{room.school ? ` · ${room.school}` : ""}</span>
+                            {room.teacher && <span className="block truncate text-[13px] text-muted-foreground">{text.teacher}: {room.teacher}</span>}
+                        </span>
+                        <button type="button" onClick={() => leave(room)} className="shrink-0 self-start text-[12px] font-bold text-muted-foreground hover:text-rose-600 cursor-pointer">{text.leave}</button>
+                    </div>
+                    <Link to={`/class/my/${room.memberId}`} className="group mt-3 flex items-center gap-2 rounded-2xl bg-background/80 px-3.5 py-2.5 text-[14px] font-bold text-primary hover:bg-background">
+                        <MessageCircle className="h-4 w-4" aria-hidden />
+                        <span className="flex-1">{text.openMyClass}</span>
+                        {room.unread > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-black text-white">{fill(text.unreadN, { n: room.unread })}</span>}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </Link>
                 </div>
             ))}
             {part === "promo" && !teacher && (

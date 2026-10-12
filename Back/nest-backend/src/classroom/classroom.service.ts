@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { createHash, randomBytes, randomInt, timingSafeEqual } from 'crypto';
 
@@ -11,10 +11,30 @@ const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 6;
 const MAX_CLASSES = 30;
 const MAX_MEMBERS = 60;
+const MAX_MESSAGE = 1000;
+// Паём: аз як нафар то 30 дар 10 дақиқа (спам нашавад).
+const MESSAGE_WINDOW_MS = 10 * 60_000;
+const MESSAGE_LIMIT = 30;
+const messageHits = new Map<string, number[]>();
+const phoneDigits = (value: string) => value.replace(/\D/g, '').length;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const clean = (value: unknown, max: number) => String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const hash = (secret: string) => createHash('sha256').update(secret).digest('hex');
+// Соли таҳсил: 1 сентябр — май. Аз 1 август соли нав ҳисоб мешавад.
+export function currentSchoolYear(now = new Date()): string {
+    const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+    return `${start}-${start + 1}`;
+}
+const SCHOOL_YEAR = /^(\d{4})-(\d{4})$/;
+function schoolYearOf(value: unknown): string {
+    const match = SCHOOL_YEAR.exec(String(value ?? '').trim());
+    if (!match || Number(match[2]) !== Number(match[1]) + 1) return currentSchoolYear();
+    const start = Number(match[1]);
+    const current = Number(currentSchoolYear().slice(0, 4));
+    // Танҳо соли ҷорӣ ё соли оянда.
+    return start >= current && start <= current + 1 ? `${start}-${start + 1}` : currentSchoolYear();
+}
 const average = (list: number[]) => (list.length ? Math.round((list.reduce((sum, value) => sum + value, 0) / list.length) * 10) / 10 : null);
 
 export interface Actor {
@@ -24,6 +44,8 @@ export interface Actor {
 
 export interface ClassroomInput {
     name?: string;
+    district?: string;
+    schoolYear?: string;
     school?: string;
     city?: string;
     grade?: number | string | null;
@@ -31,6 +53,10 @@ export interface ClassroomInput {
 }
 
 export interface TeacherRequestInput {
+    fullName?: string;
+    homeroom?: string;
+    contactName?: string;
+    contactPhone?: string;
     school?: string;
     subject?: string;
     city?: string;
@@ -60,6 +86,9 @@ export class ClassroomService implements OnModuleInit {
                 "createdAt" timestamptz NOT NULL DEFAULT now()
             )`);
         await this.dataSource.query('CREATE INDEX IF NOT EXISTS classrooms_teacher ON classrooms ("teacherId")');
+        // Ноҳия ва соли таҳсил (12.10): баъди соли таҳсил синф худкор ба бойгонӣ меравад.
+        await this.dataSource.query('ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS district varchar(60) NULL');
+        await this.dataSource.query('ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS "schoolYear" varchar(9) NULL');
         await this.dataSource.query(`
             CREATE TABLE IF NOT EXISTS classroom_guests (
                 id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -91,6 +120,33 @@ export class ClassroomService implements OnModuleInit {
                 "createdAt" timestamptz NOT NULL DEFAULT now(),
                 "decidedAt" timestamptz NULL
             )`);
+        // Дархости пурра (12.10): ному насаб, роҳбари синф, директор/котиба барои тасдиқ.
+        for (const column of ['"fullName" varchar(100)', 'homeroom varchar(40)', '"contactName" varchar(100)', '"contactPhone" varchar(30)']) {
+            await this.dataSource.query(`ALTER TABLE teacher_requests ADD COLUMN IF NOT EXISTS ${column} NULL`);
+        }
+        // Фидбеки омӯзгор ↔ хонанда (чат дар доираи синф).
+        await this.dataSource.query(`
+            CREATE TABLE IF NOT EXISTS classroom_messages (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                "classroomId" uuid NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                "memberId" uuid NOT NULL REFERENCES classroom_members(id) ON DELETE CASCADE,
+                author varchar(10) NOT NULL,
+                body varchar(${MAX_MESSAGE}) NOT NULL,
+                "createdAt" timestamptz NOT NULL DEFAULT now(),
+                "readAt" timestamptz NULL
+            )`);
+        await this.dataSource.query('CREATE INDEX IF NOT EXISTS classroom_messages_member ON classroom_messages ("memberId", "createdAt")');
+        await this.archiveFinished();
+        // Сервер моҳҳо бе бозоғоз кор мекунад — ҳар 6 соат месанҷем.
+        setInterval(() => void this.archiveFinished().catch(() => undefined), 6 * 3600_000).unref();
+    }
+
+    // Синфҳое, ки соли таҳсилашон гузашт, ба бойгонӣ (рамз дигар кор намекунад; натиҷаҳо мемонанд).
+    async archiveFinished() {
+        const current = Number(currentSchoolYear().slice(0, 4));
+        await this.dataSource.query(
+            `UPDATE classrooms SET archived = true
+             WHERE archived = false AND "schoolYear" ~ '^[0-9]{4}-[0-9]{4}$' AND split_part("schoolYear", '-', 1)::int < $1`, [current]);
     }
 
     // ---------- Хонандаи бе почта ----------
@@ -150,8 +206,9 @@ export class ClassroomService implements OnModuleInit {
         if (count >= MAX_CLASSES) throw new BadRequestException(`Ҳадди аксар ${MAX_CLASSES} синф`);
         const code = await this.newCode();
         const [room] = await this.dataSource.query(
-            `INSERT INTO classrooms (code, name, school, city, grade, "teacherId") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [code, name, clean(input?.school, 120) || null, clean(input?.city, 60) || null, ClassroomService.grade(input?.grade), actor.userId],
+            `INSERT INTO classrooms (code, name, school, city, grade, "teacherId", district, "schoolYear") VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [code, name, clean(input?.school, 120) || null, clean(input?.city, 60) || null, ClassroomService.grade(input?.grade), actor.userId,
+                clean(input?.district, 60) || null, schoolYearOf(input?.schoolYear)],
         );
         return room;
     }
@@ -161,7 +218,7 @@ export class ClassroomService implements OnModuleInit {
         const name = input?.name !== undefined ? clean(input.name, 60) : room.name;
         if (!name) throw new BadRequestException('Номи синфро нависед');
         const [updated] = await this.dataSource.query(
-            `UPDATE classrooms SET name = $2, school = $3, city = $4, grade = $5, archived = $6 WHERE id = $1 RETURNING *`,
+            `UPDATE classrooms SET name = $2, school = $3, city = $4, grade = $5, archived = $6, district = $7, "schoolYear" = $8 WHERE id = $1 RETURNING *`,
             [
                 id,
                 name,
@@ -169,6 +226,8 @@ export class ClassroomService implements OnModuleInit {
                 input?.city !== undefined ? clean(input.city, 60) || null : room.city,
                 input?.grade !== undefined ? ClassroomService.grade(input.grade) : room.grade,
                 typeof input?.archived === 'boolean' ? input.archived : room.archived,
+                input?.district !== undefined ? clean(input.district, 60) || null : room.district,
+                input?.schoolYear !== undefined ? schoolYearOf(input.schoolYear) : room.schoolYear,
             ],
         );
         return updated;
@@ -189,6 +248,7 @@ export class ClassroomService implements OnModuleInit {
 
     async mine(actor: Actor) {
         await this.assertTeacher(actor);
+        await this.archiveFinished();
         const rooms = await this.dataSource.query(
             'SELECT * FROM classrooms WHERE "teacherId" = $1 ORDER BY archived, "createdAt" DESC', [actor.userId]);
         const result = [];
@@ -235,6 +295,35 @@ export class ClassroomService implements OnModuleInit {
                 ORDER BY t."createdAt"`, [userIds, guestIds])
             : [];
 
+        // Омори пурра: шумораи тестҳо, захираҳо, рӯйхати ҳуҷҷатсупорӣ ва паёмҳо.
+        const quizStats: Array<{ key: string; count: number; first: string }> = userIds.length || guestIds.length
+            ? await this.dataSource.query(`
+                SELECT COALESCE("userId", "guestId")::text AS key, count(*)::int AS count, min("createdAt") AS first
+                FROM quiz_attempts WHERE "userId" = ANY($1::uuid[]) OR "guestId" = ANY($2::uuid[])
+                GROUP BY 1`, [userIds, guestIds])
+            : [];
+        const saved: Array<{ userId: string; id: string; name: string }> = userIds.length
+            ? await this.dataSource.query(`
+                SELECT s."userId", c.id, c.name FROM user_saved_careers s JOIN career c ON c.id = s."careerId"
+                WHERE s."userId" = ANY($1::uuid[]) ORDER BY c.name`, [userIds])
+            : [];
+        const planRows: Array<{ userId: string; career: string; careerId: string; university: string; paymentType: string; studyForm: string }> = userIds.length
+            ? await this.dataSource.query(`
+                SELECT u.id AS "userId", c.name AS career, c.id AS "careerId", un.name AS university, o."paymentType", o."studyForm"
+                FROM "user" u
+                CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(u."applicationChoices"::jsonb, '[]'::jsonb)) AS choice(id)
+                JOIN career_offerings o ON o.id::text = choice.id
+                JOIN career c ON c.id = o."careerId"
+                LEFT JOIN universities un ON un.id = o."universityId"
+                WHERE u.id = ANY($1::uuid[])`, [userIds]).catch(() => [])
+            : [];
+        const messageStats: Array<{ memberId: string; total: number; unread: number; last: string }> = members.length
+            ? await this.dataSource.query(`
+                SELECT "memberId", count(*)::int AS total,
+                       count(*) FILTER (WHERE author = 'student' AND "readAt" IS NULL)::int AS unread, max("createdAt") AS last
+                FROM classroom_messages WHERE "classroomId" = $1 GROUP BY "memberId"`, [room.id])
+            : [];
+
         const topOf = (scores: Record<string, number> | null | undefined) => {
             const ranked = Object.entries(scores || {}).map(([key, value]) => [key, Number(value) || 0] as [string, number]).sort((a, b) => b[1] - a[1]);
             return ranked.length && ranked[0][1] > 0 ? ranked[0][0] : null;
@@ -263,6 +352,8 @@ export class ClassroomService implements OnModuleInit {
                 createdAt: row.createdAt,
             }));
             const dates = [member.joinedAt, lastQuiz?.createdAt, ...memberTrials.map((t) => t.createdAt)].filter(Boolean).map((d) => new Date(d as string).getTime());
+            const stats = quizStats.find((q) => q.key === (member.userId || member.guestId));
+            const messages = messageStats.find((m) => m.memberId === member.id);
             return {
                 id: member.id,
                 displayName: member.displayName,
@@ -273,6 +364,13 @@ export class ClassroomService implements OnModuleInit {
                 quiz: scores ? { scores, topCluster: lastQuiz?.topCluster || topOf(scores), topCareers: lastQuiz?.topCareers || [], at: lastQuiz?.createdAt || null } : null,
                 trials: memberTrials,
                 plan: member.plan || 0,
+                quizCount: stats?.count || 0,
+                firstQuiz: stats?.first || null,
+                saved: member.userId ? saved.filter((row) => row.userId === member.userId).map(({ id, name }) => ({ id, name })) : [],
+                planItems: member.userId
+                    ? planRows.filter((row) => row.userId === member.userId).map(({ career, careerId, university, paymentType, studyForm }) => ({ career, careerId, university, paymentType, studyForm }))
+                    : [],
+                messages: { total: messages?.total || 0, unread: messages?.unread || 0, last: messages?.last || null },
             };
         });
 
@@ -291,6 +389,7 @@ export class ClassroomService implements OnModuleInit {
                 confBefore: average(paired.map((t) => Number(t.confBefore))),
                 confAfter: average(paired.map((t) => Number(t.confAfter))),
                 notForMe: allTrials.filter((t) => !t.fit).length,
+                unread: rows.reduce((sum, row) => sum + row.messages.unread, 0),
             },
         };
     }
@@ -330,7 +429,7 @@ export class ClassroomService implements OnModuleInit {
         const room = await this.byCode(code);
         const [teacher] = await this.dataSource.query('SELECT name FROM "user" WHERE id = $1', [room.teacherId]);
         const [{ count }] = await this.dataSource.query('SELECT count(*)::int AS count FROM classroom_members WHERE "classroomId" = $1', [room.id]);
-        return { code: room.code, name: room.name, school: room.school, city: room.city, grade: room.grade, teacher: teacher?.name || null, members: count, full: count >= MAX_MEMBERS };
+        return { code: room.code, name: room.name, school: room.school, city: room.city, district: room.district, schoolYear: room.schoolYear, grade: room.grade, teacher: teacher?.name || null, members: count, full: count >= MAX_MEMBERS };
     }
 
     private async byCode(code: string) {
@@ -389,7 +488,8 @@ export class ClassroomService implements OnModuleInit {
         const guestId = await this.resolveGuest(guestHeader);
         if (!user?.userId && !guestId) return [];
         return this.dataSource.query(`
-            SELECT c.id, c.code, c.name, c.school, c.city, m.id AS "memberId", m."displayName", u.name AS teacher
+            SELECT c.id, c.code, c.name, c.school, c.city, m.id AS "memberId", m."displayName", u.name AS teacher,
+                   (SELECT count(*)::int FROM classroom_messages x WHERE x."memberId" = m.id AND x.author = 'teacher' AND x."readAt" IS NULL) AS unread
             FROM classroom_members m
             JOIN classrooms c ON c.id = m."classroomId"
             LEFT JOIN "user" u ON u.id = c."teacherId"
@@ -404,19 +504,141 @@ export class ClassroomService implements OnModuleInit {
         return { ok: true };
     }
 
+    // Аъзогии худи хонанда (ҳисоб ё бе почта) — барои омор ва паёмҳо.
+    private async ownMembership(user: Actor | null, guestHeader: unknown, memberId: string) {
+        const guestId = await this.resolveGuest(guestHeader);
+        if (!UUID.test(memberId) || (!user?.userId && !guestId)) throw new NotFoundException('Синф ёфт нашуд');
+        const [member] = await this.dataSource.query(
+            'SELECT * FROM classroom_members WHERE id = $1 AND ("userId" = $2 OR "guestId" = $3)', [memberId, user?.userId || null, guestId]);
+        if (!member) throw new NotFoundException('Синф ёфт нашуд');
+        const [room] = await this.dataSource.query('SELECT * FROM classrooms WHERE id = $1', [member.classroomId]);
+        if (!room) throw new NotFoundException('Синф ёфт нашуд');
+        return { member, room };
+    }
+
+    // «Синфи ман»: омори умумии синф БЕ НОМҲО (хонандагон ноболиғанд — натиҷаи ҳар кас
+    // танҳо ба омӯзгор намоён аст) ва ҷойи худи хонанда дар он.
+    async overview(user: Actor | null, guestHeader: unknown, memberId: string) {
+        const { member, room } = await this.ownMembership(user, guestHeader, memberId);
+        const { members, summary } = await this.build(room);
+        const me = members.find((row) => row.id === member.id);
+        const [teacher] = await this.dataSource.query('SELECT name FROM "user" WHERE id = $1', [room.teacherId]);
+
+        const careers = new Map<string, { id: string; name: string; count: number; mine: boolean }>();
+        for (const row of members) {
+            for (const career of (row.quiz?.topCareers || []).slice(0, 5)) {
+                const entry = careers.get(career.id) || { id: career.id, name: career.name, count: 0, mine: false };
+                entry.count += 1;
+                if (row.id === member.id) entry.mine = true;
+                careers.set(career.id, entry);
+            }
+        }
+        const tried = new Map<string, { id: string; name: string; students: Set<string>; fit: number; mine: boolean }>();
+        for (const row of members) {
+            for (const trial of row.trials) {
+                if (!trial.careerId) continue;
+                const entry = tried.get(trial.careerId) || { id: trial.careerId, name: trial.careerName || '—', students: new Set<string>(), fit: 0, mine: false };
+                entry.students.add(row.id);
+                if (trial.fit) entry.fit += 1;
+                if (row.id === member.id) entry.mine = true;
+                tried.set(trial.careerId, entry);
+            }
+        }
+        const [{ unread }] = await this.dataSource.query(
+            `SELECT count(*)::int AS unread FROM classroom_messages WHERE "memberId" = $1 AND author = 'teacher' AND "readAt" IS NULL`, [member.id]);
+        return {
+            classroom: { name: room.name, school: room.school, city: room.city, district: room.district, schoolYear: room.schoolYear, grade: room.grade, teacher: teacher?.name || null },
+            summary: { members: summary.members, withQuiz: summary.withQuiz, withTrial: summary.withTrial, clusters: summary.clusters, confBefore: summary.confBefore, confAfter: summary.confAfter },
+            careers: [...careers.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10),
+            tried: [...tried.values()].map(({ students, ...rest }) => ({ ...rest, students: students.size }))
+                .sort((a, b) => b.students - a.students || a.name.localeCompare(b.name)).slice(0, 10),
+            me: { topCluster: me?.quiz?.topCluster || null, quiz: !!me?.quiz, trials: me?.trials.length || 0 },
+            unread,
+        };
+    }
+
+    // ---------- Паёмҳо (фидбеки омӯзгор) ----------
+
+    private static assertRate(key: string) {
+        const now = Date.now();
+        const list = (messageHits.get(key) || []).filter((time) => time > now - MESSAGE_WINDOW_MS);
+        if (list.length >= MESSAGE_LIMIT) throw new HttpException('Паём зиёд шуд. Каме интизор шавед.', HttpStatus.TOO_MANY_REQUESTS);
+        list.push(now);
+        messageHits.set(key, list);
+        if (messageHits.size > 5000) messageHits.clear();
+    }
+
+    private async thread(memberId: string, reader: 'teacher' | 'student') {
+        // Паёмҳои тарафи дигар ҳангоми кушодан хонда мешаванд.
+        await this.dataSource.query(
+            `UPDATE classroom_messages SET "readAt" = now() WHERE "memberId" = $1 AND author <> $2 AND "readAt" IS NULL`, [memberId, reader]);
+        return this.dataSource.query(
+            `SELECT id, author, body, "createdAt", "readAt" FROM classroom_messages WHERE "memberId" = $1 ORDER BY "createdAt" LIMIT 300`, [memberId]);
+    }
+
+    private async post(roomId: string, memberId: string, author: 'teacher' | 'student', body: unknown) {
+        const text = String(body ?? '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, MAX_MESSAGE);
+        if (!text) throw new BadRequestException('Паём холӣ аст');
+        ClassroomService.assertRate(`${author}:${memberId}`);
+        const [row] = await this.dataSource.query(
+            `INSERT INTO classroom_messages ("classroomId", "memberId", author, body) VALUES ($1, $2, $3, $4) RETURNING id, author, body, "createdAt", "readAt"`,
+            [roomId, memberId, author, text]);
+        return row;
+    }
+
+    private async ownMember(actor: Actor, id: string, memberId: string) {
+        const room = await this.ownClassroom(actor, id);
+        if (!UUID.test(memberId)) throw new NotFoundException();
+        const [member] = await this.dataSource.query('SELECT id FROM classroom_members WHERE id = $1 AND "classroomId" = $2', [memberId, id]);
+        if (!member) throw new NotFoundException('Хонанда ёфт нашуд');
+        return room;
+    }
+
+    async teacherThread(actor: Actor, id: string, memberId: string) {
+        await this.ownMember(actor, id, memberId);
+        return this.thread(memberId, 'teacher');
+    }
+
+    async teacherPost(actor: Actor, id: string, memberId: string, body: unknown) {
+        await this.ownMember(actor, id, memberId);
+        return this.post(id, memberId, 'teacher', body);
+    }
+
+    async studentThread(user: Actor | null, guestHeader: unknown, memberId: string) {
+        await this.ownMembership(user, guestHeader, memberId);
+        return this.thread(memberId, 'student');
+    }
+
+    async studentPost(user: Actor | null, guestHeader: unknown, memberId: string, body: unknown) {
+        const { room } = await this.ownMembership(user, guestHeader, memberId);
+        return this.post(room.id, memberId, 'student', body);
+    }
+
     // ---------- Дархости «Ман омӯзгор ҳастам» ----------
 
     async requestTeacher(actor: Actor, input: TeacherRequestInput) {
         const role = await this.role(actor.userId);
         if (role === 'teacher' || role === 'admin') return { status: 'approved' };
         const school = clean(input?.school, 120);
+        const fullName = clean(input?.fullName, 100);
+        const phone = clean(input?.phone, 30);
+        const contactName = clean(input?.contactName, 100);
+        const contactPhone = clean(input?.contactPhone, 30);
+        if (fullName.length < 3) throw new BadRequestException('Ному насабро пурра нависед');
         if (school.length < 2) throw new BadRequestException('Номи мактабро нависед');
+        if (phoneDigits(phone) < 7) throw new BadRequestException('Рақами телефонро нависед');
+        if (contactName.length < 3) throw new BadRequestException('Ному насаби директор ё котибаро нависед');
+        if (phoneDigits(contactPhone) < 7) throw new BadRequestException('Телефони директор ё котибаро нависед');
         const [row] = await this.dataSource.query(
-            `INSERT INTO teacher_requests ("userId", school, subject, city, phone, note) VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO teacher_requests ("userId", school, subject, city, phone, note, "fullName", homeroom, "contactName", "contactPhone")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
              ON CONFLICT ("userId") DO UPDATE SET school = EXCLUDED.school, subject = EXCLUDED.subject, city = EXCLUDED.city,
-                 phone = EXCLUDED.phone, note = EXCLUDED.note, status = 'pending', "createdAt" = now(), "decidedAt" = NULL
+                 phone = EXCLUDED.phone, note = EXCLUDED.note, "fullName" = EXCLUDED."fullName", homeroom = EXCLUDED.homeroom,
+                 "contactName" = EXCLUDED."contactName", "contactPhone" = EXCLUDED."contactPhone",
+                 status = 'pending', "createdAt" = now(), "decidedAt" = NULL
              RETURNING status, "createdAt"`,
-            [actor.userId, school, clean(input?.subject, 80) || null, clean(input?.city, 60) || null, clean(input?.phone, 30) || null, clean(input?.note, 300) || null],
+            [actor.userId, school, clean(input?.subject, 80) || null, clean(input?.city, 60) || null, phone, clean(input?.note, 300) || null,
+                fullName, clean(input?.homeroom, 40) || null, contactName, contactPhone],
         );
         return row;
     }
@@ -425,14 +647,16 @@ export class ClassroomService implements OnModuleInit {
         const role = await this.role(actor.userId);
         if (role === 'teacher' || role === 'admin') return { status: 'approved', role };
         const [row] = await this.dataSource.query('SELECT status, school, "createdAt" FROM teacher_requests WHERE "userId" = $1', [actor.userId]);
-        return row ? { ...row, role } : { status: null, role };
+        // «none» — дархост нест (null-ро браузер бо «бор шуда истодааст» иштибоҳ мекард).
+        return row ? { ...row, role } : { status: 'none', role };
     }
 
     // ---------- Админ ----------
 
     async adminRequests() {
         return this.dataSource.query(`
-            SELECT r.id, r."userId", r.school, r.subject, r.city, r.phone, r.note, r.status, r."createdAt", u.name, u.email, u.role
+            SELECT r.id, r."userId", r.school, r.subject, r.city, r.phone, r.note, r.status, r."createdAt",
+                   r."fullName", r.homeroom, r."contactName", r."contactPhone", u.name, u.email, u.role
             FROM teacher_requests r JOIN "user" u ON u.id = r."userId"
             ORDER BY (r.status = 'pending') DESC, r."createdAt" DESC LIMIT 200`);
     }
@@ -450,7 +674,7 @@ export class ClassroomService implements OnModuleInit {
 
     async adminClassrooms() {
         return this.dataSource.query(`
-            SELECT c.id, c.code, c.name, c.school, c.city, c.grade, c.archived, c."createdAt", u.name AS teacher, u.email AS "teacherEmail",
+            SELECT c.id, c.code, c.name, c.school, c.city, c.district, c."schoolYear", c.grade, c.archived, c."createdAt", u.name AS teacher, u.email AS "teacherEmail",
                    (SELECT count(*)::int FROM classroom_members m WHERE m."classroomId" = c.id) AS members
             FROM classrooms c LEFT JOIN "user" u ON u.id = c."teacherId"
             ORDER BY c."createdAt" DESC LIMIT 300`);

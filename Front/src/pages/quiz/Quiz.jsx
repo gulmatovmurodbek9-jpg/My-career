@@ -40,6 +40,7 @@ import { CLUSTER_FAMILY, FAMILY_ROLE, fillText, langCode, trialText } from "../.
 import TrialIcon from "../../components/TrialIcon";
 import ShareResult from "../../components/ShareResult";
 import ParentInvite from "../../components/ParentInvite";
+import VoiceQuizMode from "../../components/VoiceQuizMode";
 import QuickApply, { QUICK_TEXT } from "../../components/QuickApply";
 import { CLUSTER_SUBJECTS, SUBJECTS, getQuizContext, setQuizContext, subjectName } from "../../lib/quizContext";
 
@@ -1142,6 +1143,15 @@ const Quiz = () => {
                     </ul>
                 </section>
 
+                <Link to="/peers" className="group flex items-center gap-4 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.07] via-card to-card p-5 transition-colors hover:border-primary" data-peer-promo>
+                    <span className="text-4xl" aria-hidden>👥</span>
+                    <span className="min-w-0 flex-1">
+                        <span className="block text-lg font-black text-foreground">{({ tj: "Дӯстон шуморо чӣ гуна мебинанд?", ru: "Как вас видят друзья?", en: "How do your friends see you?" })[(i18n.language || "tj").slice(0, 2)] || "Дӯстон шуморо чӣ гуна мебинанд?"}</span>
+                        <span className="block text-[14px] text-muted-foreground">{({ tj: "Пайвандро ба 3 дӯст фиристед — 8 сифати шуморо баҳо медиҳанд.", ru: "Отправьте ссылку 3 друзьям — они оценят 8 ваших качеств.", en: "Send a link to 3 friends — they rate 8 of your qualities." })[(i18n.language || "tj").slice(0, 2)] || ""}</span>
+                    </span>
+                    <ArrowRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </Link>
+
                 {results.scores?.mmtClusters && (
                     <ParentInvite
                         scores={results.scores.mmtClusters}
@@ -1369,7 +1379,8 @@ const Quiz = () => {
         const text = gradeText(i18n.language);
         const stored = getGrade();
         return (
-            <div className="max-w-xl mx-auto py-10 px-4">
+            <div className="max-w-xl mx-auto py-10 px-4 space-y-4">
+                <VoiceQuizMode />
                 <div className="rounded-[1.75rem] border border-border bg-card shadow-sm p-6 sm:p-8 space-y-5">
                     <div className="space-y-2 text-center">
                         <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight">{text.pickTitle}</h2>
@@ -1527,6 +1538,8 @@ const Quiz = () => {
                         className="h-full bg-gradient-to-r from-primary to-accent-blue"
                     />
                 </div>
+
+                <VoiceQuizMode />
 
                 <AnimatePresence mode="wait">
                             {stageLoading && (

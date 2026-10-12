@@ -51,6 +51,9 @@ const TeacherHome = lazy(() => import("./pages/teacher/TeacherHome"));
 const TeacherClass = lazy(() => import("./pages/teacher/TeacherClass"));
 const ClassJoin = lazy(() => import("./pages/teacher/ClassJoin"));
 const MyClass = lazy(() => import("./pages/teacher/MyClass"));
+const Swipe = lazy(() => import("./pages/swipe/Swipe"));
+const Peers = lazy(() => import("./pages/peers/Peers"));
+const PeerAnswer = lazy(() => import("./pages/peers/PeerAnswer"));
 const ParentSurvey = lazy(() => import("./pages/parent/ParentSurvey"));
 const Favorites = lazyPreload(() => import("./pages/favorites/Favorites"));
 
@@ -90,6 +93,9 @@ export const AppRoutes = () => (
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/help" element={<Help />} />
+              <Route path="/swipe" element={<Swipe />} />
+              <Route path="/peers" element={<Peers />} />
+              <Route path="/peer/:code" element={<PeerAnswer />} />
               <Route path="/trial" element={<TrialHub />} />
               <Route path="/trial/career/:careerId" element={<Trial />} />
               <Route path="/trial/:family" element={<Trial />} />

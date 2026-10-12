@@ -412,6 +412,8 @@ const Layout = () => {
                         : []),
                       { to: "/#cluster-groups", label: t("nav.clusters", "Кластерҳо") },
                       { to: "/trial", label: t("nav.trial", "Худро дар касб санҷед") },
+                      { to: "/swipe", label: { tj: "Касб-свайп", ru: "Профессия-свайп", en: "Career swipe" }[currentLang] || "Касб-свайп" },
+                      { to: "/peers", label: { tj: "Дӯстон маро чӣ гуна мебинанд", ru: "Как меня видят друзья", en: "How friends see me" }[currentLang] || "Дӯстон маро чӣ гуна мебинанд" },
                       { to: "/class", label: { tj: "Рамзи синф", ru: "Код класса", en: "Class code" }[currentLang] || "Рамзи синф" },
                       { to: "/help", label: { tj: "Видеоҳои омӯзишӣ", ru: "Обучающие видео", en: "Tutorial videos" }[currentLang] || "Видеоҳои омӯзишӣ" },
                       { to: "/about", label: t("nav.about", "Дар бора") },

@@ -16,6 +16,7 @@ import { ImpactModule } from './impact/impact.module';
 import { ClassroomModule } from './classroom/classroom.module';
 import { InterviewModule } from './interview/interview.module';
 import { ParentModule } from './parent/parent.module';
+import { PeerModule } from './peer/peer.module';
 import { TrialModule } from './trial/trial.module';
 
 @Module({
@@ -58,6 +59,7 @@ import { TrialModule } from './trial/trial.module';
         ClassroomModule,
         InterviewModule,
         ParentModule,
+        PeerModule,
     ],
     controllers: [HealthController],
 })

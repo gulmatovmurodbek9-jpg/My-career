@@ -194,6 +194,7 @@ function ClosingScene() {
 }
 
 import { usePageMeta } from "../../lib/usePageMeta";
+import SwipePromo from "./SwipePromo";
 
 export default function Home() {
   const { t } = useTranslation();
@@ -210,6 +211,7 @@ export default function Home() {
         slides={[<HomeHero key="hero" />, <OverwhelmScene key="overwhelm" />]}
       />
       <EntryDoors />
+      <SwipePromo />
       <ClusterList />
       <TopCareers />
       <ClosingScene />

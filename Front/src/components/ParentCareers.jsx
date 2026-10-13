@@ -8,10 +8,10 @@ import { fill, parentText } from "../lib/parentSurvey";
 
 // Иконкаи ҳар саволи кӯтоҳ (lucide, на emoji) — ранги худ дар доираи хурд.
 const CHIP_ICON = {
-    what: { Icon: CircleHelp, tone: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
-    why: { Icon: Target, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
-    where: { Icon: GraduationCap, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-    work: { Icon: BriefcaseBusiness, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+    what: { Icon: CircleHelp, tone: "text-primary" },
+    why: { Icon: Target, tone: "text-primary" },
+    where: { Icon: GraduationCap, tone: "text-primary" },
+    work: { Icon: BriefcaseBusiness, tone: "text-primary" },
 };
 
 function ChipIcon({ name }) {
@@ -59,7 +59,7 @@ function Ask({ code, secret, career, text, lang }) {
             <div className="flex flex-wrap gap-2">
                 {text.askChips.map((chip) => (
                     <button key={chip.label} type="button" disabled={busy || asked.has(chip.label)} onClick={() => ask(chip.q, chip.label)}
-                        className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/[0.06] py-1.5 pl-1.5 pr-3.5 text-[13.5px] font-bold text-foreground transition hover:border-primary hover:bg-primary/10 active:scale-[0.98] disabled:opacity-45 cursor-pointer">
+                        className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-card py-1.5 pl-1.5 pr-3.5 text-[13.5px] font-bold text-foreground transition hover:border-primary hover:bg-primary/10 active:scale-[0.98] disabled:opacity-45 cursor-pointer">
                         <ChipIcon name={chip.icon} /> {chip.label}
                     </button>
                 ))}
@@ -121,9 +121,9 @@ export default function ParentCareers({ invite, code, secret, forChild = false }
 
     const name = invite.childName;
     return (
-        <section className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.07] via-card to-card p-5 sm:p-6" data-parent-careers>
+        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6" data-parent-careers>
             <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md shadow-primary/25"><Sparkles className="h-6 w-6" aria-hidden /></span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles className="h-6 w-6" aria-hidden /></span>
                 <div>
                     <h2 className="text-xl font-black text-foreground">{forChild ? text.careersTitleChild : name ? fill(text.careersTitle, { name }) : text.careersTitleNoName}</h2>
                     <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">{text.careersText}</p>

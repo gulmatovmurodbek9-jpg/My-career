@@ -61,7 +61,7 @@ const SHUFFLE_SEED = Math.floor(Math.random() * 1e9);
 const OWN_TEXT = {
     tj: {
         title: "Ҷавоби шумо дар рӯйхат нест?",
-        hint: "Бо суханони худ нависед — AI варианти аз ҳама наздикро меёбад ва ба шумо нишон медиҳад. Хол ҳамон тавр ҳисоб мешавад, ки бо интихоби вариант.",
+        hint: "Бо суханони худ нависед - AI варианти аз ҳама наздикро меёбад ва ба шумо нишон медиҳад. Хол ҳамон тавр ҳисоб мешавад, ки бо интихоби вариант.",
         placeholder: "Масалан: «дар бораи ҳайвонот ва табиат»",
         send: "Ёфтан",
         matched: "Ҷавоби шумо ба ин вариант наздик аст:",
@@ -71,7 +71,7 @@ const OWN_TEXT = {
     },
     ru: {
         title: "Вашего ответа нет в списке?",
-        hint: "Напишите своими словами — AI найдёт самый близкий вариант и покажет его вам. Баллы считаются так же, как при выборе варианта.",
+        hint: "Напишите своими словами - AI найдёт самый близкий вариант и покажет его вам. Баллы считаются так же, как при выборе варианта.",
         placeholder: "Например: «о животных и природе»",
         send: "Найти",
         matched: "Ваш ответ ближе всего к варианту:",
@@ -81,7 +81,7 @@ const OWN_TEXT = {
     },
     en: {
         title: "Your answer is not listed?",
-        hint: "Write it in your own words — AI will find the closest option and show it to you. It is scored the same as choosing that option.",
+        hint: "Write it in your own words - AI will find the closest option and show it to you. It is scored the same as choosing that option.",
         placeholder: "For example: “about animals and nature”",
         send: "Find",
         matched: "Your answer is closest to:",
@@ -132,15 +132,15 @@ const fill = (text, values) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => values
 // Саволи «ду самт баробар»: чаро пайдо шуд ва ҳар самт чӣ гуна аст.
 const TIE_TEXT = {
     tj: {
-        why: "Ҷавобҳои шумо ба ин ду самт қариб баробар хол доданд. Дар поён бинед, ки ҳар самт чӣ гуна кор аст ва кадом ихтисосҳо дорад, ва онеро интихоб кунед, ки ба дилатон наздиктар аст — тавсияҳо аз рӯи ҳамин сохта мешаванд.",
+        why: "Ҷавобҳои шумо ба ин ду самт қариб баробар хол доданд. Дар поён бинед, ки ҳар самт чӣ гуна кор аст ва кадом ихтисосҳо дорад, ва онеро интихоб кунед, ки ба дилатон наздиктар аст - тавсияҳо аз рӯи ҳамин сохта мешаванд.",
         examples: "Масалан:",
     },
     ru: {
-        why: "Ваши ответы дали этим двум направлениям почти одинаковые баллы. Ниже — чем занимаются в каждом и какие там специальности. Выберите то, что вам ближе: по нему будут подобраны рекомендации.",
+        why: "Ваши ответы дали этим двум направлениям почти одинаковые баллы. Ниже - чем занимаются в каждом и какие там специальности. Выберите то, что вам ближе: по нему будут подобраны рекомендации.",
         examples: "Например:",
     },
     en: {
-        why: "Your answers gave these two directions almost equal points. Below is what each one is about and which specialties it has. Pick the one closer to you — recommendations will be based on it.",
+        why: "Your answers gave these two directions almost equal points. Below is what each one is about and which specialties it has. Pick the one closer to you - recommendations will be based on it.",
         examples: "For example:",
     },
 };
@@ -152,42 +152,42 @@ const NEXT_TEXT = {
         hint: "Санҷиш танҳо самтро нишон медиҳад. Барои интихоби ниҳоӣ ин қадамҳоро гузаред:",
         steps: [
             ["Ихтисосҳоро шинос шавед", "2–3 ихтисоси боло ё поёнро кушоед: чӣ кор мекунанд, маош, бали гузариш ва дар куҷо мехонанд."],
-            ["Муқоиса кунед", "2–3 ихтисоси маъқулро паҳлӯи ҳам гузоред — AI фарқ ва ояндаи онҳоро мефаҳмонад."],
+            ["Муқоиса кунед", "2–3 ихтисоси маъқулро паҳлӯи ҳам гузоред - AI фарқ ва ояндаи онҳоро мефаҳмонад."],
             ["Ҷойи таҳсилро интихоб кунед", "Дар харита муассисаҳоеро бинед, ки ин ихтисосҳоро доранд: нарх, ҷойи ройгон ва шаҳр."],
             ["Ҳуҷҷатҳоро омода кунед", "Рӯйхати ҳуҷҷатсупорӣ: чӣ лозим аст ва то кай."],
             ["Ҳанӯз шубҳа доред?", "Ба ёвари овозӣ ё чати AI нависед: «кадом ихтисос барои ман беҳтар аст?»"],
         ],
-        steps9: "Баъди синфи 9 — танҳо коллеҷҳо нишон дода мешаванд.",
+        steps9: "Баъди синфи 9 - танҳо коллеҷҳо нишон дода мешаванд.",
         open: ["Ихтисосҳо", "Муқоиса", "Харита", "Ҳуҷҷатҳо", "Чати AI"],
-        both: "Шумо ҳарду самтро интихоб кардед — дар «Ҳамаи панҷ самт» самти дуюмро кушоед ва ихтисосҳои онро низ бинед.",
+        both: "Шумо ҳарду самтро интихоб кардед - дар «Ҳамаи панҷ самт» самти дуюмро кушоед ва ихтисосҳои онро низ бинед.",
     },
     ru: {
         title: "Что делать дальше?",
         hint: "Тест показывает только направление. Чтобы выбрать окончательно, пройдите эти шаги:",
         steps: [
             ["Познакомьтесь со специальностями", "Откройте 2–3 специальности: чем занимаются, зарплата, проходной балл и где учиться."],
-            ["Сравните", "Поставьте 2–3 понравившиеся специальности рядом — AI объяснит разницу и перспективы."],
-            ["Выберите, где учиться", "На карте — учебные заведения с этими специальностями: цена, бюджетные места, город."],
+            ["Сравните", "Поставьте 2–3 понравившиеся специальности рядом - AI объяснит разницу и перспективы."],
+            ["Выберите, где учиться", "На карте - учебные заведения с этими специальностями: цена, бюджетные места, город."],
             ["Подготовьте документы", "План подачи документов: что нужно и до какого срока."],
             ["Остались сомнения?", "Спросите голосового помощника или AI-чат: «какая специальность мне подходит больше?»"],
         ],
         steps9: "После 9 класса показываются только колледжи.",
         open: ["Специальности", "Сравнение", "Карта", "Документы", "AI-чат"],
-        both: "Вы выбрали оба направления — откройте второе в блоке «Все пять направлений» и посмотрите его специальности тоже.",
+        both: "Вы выбрали оба направления - откройте второе в блоке «Все пять направлений» и посмотрите его специальности тоже.",
     },
     en: {
         title: "What should I do next?",
         hint: "The test only shows a direction. To make the final choice, go through these steps:",
         steps: [
             ["Get to know the specialties", "Open 2–3 specialties: what they do, salary, entry score and where to study."],
-            ["Compare", "Put 2–3 specialties you like side by side — AI explains the difference and prospects."],
-            ["Choose where to study", "On the map — institutions with these specialties: price, free places, city."],
+            ["Compare", "Put 2–3 specialties you like side by side - AI explains the difference and prospects."],
+            ["Choose where to study", "On the map - institutions with these specialties: price, free places, city."],
             ["Prepare documents", "The application plan: what is needed and by when."],
             ["Still unsure?", "Ask the voice assistant or AI chat: “which specialty suits me better?”"],
         ],
         steps9: "After grade 9, only colleges are shown.",
         open: ["Specialties", "Compare", "Map", "Documents", "AI chat"],
-        both: "You chose both directions — open the second one in “All five directions” and look at its specialties too.",
+        both: "You chose both directions - open the second one in “All five directions” and look at its specialties too.",
     },
 };
 
@@ -201,10 +201,10 @@ const CONTEXT_TEXT = {
         city: "Шаҳри шумо",
         anyCity: "Фарқ надорад",
         weakTitle: "Ба фанҳо диққат диҳед",
-        weak: "Барои самти «{{name}}» фанҳои {{subjects}} муҳиманд, вале шумо онҳоро ҳамчун фанни қавӣ қайд накардед. Ин манъ нест — танҳо тайёрии бештар лозим мешавад.",
+        weak: "Барои самти «{{name}}» фанҳои {{subjects}} муҳиманд, вале шумо онҳоро ҳамчун фанни қавӣ қайд накардед. Ин манъ нест - танҳо тайёрии бештар лозим мешавад.",
         local: "дар шаҳри шумо",
         freeSeat: "ҷойи ройгон дорад",
-        noneLocal: "Дар шаҳри {{city}} ихтисосҳои ин самт ёфт нашуданд — ихтисосҳо дар шаҳрҳои дигаранд.",
+        noneLocal: "Дар шаҳри {{city}} ихтисосҳои ин самт ёфт нашуданд - ихтисосҳо дар шаҳрҳои дигаранд.",
     },
     ru: {
         title: "Для более точной рекомендации (необязательно)",
@@ -215,10 +215,10 @@ const CONTEXT_TEXT = {
         city: "Ваш город",
         anyCity: "Неважно",
         weakTitle: "Обратите внимание на предметы",
-        weak: "Для направления «{{name}}» важны предметы {{subjects}}, но вы не отметили их как сильные. Это не запрет — просто понадобится больше подготовки.",
+        weak: "Для направления «{{name}}» важны предметы {{subjects}}, но вы не отметили их как сильные. Это не запрет - просто понадобится больше подготовки.",
         local: "в вашем городе",
         freeSeat: "есть бюджетные места",
-        noneLocal: "В городе {{city}} специальностей этого направления не нашлось — они в других городах.",
+        noneLocal: "В городе {{city}} специальностей этого направления не нашлось - они в других городах.",
     },
     en: {
         title: "For a more precise recommendation (optional)",
@@ -229,10 +229,10 @@ const CONTEXT_TEXT = {
         city: "Your city",
         anyCity: "Doesn't matter",
         weakTitle: "Mind the subjects",
-        weak: "For the “{{name}}” direction, {{subjects}} matter, but you did not mark them as strong. That is not a ban — you will just need more preparation.",
+        weak: "For the “{{name}}” direction, {{subjects}} matter, but you did not mark them as strong. That is not a ban - you will just need more preparation.",
         local: "in your city",
         freeSeat: "has free places",
-        noneLocal: "No specialties of this direction were found in {{city}} — they are in other cities.",
+        noneLocal: "No specialties of this direction were found in {{city}} - they are in other cities.",
     },
 };
 
@@ -474,9 +474,9 @@ const Quiz = () => {
                                 {
                                     value: "both",
                                     text: {
-                                        tj: "Намедонам — ҳарду ба ман наздиканд",
-                                        ru: "Не знаю — мне близки оба",
-                                        en: "I don't know — both are close to me",
+                                        tj: "Намедонам - ҳарду ба ман наздиканд",
+                                        ru: "Не знаю - мне близки оба",
+                                        en: "I don't know - both are close to me",
                                     },
                                 },
                             ],
@@ -785,6 +785,8 @@ const Quiz = () => {
     const handleRetake = () => {
         localStorage.removeItem(QUIZ_STORAGE_KEY);
         setResults(null);
+        // Бе ин тест худро «дар натиҷа» мепиндошт: овоз, тугмаҳои 1–5 ва ёвар кор намекарданд.
+        setShowResults(false);
         setAskRetake(false);
         setClusterCareers([]);
         setClusterPage(1);
@@ -982,10 +984,10 @@ const Quiz = () => {
                 <motion.section
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[2rem] border border-border bg-card p-6 sm:p-8 text-center"
+                    className="rounded-2xl border border-border bg-card p-6 sm:p-8 text-center"
                 >
-                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary">
-                        <Trophy className="w-4 h-4" aria-hidden="true" />
+                    <div className="inline-flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                        <Trophy className="w-4 h-4 text-primary" aria-hidden="true" />
                         {t('quiz.analysis_success')}
                     </div>
                     <p className="mt-5 text-sm font-semibold text-muted-foreground">{t('quiz.your_direction', 'Самти ба шумо мувофиқ')}</p>
@@ -1004,7 +1006,7 @@ const Quiz = () => {
                     )}
                     {isClose && second && (
                         <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
-                            {t('quiz.close_second', { defaultValue: 'Самти «{{name}}» низ ба шумо хеле наздик аст — бо ихтисосҳои он ҳам шинос шавед.', name: second.label })}
+                            {t('quiz.close_second', { defaultValue: 'Самти «{{name}}» низ ба шумо хеле наздик аст - бо ихтисосҳои он ҳам шинос шавед.', name: second.label })}
                         </p>
                     )}
                     {topCluster && first && (
@@ -1022,7 +1024,7 @@ const Quiz = () => {
                     )}
                 </motion.section>
 
-                <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
+                <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
                     <h2 className="text-lg font-black text-foreground">{t('quiz.all_directions', 'Ҳамаи панҷ самт')}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{t('quiz.all_directions_hint', 'Чӣ қадар ҷавобҳои шумо ба ҳар самт мувофиқ омаданд.')}</p>
                     <ul className="mt-5 space-y-2.5">
@@ -1143,11 +1145,11 @@ const Quiz = () => {
                     </ul>
                 </section>
 
-                <Link to="/peers" className="group flex items-center gap-4 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.07] via-card to-card p-5 transition-colors hover:border-primary" data-peer-promo>
-                    <span className="text-4xl" aria-hidden>👥</span>
+                <Link to="/peers" className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary" data-peer-promo>
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Users className="h-5 w-5" aria-hidden /></span>
                     <span className="min-w-0 flex-1">
                         <span className="block text-lg font-black text-foreground">{({ tj: "Дӯстон шуморо чӣ гуна мебинанд?", ru: "Как вас видят друзья?", en: "How do your friends see you?" })[(i18n.language || "tj").slice(0, 2)] || "Дӯстон шуморо чӣ гуна мебинанд?"}</span>
-                        <span className="block text-[14px] text-muted-foreground">{({ tj: "Пайвандро ба 3 дӯст фиристед — 8 сифати шуморо баҳо медиҳанд.", ru: "Отправьте ссылку 3 друзьям — они оценят 8 ваших качеств.", en: "Send a link to 3 friends — they rate 8 of your qualities." })[(i18n.language || "tj").slice(0, 2)] || ""}</span>
+                        <span className="block text-[14px] text-muted-foreground">{({ tj: "Пайвандро ба 3 дӯст фиристед - 8 сифати шуморо баҳо медиҳанд.", ru: "Отправьте ссылку 3 друзьям - они оценят 8 ваших качеств.", en: "Send a link to 3 friends - they rate 8 of your qualities." })[(i18n.language || "tj").slice(0, 2)] || ""}</span>
                     </span>
                     <ArrowRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </Link>
@@ -1169,7 +1171,7 @@ const Quiz = () => {
                     const noLocal = context?.city && matched.length > 0 && !matched.some((career) => career.local);
                     if (!weak && !noLocal) return null;
                     return (
-                        <section className="rounded-[2rem] border border-amber-500/30 bg-amber-500/10 p-6 sm:p-8 space-y-2">
+                        <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 sm:p-8 space-y-2">
                             <h2 className="text-lg font-black text-foreground">{ctx.weakTitle}</h2>
                             {weak && (
                                 <p className="text-[15px] leading-relaxed text-foreground">
@@ -1182,7 +1184,7 @@ const Quiz = () => {
                 })()}
 
                 {aiAdvice && (
-                    <section className="rounded-[2rem] border border-primary/25 bg-primary/5 p-6 sm:p-8">
+                    <section className="rounded-2xl border border-primary/25 bg-primary/5 p-6 sm:p-8">
                         <div className="flex items-center gap-2 text-sm font-black text-primary">
                             <Sparkles className="w-4 h-4" aria-hidden="true" />
                             {t('quiz.ai_advice_title')}
@@ -1192,9 +1194,9 @@ const Quiz = () => {
                 )}
 
                 {matched.length > 0 && (
-                    <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
+                    <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
                         <h2 className="text-lg font-black text-foreground">{t('quiz.matched_careers', 'Ихтисосҳое, ки ба ҷавобҳои шумо мувофиқанд')}</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">{t('quiz.matched_hint', 'Аз рӯи ҷавобҳои қисми дуюм интихоб шуданд — аввал мувофиқтаринҳо.')} {quick.percentHint}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('quiz.matched_hint', 'Аз рӯи ҷавобҳои қисми дуюм интихоб шуданд - аввал мувофиқтаринҳо.')} {quick.percentHint}</p>
                         {planIds.size > 0 && (
                             <Link to="/dashboard/plan" className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-bold text-emerald-700 dark:text-emerald-400">
                                 <span>✓ {quick.planCount.replace("{{n}}", planIds.size)}</span>
@@ -1276,7 +1278,7 @@ const Quiz = () => {
                     const top = matched.filter((spec) => spec.id).slice(0, 3);
                     const label = (spec) => displayName(careerName(spec, i18n.language));
                     return (
-                        <section className="rounded-[2rem] border border-primary/25 bg-gradient-to-br from-primary/10 to-indigo-500/5 p-6 sm:p-8">
+                        <section className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 to-indigo-500/5 p-6 sm:p-8">
                             <div className="flex items-start gap-4">
                                 <TrialIcon family={family} size="lg" />
                                 <div className="min-w-0 flex-1">
@@ -1318,7 +1320,7 @@ const Quiz = () => {
                         "/dashboard/ai-chat",
                     ];
                     return (
-                        <section className="rounded-[2rem] border border-border bg-card p-6 sm:p-8">
+                        <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
                             <h2 className="text-lg font-black text-foreground">{next.title}</h2>
                             <p className="mt-1 text-sm text-muted-foreground">{next.hint}</p>
                             {choseBoth && (
@@ -1381,7 +1383,7 @@ const Quiz = () => {
         return (
             <div className="max-w-xl mx-auto py-10 px-4 space-y-4">
                 <VoiceQuizMode />
-                <div className="rounded-[1.75rem] border border-border bg-card shadow-sm p-6 sm:p-8 space-y-5">
+                <div className="rounded-2xl border border-border bg-card shadow-sm p-6 sm:p-8 space-y-5">
                     <div className="space-y-2 text-center">
                         <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight">{text.pickTitle}</h2>
                         <p className="text-[15px] leading-relaxed text-muted-foreground">{text.pickDesc}</p>
@@ -1458,8 +1460,8 @@ const Quiz = () => {
                     })()}
                     <p className="text-center text-[12px] leading-relaxed text-muted-foreground">
                         {{
-                            tj: "Ҷавобҳо барои беҳтар кардани тест 12 моҳ нигоҳ дошта мешаванд (агар ворид шуда бошед — бо рамзи ҳисоб). Маслиҳатро AI (Google) месозад; ном ва почтаи шумо ба он фиристода намешавад.",
-                            ru: "Ответы хранятся 12 месяцев для улучшения теста (если вы вошли — с идентификатором аккаунта). Совет составляет AI (Google); ваше имя и почта ему не передаются.",
+                            tj: "Ҷавобҳо барои беҳтар кардани тест 12 моҳ нигоҳ дошта мешаванд (агар ворид шуда бошед - бо рамзи ҳисоб). Маслиҳатро AI (Google) месозад; ном ва почтаи шумо ба он фиристода намешавад.",
+                            ru: "Ответы хранятся 12 месяцев для улучшения теста (если вы вошли - с идентификатором аккаунта). Совет составляет AI (Google); ваше имя и почта ему не передаются.",
                             en: "Answers are kept for 12 months to improve the test (with your account ID if you are signed in). The advice is written by AI (Google); your name and email are never sent to it.",
                         }[(i18n.language || "tj").slice(0, 2)] || ""}{" "}
                         <Link to="/privacy" className="font-semibold text-primary hover:underline">{{ tj: "Махфият", ru: "Конфиденциальность", en: "Privacy" }[(i18n.language || "tj").slice(0, 2)]}</Link>
@@ -1503,27 +1505,17 @@ const Quiz = () => {
             <div className="space-y-4 relative">
                 <div className="flex items-center justify-between gap-4">
                     <div className="space-y-2">
-                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                            <LogoMark className="w-4 h-4" />
-                            {stageLabel}
-                        </div>
+                        <div className="text-[13px] font-semibold text-muted-foreground">{stageLabel}</div>
                         <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight">
                             {t('quiz.title')}
                         </h1>
                     </div>
 
-                    <div className="shrink-0 rounded-2xl border border-border bg-card px-4 py-2.5 flex items-center gap-4">
-                        <div className="text-center">
-                            <div className="text-lg font-black text-primary leading-none">{Math.round(progress)}%</div>
-                            <div className="mt-1 text-[11px] font-semibold text-muted-foreground">{t('quiz.progress')}</div>
+                    <div className="shrink-0 text-right">
+                        <div className="text-2xl font-black tabular-nums text-foreground leading-none">
+                            {currentStep + 1}<span className="text-base font-bold text-muted-foreground">/{totalExpected}</span>
                         </div>
-                        <div className="w-px h-8 bg-border" />
-                        <div className="text-center">
-                            <div className="text-lg font-black text-foreground leading-none">
-                                {currentStep + 1}<span className="text-sm font-bold text-muted-foreground">/{totalExpected}</span>
-                            </div>
-                            <div className="mt-1 text-[11px] font-semibold text-muted-foreground">{t('quiz.question')}</div>
-                        </div>
+                        <div className="mt-1 text-[12px] font-semibold text-muted-foreground">{t('quiz.question')}</div>
                     </div>
                 </div>
 
@@ -1535,7 +1527,7 @@ const Quiz = () => {
                     <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
-                        className="h-full bg-gradient-to-r from-primary to-accent-blue"
+                        className="h-full bg-primary"
                     />
                 </div>
 
@@ -1547,7 +1539,7 @@ const Quiz = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-[2rem]"
+                                    className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-2xl"
                                 >
                                     <div className="w-12 h-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin mb-4"></div>
                                     <h3 className="text-xl font-black uppercase tracking-widest text-primary">{t("misc2.cluster_analysis")}</h3>
@@ -1560,13 +1552,10 @@ const Quiz = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.2 }}
-                        className="rounded-[1.75rem] border border-border bg-card shadow-sm p-5 sm:p-8"
+                        className="rounded-2xl border border-border bg-card shadow-sm p-5 sm:p-8"
                     >
                         <div className="space-y-5 w-full max-w-lg mx-auto">
                             <div className="flex flex-col items-center gap-3 text-center">
-                                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                                    <CurrentIcon className="w-7 h-7 text-primary" />
-                                </div>
                                 <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight leading-snug">
                                     {questionText}
                                 </h2>
@@ -1665,7 +1654,7 @@ const Quiz = () => {
                                         disabled={!ownText.trim() || ownLoading}
                                         className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                                     >
-                                        {ownLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                        {ownLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
                                         {own.send}
                                     </button>
                                 </form>

@@ -63,7 +63,7 @@ const DashboardSidebar = () => {
                                 ? `gap-2 rounded-2xl border px-1.5 py-3.5 shadow-sm ${isActive ? 'border-primary/40 bg-primary/10' : 'border-border bg-card'}`
                                 : `gap-1 rounded-xl px-0.5 py-2 ${isActive ? 'bg-primary/10' : ''}`}`}
                         >
-                            <span className={`flex items-center justify-center rounded-xl bg-gradient-to-br ${item.tone} text-white shadow-md ${home ? 'h-11 w-11' : `h-9 w-9 ${isActive ? 'ring-2 ring-primary/40 ring-offset-1 ring-offset-card' : ''}`}`}>
+                            <span className={`flex items-center justify-center rounded-xl ${isActive ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'} ${home ? 'h-11 w-11' : 'h-9 w-9'}`}>
                                 <item.icon className={home ? 'h-5 w-5' : 'h-[18px] w-[18px]'} aria-hidden />
                             </span>
                             <span className={`w-full font-bold leading-tight ${home ? 'text-[12px] line-clamp-2' : 'truncate text-[10px]'} ${isActive ? 'text-primary' : home ? 'text-foreground' : 'text-muted-foreground'}`}>

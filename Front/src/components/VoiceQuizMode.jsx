@@ -11,20 +11,20 @@ import { matchQuizCommand, quizSpeech } from "../lib/quizVoice";
 // ҳамеша кор мекунанд. Тест савол/ҷавобро тавассути `quiz:question` / `quiz:command` мебахшад.
 const TEXT = {
     tj: {
-        on: "Реҷаи овозӣ", off: "Хомӯш кардан", start: "🔊 Тестро бо овоз гузаред", startHint: "Барои нобиноён ва камбиноён: саволҳо хонда мешаванд, бо овоз ё рақамҳои 1–5 ҷавоб диҳед.",
-        speaking: "Хонда истодаам…", listening: "Гӯш мекунам — рақам ё ҷавобро гӯед", thinking: "Мефаҳмам…", idle: "Тугмаи 🎤-ро пахш кунед ва ҷавобро гӯед",
+        on: "Реҷаи овозӣ", off: "Хомӯш кардан", start: "Тестро бо овоз гузаред", startHint: "Барои нобиноён ва камбиноён: саволҳо хонда мешаванд, бо овоз ё рақамҳои 1–5 ҷавоб диҳед.",
+        speaking: "Хонда истодаам…", listening: "Гӯш мекунам - рақам ё ҷавобро гӯед", thinking: "Мефаҳмам…", idle: "«Гап занед»-ро пахш кунед ва ҷавобро гӯед",
         repeat: "Такрор", speak: "Гап занед", heard: "Шунидам", chosen: "Шумо интихоб кардед", notUnderstood: "Нафаҳмидам. Рақамро гӯед: якум, дуюм ё сеюм.",
         noMic: "Микрофон дастрас нест. Бо тугмаҳо ё рақамҳои 1–5 ҷавоб диҳед.", ords: ["якум", "дуюм", "сеюм", "чорум", "панҷум"],
     },
     ru: {
-        on: "Голосовой режим", off: "Выключить", start: "🔊 Пройти тест голосом", startHint: "Для незрячих и слабовидящих: вопросы читаются вслух, отвечайте голосом или цифрами 1–5.",
-        speaking: "Читаю…", listening: "Слушаю — назовите номер или ответ", thinking: "Понимаю…", idle: "Нажмите 🎤 и скажите ответ",
+        on: "Голосовой режим", off: "Выключить", start: "Пройти тест голосом", startHint: "Для незрячих и слабовидящих: вопросы читаются вслух, отвечайте голосом или цифрами 1–5.",
+        speaking: "Читаю…", listening: "Слушаю - назовите номер или ответ", thinking: "Понимаю…", idle: "Нажмите «Говорить» и скажите ответ",
         repeat: "Повторить", speak: "Говорить", heard: "Услышал", chosen: "Вы выбрали", notUnderstood: "Не понял. Назовите номер: первый, второй или третий.",
         noMic: "Микрофон недоступен. Отвечайте кнопками или цифрами 1–5.", ords: ["первый", "второй", "третий", "четвёртый", "пятый"],
     },
     en: {
-        on: "Voice mode", off: "Turn off", start: "🔊 Take the test by voice", startHint: "For blind and low-vision users: questions are read aloud, answer by voice or keys 1–5.",
-        speaking: "Reading…", listening: "Listening — say the number or the answer", thinking: "Understanding…", idle: "Press 🎤 and say your answer",
+        on: "Voice mode", off: "Turn off", start: "Take the test by voice", startHint: "For blind and low-vision users: questions are read aloud, answer by voice or keys 1–5.",
+        speaking: "Reading…", listening: "Listening - say the number or the answer", thinking: "Understanding…", idle: "Press “Speak” and say your answer",
         repeat: "Repeat", speak: "Speak", heard: "Heard", chosen: "You chose", notUnderstood: "Sorry, I didn't get that. Say a number: one, two or three.",
         noMic: "Microphone unavailable. Answer with the buttons or keys 1–5.", ords: ["one", "two", "three", "four", "five"],
     },
@@ -51,6 +51,8 @@ export default function VoiceQuizMode() {
     useEffect(() => {
         const onQuestion = (event) => setQuiz(event.detail || null);
         window.addEventListener("quiz:question", onQuestion);
+        // Агар савол пеш аз пайдо шудани ин компонент нашр шуда бошад (масалан, «аз нав» аз натиҷа).
+        if (window.__quizVoice) setQuiz(window.__quizVoice);
         return () => window.removeEventListener("quiz:question", onQuestion);
     }, []);
 
@@ -201,26 +203,23 @@ export default function VoiceQuizMode() {
     if (!quiz && !on) return null;
     if (!on) {
         return (
-            <button type="button" onClick={toggle} data-voice-mode-start
-                className="flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/[0.04] p-4 text-left transition hover:border-primary cursor-pointer">
-                <Volume2 className="h-7 w-7 shrink-0 text-primary" aria-hidden />
-                <span>
-                    <span className="block text-[16px] font-black text-foreground">{text.start}</span>
-                    <span className="block text-[13px] text-muted-foreground">{text.startHint}</span>
-                </span>
+            <button type="button" onClick={toggle} data-voice-mode-start title={text.startHint}
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[13.5px] font-bold text-foreground transition hover:border-primary hover:text-primary cursor-pointer">
+                <Volume2 className="h-4 w-4 text-primary" aria-hidden />
+                {text.start}
             </button>
         );
     }
 
     const statusText = { speaking: text.speaking, listening: text.listening, thinking: text.thinking, idle: text.idle }[status];
     return (
-        <section className="rounded-2xl border-2 border-primary bg-primary/[0.06] p-4" aria-label={text.on} data-voice-mode data-status={status}>
+        <section className="rounded-2xl border border-primary/30 bg-card p-4" aria-label={text.on} data-voice-mode data-status={status}>
             <div className="flex flex-wrap items-center gap-3">
                 <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${status === "listening" ? "animate-pulse bg-rose-500 text-white" : "bg-primary text-primary-foreground"}`}>
                     {status === "speaking" ? <Volume2 className="h-6 w-6" aria-hidden /> : status === "listening" ? <Ear className="h-6 w-6" aria-hidden /> : status === "thinking" ? <Loader2 className="h-6 w-6 animate-spin" aria-hidden /> : <Mic className="h-6 w-6" aria-hidden />}
                 </span>
                 <div className="min-w-0 flex-1">
-                    <div className="text-[12px] font-black uppercase tracking-wide text-primary">{text.on}</div>
+                    <div className="text-[13px] font-semibold text-muted-foreground">{text.on}</div>
                     <div className="text-[16px] font-bold text-foreground" aria-live="polite">{micOk ? statusText : text.noMic}</div>
                     {line && <div className="truncate text-[13px] text-muted-foreground">{line}</div>}
                 </div>

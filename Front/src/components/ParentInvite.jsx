@@ -80,9 +80,9 @@ export default function ParentInvite({ scores, careers = [] }) {
     }
 
     return (
-        <section className="rounded-3xl border border-rose-500/20 bg-gradient-to-br from-rose-500/[0.07] via-card to-card p-5 sm:p-6">
+        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500"><Users className="h-6 w-6" aria-hidden /></span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Users className="h-6 w-6" aria-hidden /></span>
                 <div>
                     <h2 className="text-xl font-black text-foreground">{text.inviteTitle}</h2>
                     <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">{text.inviteText}</p>

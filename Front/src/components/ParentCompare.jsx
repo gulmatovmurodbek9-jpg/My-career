@@ -21,10 +21,10 @@ export default function ParentCompare({ invite }) {
     const tone = score >= 70 ? "text-emerald-600 dark:text-emerald-400" : score >= 45 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400";
 
     return (
-        <section className="rounded-3xl border border-border bg-card p-5 sm:p-6">
+        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500"><HeartHandshake className="h-6 w-6" aria-hidden /></span>
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><HeartHandshake className="h-6 w-6" aria-hidden /></span>
                     <div>
                         <h2 className="text-xl font-black text-foreground">{text.compareTitle}</h2>
                         {invite.relation && <p className="text-[13px] text-muted-foreground">{text.relations[invite.relation]}</p>}
@@ -32,13 +32,13 @@ export default function ParentCompare({ invite }) {
                 </div>
                 <div className="text-right">
                     <div className={`text-4xl font-black tabular-nums ${tone}`}>{score}%</div>
-                    <div className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{text.agreement}</div>
+                    <div className="text-[13px] font-semibold text-muted-foreground">{text.agreement}</div>
                 </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-4 text-[12px] font-semibold text-muted-foreground">
                 <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-primary" />{text.child}</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-rose-400" />{text.parent}</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-slate-400 dark:bg-slate-500" />{text.parent}</span>
             </div>
             <div className="mt-3 space-y-3">
                 {CLUSTER_KEYS.map((key) => {
@@ -47,12 +47,12 @@ export default function ParentCompare({ invite }) {
                     return (
                         <div key={key}>
                             <div className="flex justify-between text-[13px]">
-                                <span className={`font-semibold ${key === childTop || key === parentTop ? "text-foreground" : "text-muted-foreground"}`}>{name(key)}{invite.wish === key ? " ❤" : ""}</span>
-                                <span className="tabular-nums text-muted-foreground"><b className="text-primary">{a}%</b> · <b className="text-rose-500">{b}%</b></span>
+                                <span className={`font-semibold ${key === childTop || key === parentTop ? "text-foreground" : "text-muted-foreground"}`}>{name(key)}{invite.wish === key ? ` (${text.wishMark || "орзуи волид"})` : ""}</span>
+                                <span className="tabular-nums text-muted-foreground"><b className="text-primary">{a}%</b> · <b className="text-slate-500 dark:text-slate-400">{b}%</b></span>
                             </div>
                             <div className="mt-1 space-y-1">
                                 <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${a}%` }} /></div>
-                                <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-rose-400" style={{ width: `${b}%` }} /></div>
+                                <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-slate-400 dark:bg-slate-500" style={{ width: `${b}%` }} /></div>
                             </div>
                         </div>
                     );

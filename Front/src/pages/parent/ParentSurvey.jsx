@@ -54,7 +54,7 @@ export default function ParentSurvey() {
     };
 
     if (missing) return <p className="mx-auto max-w-lg px-4 py-20 text-center text-muted-foreground">{text.notFound}</p>;
-    if (!invite) return <div className="mx-auto max-w-lg px-4 py-20"><div className="h-60 animate-pulse rounded-3xl bg-muted/50" /></div>;
+    if (!invite) return <div className="mx-auto max-w-lg px-4 py-20"><div className="h-60 animate-pulse rounded-2xl bg-muted/50" /></div>;
 
     if (done) {
         return (
@@ -72,7 +72,7 @@ export default function ParentSurvey() {
     if (step < 0) {
         return (
             <div className="mx-auto max-w-lg px-4 pb-16 pt-8 sm:pt-12">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500"><HeartHandshake className="h-7 w-7" aria-hidden /></span>
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><HeartHandshake className="h-7 w-7" aria-hidden /></span>
                 <h1 className="mt-4 text-2xl font-black leading-tight text-foreground sm:text-3xl">{title}</h1>
                 <p className="mt-3 text-[16px] leading-relaxed text-muted-foreground">{text.askText}</p>
                 <div className="mt-6 font-bold text-foreground">{text.relation}</div>
@@ -97,7 +97,7 @@ export default function ParentSurvey() {
                 <button type="button" onClick={() => setStep(step - 1)} className="inline-flex items-center gap-1 font-semibold text-muted-foreground cursor-pointer"><ArrowLeft className="h-4 w-4" aria-hidden /> {text.back}</button>
                 <span className="font-bold text-muted-foreground">{isWish ? text.wishLabel : fill(text.question, { n: step + 1, t: PARENT_QUESTIONS.length })}</span>
             </div>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-rose-400 transition-all" style={{ width: `${((step + 1) / total) * 100}%` }} /></div>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${((step + 1) / total) * 100}%` }} /></div>
             <h2 className="mt-6 text-xl font-black leading-snug text-foreground sm:text-2xl">{item.q}</h2>
             <div className="mt-5 space-y-2.5">
                 {item.o.map((option, i) => (

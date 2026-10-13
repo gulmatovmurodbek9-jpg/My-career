@@ -1,26 +1,26 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { Bot, Footprints, Loader2, Sparkles, User } from "lucide-react";
+import { Bot, Cog, Footprints, Lightbulb, Loader2, Sparkles, Telescope, User } from "lucide-react";
 import { API } from "../lib/config";
 
 // «Касби ман дар соли 2035»: пешгӯии AI (як бор сохта ва кеш мешавад) — хатари
 // автоматикунонӣ, чӣ ба мошин ва чӣ ба одам мемонад, малакаҳои нав ва қадамҳо аз ҳозир.
 const TEXT = {
     tj: {
-        title: "🔮 Ин касб дар соли 2035", lead: "AI ва мошинҳо кадом корро мегиранд, чӣ ба одам мемонад ва аз ҳозир чӣ кор кунед.",
+        title: "Ин касб дар соли 2035", lead: "AI ва мошинҳо кадом корро мегиранд, чӣ ба одам мемонад ва аз ҳозир чӣ кор кунед.",
         show: "Нишон диҳед", loading: "AI пешгӯӣ месозад…", risk: { low: "Хатари автоматикунонӣ: паст", mid: "Хатари автоматикунонӣ: миёна", high: "Хатари автоматикунонӣ: баланд" },
         automated: "Ба мошин ва AI мегузарад", human: "Ба одам мемонад", skills: "Малакаҳои нав", prepare: "Аз ҳозир чӣ кор кунед",
         note: "Ин пешгӯии AI дар асоси тамоюлҳои ҷаҳонӣ аст, на факт.", error: "Пешгӯӣ сохта нашуд. Баъдтар боз кӯшиш кунед.",
     },
     ru: {
-        title: "🔮 Эта профессия в 2035 году", lead: "Что заберут AI и машины, что останется за человеком и что делать уже сейчас.",
+        title: "Эта профессия в 2035 году", lead: "Что заберут AI и машины, что останется за человеком и что делать уже сейчас.",
         show: "Показать", loading: "AI составляет прогноз…", risk: { low: "Риск автоматизации: низкий", mid: "Риск автоматизации: средний", high: "Риск автоматизации: высокий" },
         automated: "Перейдёт к машинам и AI", human: "Останется за человеком", skills: "Новые навыки", prepare: "Что делать уже сейчас",
         note: "Это прогноз AI на основе мировых тенденций, а не факт.", error: "Не удалось составить прогноз. Попробуйте позже.",
     },
     en: {
-        title: "🔮 This career in 2035", lead: "What AI and machines will take over, what stays human and what to do now.",
+        title: "This career in 2035", lead: "What AI and machines will take over, what stays human and what to do now.",
         show: "Show", loading: "The AI is making a forecast…", risk: { low: "Automation risk: low", mid: "Automation risk: medium", high: "Automation risk: high" },
         automated: "Goes to machines and AI", human: "Stays human", skills: "New skills", prepare: "What to do now",
         note: "This is an AI forecast based on global trends, not a fact.", error: "Could not make a forecast. Please try later.",
@@ -49,11 +49,11 @@ export default function CareerFuture({ careerId }) {
         }
     };
 
-    const list = (items, icon) => (
+    const list = (items, Icon, tone) => (
         <ul className="space-y-1.5">
             {items.map((item) => (
                 <li key={item} className="flex items-start gap-2 text-[14.5px] leading-snug text-foreground">
-                    <span className="mt-0.5 shrink-0 text-muted-foreground">{icon}</span>{item}
+                    <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${tone}`} strokeWidth={2.2} aria-hidden />{item}
                 </li>
             ))}
         </ul>
@@ -63,7 +63,7 @@ export default function CareerFuture({ careerId }) {
         <section className="overflow-hidden rounded-3xl border border-border bg-card" data-career-future>
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent p-5">
                 <div className="min-w-0">
-                    <h2 className="text-xl font-black text-foreground">{text.title}</h2>
+                    <h2 className="flex items-center gap-2.5 text-xl font-black text-foreground"><span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-black/10" aria-hidden><Telescope className="h-5 w-5" strokeWidth={2.2} /></span>{text.title}</h2>
                     <p className="mt-1 text-[14px] text-muted-foreground">{text.lead}</p>
                 </div>
                 {!data && (
@@ -85,11 +85,11 @@ export default function CareerFuture({ careerId }) {
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="rounded-2xl bg-muted/40 p-4">
                             <h3 className="mb-2 flex items-center gap-2 text-[13px] font-black uppercase tracking-wide text-muted-foreground"><Bot className="h-4 w-4" aria-hidden /> {text.automated}</h3>
-                            {list(data.automated, "⚙️")}
+                            {list(data.automated, Cog, "text-muted-foreground")}
                         </div>
                         <div className="rounded-2xl bg-primary/[0.06] p-4">
                             <h3 className="mb-2 flex items-center gap-2 text-[13px] font-black uppercase tracking-wide text-primary"><User className="h-4 w-4" aria-hidden /> {text.human}</h3>
-                            {list(data.human, "💡")}
+                            {list(data.human, Lightbulb, "text-amber-500")}
                         </div>
                     </div>
                     <div>

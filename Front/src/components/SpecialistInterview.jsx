@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { Loader2, MessageCircleQuestion, Send, Square, Volume2 } from "lucide-react";
+import { Bot, Loader2, MessageCircleQuestion, Send, Square, Volume2 } from "lucide-react";
 import { API } from "../lib/config";
 
-// «Мусоҳиба бо мутахассис»: мутахассиси виртуалии ҳамин ихтисос (AI) аз номи худ ҷавоб медиҳад.
+// «Аз AI дар бораи касб пурсед»: ёвари AI аз рӯи маълумоти ҳамин ихтисос ҷавоб медиҳад.
+// Пештар ӯ худро одами воқеӣ (ном, шаҳр, таҷриба) муаррифӣ мекард — ин бофта буд ва нест шуд.
 const TEXT = {
-    tj: { title: "Мусоҳиба бо мутахассис", sub: "Аз мутахассиси ҳамин касб бипурсед — ӯ аз таҷрибаи худ ростқавлона ҷавоб медиҳад.", years: "{{n}} сол таҷриба", placeholder: "Саволи худро нависед…", ai: "Мутахассиси виртуалӣ (AI) — аз рӯи маълумоти ҳамин ихтисос. Барои қарори ниҳоӣ бо мутахассиси воқеӣ ҳам гап занед.", error: "Ҷавоб наомад. Боз кӯшиш кунед.", listen: "Гӯш кардан", stop: "Бас" },
-    ru: { title: "Интервью со специалистом", sub: "Спросите специалиста этой профессии — он честно ответит из своего опыта.", years: "опыт {{n}} лет", placeholder: "Напишите свой вопрос…", ai: "Виртуальный специалист (AI) — на основе данных этой специальности. Для окончательного решения поговорите и с настоящим специалистом.", error: "Ответ не пришёл. Попробуйте ещё раз.", listen: "Слушать", stop: "Стоп" },
-    en: { title: "Interview a specialist", sub: "Ask a specialist in this career — they answer honestly from their experience.", years: "{{n}} years of experience", placeholder: "Type your question…", ai: "A virtual specialist (AI) based on this specialty’s data. Before deciding, also talk to a real specialist.", error: "No answer came. Try again.", listen: "Listen", stop: "Stop" },
+    tj: { title: "Аз AI дар бораи касб пурсед", placeholder: "Саволи худро нависед…", ai: "Ин ёвари AI аст, на одами воқеӣ — аз рӯи маълумоти ҳамин ихтисос ҷавоб медиҳад. Барои қарори ниҳоӣ бо мутахассиси воқеӣ ҳам гап занед.", thinking: "AI фикр мекунад…", error: "Ҷавоб наомад. Боз кӯшиш кунед.", listen: "Гӯш кардан", stop: "Бас" },
+    ru: { title: "Спросите AI об этой профессии", placeholder: "Напишите свой вопрос…", ai: "Это AI-помощник, а не настоящий человек — он отвечает по данным этой специальности. Для окончательного решения поговорите и с настоящим специалистом.", thinking: "AI думает…", error: "Ответ не пришёл. Попробуйте ещё раз.", listen: "Слушать", stop: "Стоп" },
+    en: { title: "Ask AI about this career", placeholder: "Type your question…", ai: "This is an AI assistant, not a real person — it answers from this specialty’s data. Before deciding, also talk to a real specialist.", thinking: "AI is thinking…", error: "No answer came. Try again.", listen: "Listen", stop: "Stop" },
 };
-const fill = (s, v) => String(s).replace(/\{\{(\w+)\}\}/g, (_, k) => v?.[k] ?? "");
 
 export default function SpecialistInterview({ careerId }) {
     const { i18n } = useTranslation();
@@ -75,17 +75,16 @@ export default function SpecialistInterview({ careerId }) {
 
     if (!info) return null;
     const p = info.persona;
-    const initials = p.name.split(" ").map((x) => x[0]).join("").slice(0, 2);
     const asked = new Set(messages.filter((m) => m.role === "user").map((m) => m.text));
 
     return (
         <section className="overflow-hidden rounded-3xl border border-border bg-card">
             <div className="flex items-center gap-4 border-b border-border bg-gradient-to-br from-violet-500/10 via-transparent to-transparent p-5">
-                <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-black text-white shadow-md ${p.female ? "bg-gradient-to-br from-rose-400 to-violet-500" : "bg-gradient-to-br from-sky-500 to-indigo-600"}`}>{initials}</span>
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-md" aria-hidden><Bot className="h-7 w-7" strokeWidth={2.2} /></span>
                 <div className="min-w-0">
                     <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wide text-violet-600 dark:text-violet-300"><MessageCircleQuestion className="h-4 w-4" aria-hidden /> {text.title}</div>
                     <div className="truncate text-lg font-black text-foreground">{p.name}</div>
-                    <div className="truncate text-[13px] text-muted-foreground">{p.title} · {p.city} · {fill(text.years, { n: p.years })}</div>
+                    <div className="truncate text-[13px] text-muted-foreground">{p.title}</div>
                 </div>
             </div>
 
@@ -105,7 +104,7 @@ export default function SpecialistInterview({ careerId }) {
                         </div>
                     </div>
                 ))}
-                {busy && <div className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {p.name}…</div>}
+                {busy && <div className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {text.thinking}</div>}
                 {error && <p className="text-[13px] font-semibold text-rose-600">{text.error}</p>}
             </div>
 

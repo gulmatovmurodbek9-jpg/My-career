@@ -23,8 +23,29 @@
         }
         if (theme === "dark") document.documentElement.classList.add("dark");
         document.documentElement.style.backgroundColor = theme === "dark" ? "#0a0a0f" : "#f7f8fc";
+        // Браузер бо JS: матни SEO-и пешсохта (.seo-prerender) то бор шудани React
+        // ҳамчун матни оддӣ намоён буд. Роботҳои бе JS онро мисли пештара мебинанд.
+        document.documentElement.classList.add("js");
       })();
     </script>
+    <style>
+      .js .seo-prerender { display: none; }
+      .js #root:has(> .seo-prerender)::before {
+        content: "";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 36px;
+        height: 36px;
+        margin: -18px 0 0 -18px;
+        border: 3px solid rgba(99, 102, 241, 0.2);
+        border-top-color: #4f46e5;
+        border-radius: 50%;
+        animation: boot-spin 0.8s linear infinite;
+      }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .js #root:has(> .seo-prerender)::before { animation-duration: 2.4s; } }
+    </style>
     <meta name="description" content="Ихтисоси ман — платформаи роҳнамоии касбӣ барои ҷавонони Тоҷикистон" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Ихтисоси ман" />

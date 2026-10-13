@@ -2,9 +2,26 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Loader2, PenLine, Send, Sparkles } from "lucide-react";
+import { BriefcaseBusiness, CircleHelp, GraduationCap, Loader2, PenLine, Send, Sparkles, Target } from "lucide-react";
 import { API } from "../lib/config";
 import { fill, parentText } from "../lib/parentSurvey";
+
+// Иконкаи ҳар саволи кӯтоҳ (lucide, на emoji) — ранги худ дар доираи хурд.
+const CHIP_ICON = {
+    what: { Icon: CircleHelp, tone: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
+    why: { Icon: Target, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
+    where: { Icon: GraduationCap, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+    work: { Icon: BriefcaseBusiness, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+};
+
+function ChipIcon({ name }) {
+    const { Icon, tone } = CHIP_ICON[name] || { Icon: Sparkles, tone: "bg-primary/15 text-primary" };
+    return (
+        <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${tone}`} aria-hidden>
+            <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
+        </span>
+    );
+}
 
 // Ихтисосҳои фарзанд барои волид — як рӯйхат (бе такрор) бо нишонаҳо: дар рӯйхати
 // ҳуҷҷатсупорӣ, захира, санҷид, аз тест. Зери ҳар ихтисос 4 саволи кӯтоҳ ҳамеша намоён:
@@ -24,7 +41,9 @@ function Ask({ code, secret, career, text, lang }) {
         setItems((old) => [...old, { q: label, a: null }]);
         setDraft("");
         try {
-            const { data } = await axios.post(`${API}/parents/invites/${code}/ask`, { careerId: career.id, question: q, lang, secret }, { timeout: 45000 });
+            // Се саволи охир — то «Мисол» баъди «маош чанд аст?» фаҳмо бошад.
+            const history = items.filter((item) => item.a).slice(-3).map((item) => ({ q: item.q, a: item.a }));
+            const { data } = await axios.post(`${API}/parents/invites/${code}/ask`, { careerId: career.id, question: q, lang, secret, history }, { timeout: 45000 });
             setItems((old) => old.map((item, i) => (i === old.length - 1 ? { ...item, a: data.answer } : item)));
         } catch (err) {
             setItems((old) => old.slice(0, -1));
@@ -40,8 +59,8 @@ function Ask({ code, secret, career, text, lang }) {
             <div className="flex flex-wrap gap-2">
                 {text.askChips.map((chip) => (
                     <button key={chip.label} type="button" disabled={busy || asked.has(chip.label)} onClick={() => ask(chip.q, chip.label)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/[0.06] px-3 py-2 text-[13.5px] font-bold text-foreground transition hover:border-primary hover:bg-primary/10 active:scale-[0.98] disabled:opacity-45 cursor-pointer">
-                        <span aria-hidden>{chip.icon}</span> {chip.label}
+                        className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/[0.06] py-1.5 pl-1.5 pr-3.5 text-[13.5px] font-bold text-foreground transition hover:border-primary hover:bg-primary/10 active:scale-[0.98] disabled:opacity-45 cursor-pointer">
+                        <ChipIcon name={chip.icon} /> {chip.label}
                     </button>
                 ))}
                 {!writing && (

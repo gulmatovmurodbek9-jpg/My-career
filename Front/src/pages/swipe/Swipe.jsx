@@ -9,6 +9,7 @@ import { careerName } from "../../lib/careerText";
 import { displayName } from "../../lib/careerName";
 import { copyText } from "../../lib/copyText";
 import { usePageMeta } from "../../lib/usePageMeta";
+import TraitIcon from "../../components/TraitIcon";
 
 const TEXT = {
     tj: {
@@ -126,7 +127,7 @@ function Result({ result, choices, lang, text, onAgain }) {
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
                         {result.likes.map((key) => (
                             <div key={key} className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3 shadow-sm">
-                                <span className="text-3xl" aria-hidden>{TRAITS[key].icon}</span>
+                                <TraitIcon trait={key} />
                                 <span className="text-[16px] font-black leading-tight text-foreground">{TRAITS[key][lang]}</span>
                             </div>
                         ))}
@@ -137,7 +138,7 @@ function Result({ result, choices, lang, text, onAgain }) {
                         <div className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{text.notLiked}</div>
                         <div className="mt-1.5 flex flex-wrap gap-2">
                             {result.dislikes.map((key) => (
-                                <span key={key} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[13px] font-semibold text-muted-foreground"><span aria-hidden>{TRAITS[key].icon}</span> {TRAITS[key][lang]}</span>
+                                <span key={key} className="inline-flex items-center gap-1.5 rounded-full bg-muted py-1 pl-1 pr-3 text-[13px] font-semibold text-muted-foreground"><TraitIcon trait={key} size="xs" className="rounded-full" /> {TRAITS[key][lang]}</span>
                             ))}
                         </div>
                     </div>

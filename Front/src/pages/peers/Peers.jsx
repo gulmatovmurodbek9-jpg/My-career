@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Check, Copy, Eye, Loader2, RefreshCw, Send, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Check, Copy, Eye, Gem, Loader2, RefreshCw, Send, ShieldCheck, Sparkles, Star, Users } from "lucide-react";
+import TraitIcon from "../../components/TraitIcon";
 import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { MMT_CLUSTERS } from "../../lib/mmtClusters";
@@ -45,7 +46,7 @@ function Result({ data, text, lang, onReset }) {
                     {analysis.rows.map((row) => (
                         <div key={row.key}>
                             <div className="flex items-center justify-between text-[14px]">
-                                <span className="font-bold text-foreground"><span aria-hidden>{row.icon}</span> {label(row)}</span>
+                                <span className="flex items-center gap-2 font-bold text-foreground"><TraitIcon trait={row.key} size="xs" /> {label(row)}</span>
                                 <span className="tabular-nums text-muted-foreground">{row.self} · <b className="text-primary">{row.others}</b></span>
                             </div>
                             <div className="mt-1 space-y-1">
@@ -59,11 +60,11 @@ function Result({ data, text, lang, onReset }) {
 
             <div className="grid gap-4 md:grid-cols-2">
                 <section className="rounded-3xl border border-emerald-500/25 bg-emerald-500/[0.06] p-5">
-                    <h3 className="font-black text-foreground">💎 {text.hidden}</h3>
+                    <h3 className="font-black text-foreground"><Gem className="mr-1 inline h-5 w-5 text-emerald-600" aria-hidden /> {text.hidden}</h3>
                     {analysis.hidden.length ? (
                         <>
                             <p className="mt-1 text-[13.5px] text-muted-foreground">{text.hiddenText}</p>
-                            <div className="mt-2 flex flex-wrap gap-2">{analysis.hidden.map((r) => <span key={r.key} className="rounded-full bg-card px-3 py-1.5 text-[14px] font-bold text-foreground shadow-sm">{r.icon} {label(r)} <span className="text-emerald-600">+{Math.round((r.others - r.self) * 10) / 10}</span></span>)}</div>
+                            <div className="mt-2 flex flex-wrap gap-2">{analysis.hidden.map((r) => <span key={r.key} className="inline-flex items-center gap-1.5 rounded-full bg-card py-1.5 pl-1.5 pr-3 text-[14px] font-bold text-foreground shadow-sm"><TraitIcon trait={r.key} size="xs" className="rounded-full" /> {label(r)} <span className="text-emerald-600">+{Math.round((r.others - r.self) * 10) / 10}</span></span>)}</div>
                         </>
                     ) : <p className="mt-1 text-[13.5px] text-muted-foreground">{text.none}</p>}
                 </section>
@@ -72,18 +73,18 @@ function Result({ data, text, lang, onReset }) {
                     {analysis.blind.length ? (
                         <>
                             <p className="mt-1 text-[13.5px] text-muted-foreground">{text.blindText}</p>
-                            <div className="mt-2 flex flex-wrap gap-2">{analysis.blind.map((r) => <span key={r.key} className="rounded-full bg-card px-3 py-1.5 text-[14px] font-bold text-foreground shadow-sm">{r.icon} {label(r)}</span>)}</div>
+                            <div className="mt-2 flex flex-wrap gap-2">{analysis.blind.map((r) => <span key={r.key} className="inline-flex items-center gap-1.5 rounded-full bg-card py-1.5 pl-1.5 pr-3 text-[14px] font-bold text-foreground shadow-sm"><TraitIcon trait={r.key} size="xs" className="rounded-full" /> {label(r)}</span>)}</div>
                         </>
                     ) : <p className="mt-1 text-[13.5px] text-muted-foreground">{text.none}</p>}
                 </section>
             </div>
 
             <section className="rounded-3xl border border-border bg-card p-5">
-                <h3 className="font-black text-foreground">⭐ {text.strongest}</h3>
+                <h3 className="font-black text-foreground"><Star className="mr-1 inline h-5 w-5 text-amber-500" aria-hidden /> {text.strongest}</h3>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
                     {analysis.strongest.map((r) => (
                         <div key={r.key} className="flex items-center gap-3 rounded-2xl bg-muted/40 px-4 py-3">
-                            <span className="text-3xl" aria-hidden>{r.icon}</span>
+                            <TraitIcon trait={r.key} />
                             <span className="font-black text-foreground">{label(r)}</span>
                         </div>
                     ))}

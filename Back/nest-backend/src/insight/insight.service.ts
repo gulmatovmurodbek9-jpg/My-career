@@ -86,7 +86,7 @@ ${career.facts}
 САБАБИ ХОНАНДА: «${reason}»`;
         for (let attempt = 0; attempt < 2; attempt += 1) {
             try {
-                const data = parseJson(await this.ai.generateContent(prompt, { timeoutMs: 30000 }));
+                const data = parseJson(await this.ai.generateFast(prompt, 15000));
                 const questions = texts(data.questions, 3);
                 const summary = String(data.summary || '').trim().slice(0, 600);
                 if (!summary || questions.length < 2) throw new Error('холӣ');
@@ -129,8 +129,8 @@ ${career.facts}
 - human: 3 кор, ки ба одам мемонанд ва қадрашон меафзояд.
 - skills: 4 малакаи нав (2–4 калима ҳар кадом).
 - prepare: 3 қадами мушаххас, ки хонанда аз ҳозир карда метавонад (фан, курс, лоиҳа).
-- summary: 2 ҷумлаи ҷамъбаст, рӯҳбаландкунанда.
-- Рақами маош, номи ширкатҳо ва фоизҳои сохтаро нанавис.
+- summary: 2 ҷумлаи ҷамъбаст, ором ва ростқавл. Ба хонанда «шумо» гӯй (на «ту»).
+- Рақами маош, номи ширкатҳо ва фоизҳои сохтаро нанавис. «Серталабтарин», «ояндаи дурахшон», «ҳамеша» ва дигар ваъдаҳоро нанавис — ин пешгӯӣ аст, на кафолат.
 - Забони ҳамаи матнҳо: ${LANGUAGE[lang]}.
 - Танҳо JSON: {"risk":"…","riskText":"…","automated":["…"],"human":["…"],"skills":["…"],"prepare":["…"],"summary":"…"}
 
@@ -138,7 +138,8 @@ ${career.facts}
 ${career.facts}`;
         for (let attempt = 0; attempt < 2; attempt += 1) {
             try {
-                const data = parseJson(await this.ai.generateContent(prompt, { timeoutMs: 40000 }));
+                // Модели тез: пештар модели пурра 10–40 сония мегирифт, ва корбар бори аввал интизор мешуд.
+                const data = parseJson(await this.ai.generateFast(prompt, 15000));
                 const content = {
                     risk: pick(data.risk, ['low', 'mid', 'high'] as const, 'mid'),
                     riskText: String(data.riskText || '').trim().slice(0, 300),

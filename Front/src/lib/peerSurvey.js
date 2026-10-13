@@ -1,13 +1,13 @@
 // «Дӯстон маро чӣ гуна мебинанд» (360°): 8 сифат, матнҳо ва ҳисоби натиҷа.
 export const PEER_TRAITS = [
-    { key: "leader", icon: "👑", c: "c4", tj: ["Роҳбарӣ", "Дигаронро ба кор ҷалб мекунад ва қарор қабул мекунад"], ru: ["Лидерство", "Ведёт за собой и принимает решения"], en: ["Leadership", "Gets others going and makes decisions"] },
-    { key: "accurate", icon: "🎯", c: "c2", tj: ["Дақиқӣ", "Корро бодиққат ва бе хато иҷро мекунад"], ru: ["Точность", "Делает всё аккуратно и без ошибок"], en: ["Precision", "Works carefully and without mistakes"] },
-    { key: "creative", icon: "🎨", c: "c3", tj: ["Эҷодкорӣ", "Фикрҳои нав ва ғайриоддӣ меёбад"], ru: ["Творчество", "Находит новые и необычные идеи"], en: ["Creativity", "Comes up with new, unusual ideas"] },
-    { key: "helpful", icon: "❤️", c: "c5", tj: ["Ғамхорӣ", "Ба дигарон бо омодагӣ кӯмак мекунад"], ru: ["Забота", "Охотно помогает другим"], en: ["Caring", "Is glad to help others"] },
-    { key: "logical", icon: "🧠", c: "c1", tj: ["Мантиқ", "Масъалаҳои душворро қадам ба қадам ҳал мекунад"], ru: ["Логика", "Решает сложные задачи шаг за шагом"], en: ["Logic", "Solves hard problems step by step"] },
-    { key: "patient", icon: "🌱", c: "c3", tj: ["Сабр", "Ором аст ва бо кӯдакону дигарон ҳавсала дорад"], ru: ["Терпение", "Спокоен и терпелив с детьми и другими"], en: ["Patience", "Calm and patient with kids and others"] },
-    { key: "brave", icon: "🦁", c: "c4", tj: ["Далерӣ", "Аз нав ва душворӣ наметарсад, фикрашро мегӯяд"], ru: ["Смелость", "Не боится нового и трудного, говорит своё мнение"], en: ["Courage", "Not afraid of new or hard things, speaks up"] },
-    { key: "social", icon: "💬", c: "c4", tj: ["Муошират", "Бо ҳама зуд забон меёбад ва хуб гап мезанад"], ru: ["Общение", "Легко находит общий язык и хорошо говорит"], en: ["Communication", "Easily connects with people and speaks well"] },
+    { key: "leader", c: "c4", tj: ["Роҳбарӣ", "Дигаронро ба кор ҷалб мекунад ва қарор қабул мекунад"], ru: ["Лидерство", "Ведёт за собой и принимает решения"], en: ["Leadership", "Gets others going and makes decisions"] },
+    { key: "accurate", c: "c2", tj: ["Дақиқӣ", "Корро бодиққат ва бе хато иҷро мекунад"], ru: ["Точность", "Делает всё аккуратно и без ошибок"], en: ["Precision", "Works carefully and without mistakes"] },
+    { key: "creative", c: "c3", tj: ["Эҷодкорӣ", "Фикрҳои нав ва ғайриоддӣ меёбад"], ru: ["Творчество", "Находит новые и необычные идеи"], en: ["Creativity", "Comes up with new, unusual ideas"] },
+    { key: "helpful", c: "c5", tj: ["Ғамхорӣ", "Ба дигарон бо омодагӣ кӯмак мекунад"], ru: ["Забота", "Охотно помогает другим"], en: ["Caring", "Is glad to help others"] },
+    { key: "logical", c: "c1", tj: ["Мантиқ", "Масъалаҳои душворро қадам ба қадам ҳал мекунад"], ru: ["Логика", "Решает сложные задачи шаг за шагом"], en: ["Logic", "Solves hard problems step by step"] },
+    { key: "patient", c: "c3", tj: ["Сабр", "Ором аст ва бо кӯдакону дигарон ҳавсала дорад"], ru: ["Терпение", "Спокоен и терпелив с детьми и другими"], en: ["Patience", "Calm and patient with kids and others"] },
+    { key: "brave", c: "c4", tj: ["Далерӣ", "Аз нав ва душворӣ наметарсад, фикрашро мегӯяд"], ru: ["Смелость", "Не боится нового и трудного, говорит своё мнение"], en: ["Courage", "Not afraid of new or hard things, speaks up"] },
+    { key: "social", c: "c4", tj: ["Муошират", "Бо ҳама зуд забон меёбад ва хуб гап мезанад"], ru: ["Общение", "Легко находит общий язык и хорошо говорит"], en: ["Communication", "Easily connects with people and speaks well"] },
 ];
 
 export const PEER_TEXT = {

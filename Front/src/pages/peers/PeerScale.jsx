@@ -1,12 +1,13 @@
 import React from "react";
+import TraitIcon from "../../components/TraitIcon";
 
 // Як сифат: нишона, ном, шарҳ ва 5 тугмаи калон (дар телефон осонтар аз слайдер).
 export default function PeerScale({ trait, lang, value, onChange, scale }) {
     const [name, hint] = trait[lang] || trait.tj;
     return (
         <div className="rounded-2xl border border-border bg-card p-4" data-peer-trait={trait.key}>
-            <div className="flex items-start gap-3">
-                <span className="text-3xl leading-none" aria-hidden>{trait.icon}</span>
+            <div className="flex items-center gap-3">
+                <TraitIcon trait={trait.key} />
                 <div className="min-w-0">
                     <div className="text-[16px] font-black text-foreground">{name}</div>
                     <div className="text-[13px] leading-snug text-muted-foreground">{hint}</div>

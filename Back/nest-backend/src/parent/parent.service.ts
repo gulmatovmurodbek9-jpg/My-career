@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { createHash, randomBytes, randomInt } from 'crypto';
 import { AiService } from '../ai/ai.service';
 import { assertAiAllowed } from '../common/ai-limit';
+import { SALARY_SOURCE, sectorFor } from '../common/salary-sectors';
 
 // «Волидайн ҳам бигӯянд»: хонанда пайванд месозад (бо холҳои тести худ), волид бе ворид шудан
 // ба 10 савол дар бораи фарзандаш ҷавоб медиҳад; ҳарду муқоисаро мебинанд. Ном ва почта нест —
@@ -16,6 +17,18 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ASK_PER_DAY = 30;
 const asks = new Map<string, number[]>();
 const CLUSTER_NAMES: Record<string, string> = { c1: 'Техникӣ', c2: 'Иқтисод', c3: 'Филология', c4: 'Ҷомеашиносӣ', c5: 'Тиб' };
+
+// Маош барои AI: миёнаи соҳа (Агентии омор) ва тахминҳои сайт — ҳамон рақамҳои саҳифаи ихтисос.
+function salaryFacts(career: any): string {
+    const sector = sectorFor(career?.name, career?.cluster);
+    const lines = [];
+    if (sector) lines.push(`Маоши миёнаи соҳаи «${sector.name}»: ${sector.amount} сомонӣ дар як моҳ (${SALARY_SOURCE.agency}, ${SALARY_SOURCE.period}; миёнаи кишвар ${SALARY_SOURCE.nationalAverage})`);
+    const s = career?.salaryAndMarket;
+    if (s && (s.junior || s.mid || s.senior)) {
+        lines.push(`Тахминӣ (аз эълонҳои кор, на омори расмӣ): навкор ${s.junior || '—'}, ботаҷриба ${s.mid || '—'}, мутахассиси пешбар ${s.senior || '—'}`);
+    }
+    return lines.join('\n');
+}
 
 const hits = new Map<string, number[]>();
 function limit(ip: string | undefined, max = 20) {
@@ -177,7 +190,7 @@ export class ParentService implements OnModuleInit {
     }
 
     // Волид (ё фарзанд бо калид) дар бораи ихтисоси фарзанд аз AI мепурсад.
-    async ask(code: string, body: { careerId?: string; question?: string; lang?: string; secret?: string }, ip?: string) {
+    async ask(code: string, body: { careerId?: string; question?: string; lang?: string; secret?: string; history?: Array<{ q?: string; a?: string }> }, ip?: string) {
         const row = await this.byCode(code);
         const isChild = !!body?.secret && hash(String(body.secret)) === row.secretHash;
         if (!row.answeredAt && !isChild) throw new BadRequestException('Аввал ба саволҳо ҷавоб диҳед');
@@ -197,7 +210,7 @@ export class ParentService implements OnModuleInit {
 
         const lang = ['tj', 'ru', 'en'].includes(String(body?.lang)) ? String(body?.lang) : row.lang || 'tj';
         const [career] = await this.dataSource.query(
-            `SELECT c.name, c.description, c.purpose, c.skills, c."careerOpportunities", c."durationYears", c."hasFreeSeats", c.advice, cl."clusterName" AS cluster,
+            `SELECT c.name, c.description, c.purpose, c.skills, c."careerOpportunities", c."durationYears", c."hasFreeSeats", c.advice, c."salaryAndMarket", cl."clusterName" AS cluster,
                     (SELECT string_agg(DISTINCT un.name, '; ') FROM career_offerings o JOIN universities un ON un.id = o."universityId" WHERE o."careerId" = c.id) AS universities,
                     (SELECT count(*) FROM career_offerings o WHERE o."careerId" = c.id AND o."paymentType" = 'ройгон') AS free
              FROM career c LEFT JOIN cluster cl ON cl.id = c."clusterId" WHERE c.id = $1`, [careerId]).catch(async () =>
@@ -223,6 +236,7 @@ export class ParentService implements OnModuleInit {
             career.durationYears ? `Муддати таҳсил: ${career.durationYears} сол` : '',
             career.advice ? `Маслиҳат: ${String(career.advice).slice(0, 300)}` : '',
             career.universities ? `Дар куҷо таҳсил мекунанд: ${String(career.universities).slice(0, 500)}` : '',
+            salaryFacts(career),
             career.free !== undefined || career.hasFreeSeats !== undefined ? `Ҷойҳои буҷетӣ (ройгон) ҳаст: ${Number(career.free) > 0 || career.hasFreeSeats ? 'ҳа' : 'не'}` : '',
             `Натиҷаи тести фарзанд аз рӯи самтҳо: ${scores}`,
             parentTop ? `Аз ҷавобҳои волид бештар самти «${CLUSTER_NAMES[parentTop]}» намоён аст` : '',
@@ -231,23 +245,34 @@ export class ParentService implements OnModuleInit {
         ].filter(Boolean).join('\n');
         const languageName = { tj: 'тоҷикии адабӣ (кириллица, бо ӣ ӯ қ ғ ҳ ҷ)', ru: 'русский', en: 'English' }[lang as 'tj' | 'ru' | 'en'];
         const who = isChild ? 'хонанда (худи фарзанд)' : 'волиди хонанда';
+        // Саволҳои пештара дар ҳамин ихтисос: «Мисол» баъди «маош чанд аст?» маънои «мисоли маош»-ро дорад.
+        const history = (Array.isArray(body?.history) ? body.history : [])
+            .slice(-3)
+            .map((item) => ({ q: String(item?.q || '').trim().slice(0, 200), a: String(item?.a || '').trim().slice(0, 400) }))
+            .filter((item) => item.q && item.a)
+            .map((item) => `Савол: ${item.q}\nҶавоб: ${item.a}`)
+            .join('\n\n');
         const prompt = `Ту маслиҳатчии касбии «Ихтисоси ман» (Тоҷикистон) ҳастӣ. Ба ${who} дар бораи як ихтисос ҷавоб медиҳӣ.
 
 ҚОИДАҲО:
-- Ҷавоб кӯтоҳ ва фаҳмо: 4–6 ҷумлаи содда, бе markdown, бе рӯйхати дароз.
+- Ҳадди аксар 3–4 ҷумлаи содда (то 70 калима), як сархат, бе markdown ва бе рӯйхат.
 - Салом нагӯ ва саволро такрор накун — рост аз ҷавоб сар кун.
-- Ба савол рост ҷавоб деҳ. Агар пурсанд «чаро мувофиқ аст» — натиҷаи тест ва фактҳои поёнро истифода бар.
-- Ростқавл бош: хубиҳо ва душвориҳоро бигӯ. Агар фикри волид ва натиҷаи тест фарқ кунанд, мулоимона шарҳ деҳ ва маслиҳат деҳ, ки бо фарзанд гап зананд.
-- Рақами маош, кафолати кор ва номи ширкатҳоро аз худ НАСОЗ. Танҳо фактҳои поёнро истифода бар; агар маълумот нест — ростқавлона бигӯ.
+- Агар савол кӯтоҳ ё норавшан бошад («Мисол», «Боз?», «Чаро?»), онро ҳамчун давоми саволи охирини сӯҳбат фаҳм. Агар сӯҳбат набошад, як саволи кӯтоҳи аниқкунанда деҳ.
+- Танҳо ба ҳамин савол ҷавоб деҳ. Чизеро, ки дар ҷавобҳои пештара гуфта шуд, такрор накун.
+- Танҳо фактҳои поёнро истифода бар. Рақами маош, номи ширкат ё ташкилот (масалан FAO, USAID), «ҳамеша талабот дорад», «ояндаи дурахшон» ва дигар ваъдаҳоро аз худ НАСОЗ. Агар маълумот нест — дар як ҷумла ростқавлона бигӯ.
+- Дар бораи маош: аввал маоши миёнаи соҳаро аз Агентии омор бигӯ, баъд тахминҳоро ҳамчун «тахминӣ» бигӯ.
+- Фоизи самт ин мувофиқати тест аст. Танҳо самти аввалро «пешбар» гӯй; фоизи пастро «баланд» нагӯй.
+- Агар фикри волид ва натиҷаи тест фарқ кунанд, мулоимона як ҷумла гӯй ва маслиҳат деҳ, ки бо фарзанд гап зананд — танҳо агар савол ба ин рабт дошта бошад.
 - Бо эҳтиром «шумо» гӯй.
 - Забони ҷавоб: ${languageName}.
 
 ФАКТҲО:
 ${facts}
-
+${history ? `\nСӮҲБАТИ ПЕШТАРА:\n${history}\n` : ''}
 САВОЛ: ${question}
 ҶАВОБ:`;
-        const answer = (await this.ai.generateContent(prompt, { timeoutMs: 30000 }))
+        // Модели тез (flash-lite, ~1 с), мисли ёвари сайт; агар наояд — Gemini-и муқаррарӣ.
+        const answer = (await this.ai.generateFast(prompt, 12000))
             .replace(/^\s*[*#>-]+\s*/gm, '')
             .replace(/^(салом|ассалому алейкум|здравствуйте|hello|hi)[.!,]?\s*/i, '')
             .trim();

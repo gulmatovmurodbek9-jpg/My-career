@@ -5,17 +5,17 @@
 // `scene` — тавсифи сурат барои модели тасвирсоз (англисӣ).
 
 export const TRAITS = {
-    people: { icon: "🤝", tj: "Кор бо одамон", ru: "Работа с людьми", en: "Working with people" },
-    tech: { icon: "💻", tj: "Техника ва компютер", ru: "Техника и компьютер", en: "Tech and computers" },
-    nature: { icon: "🌿", tj: "Табиат ва ҳаёт", ru: "Природа и живое", en: "Nature and living things" },
-    numbers: { icon: "🔢", tj: "Рақам ва ҳисоб", ru: "Числа и расчёты", en: "Numbers and calculations" },
-    creative: { icon: "🎨", tj: "Эҷодкорӣ", ru: "Творчество", en: "Creativity" },
-    active: { icon: "🏃", tj: "Ҳаракат ва кори дастӣ", ru: "Движение и работа руками", en: "Movement and hands-on work" },
-    office: { icon: "🏢", tj: "Кори ором дар идора", ru: "Спокойная работа в офисе", en: "Calm office work" },
-    risk: { icon: "⚡", tj: "Таваккал ва ҳолатҳои тез", ru: "Риск и быстрые решения", en: "Risk and quick decisions" },
-    helping: { icon: "❤️", tj: "Кӯмак ба дигарон", ru: "Помощь другим", en: "Helping others" },
-    leading: { icon: "👑", tj: "Роҳбарӣ ва қарор", ru: "Лидерство и решения", en: "Leading and deciding" },
-    words: { icon: "📖", tj: "Забон ва калима", ru: "Язык и слова", en: "Language and words" },
+    people: { tj: "Кор бо одамон", ru: "Работа с людьми", en: "Working with people" },
+    tech: { tj: "Техника ва компютер", ru: "Техника и компьютер", en: "Tech and computers" },
+    nature: { tj: "Табиат ва ҳаёт", ru: "Природа и живое", en: "Nature and living things" },
+    numbers: { tj: "Рақам ва ҳисоб", ru: "Числа и расчёты", en: "Numbers and calculations" },
+    creative: { tj: "Эҷодкорӣ", ru: "Творчество", en: "Creativity" },
+    active: { tj: "Ҳаракат ва кори дастӣ", ru: "Движение и работа руками", en: "Movement and hands-on work" },
+    office: { tj: "Кори ором дар идора", ru: "Спокойная работа в офисе", en: "Calm office work" },
+    risk: { tj: "Таваккал ва ҳолатҳои тез", ru: "Риск и быстрые решения", en: "Risk and quick decisions" },
+    helping: { tj: "Кӯмак ба дигарон", ru: "Помощь другим", en: "Helping others" },
+    leading: { tj: "Роҳбарӣ ва қарор", ru: "Лидерство и решения", en: "Leading and deciding" },
+    words: { tj: "Забон ва калима", ru: "Язык и слова", en: "Language and words" },
 };
 
 const C = (tj, ru, en) => ({ tj, ru, en });

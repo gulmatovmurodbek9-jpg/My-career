@@ -53,7 +53,6 @@ const TeacherClass = lazy(() => import("./pages/teacher/TeacherClass"));
 const ClassJoin = lazy(() => import("./pages/teacher/ClassJoin"));
 const MyClass = lazy(() => import("./pages/teacher/MyClass"));
 const Swipe = lazy(() => import("./pages/swipe/Swipe"));
-const CertVerify = lazy(() => import("./pages/CertVerify"));
 const Peers = lazy(() => import("./pages/peers/Peers"));
 const PeerAnswer = lazy(() => import("./pages/peers/PeerAnswer"));
 const ParentSurvey = lazy(() => import("./pages/parent/ParentSurvey"));
@@ -96,7 +95,6 @@ export const AppRoutes = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/help" element={<Help />} />
               <Route path="/swipe" element={<Swipe />} />
-              <Route path="/cert/:code" element={<CertVerify />} />
               <Route path="/peers" element={<Peers />} />
               <Route path="/peer/:code" element={<PeerAnswer />} />
               <Route path="/trial" element={<TrialHub />} />

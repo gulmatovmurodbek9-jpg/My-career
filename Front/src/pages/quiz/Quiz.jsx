@@ -41,7 +41,6 @@ import TrialIcon from "../../components/TrialIcon";
 import ShareResult from "../../components/ShareResult";
 import ParentInvite from "../../components/ParentInvite";
 import VoiceQuizMode from "../../components/VoiceQuizMode";
-import CertificateButton from "../../components/CertificateButton";
 import QuickApply, { QUICK_TEXT } from "../../components/QuickApply";
 import { CLUSTER_SUBJECTS, SUBJECTS, getQuizContext, setQuizContext, subjectName } from "../../lib/quizContext";
 
@@ -1143,13 +1142,6 @@ const Quiz = () => {
                         })}
                     </ul>
                 </section>
-
-                {results.scores?.mmtClusters && (
-                    <CertificateButton
-                        scores={results.scores.mmtClusters}
-                        careers={matched.filter((career) => career.id).slice(0, 3).map((career) => ({ name: displayName(careerName(career, i18n.language)), percent: career.matchPercentage }))}
-                    />
-                )}
 
                 <Link to="/peers" className="group flex items-center gap-4 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.07] via-card to-card p-5 transition-colors hover:border-primary" data-peer-promo>
                     <span className="text-4xl" aria-hidden>👥</span>

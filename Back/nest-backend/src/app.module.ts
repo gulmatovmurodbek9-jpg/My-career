@@ -18,7 +18,6 @@ import { InterviewModule } from './interview/interview.module';
 import { ParentModule } from './parent/parent.module';
 import { PeerModule } from './peer/peer.module';
 import { InsightModule } from './insight/insight.module';
-import { CertificateModule } from './certificate/certificate.module';
 import { TrialModule } from './trial/trial.module';
 
 @Module({
@@ -63,7 +62,6 @@ import { TrialModule } from './trial/trial.module';
         ParentModule,
         PeerModule,
         InsightModule,
-        CertificateModule,
     ],
     controllers: [HealthController],
 })

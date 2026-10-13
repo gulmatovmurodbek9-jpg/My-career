@@ -1,8 +1,6 @@
-// E2E: «Чаро ин касб?» ва «Касб дар соли 2035» (AI, саҳифаи ихтисос), «Ҳисоботи мактаб»
-// (омӯзгори намоишӣ, синфи NAMUNA) ва сертификат бо QR (API → саҳифаи тасдиқ + кашидани canvas).
+// E2E: «Чаро ин касб?» ва «Касб дар соли 2035» (AI, саҳифаи ихтисос) ва «Ҳисоботи мактаб»
+// (омӯзгори намоишӣ, синфи NAMUNA).
 //   TEACHER_TOKEN=… TEACHER_USER='{…}' BASE_URL=http://localhost:5173 node e2e/insights.e2e.mjs
-// Дар охир CERT_CODE чоп мешавад — барои нест кардани сатри санҷишӣ.
-import fs from "fs";
 import puppeteer, { KnownDevices } from "puppeteer-core";
 
 const BASE = process.env.BASE_URL || "http://localhost:5173";
@@ -63,30 +61,6 @@ await teacher.emulateMediaType("print");
 const printHidden = await teacher.evaluate(() => getComputedStyle(document.querySelector("[data-report-sheet]")).display !== "none" && [...document.querySelectorAll("nav, aside")].every((n) => getComputedStyle(n).display === "none"));
 check("Чоп: танҳо варақи ҳисобот (меню пинҳон)", printHidden);
 if (SHOTS) await teacher.pdf({ path: `${SHOTS}/school-report.pdf`, format: "A4", printBackground: true });
-
-// 8. Сертификат.
-const created = await fetch(`${API}/certificates`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "Ҷамшед Раҳимов", scores: { c1: 31, c2: 12, c3: 9, c4: 14, c5: 8 }, careers: [{ name: "Информатика", percent: 88 }, { name: "Амнияти киберӣ", percent: 81 }], trials: [{ name: "Информатика", fit: true }], lang: "tj" }),
-}).then((r) => r.json());
-console.log(`CERT_CODE=${created.code}`);
-check("Сертификат сохта шуд (рамз ва 78%)", /^[A-Z2-9]{8}$/.test(created.code) && created.percent === 78, `${created.code} ${created.percent}`);
-const verify = await open(true);
-await verify.goto(`${BASE}/cert/${created.code}`, { waitUntil: "networkidle2" });
-await verify.waitForSelector("[data-cert-valid]", { timeout: 15000 });
-const vText = await verify.evaluate(() => document.body.innerText);
-check("Тасдиқ: ✅ ва номи кӯтоҳ «Ҷамшед Р.»", vText.includes("Сертификат воқеӣ аст") && vText.includes("Ҷамшед Р.") && !vText.includes("Раҳимов"));
-await verify.goto(`${BASE}/cert/ZZZZZZZZ`, { waitUntil: "networkidle2" });
-await verify.waitForSelector("[data-cert-invalid]", { timeout: 15000 });
-check("Рамзи нодуруст: «ёфт нашуд»", true);
-// Кашидани сертификат дар браузер (модули воқеии сайт).
-const png = await verify.evaluate(async (data) => {
-    const { drawCertificate } = await import("/src/lib/certificate.js");
-    const canvas = await drawCertificate({ ...data, directionLabel: "Техникӣ", lang: "tj" });
-    return canvas.toDataURL("image/png");
-}, created);
-check("Сертификат кашида шуд (PNG)", png.startsWith("data:image/png") && png.length > 100000, `${Math.round(png.length / 1024)} KB`);
-if (SHOTS) fs.writeFileSync(`${SHOTS}/certificate.png`, Buffer.from(png.split(",")[1], "base64"));
 
 check("Хатои JavaScript нест", errors.length === 0, errors.slice(0, 2).join(" | "));
 await browser.close();

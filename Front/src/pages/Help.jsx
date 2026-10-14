@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PlayCircle } from "lucide-react";
-import { HELP_TEXT, HELP_VIDEOS, isPhone, videoAvailable, videoPoster } from "../lib/helpVideos";
+import { HELP_TEXT, HELP_VIDEOS, isPhone, videoPoster } from "../lib/helpVideos";
 import { VideoModal } from "../components/HelpVideo";
 import { usePageMeta } from "../lib/usePageMeta";
 
@@ -12,14 +12,10 @@ export default function Help() {
     const text = HELP_TEXT[lang] || HELP_TEXT.tj;
     const [open, setOpen] = useState(null);
     const [mobile] = useState(isPhone);
-    const [ready, setReady] = useState(null);
-    useEffect(() => {
-        let alive = true;
-        Promise.all(HELP_VIDEOS.map((video) => videoAvailable(video.id, lang, mobile))).then((list) => {
-            if (alive) setReady(HELP_VIDEOS.filter((_, index) => list[index]));
-        });
-        return () => { alive = false; };
-    }, [lang, mobile]);
+    // Кортҳо фавран нишон дода мешаванд; кортҳое, ки муқоваашон бор нашуд (видео нест), пинҳон мешаванд.
+    // Пештар саҳифа ҳамаи 17 муқоваро интизор мешуд ва бо як сурати дер тамоман холӣ мемонд.
+    const [missing, setMissing] = useState(() => new Set());
+    const hide = (id) => setMissing((old) => new Set(old).add(id));
     usePageMeta({ title: text.title, description: text.intro, path: "/help" });
 
     return (
@@ -27,10 +23,10 @@ export default function Help() {
             <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">{text.title}</h1>
             <p className="mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg">{text.intro}</p>
             <div className={`mt-8 grid ${mobile ? "grid-cols-2 gap-3" : "gap-5 sm:grid-cols-2 lg:grid-cols-3"}`}>
-                {(ready || []).map((video) => (
+                {HELP_VIDEOS.filter((video) => !missing.has(video.id)).map((video) => (
                     <button key={video.id} type="button" onClick={() => setOpen(video.id)} className="group overflow-hidden rounded-3xl border border-border bg-card text-left transition hover:-translate-y-0.5 hover:border-primary cursor-pointer">
                         <div className={`relative bg-muted ${mobile ? "aspect-[9/16]" : "aspect-video"}`}>
-                            <img src={videoPoster(video.id, lang, mobile)} alt="" loading="lazy" className="h-full w-full object-cover" />
+                            <img src={videoPoster(video.id, lang, mobile)} onError={() => hide(video.id)} alt="" loading="lazy" className="h-full w-full object-cover" />
                             <span className="absolute inset-0 flex items-center justify-center bg-slate-950/20 transition group-hover:bg-slate-950/35">
                                 <PlayCircle className="h-14 w-14 text-white drop-shadow-lg" aria-hidden />
                             </span>

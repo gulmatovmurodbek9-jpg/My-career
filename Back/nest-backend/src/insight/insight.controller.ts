@@ -15,7 +15,7 @@ export class InsightController {
     }
 
     @Get(':id/future')
-    @ApiOperation({ summary: '«Касби ман дар соли 2035» — пешгӯии AI (кеш)' })
+    @ApiOperation({ summary: '«Касб пас аз 10 сол» — пешгӯии AI (кеш)' })
     future(@Param('id') id: string, @Query('lang') lang: string, @Ip() ip: string) {
         return this.insight.future(id, lang, ip);
     }

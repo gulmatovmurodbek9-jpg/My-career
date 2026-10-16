@@ -4,23 +4,23 @@ import { useTranslation } from "react-i18next";
 import { Bot, Cog, Footprints, Lightbulb, Loader2, Sparkles, Telescope, User } from "lucide-react";
 import { API } from "../lib/config";
 
-// «Касби ман дар соли 2035»: пешгӯии AI (як бор сохта ва кеш мешавад) — хатари
+// «Касб пас аз 10 сол»: пешгӯии AI (як бор сохта ва кеш мешавад) — хатари
 // автоматикунонӣ, чӣ ба мошин ва чӣ ба одам мемонад, малакаҳои нав ва қадамҳо аз ҳозир.
 const TEXT = {
     tj: {
-        title: "Ин касб дар соли 2035", lead: "AI ва мошинҳо кадом корро мегиранд, чӣ ба одам мемонад ва аз ҳозир чӣ кор кунед.",
+        title: "Ин касб пас аз 10 сол", lead: "AI ва мошинҳо кадом корро мегиранд, чӣ ба одам мемонад ва аз ҳозир чӣ кор кунед.",
         show: "Нишон диҳед", loading: "AI пешгӯӣ месозад…", risk: { low: "Хатари автоматикунонӣ: паст", mid: "Хатари автоматикунонӣ: миёна", high: "Хатари автоматикунонӣ: баланд" },
         automated: "Ба мошин ва AI мегузарад", human: "Ба одам мемонад", skills: "Малакаҳои нав", prepare: "Аз ҳозир чӣ кор кунед",
         note: "Ин пешгӯии AI дар асоси тамоюлҳои ҷаҳонӣ аст, на факт.", error: "Пешгӯӣ сохта нашуд. Баъдтар боз кӯшиш кунед.",
     },
     ru: {
-        title: "Эта профессия в 2035 году", lead: "Что заберут AI и машины, что останется за человеком и что делать уже сейчас.",
+        title: "Эта профессия через 10 лет", lead: "Что заберут AI и машины, что останется за человеком и что делать уже сейчас.",
         show: "Показать", loading: "AI составляет прогноз…", risk: { low: "Риск автоматизации: низкий", mid: "Риск автоматизации: средний", high: "Риск автоматизации: высокий" },
         automated: "Перейдёт к машинам и AI", human: "Останется за человеком", skills: "Новые навыки", prepare: "Что делать уже сейчас",
         note: "Это прогноз AI на основе мировых тенденций, а не факт.", error: "Не удалось составить прогноз. Попробуйте позже.",
     },
     en: {
-        title: "This career in 2035", lead: "What AI and machines will take over, what stays human and what to do now.",
+        title: "This career in 10 years", lead: "What AI and machines will take over, what stays human and what to do now.",
         show: "Show", loading: "The AI is making a forecast…", risk: { low: "Automation risk: low", mid: "Automation risk: medium", high: "Automation risk: high" },
         automated: "Goes to machines and AI", human: "Stays human", skills: "New skills", prepare: "What to do now",
         note: "This is an AI forecast based on global trends, not a fact.", error: "Could not make a forecast. Please try later.",

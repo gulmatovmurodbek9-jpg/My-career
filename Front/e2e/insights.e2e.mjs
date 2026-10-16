@@ -1,4 +1,4 @@
-// E2E: «Чаро ин касб?» ва «Касб дар соли 2035» (AI, саҳифаи ихтисос) ва «Ҳисоботи мактаб»
+// E2E: «Чаро ин касб?» ва «Касб пас аз 10 сол» (AI, саҳифаи ихтисос) ва «Ҳисоботи мактаб»
 // (омӯзгори намоишӣ, синфи NAMUNA).
 //   TEACHER_TOKEN=… TEACHER_USER='{…}' BASE_URL=http://localhost:5173 node e2e/insights.e2e.mjs
 import puppeteer, { KnownDevices } from "puppeteer-core";
@@ -42,10 +42,10 @@ check("«Чаро ин касб?»: тип, хатар ва 3 савол", /Са
 await info.click("[data-future-show]");
 await info.waitForSelector("[data-future-result]", { timeout: 90000 });
 const future = await info.$eval("[data-future-result]", (n) => n.innerText);
-check("«2035»: хатар, мошин ↔ одам, малакаҳо, қадамҳо", /Хатари автоматикунонӣ/.test(future) && /Ба одам мемонад/i.test(future) && /Малакаҳои нав/i.test(future), future.replace(/\n/g, " ").slice(0, 140));
+check("«10 сол»: хатар, мошин ↔ одам, малакаҳо, қадамҳо", /Хатари автоматикунонӣ/.test(future) && /Ба одам мемонад/i.test(future) && /Малакаҳои нав/i.test(future), future.replace(/\n/g, " ").slice(0, 140));
 const t0 = Date.now();
 const again = await fetch(`${API}/career-insight/${careerId}/future?lang=tj`).then((r) => r.json());
-check("«2035»: бори дуюм аз кеш (фаврӣ)", again.cached === true && Date.now() - t0 < 2000, `${Date.now() - t0} ms`);
+check("«10 сол»: бори дуюм аз кеш (фаврӣ)", again.cached === true && Date.now() - t0 < 2000, `${Date.now() - t0} ms`);
 if (SHOTS) await info.screenshot({ path: `${SHOTS}/insights.png`, fullPage: true });
 
 // 7. Ҳисоботи мактаб.

@@ -18,8 +18,21 @@ export class ParentController {
     @Post('invites/:code/ask')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Волид дар бораи ихтисоси фарзанд аз AI мепурсад' })
-    ask(@Param('code') code: string, @Body() body: { careerId?: string; question?: string; lang?: string; secret?: string }, @Ip() ip: string) {
+    ask(@Param('code') code: string, @Body() body: { careerId?: string; question?: string; lang?: string; secret?: string; author?: string }, @Ip() ip: string) {
         return this.parents.ask(code, body, ip);
+    }
+
+    @Post('invites/:code/notes')
+    @ApiOperation({ summary: 'Хешованд зери ихтисос ба фарзанд менависад (ё фарзанд бо калид ба оила)' })
+    note(@Param('code') code: string, @Body() body: { careerId?: string; text?: string; author?: string; secret?: string }, @Ip() ip: string) {
+        return this.parents.note(code, body, ip);
+    }
+
+    @Post('invites/:code/refresh')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Фарзанд баъди тести нав ҳамон пайвандро нав мекунад (бо калид)' })
+    refresh(@Param('code') code: string, @Body() body: { secret?: string; scores?: any; careers?: any; childName?: string }, @Ip() ip: string) {
+        return this.parents.refresh(code, body, ip);
     }
 
     @Get('invites/:code')

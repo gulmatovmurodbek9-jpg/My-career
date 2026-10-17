@@ -91,13 +91,18 @@ const parent = await open(browser, null, true);
 await parent.goto(`${BASE}/parent/${process.env.PARENT_CODE}`, { waitUntil: "networkidle2" });
 await parent.waitForSelector("[data-parent-careers]", { timeout: 20000 });
 const parentText = await text(parent);
-check("Волид: ихтисосҳои Ҷамшед (рӯйхати ҳуҷҷатсупорӣ, захира, тест)", /Ихтисосҳое, ки Ҷамшед интихоб кардааст/.test(parentText) && /рӯйхати ҳуҷҷатсупорӣ/i.test(parentText) && parentText.includes("захира кардааст"));
-await parent.evaluate(() => [...document.querySelectorAll("[data-parent-ask] button")].find((b) => /Чаро мувофиқ/.test(b.innerText)).click());
-await parent.waitForFunction(() => {
-    const box = document.querySelector("[data-parent-ask]");
-    return box && !/AI фикр мекунад/.test(box.innerText) && box.querySelectorAll("p").length >= 1;
-}, { timeout: 60000 });
-const answer = await parent.$eval("[data-parent-ask]", (n) => n.innerText);
+check("Волид: ихтисосҳои Ҷамшед (рӯйхати ҳуҷҷатсупорӣ, захира, тест)", /Ҷамшед ихтисосҳояшро бо шумо мубодила кард/.test(parentText) && /рӯйхати ҳуҷҷатсупорӣ/i.test(parentText) && parentText.includes("захира кардааст"));
+// Корти ихтисос, ки ҳанӯз саволи «Чаро мувофиқ?»-ро дорад (ҷавобҳои пештара дар база мемонанд).
+const index = await parent.evaluate(() => [...document.querySelectorAll("[data-family-career]")].findIndex((card) => {
+    const button = [...card.querySelectorAll("button")].find((b) => /Чаро мувофиқ/.test(b.innerText));
+    if (button) button.click();
+    return Boolean(button);
+}));
+await parent.waitForFunction((i) => {
+    const box = document.querySelectorAll("[data-family-career]")[i];
+    return box && /пурсид/.test(box.innerText) && !/AI фикр мекунад/.test(box.innerText);
+}, { timeout: 60000 }, index);
+const answer = await parent.evaluate((i) => document.querySelectorAll("[data-family-career]")[i].innerText, index);
 check("Волид: AI ҷавоб дод", answer.length > 120, answer.replace(/\n/g, " ").slice(0, 160));
 if (SHOTS) await parent.screenshot({ path: `${SHOTS}/parent-ai.png`, fullPage: true });
 

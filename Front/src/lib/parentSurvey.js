@@ -185,7 +185,7 @@ const PARENT_MORE = {
         careersTitle: "Ихтисосҳое, ки {{name}} интихоб кардааст",
         careersTitleNoName: "Ихтисосҳое, ки фарзандатон интихоб кардааст",
         careersTitleChild: "Ихтисосҳои шумо - аз AI пурсед",
-        careersText: "Саволро зери ихтисос пахш кунед - AI фавран ҷавоб медиҳад.",
+        careersText: "Зери ҳар ихтисос аз AI пурсед ё ба оила нависед. Ҳар чӣ оила менависад, ин ҷо пайдо мешавад.",
         groupPlan: "Дар рӯйхати ҳуҷҷатсупорӣ",
         groupSaved: "Захира кардааст",
         groupTried: "Худаш санҷидааст",
@@ -213,7 +213,7 @@ const PARENT_MORE = {
         careersTitle: "Специальности, которые выбрал(а) {{name}}",
         careersTitleNoName: "Специальности, которые выбрал ваш ребёнок",
         careersTitleChild: "Ваши специальности - спросите AI",
-        careersText: "Нажмите на вопрос под специальностью - AI сразу ответит.",
+        careersText: "Под каждой специальностью спросите AI или напишите семье. Всё, что пишет семья, появится здесь.",
         groupPlan: "В списке подачи",
         groupSaved: "Сохранил(а)",
         groupTried: "Попробовал(а) сам(а)",
@@ -241,7 +241,7 @@ const PARENT_MORE = {
         careersTitle: "Specialties {{name}} has chosen",
         careersTitleNoName: "Specialties your child has chosen",
         careersTitleChild: "Your specialties - ask the AI",
-        careersText: "Tap a question under a specialty - the AI answers right away.",
+        careersText: "Under each specialty, ask the AI or write to your family. Everything your family writes appears here.",
         groupPlan: "In the application list",
         groupSaved: "Saved",
         groupTried: "Tried it",
@@ -266,10 +266,115 @@ const PARENT_MORE = {
         askError: "No answer. Please try again later.",
     },
 };
+// Илова (17.10): як пайванд барои тамоми оила, ёддоштҳо зери ихтисосҳо, навсозӣ баъди тести нав.
+const PARENT_FAMILY = {
+    tj: {
+        familyTitle: "Бо оила маслиҳат кунед",
+        familyText: "Ихтисосҳои худро ба падару модар ва хешовандон фиристед. Онҳо бе бақайдгирӣ мебинанд, аз AI мепурсанд ва ба шумо фикри худро менависанд.",
+        createFamily: "Ба оила фиристед",
+        familyShare: "{{name}} ихтисосҳои интихобкардаашро бо шумо мубодила кард. Бинед, аз AI пурсед ва фикри худро нависед:",
+        familyShareUpdate: "{{name}} тестро аз нав гузашт. Натиҷа ва ихтисосҳои навро бинед:",
+        retakeTitle: "Шумо тестро аз нав гузаштед",
+        retakeText: "Натиҷаи навро ба оила фиристед. Пайванд ҳамон мемонад.",
+        retakeButton: "Натиҷаи навро фиристед",
+        updatedNow: "Нав шуд. Акнун пайвандро ба оила боз фиристед.",
+        surveyWaiting: "Агар волидайн ба 10 саволи кӯтоҳ ҷавоб диҳанд, ин ҷо фикри онҳо бо тести шумо муқоиса мешавад.",
+        noNotes: "Ҳанӯз касе чизе нанавиштааст. Пайвандро ба оила фиристед.",
+        parentTitle: "{{name}} ихтисосҳояшро бо шумо мубодила кард",
+        parentTitleNoName: "Фарзандатон ихтисосҳояшро бо шумо мубодила кард",
+        parentText: "Зери ҳар ихтисос аз AI пурсед ё ба {{name}} фикри худро нависед. Бақайдгирӣ лозим нест.",
+        whoAreYou: "Шумо кистед?",
+        authors: { father: "Падар", mother: "Модар", brother: "Бародар", sister: "Хоҳар", other: "Хешованд" },
+        childSelf: "Шумо",
+        childOther: "Фарзанд",
+        surveyTitle: "{{name}}-ро чӣ гуна мебинед?",
+        surveyTitleNoName: "Фарзандатонро чӣ гуна мебинед?",
+        surveyText: "10 саволи кӯтоҳ, 2 дақиқа. Баъд фикри шумо бо натиҷаи тести ӯ муқоиса мешавад.",
+        writeParent: "Савол ба AI ё фикр барои {{name}}…",
+        writeParentNoName: "Савол ба AI ё фикр барои фарзанд…",
+        writeChild: "Савол ба AI ё паём ба оила…",
+        askAiButton: "Аз AI пурсед",
+        toChild: "Ба {{name}} нависед",
+        toChildNoName: "Ба фарзанд нависед",
+        toFamily: "Ба оила нависед",
+        asked: "{{who}} пурсид",
+        wrote: "{{who}}",
+        noteError: "Фиристода нашуд. Боз кӯшиш кунед.",
+        careersTitleFamily: "Ихтисосҳои шумо ва фикри оила",
+    },
+    ru: {
+        familyTitle: "Посоветуйтесь с семьёй",
+        familyText: "Отправьте свои специальности родителям и родным. Без регистрации они посмотрят, спросят AI и напишут вам своё мнение.",
+        createFamily: "Отправить семье",
+        familyShare: "{{name}} делится с вами выбранными специальностями. Посмотрите, спросите AI и напишите своё мнение:",
+        familyShareUpdate: "{{name}} прошёл(а) тест заново. Посмотрите новый результат и специальности:",
+        retakeTitle: "Вы прошли тест заново",
+        retakeText: "Отправьте новый результат семье. Ссылка останется той же.",
+        retakeButton: "Отправить новый результат",
+        updatedNow: "Обновлено. Теперь снова отправьте ссылку семье.",
+        surveyWaiting: "Если родители ответят на 10 коротких вопросов, здесь их мнение сравнится с вашим тестом.",
+        noNotes: "Пока никто ничего не написал. Отправьте ссылку семье.",
+        parentTitle: "{{name}} делится с вами своими специальностями",
+        parentTitleNoName: "Ваш ребёнок делится с вами своими специальностями",
+        parentText: "Под каждой специальностью спросите AI или напишите {{name}} своё мнение. Регистрация не нужна.",
+        whoAreYou: "Кто вы?",
+        authors: { father: "Отец", mother: "Мать", brother: "Брат", sister: "Сестра", other: "Родственник" },
+        childSelf: "Вы",
+        childOther: "Ребёнок",
+        surveyTitle: "Каким вы видите {{name}}?",
+        surveyTitleNoName: "Каким вы видите своего ребёнка?",
+        surveyText: "10 коротких вопросов, 2 минуты. Потом ваше мнение сравнится с результатом его теста.",
+        writeParent: "Вопрос AI или мнение для {{name}}…",
+        writeParentNoName: "Вопрос AI или мнение для ребёнка…",
+        writeChild: "Вопрос AI или сообщение семье…",
+        askAiButton: "Спросить AI",
+        toChild: "Написать {{name}}",
+        toChildNoName: "Написать ребёнку",
+        toFamily: "Написать семье",
+        asked: "{{who}} спросил(а)",
+        wrote: "{{who}}",
+        noteError: "Не отправилось. Попробуйте ещё раз.",
+        careersTitleFamily: "Ваши специальности и мнение семьи",
+    },
+    en: {
+        familyTitle: "Talk it over with your family",
+        familyText: "Send your specialties to your parents and relatives. Without signing up they can look, ask the AI and write you what they think.",
+        createFamily: "Send to family",
+        familyShare: "{{name}} is sharing their chosen specialties with you. Have a look, ask the AI and write what you think:",
+        familyShareUpdate: "{{name}} took the test again. See the new result and specialties:",
+        retakeTitle: "You took the test again",
+        retakeText: "Send the new result to your family. The link stays the same.",
+        retakeButton: "Send the new result",
+        updatedNow: "Updated. Now send the link to your family again.",
+        surveyWaiting: "If your parents answer 10 short questions, their view will be compared with your test here.",
+        noNotes: "Nobody has written anything yet. Send the link to your family.",
+        parentTitle: "{{name}} is sharing their specialties with you",
+        parentTitleNoName: "Your child is sharing their specialties with you",
+        parentText: "Under each specialty, ask the AI or write {{name}} what you think. No sign-up needed.",
+        whoAreYou: "Who are you?",
+        authors: { father: "Father", mother: "Mother", brother: "Brother", sister: "Sister", other: "Relative" },
+        childSelf: "You",
+        childOther: "Child",
+        surveyTitle: "How do you see {{name}}?",
+        surveyTitleNoName: "How do you see your child?",
+        surveyText: "10 short questions, 2 minutes. Then your view is compared with their test result.",
+        writeParent: "A question for the AI or a note for {{name}}…",
+        writeParentNoName: "A question for the AI or a note for your child…",
+        writeChild: "A question for the AI or a message to your family…",
+        askAiButton: "Ask AI",
+        toChild: "Write to {{name}}",
+        toChildNoName: "Write to your child",
+        toFamily: "Write to family",
+        asked: "{{who}} asked",
+        wrote: "{{who}}",
+        noteError: "Not sent. Please try again.",
+        careersTitleFamily: "Your specialties and your family’s view",
+    },
+};
 const parentCache = {};
 export const parentText = (lang) => {
     const key = PARENT_TEXT[String(lang || "tj").slice(0, 2)] ? String(lang).slice(0, 2) : "tj";
-    parentCache[key] ??= { ...PARENT_TEXT[key], ...PARENT_MORE[key] };
+    parentCache[key] ??= { ...PARENT_TEXT[key], ...PARENT_MORE[key], ...PARENT_FAMILY[key] };
     return parentCache[key];
 };
 export const fill = (text, values) => String(text).replace(/\{\{(\w+)\}\}/g, (_, key) => values?.[key] ?? "");
@@ -285,5 +390,13 @@ export function agreement(child, parent) {
     const diff = a.reduce((sum, value, i) => sum + Math.abs(value - b[i]), 0);
     return Math.round((1 - diff / 2) * 100);
 }
+
+// Холҳои тести ҳозира аз холҳои пайванд фарқ мекунанд? (ҳамон яклухткунии сервер: 0–40, 0.1)
+const normScore = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(0, Math.min(40, Math.round(n * 10) / 10)) : 0;
+};
+export const scoresDiffer = (a, b) => CLUSTER_KEYS.some((k) => Math.abs(normScore(a?.[k]) - normScore(b?.[k])) > 0.05);
+export const hasScores = (s) => CLUSTER_KEYS.some((k) => normScore(s?.[k]) > 0);
 
 export const topOf = (s) => CLUSTER_KEYS.reduce((best, k) => ((Number(s?.[k]) || 0) > (Number(s?.[best]) || 0) ? k : best), "c1");

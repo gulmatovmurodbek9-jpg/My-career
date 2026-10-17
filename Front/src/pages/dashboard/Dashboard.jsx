@@ -1,4 +1,5 @@
 import ClassCard from "../../components/ClassCard";
+import ParentInvite from "../../components/ParentInvite";
 import React, { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
@@ -401,6 +402,11 @@ const Dashboard = () => {
                     </motion.div>
                 )}
             </div>
+
+            {/* Бо оила маслиҳат кунед: ихтисосҳои захирашуда ва натиҷаи тест ба хешовандон. */}
+            {(savedCareers.length > 0 || user?.quizResults?.mmtClusters) && (
+                <div className="mt-10 max-w-3xl"><ParentInvite scores={user?.quizResults?.mmtClusters} /></div>
+            )}
 
             <div className="mt-12"><ClassCard part="promo" /></div>
 

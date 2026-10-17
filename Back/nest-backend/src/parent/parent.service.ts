@@ -8,6 +8,9 @@ import { SALARY_SOURCE, sectorFor } from '../common/salary-sectors';
 // «Волидайн ҳам бигӯянд»: хонанда пайванд месозад (бо холҳои тести худ), волид бе ворид шудан
 // ба 10 савол дар бораи фарзандаш ҷавоб медиҳад; ҳарду муқоисаро мебинанд. Ном ва почта нест —
 // танҳо номи ихтиёрии фарзанд (барои «Ҷамшед аз шумо мепурсад»). 90 рӯз нигоҳ дошта мешавад.
+// 17.10: як пайванди доимӣ барои тамоми оила — ихтисосҳо фавран намоёнанд (10 савол ихтиёрӣ),
+// хешовандон зери ҳар ихтисос аз AI мепурсанд ё ба фарзанд менависанд (parent_notes);
+// баъди тести нав фарзанд ҳамон пайвандро нав мекунад (refresh).
 const CLUSTERS = ['c1', 'c2', 'c3', 'c4', 'c5'];
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const KEEP_DAYS = 90;
@@ -16,6 +19,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Саволи волид ба AI: як пайванд — то 30 савол дар як рӯз.
 const ASK_PER_DAY = 30;
 const asks = new Map<string, number[]>();
+// Ёддоштҳо ба фарзанд: як пайванд — то 60 дар як рӯз.
+const NOTES_PER_DAY = 60;
+const noteHits = new Map<string, number[]>();
+const AUTHORS = ['father', 'mother', 'brother', 'sister', 'other'];
+const AUTHOR_NAMES: Record<string, string> = { father: 'падари', mother: 'модари', brother: 'бародари', sister: 'хоҳари', other: 'хешованди' };
 const CLUSTER_NAMES: Record<string, string> = { c1: 'Техникӣ', c2: 'Иқтисод', c3: 'Филология', c4: 'Ҷомеашиносӣ', c5: 'Тиб' };
 
 // Маош барои AI: миёнаи соҳа (Агентии омор) ва тахминҳои сайт — ҳамон рақамҳои саҳифаи ихтисос.
@@ -64,7 +72,20 @@ export class ParentService implements OnModuleInit {
         // Ихтисосҳои фарзанд (12.10): рӯйхати тест ва ҳисоби фарзанд (захираҳо, рӯйхати ҳуҷҷатсупорӣ).
         await this.dataSource.query('ALTER TABLE parent_invites ADD COLUMN IF NOT EXISTS "childCareers" jsonb NULL');
         await this.dataSource.query('ALTER TABLE parent_invites ADD COLUMN IF NOT EXISTS "userId" uuid NULL');
-        await this.dataSource.query(`DELETE FROM parent_invites WHERE "createdAt" < now() - interval '${KEEP_DAYS} days'`).catch(() => undefined);
+        await this.dataSource.query('ALTER TABLE parent_invites ADD COLUMN IF NOT EXISTS "updatedAt" timestamptz NULL');
+        await this.dataSource.query(`
+            CREATE TABLE IF NOT EXISTS parent_notes (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                "inviteId" uuid NOT NULL REFERENCES parent_invites(id) ON DELETE CASCADE,
+                "careerId" uuid NOT NULL,
+                author varchar(10) NOT NULL,
+                kind varchar(4) NOT NULL,
+                text varchar(500) NOT NULL,
+                answer text NULL,
+                "createdAt" timestamptz NOT NULL DEFAULT now()
+            )`);
+        await this.dataSource.query('CREATE INDEX IF NOT EXISTS parent_notes_invite ON parent_notes ("inviteId", "createdAt")');
+        await this.dataSource.query(`DELETE FROM parent_invites WHERE COALESCE("updatedAt", "createdAt") < now() - interval '${KEEP_DAYS} days'`).catch(() => undefined);
     }
 
     private static scores(input: any): Record<string, number> {
@@ -89,7 +110,8 @@ export class ParentService implements OnModuleInit {
     async create(body: { childName?: string; scores?: any; lang?: string; careers?: any }, ip?: string, userId?: string | null) {
         limit(ip);
         const childScores = ParentService.scores(body?.scores);
-        if (!Object.values(childScores).some((v) => v > 0)) throw new BadRequestException('Аввал тестро гузаред');
+        // Бе тест танҳо бо ҳисоб: волид ихтисосҳои захирашуда ва рӯйхати ҳуҷҷатсупориро мебинад.
+        if (!Object.values(childScores).some((v) => v > 0) && !userId) throw new BadRequestException('Аввал тестро гузаред');
         const childName = String(body?.childName || '').replace(/\s+/g, ' ').trim().slice(0, 40) || null;
         const lang = ['tj', 'ru', 'en'].includes(String(body?.lang)) ? String(body?.lang) : 'tj';
         const secret = randomBytes(18).toString('base64url');
@@ -139,8 +161,17 @@ export class ParentService implements OnModuleInit {
         };
     }
 
+    private async notes(row: any) {
+        return this.dataSource.query(
+            `SELECT id, "careerId", author, kind, text, answer, "createdAt" FROM parent_notes WHERE "inviteId" = $1 ORDER BY "createdAt" LIMIT 300`, [row.id]);
+    }
+
     private async fullView(row: any) {
-        return { ...ParentService.view(row), careers: await this.childData(row) };
+        return { ...ParentService.view(row), careers: await this.childData(row), notes: await this.notes(row) };
+    }
+
+    private static isChild(row: any, secret: unknown) {
+        return !!secret && hash(String(secret)) === row.secretHash;
     }
 
     private static view(row: any) {
@@ -154,15 +185,54 @@ export class ParentService implements OnModuleInit {
             parentScores: row.parentScores,
             wish: row.wish,
             answeredAt: row.answeredAt,
+            updatedAt: row.updatedAt || null,
         };
     }
 
-    // Барои волид: пеш аз ҷавоб натиҷаи фарзанд намоён нест (то фикри худашро гӯяд).
+    // Барои волид: ихтисосҳо ва ёддоштҳо фавран; холҳои тести фарзанд — танҳо баъди 10 савол
+    // (то волид аввал фикри худашро гӯяд).
     async forParent(code: string) {
         const row = await this.byCode(code);
-        const view = ParentService.view(row);
-        if (!row.answeredAt) return { ...view, childScores: null };
-        return { ...view, careers: await this.childData(row) };
+        const full = { ...ParentService.view(row), careers: await this.childData(row), notes: await this.notes(row) };
+        return row.answeredAt ? full : { ...full, childScores: null };
+    }
+
+    // Фарзанд тестро аз нав гузашт: ҳамон пайванд, холҳо ва ихтисосҳои нав; 10 саволи волид аз нав.
+    // Ёддоштҳои оила мемонанд.
+    async refresh(code: string, body: { secret?: string; scores?: any; careers?: any; childName?: string }, ip?: string) {
+        limit(ip);
+        const row = await this.byCode(code);
+        if (!ParentService.isChild(row, body?.secret)) throw new NotFoundException('Пайванд ёфт нашуд');
+        const childScores = ParentService.scores(body?.scores);
+        if (!Object.values(childScores).some((v) => v > 0) && !row.userId) throw new BadRequestException('Аввал тестро гузаред');
+        const careers = Array.isArray(body?.careers) ? ParentService.careers(body.careers) : row.childCareers;
+        const childName = String(body?.childName || '').replace(/\s+/g, ' ').trim().slice(0, 40) || row.childName;
+        const [updated] = await this.dataSource.query(
+            `UPDATE parent_invites SET "childScores" = $2, "childCareers" = $3, "childName" = $4, answers = NULL, "parentScores" = NULL,
+                    wish = NULL, relation = NULL, "answeredAt" = NULL, "updatedAt" = now() WHERE id = $1 RETURNING *`,
+            [row.id, JSON.stringify(childScores), JSON.stringify(careers || []), childName]);
+        return this.fullView(updated[0] || updated);
+    }
+
+    // Хешованд ба фарзанд зери ихтисос менависад (ё фарзанд бо калид ба оила).
+    async note(code: string, body: { careerId?: string; text?: string; author?: string; secret?: string }, ip?: string) {
+        limit(ip, 60);
+        const row = await this.byCode(code);
+        const text = String(body?.text || '').replace(/\s+/g, ' ').trim().slice(0, 500);
+        if (text.length < 2) throw new BadRequestException('Матнро нависед');
+        const careerId = String(body?.careerId || '');
+        const data = await this.childData(row);
+        if (![...data.fromTest, ...data.saved, ...data.plan, ...data.tried].some((c: any) => c.id === careerId)) throw new NotFoundException('Ихтисос ёфт нашуд');
+        const now = Date.now();
+        const recent = (noteHits.get(row.code) || []).filter((at) => now - at < 86_400_000);
+        if (recent.length >= NOTES_PER_DAY) throw new HttpException('Барои имрӯз кофист. Фардо боз нависед.', HttpStatus.TOO_MANY_REQUESTS);
+        recent.push(now);
+        noteHits.set(row.code, recent);
+        const author = ParentService.isChild(row, body?.secret) ? 'child' : AUTHORS.includes(String(body?.author)) ? String(body?.author) : 'other';
+        const [note] = await this.dataSource.query(
+            `INSERT INTO parent_notes ("inviteId", "careerId", author, kind, text) VALUES ($1, $2, $3, 'note', $4)
+             RETURNING id, "careerId", author, kind, text, answer, "createdAt"`, [row.id, careerId, author, text]);
+        return note;
     }
 
     async answer(code: string, body: { answers?: string[]; wish?: string; relation?: string }, ip?: string) {
@@ -185,15 +255,15 @@ export class ParentService implements OnModuleInit {
     // Барои хонанда (бо калиде, ки ҳангоми сохтан гирифт).
     async forChild(code: string, secret: string) {
         const row = await this.byCode(code);
-        if (!secret || hash(secret) !== row.secretHash) throw new NotFoundException('Пайванд ёфт нашуд');
+        if (!ParentService.isChild(row, secret)) throw new NotFoundException('Пайванд ёфт нашуд');
         return this.fullView(row);
     }
 
     // Волид (ё фарзанд бо калид) дар бораи ихтисоси фарзанд аз AI мепурсад.
-    async ask(code: string, body: { careerId?: string; question?: string; lang?: string; secret?: string; history?: Array<{ q?: string; a?: string }> }, ip?: string) {
+    async ask(code: string, body: { careerId?: string; question?: string; lang?: string; secret?: string; author?: string; history?: Array<{ q?: string; a?: string }> }, ip?: string) {
         const row = await this.byCode(code);
-        const isChild = !!body?.secret && hash(String(body.secret)) === row.secretHash;
-        if (!row.answeredAt && !isChild) throw new BadRequestException('Аввал ба саволҳо ҷавоб диҳед');
+        const isChild = ParentService.isChild(row, body?.secret);
+        const author = isChild ? 'child' : AUTHORS.includes(String(body?.author)) ? String(body?.author) : 'other';
         const question = String(body?.question || '').replace(/\s+/g, ' ').trim().slice(0, 500);
         if (question.length < 3) throw new BadRequestException('Саволро нависед');
         const careerId = String(body?.careerId || '');
@@ -244,7 +314,7 @@ export class ParentService implements OnModuleInit {
             where ? `Ин ихтисос: ${where}` : '',
         ].filter(Boolean).join('\n');
         const languageName = { tj: 'тоҷикии адабӣ (кириллица, бо ӣ ӯ қ ғ ҳ ҷ)', ru: 'русский', en: 'English' }[lang as 'tj' | 'ru' | 'en'];
-        const who = isChild ? 'хонанда (худи фарзанд)' : 'волиди хонанда';
+        const who = isChild ? 'хонанда (худи фарзанд)' : `${AUTHOR_NAMES[author] || 'волиди'} хонанда`;
         // Саволҳои пештара дар ҳамин ихтисос: «Мисол» баъди «маош чанд аст?» маънои «мисоли маош»-ро дорад.
         const history = (Array.isArray(body?.history) ? body.history : [])
             .slice(-3)
@@ -276,6 +346,10 @@ ${history ? `\nСӮҲБАТИ ПЕШТАРА:\n${history}\n` : ''}
             .replace(/^\s*[*#>-]+\s*/gm, '')
             .replace(/^(салом|ассалому алейкум|здравствуйте|hello|hi)[.!,]?\s*/i, '')
             .trim();
-        return { answer };
+        // Савол ва ҷавоб барои тамоми оила ва фарзанд намоён мемонад.
+        const [note] = await this.dataSource.query(
+            `INSERT INTO parent_notes ("inviteId", "careerId", author, kind, text, answer) VALUES ($1, $2, $3, 'ask', $4, $5)
+             RETURNING id, "careerId", author, kind, text, answer, "createdAt"`, [row.id, careerId, author, question, answer]).catch(() => [null]);
+        return { answer, note };
     }
 }

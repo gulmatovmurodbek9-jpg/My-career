@@ -263,6 +263,26 @@ const Quiz = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [results, setResults] = useState(null);
+    // Маслиҳати AI бо забони ҳозираи сайт: агар забон баъди тест иваз шуда бошад, аз нав гирифта мешавад
+    // (null — интизор, "" — нашуд). Натиҷа дар localStorage ҳам нигоҳ дошта мешавад.
+    const [adviceByLang, setAdviceByLang] = useState({});
+    const uiLang = (i18n.language || "tj").slice(0, 2);
+    useEffect(() => {
+        if (!results?.aiAdvice || !results.rawAnswers?.length) return;
+        if ((results.quizLang || "tj").slice(0, 2) === uiLang || results.aiAdviceByLang?.[uiLang] || adviceByLang[uiLang] !== undefined) return;
+        setAdviceByLang((old) => ({ ...old, [uiLang]: null }));
+        axios.post(`${API}/quiz/advice`, { answers: results.rawAnswers, lang: uiLang, grade: results.grade ?? getGrade(), context: results.context || getQuizContext() }, { timeout: 45000 })
+            .then(({ data }) => {
+                const text = data?.aiAdvice || "";
+                setAdviceByLang((old) => ({ ...old, [uiLang]: text }));
+                if (!text) return;
+                try {
+                    const stored = JSON.parse(localStorage.getItem(QUIZ_STORAGE_KEY));
+                    if (stored) localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify({ ...stored, aiAdviceByLang: { ...(stored.aiAdviceByLang || {}), [uiLang]: text } }));
+                } catch { /* холӣ */ }
+            })
+            .catch(() => setAdviceByLang((old) => ({ ...old, [uiLang]: "" })));
+    }, [results, uiLang, adviceByLang]);
     const [loading, setLoading] = useState(true);
     const [askRetake, setAskRetake] = useState(false);
 
@@ -931,7 +951,10 @@ const Quiz = () => {
         matched.sort((a, b) => (Number(b.matchPercentage) || 0) - (Number(a.matchPercentage) || 0));
         const visibleMatched = matched;
         const quick = QUICK_TEXT[(i18n.language || "tj").slice(0, 2)] || QUICK_TEXT.tj;
-        const aiAdvice = results.aiAdvice || "";
+        // Матни маслиҳат танҳо бо забони сайт: забони дигар — интизор (null) ё пинҳон.
+        const aiAdvice = (results.quizLang || "tj").slice(0, 2) === uiLang
+            ? results.aiAdvice || ""
+            : results.aiAdviceByLang?.[uiLang] ?? adviceByLang[uiLang] ?? (results.rawAnswers?.length ? null : "");
         // Холҳо дар миқёси 0–40 (сервер ба ин миқёс мувофиқ мекунад).
         const rankedClusters = Object.entries(results.scores?.mmtClusters || {})
             .map(([key, score]) => ({
@@ -1176,13 +1199,21 @@ const Quiz = () => {
                     );
                 })()}
 
-                {aiAdvice && (
-                    <section className="rounded-2xl border border-primary/25 bg-primary/5 p-6 sm:p-8">
+                {aiAdvice !== "" && (
+                    <section className="rounded-2xl border border-primary/25 bg-primary/5 p-6 sm:p-8" data-ai-advice>
                         <div className="flex items-center gap-2 text-sm font-black text-primary">
                             <Sparkles className="w-4 h-4" aria-hidden="true" />
                             {t('quiz.ai_advice_title')}
                         </div>
-                        <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">{aiAdvice}</p>
+                        {aiAdvice === null ? (
+                            <div className="mt-3 space-y-2" aria-busy="true">
+                                <div className="h-3.5 w-full animate-pulse rounded bg-primary/10" />
+                                <div className="h-3.5 w-11/12 animate-pulse rounded bg-primary/10" />
+                                <div className="h-3.5 w-3/4 animate-pulse rounded bg-primary/10" />
+                            </div>
+                        ) : (
+                            <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">{aiAdvice}</p>
+                        )}
                     </section>
                 )}
 

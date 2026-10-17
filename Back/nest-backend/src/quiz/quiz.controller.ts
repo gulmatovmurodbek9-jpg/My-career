@@ -97,6 +97,17 @@ export class QuizController {
         return this.quizService.interpretAnswer(body?.question, body?.options, body?.text, body?.lang);
     }
 
+    // Забони сайт баъди тест иваз шуд: маслиҳати AI бо забони нав (ҳамон ҷавобҳо, бе сабти омор).
+    @Post('advice')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Маслиҳати AI-и натиҷа бо забони дигар' })
+    async advice(@Body() dto: SubmitQuizDto, @Ip() ip: string) {
+        assertAiAllowed(ip);
+        const scores = this.quizService.calculateScores(dto);
+        const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context);
+        return { aiAdvice: result?.aiAdvice || '', lang: dto.lang };
+    }
+
     @Post('submit')
     @ApiOperation({ summary: 'Фиристодани ҷавобҳо ва гирифтани TOP 12 ихтисосҳо' })
     async submitQuiz(@Body() dto: SubmitQuizDto, @Req() req: any) {

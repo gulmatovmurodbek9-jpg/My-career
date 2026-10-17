@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { DataSource } from 'typeorm';
 import { AiService } from '../ai/ai.service';
 import { assertAiAllowed } from '../common/ai-limit';
+import { SALARY_SOURCE, sectorFor } from '../common/salary-sectors';
 
 // «Аз AI дар бораи касб пурсед»: ёвари AI аз рӯи маълумоти худи ихтисос ва сенарияи «Худро дар
 // касб санҷед» (рӯзи корӣ, плюс/минус) кӯтоҳ ва ростқавлона ҷавоб медиҳад. Пештар ӯ худро одами
@@ -26,7 +27,7 @@ export class InterviewService {
     private async load(careerId: string, lang: Lang) {
         if (!/^[0-9a-f-]{36}$/i.test(careerId)) throw new NotFoundException('Ихтисос ёфт нашуд');
         const [career] = await this.dataSource.query(
-            `SELECT c.id, c.name, c.translations, c.description, c.purpose, c.skills, c."careerOpportunities", cl."clusterName" AS cluster,
+            `SELECT c.id, c.name, c.translations, c.description, c.purpose, c.skills, c."careerOpportunities", c."salaryAndMarket", cl."clusterName" AS cluster,
                     (SELECT content FROM career_trials t WHERE t."careerId" = c.id) AS trial
              FROM career c LEFT JOIN cluster cl ON cl.id = c."clusterId" WHERE c.id = $1`, [careerId]);
         if (!career) throw new NotFoundException('Ихтисос ёфт нашуд');
@@ -72,6 +73,31 @@ export class InterviewService {
             trial?.pros?.length ? `Хубиҳо: ${trial.pros.join('; ')}` : '',
             trial?.cons?.length ? `Душвориҳо: ${trial.cons.join('; ')}` : '',
         ].filter(Boolean).join('\n');
+        // Маълумоти иловагӣ, то ба саволҳои «оянда дорад?», «маош?», «дар куҷо мехонанд?» ҷавоби
+        // мушаххас бошад, на «аз омӯзгор пурсед».
+        const [offers] = await this.dataSource.query(
+            `SELECT count(*)::int AS total, count(*) FILTER (WHERE "paymentType" = 'ройгон')::int AS free,
+                    count(DISTINCT "universityId")::int AS places, min("tuitionFee") FILTER (WHERE "tuitionFee" > 0) AS "minFee"
+             FROM career_offerings WHERE "careerId" = $1`, [careerId]).catch(() => [null]);
+        const [future] = await this.dataSource.query(
+            `SELECT content FROM career_future WHERE "careerId" = $1 ORDER BY (lang = 'tj') DESC LIMIT 1`, [careerId]).catch(() => [null]);
+        const f = future?.content;
+        const sector = sectorFor(career.name, career.cluster);
+        const sal = career.salaryAndMarket;
+        // Маълумоти иловагӣ танҳо ба саволе, ки ба он рабт дорад: вагарна модел маошро ба ҷавоби «рӯзи корӣ» ҳам меорад.
+        const q = question.text;
+        const asksChoice = /интихоб|оянд|арзиш|выбра|будущ|стоит|перспектив|choose|future|worth|should i/i.test(q);
+        const asksMoney = asksChoice || /маош|музд|пул|даромад|зарплат|доход|salary|pay|earn|money/i.test(q);
+        const asksStudy = asksChoice || /куҷо|донишгоҳ|коллеҷ|буҷет|ройгон|нарх|хонд|учит|вуз|бюджет|стоимост|study|universit|college|tuition/i.test(q);
+        const more = [
+            !asksStudy ? '' : offers?.total ? `Таҳсил: ${offers.places} муассиса, ${offers.total} пешниҳод, аз онҳо буҷетӣ (ройгон): ${offers.free}${offers.minFee ? `, нархи пулакӣ аз ${Math.round(Number(offers.minFee))} сомонӣ дар сол` : ''}` : 'Ҳоло ягон муассиса ин ихтисосро қабул намекунад',
+            asksMoney && sector ? `Маоши миёнаи соҳаи «${sector.name}»: ${sector.amount} сомонӣ дар як моҳ (${SALARY_SOURCE.agency}, ${SALARY_SOURCE.period})` : '',
+            asksMoney && sal && (sal.junior || sal.mid) ? `Маош тахминӣ (аз эълонҳои кор): навкор ${sal.junior || '—'}, ботаҷриба ${sal.mid || '—'}` : '',
+            asksChoice && f?.riskText ? `Тамоюл дар 10 соли оянда (пешгӯии AI, на факт): ${f.riskText}` : '',
+            asksChoice && f?.human?.length ? `Корҳое, ки ба одам мемонанд ва қадрашон меафзояд: ${f.human.join('; ')}` : '',
+            asksChoice && f?.skills?.length ? `Малакаҳои нав: ${f.skills.join('; ')}` : '',
+            asksChoice && !f ? 'Пешгӯии 10 соли оянда ҳоло дар маълумот нест: бигӯ, ки онро дар қисми «Ин касб пас аз 10 сол» дар ҳамин саҳифа дидан мумкин аст' : '',
+        ].filter(Boolean).join('\n');
         const languageName = { tj: 'тоҷикии адабӣ (кириллица, бо ӣ ӯ қ ғ ҳ ҷ)', ru: 'русский', en: 'English' }[lang];
         const dialogue = messages.map((m) => `${m.role === 'user' ? 'Хонанда' : 'Ёвар'}: ${m.text}`).join('\n');
 
@@ -80,16 +106,20 @@ export class InterviewService {
 ҚОИДАҲО:
 - Ту одам нестӣ: худро мутахассис, «ман дар ин кор…», ном, шаҳр ё солҳои таҷриба НАГӮ. Дар бораи касб аз шахси сеюм гап зан: «мутахассиси ин соҳа одатан…».
 - Салом нагӯ ва худро муаррифӣ накун — рост ба савол ҷавоб деҳ.
+- ҶУМЛАИ АВВАЛ ҲАТМАН ба худи савол ҷавоб медиҳад. Тавсифи умумии касбро такрор накун ва чизеро, ки дар ҷавобҳои пештара гуфта шуд, дубора нагӯ.
+- Танҳо он маълумотеро истифода бар, ки ба ҳамин савол лозим аст (маош — танҳо агар дар бораи маош пурсанд ё савол дар бораи интихоб бошад).
+${asksChoice ? '- Савол дар бораи интихоб ё оянда аст: қарорро ба ҷои хонанда нагир, вале 2–3 далели мушаххас аз маълумоти поён биёр (тамоюли 10 соли оянда, маош, ҷойҳои буҷетӣ, ба кӣ мувофиқ ва ба кӣ душвор) ва дар охир як қадами амалӣ пешниҳод кун: «Худро дар касб санҷед»-ро дар ҳамин саҳифа гузаред.\n' : ''}- Дар бораи «талабот дар бозори меҳнат» танҳо он чиро гӯй, ки дар маълумот ҳаст.
 - Ростқавл бош: ҳам хубиҳо ва ҳам душвориҳоро бигӯ. Мисолҳои мушаххас аз рӯзи корӣ биёр, агар дар маълумот бошанд.
-- Кӯтоҳ: 3–4 ҷумлаи содда (то 70 калима). Бе рӯйхат ва бе markdown.
-- Рақами маош, кафолати кор, номи ширкатҳо ва одамони воқеӣ, рақами моддаҳои қонун, номи доруҳо, «ояндаи дурахшон» ва «ҳамеша талабот дорад»-ро НАГӮ.
-- Агар маълумот нест — ростқавлона бигӯ ва маслиҳат деҳ, ки аз мутахассиси воқеӣ ё омӯзгор пурсад.
+- Кӯтоҳ: 3–4 ҷумлаи содда, ҚАТЪИЯН то 70 калима. Бе рӯйхат ва бе markdown.
+- Танҳо рақамҳои маълумоти поёнро истифода бар (маош бо манбаъ; тахминиро «тахминӣ» гӯй). Кафолати кор, номи ширкатҳо ва одамони воқеӣ, рақами моддаҳои қонун, номи доруҳо, «ояндаи дурахшон» ва «ҳамеша талабот дорад»-ро НАГӮ. Пешгӯиро «пешгӯӣ» гӯй, на факт.
+- Танҳо агар дар маълумот ҷавоб умуман набошад — ростқавлона бигӯ. «Аз омӯзгор пурсед»-ро ҳамчун ҷавоби асосӣ истифода набар.
 - Агар савол ба касб ва таҳсил рабт надошта бошад — мулоимона ба мавзӯъ баргардон.
 - Ба хонанда «шумо» гӯй.
 - Забони ҷавоб: ${languageName}.
 
 МАЪЛУМОТ ДАР БОРАИ ИХТИСОС:
 ${facts}
+${more}
 
 СУҲБАТ:
 ${dialogue}

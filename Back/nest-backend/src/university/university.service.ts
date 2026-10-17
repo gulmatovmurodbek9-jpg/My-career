@@ -149,6 +149,19 @@ export class UniversityService {
             .leftJoin('cluster', 'cluster', 'cluster.id = career."clusterId"')
             .getRawMany();
 
+        // Пешниҳодҳои ҳамин донишгоҳ (буҷетӣ / пулакӣ, нарх, ҷой) — барои корт ва «Ба рӯйхати ҳуҷҷатсупорӣ».
+        const offerRows = await this.universityRepo.manager.query(
+            `SELECT id, "careerId", "paymentType", "tuitionFee", seats, "studyForm", language, "basedOn"
+             FROM career_offerings WHERE "universityId" = $1 ${grade ? 'AND "basedOn" = $2' : ''}
+             ORDER BY ("paymentType" = 'ройгон') DESC, "tuitionFee" NULLS FIRST`,
+            grade ? [id, grade] : [id]);
+        const offersByCareer = new Map<string, any[]>();
+        offerRows.forEach((o: any) => {
+            const list = offersByCareer.get(o.careerId) || [];
+            list.push({ id: o.id, paymentType: o.paymentType, tuitionFee: o.tuitionFee === null ? null : Number(o.tuitionFee), seats: o.seats, studyForm: o.studyForm, language: o.language, basedOn: o.basedOn });
+            offersByCareer.set(o.careerId, list);
+        });
+
         const useLang = lang && lang !== 'tj' ? lang : null;
         return careers.map((row) => {
             const tr = useLang ? row.career_translations?.[useLang] : null;
@@ -160,6 +173,7 @@ export class UniversityService {
                 cluster: row.cluster_id
                     ? { id: row.cluster_id, clusterId: row.cluster_clusterId, clusterName: row.cluster_clusterName }
                     : null,
+                offerings: offersByCareer.get(row.career_id) || [],
             };
         });
     }

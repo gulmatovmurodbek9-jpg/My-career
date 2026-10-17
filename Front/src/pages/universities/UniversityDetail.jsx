@@ -14,6 +14,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { displayName } from "../../lib/careerName";
 import { ssrData, ssrKey } from "../../lib/ssrData";
+import { useAuthStore } from "../../store/authStore";
+import UniOfferApply, { OfferBadges } from "../../components/UniOfferApply";
 
 const CLUSTER_COLORS = {
   1: { bg: "#FAEEDA", text: "#633806" },
@@ -38,6 +40,15 @@ export default function UniversityDetail() {
   const [loading, setLoading] = useState(!initial);
   const [activeCluster, setActiveCluster] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  // Рӯйхати ҳуҷҷатсупории корбар — барои тугмаи «Ба рӯйхати ҳуҷҷатсупорӣ» дар ҳар корт.
+  const token = useAuthStore((state) => state.token);
+  const [planIds, setPlanIds] = useState(() => new Set());
+  useEffect(() => {
+    if (!token) { setPlanIds(new Set()); return; }
+    axios.get(`${API}/users/application-plan`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setPlanIds(new Set((data.items || []).map((item) => item.offeringId))))
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     const pre = ssrData(ssrKey("university", id, i18n.language));
@@ -319,9 +330,8 @@ export default function UniversityDetail() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.2, delay: idx * 0.02 }}
                 >
-                <Link
-                  to={`/info/${spec.id}`}
-                  className="focus-ring flex h-full flex-col glass-card p-6 rounded-3xl border border-white/5 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all group cursor-pointer"
+                <div
+                  className="relative flex h-full flex-col glass-card p-6 rounded-3xl border border-white/5 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all group"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div 
@@ -333,9 +343,19 @@ export default function UniversityDetail() {
                     <GraduationCap aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
                   </div>
                   
-                  <h3 className="text-lg font-bold text-foreground leading-snug mb-4 line-clamp-2 min-h-[3.5rem] max-h-[3.5rem] overflow-hidden">
-                    {displayName(spec.name)}
+                  <h3 className="text-lg font-bold text-foreground leading-snug mb-3 line-clamp-2 min-h-[3.5rem] max-h-[3.5rem] overflow-hidden">
+                    {/* Тамоми корт ба саҳифаи ихтисос мебарад (after:inset-0); тугмаи рӯйхат болотар (z-10). */}
+                    <Link to={`/info/${spec.id}`} className="focus-ring rounded after:absolute after:inset-0 after:content-['']">
+                      {displayName(spec.name)}
+                    </Link>
                   </h3>
+
+                  {spec.offerings?.length > 0 && (
+                    <div className="mb-4 space-y-3">
+                      <OfferBadges offerings={spec.offerings} />
+                      <UniOfferApply offerings={spec.offerings} token={token} planIds={planIds} setPlanIds={setPlanIds} next={`/universities/${id}`} />
+                    </div>
+                  )}
                   
                   <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
                     {/* 22, 98, 99: мӯҳлат ва дараҷа дар база нест — «4 сол, Бакалавр»-и тахминиро нишон намедиҳем. */}
@@ -346,7 +366,7 @@ export default function UniversityDetail() {
                       {t("misc2.detail")}
                     </div>
                   </div>
-                </Link>
+                </div>
                 </motion.div>
               );
             })}

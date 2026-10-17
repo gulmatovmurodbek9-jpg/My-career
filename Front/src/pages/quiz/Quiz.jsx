@@ -1154,13 +1154,6 @@ const Quiz = () => {
                     <ArrowRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </Link>
 
-                {results.scores?.mmtClusters && (
-                    <ParentInvite
-                        scores={results.scores.mmtClusters}
-                        careers={matched.filter((career) => career.id).map((career) => ({ id: career.id, name: displayName(careerName(career, i18n.language)), percent: career.matchPercentage }))}
-                    />
-                )}
-
                 {(() => {
                     const ctx = CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj;
                     const lang2 = (i18n.language || "tj").slice(0, 2);
@@ -1265,6 +1258,14 @@ const Quiz = () => {
                             })}
                         </div>
                     </section>
+                )}
+
+                {/* Аввал ихтисосҳо, баъд фикри оила дар бораи ҳамонҳо. */}
+                {results.scores?.mmtClusters && (
+                    <ParentInvite
+                        scores={results.scores.mmtClusters}
+                        careers={matched.filter((career) => career.id).map((career) => ({ id: career.id, name: displayName(careerName(career, i18n.language)), percent: career.matchPercentage }))}
+                    />
                 )}
 
                 {(() => {

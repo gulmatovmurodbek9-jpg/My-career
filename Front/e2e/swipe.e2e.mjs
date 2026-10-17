@@ -1,5 +1,5 @@
 // E2E: «Касб-свайп» — телефон: кашидан бо ангушт (рост/чап), тугмаҳо, «Бозгашт», натиҷа
-// (хусусиятҳо, самт, ихтисосҳо, суратҳо); компютер: тугмаҳои ← →.
+// (хусусиятҳо, самт, ихтисосҳо бо сабаб, суратҳо); 3 бозӣ — 90 сурати гуногун; компютер: тугмаҳои ← →.
 //   BASE_URL=http://localhost:5173 node e2e/swipe.e2e.mjs
 import puppeteer, { KnownDevices } from "puppeteer-core";
 
@@ -51,7 +51,7 @@ const second = await current(phone);
 check("Кашидан ба рост — корти навбатӣ", second && second !== first, `${first} → ${second}`);
 await swipe(-220);
 check("Кашидан ба чап — корти навбатӣ", (await current(phone)) !== second);
-const saved = await phone.evaluate(() => JSON.parse(localStorage.getItem("swipe_result_v1")).choices);
+const saved = await phone.evaluate(() => JSON.parse(localStorage.getItem("swipe_round_v2")).choices);
 check("Интихобҳо: ❤️ ва ✖️ сабт шуданд", saved[first] === true && saved[second] === false, JSON.stringify(saved));
 // «Бозгашт»
 await phone.evaluate(() => document.querySelector('button[aria-label="Бозгашт"]').click());
@@ -67,9 +67,29 @@ await phone.waitForSelector("[data-swipe-result]", { timeout: 10000 });
 await phone.waitForFunction(() => document.querySelector("[data-swipe-result]").innerText.includes("Ихтисосҳое, ки"), { timeout: 15000 }).catch(() => {});
 const result = await phone.$eval("[data-swipe-result]", (n) => n.innerText);
 check("Натиҷа: «Ба ту инҳо маъқуланд» ва самт", /ба ту инҳо маъқуланд/i.test(result) && /самти ба ту наздик/i.test(result));
-check("Натиҷа: 5 ихтисос аз база", (await phone.$$eval("[data-swipe-result] a[href^='/info/']", (n) => n.length)) === 5);
+await phone.waitForSelector("[data-swipe-career]", { timeout: 15000 }).catch(() => {});
+const careerTexts = await phone.$$eval("[data-swipe-career]", (n) => n.map((a) => a.innerText));
+check("Натиҷа: ихтисосҳо аз суратҳои маъқул (бо сабаб)", careerTexts.length >= 3 && careerTexts.some((t) => /Чунки маъқул шуд/.test(t)), `${careerTexts.length}: ${careerTexts[0]?.replace(/\n/g, " / ")}`);
 check("Натиҷа: суратҳои маъқулшуда", (await phone.$$eval("[data-swipe-result] img", (n) => n.length)) >= 10);
 if (SHOTS) await phone.screenshot({ path: `${SHOTS}/swipe-result.png`, fullPage: true });
+
+// Се бозӣ паи ҳам — ягон сурат такрор намешавад.
+const decks = [await phone.evaluate(() => JSON.parse(localStorage.getItem("swipe_round_v2")).deck)];
+for (let round = 0; round < 2; round += 1) {
+    await phone.evaluate(() => [...document.querySelectorAll("button")].find((b) => /Аз нав/.test(b.innerText)).click());
+    await phone.waitForSelector("[data-swipe-card]");
+    for (let i = 0; i < 40; i += 1) {
+        if (await phone.$("[data-swipe-result]")) break;
+        await phone.evaluate(() => document.querySelector("[data-swipe-yes]").click());
+        await sleep(280);
+    }
+    await phone.waitForSelector("[data-swipe-result]", { timeout: 10000 });
+    decks.push(await phone.evaluate(() => JSON.parse(localStorage.getItem("swipe_round_v2")).deck));
+}
+const allIds = decks.flat();
+check("Се бозӣ: 90 сурат, ҳеҷ кадом такрор нашуд", allIds.length === 90 && new Set(allIds).size === 90, `${allIds.length} / ${new Set(allIds).size}`);
+const broken = await phone.evaluate(async (ids) => (await Promise.all(ids.map((id) => fetch(`/swipe/${id}.webp`).then((r) => (r.ok && (r.headers.get("content-type") || "").includes("image") ? null : id))))).filter(Boolean), allIds);
+check("Ҳамаи суратҳо ҳастанд", broken.length === 0, broken.slice(0, 5).join(", "));
 
 // 2. Компютер: тугмаҳои клавиатура.
 const desk = await open(false);
@@ -82,7 +102,7 @@ await sleep(500);
 const b = await current(desk);
 await desk.keyboard.press("ArrowLeft");
 await sleep(500);
-const choicesDesk = await desk.evaluate(() => JSON.parse(localStorage.getItem("swipe_result_v1")).choices);
+const choicesDesk = await desk.evaluate(() => JSON.parse(localStorage.getItem("swipe_round_v2")).choices);
 check("Компютер: → маъқул, ← не", choicesDesk[a] === true && choicesDesk[b] === false && (await current(desk)) !== b);
 
 check("Хатои JavaScript нест", errors.length === 0, errors.slice(0, 2).join(" | "));

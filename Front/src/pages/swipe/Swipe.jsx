@@ -245,7 +245,8 @@ export default function Swipe() {
     const cards = useMemo(() => (round?.deck || []).map((id) => CARD_BY_ID[id]), [round?.deck]);
     const [started, setStarted] = useState(() => Object.keys(round?.choices || {}).length > 0);
     const begin = () => { if (!round) setRound({ deck: freshDeck(), choices: {} }); setStarted(true); };
-    const again = () => setRound((old) => ({ deck: freshDeck(old?.deck || []), choices: {} }));
+    // Бозии навро берун аз setRound интихоб мекунем: дар StrictMode функсияи setRound ду бор иҷро мешавад.
+    const again = () => setRound({ deck: freshDeck(round?.deck || []), choices: {} });
     const [fly, setFly] = useState(null);
     usePageMeta({ title: text.title, description: text.subtitle, path: "/swipe" });
 

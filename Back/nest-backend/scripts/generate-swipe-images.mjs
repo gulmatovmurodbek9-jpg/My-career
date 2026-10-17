@@ -1,6 +1,7 @@
 // Суратҳои «Касб-свайп»: барои ҳар корт як тасвир бо Gemini (Vertex, gemini-2.5-flash-image)
 // → Front/public/swipe/<id>.webp (720×960). Суратҳои мавҷуда такрор сохта намешаванд.
-//   node scripts/generate-swipe-images.mjs [id ...] [--force]
+//   node scripts/generate-swipe-images.mjs [id ...] [--force] [--key]
+// --key: Gemini API бо GEMINI_API_KEY (17.10: Vertex суратҳоро бо 403 рад мекард).
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
@@ -17,7 +18,9 @@ const { SWIPE_CARDS } = await import(path.resolve(here, '../../../Front/src/lib/
 const args = process.argv.slice(2);
 const force = args.includes('--force');
 const only = args.filter((a) => !a.startsWith('--'));
-const ai = new GoogleGenAI({ vertexai: true, project: process.env.VERTEX_PROJECT_ID, location: 'global' });
+const ai = args.includes('--key')
+    ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+    : new GoogleGenAI({ vertexai: true, project: process.env.VERTEX_PROJECT_ID, location: 'global' });
 fs.mkdirSync(OUT, { recursive: true });
 
 // Як услуб барои ҳама: тасвири ҳамвор, гарм, одамони тоҷик, бе матн, то канорҳо.

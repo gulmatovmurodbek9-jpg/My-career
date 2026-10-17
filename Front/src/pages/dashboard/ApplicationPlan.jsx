@@ -10,6 +10,7 @@ import { MapPin,
     FileText,
     GraduationCap,
     Layers,
+    Image as ImageIcon,
 } from "lucide-react";
 import { Link } from "react-router";
 import axios from "axios";
@@ -82,6 +83,116 @@ const ApplicationPlan = () => {
     };
 
     const [downloading, setDownloading] = useState(false);
+    const [imaging, setImaging] = useState(false);
+
+    // Рӯйхат ҳамчун сурати PNG-и амудӣ (1080px): барои телефон ва Telegram, бе китобхонаи иловагӣ.
+    const downloadImage = async () => {
+        setImaging(true);
+        try {
+            await document.fonts?.ready;
+            const W = 1080;
+            const PAD = 56;
+            const font = getComputedStyle(document.body).fontFamily || "sans-serif";
+            const measure = document.createElement("canvas").getContext("2d");
+            const wrap = (text, size, weight, width) => {
+                measure.font = `${weight} ${size}px ${font}`;
+                const lines = [];
+                let line = "";
+                String(text || "").split(/\s+/).forEach((word) => {
+                    const next = line ? `${line} ${word}` : word;
+                    if (measure.measureText(next).width > width && line) { lines.push(line); line = word; } else line = next;
+                });
+                if (line) lines.push(line);
+                return lines;
+            };
+            const rows = items.map((item) => {
+                const title = wrap(item.careerName, 34, 800, W - PAD * 2 - 90);
+                const uni = wrap([item.universityName, item.city].filter(Boolean).join(", "), 26, 500, W - PAD * 2 - 90);
+                return { item, title, uni, height: 40 + title.length * 44 + uni.length * 36 + 56 };
+            });
+            const headerH = cluster ? 230 : 190;
+            const H = headerH + rows.reduce((sum, r) => sum + r.height + 20, 0) + 150;
+            const canvas = document.createElement("canvas");
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#f6f8fc";
+            ctx.fillRect(0, 0, W, H);
+            ctx.textBaseline = "top";
+            ctx.fillStyle = "#0f172a";
+            ctx.font = `800 54px ${font}`;
+            ctx.fillText(t("plan.title"), PAD, 56);
+            ctx.fillStyle = "#64748b";
+            ctx.font = `500 28px ${font}`;
+            ctx.fillText(`${t("plan.summary", { count: items.length, free: freeCount })} · ${new Date().toLocaleDateString("ru-RU")}`, PAD, 128);
+            if (cluster) ctx.fillText(t("plan.cluster", { number: cluster.number, name: cluster.name }), PAD, 168);
+            let y = headerH;
+            rows.forEach(({ item, title, uni, height }) => {
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.roundRect ? ctx.roundRect(PAD, y, W - PAD * 2, height, 24) : ctx.rect(PAD, y, W - PAD * 2, height);
+                ctx.fill();
+                ctx.strokeStyle = "#e2e8f0";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = "#1d4ed8";
+                ctx.font = `800 34px ${font}`;
+                ctx.fillText(String(item.order), PAD + 30, y + 30);
+                let ty = y + 30;
+                ctx.fillStyle = "#0f172a";
+                ctx.font = `800 34px ${font}`;
+                title.forEach((line) => { ctx.fillText(line, PAD + 90, ty); ty += 44; });
+                ctx.fillStyle = "#475569";
+                ctx.font = `500 26px ${font}`;
+                uni.forEach((line) => { ctx.fillText(line, PAD + 90, ty); ty += 36; });
+                const price = item.isFree ? item.paymentType : money(item.tuitionFee) ? `${money(item.tuitionFee)} сомонӣ/сол` : item.paymentType;
+                const meta = [item.studyForm, item.seats > 0 ? `${item.seats} ҷой` : null, item.code ? `#${item.code}` : null].filter(Boolean).join(" · ");
+                ctx.font = `800 26px ${font}`;
+                ctx.fillStyle = item.isFree ? "#047857" : "#0f172a";
+                ctx.fillText(price || "", PAD + 90, ty + 10);
+                const priceW = ctx.measureText(price || "").width;
+                ctx.font = `500 26px ${font}`;
+                ctx.fillStyle = "#64748b";
+                ctx.fillText(meta ? ` · ${meta}` : "", PAD + 90 + priceW, ty + 10);
+                y += height + 20;
+            });
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = `500 22px ${font}`;
+            ctx.fillText("Нархҳо ва ҷойҳоро пеш аз супоридани ҳуҷҷат дар худи донишгоҳ тасдиқ кунед.", PAD, y + 20);
+            ctx.fillStyle = "#1d4ed8";
+            ctx.font = `800 24px ${font}`;
+            ctx.fillText("ikhtisosiman.qobus.tj", PAD, y + 62);
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+            if (!blob) throw new Error("toBlob");
+            const name = `ruyhati-hujjatsupori-${new Date().toISOString().slice(0, 10)}.png`;
+            // Дар телефон — менюи «Фиристодан» (Telegram, WhatsApp, галерея), агар браузер файлро қабул кунад.
+            const file = typeof File === "function" ? new File([blob], name, { type: "image/png" }) : null;
+            const phone = window.matchMedia?.("(pointer: coarse)").matches;
+            if (phone && file && navigator.canShare?.({ files: [file] })) {
+                try {
+                    await navigator.share({ files: [file], title: t("plan.title") });
+                    showSuccess(t("plan.ok_img"));
+                    return;
+                } catch (shareErr) {
+                    if (shareErr?.name === "AbortError") return;
+                }
+            }
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = name;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            showSuccess(t("plan.ok_img"));
+        } catch (err) {
+            console.error("PNG:", err);
+            showError(t("plan.err_img"));
+        } finally {
+            setImaging(false);
+        }
+    };
 
     const downloadPlan = async () => {
         setDownloading(true);
@@ -246,6 +357,16 @@ const ApplicationPlan = () => {
                             >
                                 {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                                 {downloading ? t("plan.downloading") : t("plan.download")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={downloadImage}
+                                disabled={imaging}
+                                data-plan-image
+                                className="flex cursor-pointer items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50"
+                            >
+                                {imaging ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                                {imaging ? t("plan.downloading") : t("plan.download_img")}
                             </button>
                             <button
                                 type="button"

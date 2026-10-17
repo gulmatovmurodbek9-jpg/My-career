@@ -581,10 +581,6 @@ const Info = () => {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
         <div className="space-y-5">
 
-          <TrialCta career={career} />
-
-          <TrialPreview trial={trial} careerId={id} />
-
           <SpecialistInterview careerId={id} />
 
           <CareerWhy careerId={id} />
@@ -759,6 +755,11 @@ const Info = () => {
               </div>
             </Section>
           )}
+
+          {/* «Худро дар касб санҷед» ва «Як рӯзи корӣ» — пеш аз интихоби донишгоҳ. */}
+          <TrialCta career={career} />
+
+          <TrialPreview trial={trial} careerId={id} />
 
           {offerings.length > 0 ? (
             <Section

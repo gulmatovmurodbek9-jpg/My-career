@@ -45,6 +45,16 @@ import QuickApply, { QUICK_TEXT } from "../../components/QuickApply";
 import { CLUSTER_SUBJECTS, SUBJECTS, getQuizContext, setQuizContext, subjectName } from "../../lib/quizContext";
 
 const QUIZ_STORAGE_KEY = "quiz_results_v1";
+// Забони матн (мисли QuizService.matchesLang дар сервер): маслиҳати пештара метавонад бо забони дигар бошад.
+const countOf = (text, re) => (String(text || "").match(re) || []).length;
+const adviceMatches = (text, lang) => {
+    const tajik = countOf(text, /[ӣӯқғҳҷ]/gi);
+    const cyrillic = countOf(text, /[а-яё]/gi);
+    const latin = countOf(text, /[a-z]/gi);
+    if (lang === "en") return latin > cyrillic;
+    if (lang === "ru") return tajik === 0 && cyrillic > latin;
+    return tajik >= 3 && countOf(text, /[ыщ]/gi) <= 1;
+};
 
 const SPEC_WINDOW = 8;
 const CLUSTER_PAGE_SIZE = 12;
@@ -269,7 +279,8 @@ const Quiz = () => {
     const uiLang = (i18n.language || "tj").slice(0, 2);
     useEffect(() => {
         if (!results?.aiAdvice || !results.rawAnswers?.length) return;
-        if ((results.quizLang || "tj").slice(0, 2) === uiLang || results.aiAdviceByLang?.[uiLang] || adviceByLang[uiLang] !== undefined) return;
+        const sameLang = (results.quizLang || "tj").slice(0, 2) === uiLang && adviceMatches(results.aiAdvice, uiLang);
+        if (sameLang || results.aiAdviceByLang?.[uiLang] || adviceByLang[uiLang] !== undefined) return;
         setAdviceByLang((old) => ({ ...old, [uiLang]: null }));
         axios.post(`${API}/quiz/advice`, { answers: results.rawAnswers, lang: uiLang, grade: results.grade ?? getGrade(), context: results.context || getQuizContext() }, { timeout: 45000 })
             .then(({ data }) => {
@@ -952,7 +963,7 @@ const Quiz = () => {
         const visibleMatched = matched;
         const quick = QUICK_TEXT[(i18n.language || "tj").slice(0, 2)] || QUICK_TEXT.tj;
         // Матни маслиҳат танҳо бо забони сайт: забони дигар — интизор (null) ё пинҳон.
-        const aiAdvice = (results.quizLang || "tj").slice(0, 2) === uiLang
+        const aiAdvice = (results.quizLang || "tj").slice(0, 2) === uiLang && adviceMatches(results.aiAdvice, uiLang)
             ? results.aiAdvice || ""
             : results.aiAdviceByLang?.[uiLang] ?? adviceByLang[uiLang] ?? (results.rawAnswers?.length ? null : "");
         // Холҳо дар миқёси 0–40 (сервер ба ин миқёс мувофиқ мекунад).

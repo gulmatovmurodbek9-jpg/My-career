@@ -168,6 +168,7 @@ export class QuizService {
         clusterScores: { cluster: Cluster; score: number }[] = [],
         grade: number | null = null,
     ): Promise<string> {
+        lang = ['ru', 'en'].includes(String(lang || '').slice(0, 2)) ? String(lang).slice(0, 2) : 'tj';
         const fallback = this.staticAdvice(cluster, lang, careers, clusterScores, grade);
 
         try {
@@ -214,7 +215,17 @@ export class QuizService {
                 '- Ҳадди аксар 90 калима.',
             ].filter(Boolean).join('\n');
 
-            const text = (await this.aiService.generateContent(prompt))?.trim();
+            let text = (await this.aiService.generateContent(prompt))?.trim();
+            // AI баъзан бо забони дигар (масалан русӣ ба ҷои тоҷикӣ) менависад: як бори дигар бо
+            // дастури қатъӣ ба ҳамон забон, баъд — матни захиравӣ бо забони дуруст.
+            if (text && !QuizService.matchesLang(text, lang)) {
+                const strict = { tj: 'Ҷавобро ТАНҲО бо забони тоҷикӣ (алифбои кириллии тоҷикӣ, бо ҳарфҳои ӣ ӯ қ ғ ҳ ҷ) нависед. Русӣ нанависед.', ru: 'Отвечай ТОЛЬКО на русском языке.', en: 'Answer ONLY in English.' }[lang];
+                text = (await this.aiService.generateContent(`${prompt}\n\nМУҲИМ: ${strict}`))?.trim();
+                if (text && !QuizService.matchesLang(text, lang)) {
+                    console.warn(`AI advice забони дигар дошт (${lang}) — матни захиравӣ`);
+                    return fallback;
+                }
+            }
             if (!text || text.length <= 40) return fallback;
             // Санҷиши худкор: рақаме, ки дар маълумоти мо нест (бал, маош, сол), бофта аст —
             // он гоҳ матни захиравии бехатар.
@@ -227,6 +238,18 @@ export class QuizService {
             console.error('AI advice афтод, матни захиравӣ истифода мешавад:', error?.message || error);
             return fallback;
         }
+    }
+
+    // Забони матн: тоҷикӣ ҳарфҳои ӣ ӯ қ ғ ҳ ҷ дорад (ы ва щ — не), русӣ ин ҳарфҳоро надорад,
+    // англисӣ — асосан лотинӣ.
+    static matchesLang(text: string, lang: string): boolean {
+        const count = (re: RegExp) => (text.match(re) || []).length;
+        const tajik = count(/[ӣӯқғҳҷ]/gi);
+        const cyrillic = count(/[а-яё]/gi);
+        const latin = count(/[a-z]/gi);
+        if (lang === 'en') return latin > cyrillic;
+        if (lang === 'ru') return tajik === 0 && cyrillic > latin;
+        return tajik >= 3 && count(/[ыщ]/gi) <= 1;
     }
 
     // Рақамҳои матни AI, ки дар prompt нестанд. Рақамҳои хурди «шуморагӣ» (1–5) иҷозат.

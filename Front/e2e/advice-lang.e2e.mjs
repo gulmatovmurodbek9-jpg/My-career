@@ -15,8 +15,8 @@ const check = (name, ok, detail = "") => {
     if (!ok) failed += 1;
     console.log(`${ok ? "✅" : "❌"} ${name}${detail ? ` — ${detail}` : ""}`);
 };
-// Матни тоҷикӣ ҳарфҳои ӣ ӯ қ ғ ҳ ҷ дорад; русӣ — ы э щ.
-const tajik = (text) => /[ӣӯқғҳҷ]/i.test(text) && !/[ыэщ]/i.test(text);
+// Матни тоҷикӣ ҳарфҳои ӣ ӯ қ ғ ҳ ҷ дорад (ы ва щ не; «э» дар ҳарду забон ҳаст); русӣ — тоҷикиро не.
+const tajik = (text) => (text.match(/[ӣӯқғҳҷ]/gi) || []).length >= 3 && (text.match(/[ыщ]/gi) || []).length <= 1;
 const russian = (text) => /[ыэщ]/i.test(text) && !/[ӣӯқғҳҷ]/i.test(text);
 
 // Ҷавобҳо: варианти аввали ҳар саволи қисми 1.
@@ -28,37 +28,46 @@ const res = await fetch(`${API}/quiz/submit`, { method: "POST", headers: { "Cont
 const data = await res.json();
 check("Тест бо русӣ: маслиҳат русӣ", res.ok && russian(data.aiAdvice || ""), (data.aiAdvice || "").slice(0, 80));
 
-const stored = { ...data, rawAnswers: answers, answers: [], quizLang: "ru", answeredAt: new Date().toISOString() };
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true });
-const page = await browser.newPage();
 const errors = [];
-page.on("pageerror", (e) => errors.push(e.message));
-await page.emulate(KnownDevices["iPhone 13"]);
-await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-await page.evaluate((value, auth) => {
-    if (auth) localStorage.setItem("auth-storage", JSON.stringify({ state: { user: auth.user, token: auth.token, isAuthenticated: true }, version: 0 }));
-    localStorage.setItem("app_lang", "tj");
-    localStorage.setItem("assistant_greeted_v1", "1");
-    localStorage.setItem("quiz_results_v1", JSON.stringify(value));
-}, stored, T.student || null);
-await page.goto(`${BASE}/quiz`, { waitUntil: "networkidle2" });
-// Агар саҳифа «Натиҷаи пештара» пурсад — натиҷаро кушоем.
-await page.evaluate(() => {
-    const button = [...document.querySelectorAll("button")].find((b) => /натиҷа/i.test(b.innerText) && !/аз нав/i.test(b.innerText));
-    if (button) button.click();
-});
-await page.waitForSelector("[data-ai-advice]", { timeout: 20000 }).catch(async () => {
-    console.log("BODY:", (await page.evaluate(() => document.body.innerText)).replace(/\s+/g, " ").slice(0, 600));
-});
-const ok = await page.waitForFunction(() => {
-    const box = document.querySelector("[data-ai-advice] p");
-    return box && box.innerText.length > 40;
-}, { timeout: 60000 }).then(() => true).catch(() => false);
-const advice = await page.$eval("[data-ai-advice]", (n) => n.innerText).catch(() => "");
-check("Саҳифа бо тоҷикӣ: маслиҳат тоҷикӣ шуд", ok && tajik(advice.replace(/^.*\n/, "")), advice.replace(/\n/g, " ").slice(0, 120));
-const cached = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz_results_v1")).aiAdviceByLang?.tj || "");
-check("Маслиҳати тоҷикӣ нигоҳ дошта шуд (бори дуюм бе AI)", tajik(cached));
+// Натиҷаи нигоҳдошта дар браузер → /quiz бо тоҷикӣ → маслиҳат бояд тоҷикӣ бошад.
+async function openTajik(stored, label) {
+    const page = await (await browser.createBrowserContext()).newPage();
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.emulate(KnownDevices["iPhone 13"]);
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+    await page.evaluate((value, auth) => {
+        if (auth) localStorage.setItem("auth-storage", JSON.stringify({ state: { user: auth.user, token: auth.token, isAuthenticated: true }, version: 0 }));
+        localStorage.setItem("app_lang", "tj");
+        localStorage.setItem("assistant_greeted_v1", "1");
+        localStorage.setItem("quiz_results_v1", JSON.stringify(value));
+    }, stored, T.student || null);
+    await page.goto(`${BASE}/quiz`, { waitUntil: "networkidle2" });
+    // Агар саҳифа «Натиҷаи пештара» пурсад — натиҷаро кушоем.
+    await page.evaluate(() => {
+        const button = [...document.querySelectorAll("button")].find((b) => /натиҷа/i.test(b.innerText) && !/аз нав/i.test(b.innerText));
+        if (button) button.click();
+    });
+    await page.waitForSelector("[data-ai-advice]", { timeout: 20000 }).catch(async () => {
+        console.log("BODY:", (await page.evaluate(() => document.body.innerText)).replace(/\s+/g, " ").slice(0, 600));
+    });
+    const ok = await page.waitForFunction(() => {
+        const box = document.querySelector("[data-ai-advice] p");
+        return box && box.innerText.length > 40;
+    }, { timeout: 60000 }).then(() => true).catch(() => false);
+    const advice = await page.$eval("[data-ai-advice]", (n) => n.innerText).catch(() => "");
+    check(`${label}: маслиҳат тоҷикӣ`, ok && tajik(advice.replace(/^.*\n/, "")), advice.replace(/\n/g, " ").slice(0, 120));
+    const cached = await page.evaluate(() => JSON.parse(localStorage.getItem("quiz_results_v1")).aiAdviceByLang?.tj || "");
+    check(`${label}: маслиҳати тоҷикӣ нигоҳ дошта шуд`, tajik(cached));
+    return page;
+}
+
+const base = { ...data, rawAnswers: answers, answers: [], answeredAt: new Date().toISOString() };
+// 1. Тест бо русӣ, баъд сайт бо тоҷикӣ.
+const page = await openTajik({ ...base, quizLang: "ru" }, "Тест русӣ → сайт тоҷикӣ");
 if (SHOTS) await page.screenshot({ path: `${SHOTS}/advice-tj.png`, fullPage: false });
+// 2. Тест бо тоҷикӣ, вале AI маслиҳатро бо русӣ навишта буд (ҳолати скриншоти корбар).
+await openTajik({ ...base, quizLang: "tj", aiAdvice: data.aiAdvice }, "Тест тоҷикӣ, маслиҳат русӣ");
 check("Хатои JavaScript нест", errors.length === 0, errors.slice(0, 2).join(" | "));
 await browser.close();
 console.log(failed ? `\n${failed} санҷиш нагузашт` : "\nҲама гузашт");

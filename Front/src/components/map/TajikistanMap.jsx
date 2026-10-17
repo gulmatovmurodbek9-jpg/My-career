@@ -492,11 +492,9 @@ export default function TajikistanMap({ universities = [], focusResults = false 
       .sort((a, b) => (b.careerCount || 0) - (a.careerCount || 0));
   }, [activeCity, displayUniversities, viewport.bounds, viewport.zoom]);
 
-  useEffect(() => {
-    if (selectedUni && selectedUni.inferredCity !== activeCity) {
-      setSelectedUni(null);
-    }
-  }, [activeCity, selectedUni]);
+  // Пештар ин ҷо интихоб бекор мешуд, агар муассиса аз «шаҳри фаъол» набошад: клик ба коллеҷҳои
+  // Ваҳдат дар харитаи Душанбе панелро дарҳол мепӯшид. Ҳар ҷое, ки шаҳр иваз мешавад
+  // (нишонаи шаҳр, «Ба Душанбе»), интихобро худаш танзим мекунад.
 
   useEffect(() => {
     if (viewport.zoom > CITY_OVERVIEW_ZOOM) {

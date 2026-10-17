@@ -210,8 +210,8 @@ export default function Home() {
         label={t("misc.intro_label")}
         slides={[<HomeHero key="hero" />, <OverwhelmScene key="overwhelm" />]}
       />
-      <EntryDoors />
       <SwipePromo />
+      <EntryDoors />
       <ClusterList />
       <TopCareers />
       <ClosingScene />

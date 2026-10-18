@@ -27,6 +27,23 @@ export const quizSpeech = (quiz, lang) => {
     return parts.join(" ");
 };
 
+// Ҳамон матн ҳамчун ҷумлаҳои алоҳида — барои «Реҷаи овозӣ»: ҷумлаи аввал зуд сохта ва хонда
+// мешавад, боқимонда дар ҳамин вақт тайёр мешаванд. Рақами тартибӣ («Якум.») ва матни ҷавоб
+// ҷудо: тартиби ҷавобҳо барои ҳар корбар тасодуфӣ аст, вале ҳар ҷумла дар кеши сервер якхела мемонад
+// (Back/nest-backend/scripts/warm-quiz-voice.mjs онҳоро пешакӣ месозад).
+export const quizSpeechParts = (quiz, lang) => {
+    const ord = QUIZ_ORDINALS[lang] || QUIZ_ORDINALS.tj;
+    const clean = (value) => String(value || "").replace(/[«»"“”]/g, "").replace(/[.!?…\s]+$/, "").trim();
+    const asked = String(quiz.question || "").trim();
+    const parts = [
+        quiz.step >= 0 ? `${QUIZ_HEAD[lang] || QUIZ_HEAD.tj} ${quiz.step + 1}.` : "",
+        `${clean(asked)}${/\?$/.test(asked) ? "?" : "."}`,
+        ...quiz.options.flatMap((option, index) => [`${ord[index] || index + 1}.`, `${clean(option)}.`]),
+        quiz.step === 0 ? QUIZ_HINT[lang] || QUIZ_HINT.tj : "",
+    ];
+    return parts.filter((part) => part && part !== ".");
+};
+
 export const foldQuiz = (value) => String(value || "").toLowerCase()
     .replace(/ё/g, "е").replace(/ӣ/g, "и").replace(/ӯ/g, "у").replace(/ҳ/g, "х")
     .replace(/ҷ/g, "ч").replace(/қ/g, "к").replace(/ғ/g, "г")

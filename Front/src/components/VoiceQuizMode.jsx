@@ -3,7 +3,7 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { Ear, Loader2, Mic, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { API } from "../lib/config";
-import { matchQuizCommand, quizSpeech } from "../lib/quizVoice";
+import { matchQuizCommand, quizSpeech, quizSpeechParts } from "../lib/quizVoice";
 
 // «Реҷаи овозӣ»-и тест (барои нобиноён, камбиноён ва онҳое, ки хондан душвор аст):
 // ҳар савол бо ҷавобҳо бо овози модел хонда мешавад, баъд микрофон худкор гӯш мекунад —
@@ -30,6 +30,19 @@ const TEXT = {
     },
 };
 const KEY = "quiz_voice_mode";
+// Садои ҷумлаҳо дар хотираи саҳифа: «Такрор» ва саволи такрорӣ фавран.
+const clips = new Map();
+const clip = (sentence, lang) => {
+    const key = `${lang}|${sentence}`;
+    if (!clips.has(key)) {
+        if (clips.size > 400) clips.clear();
+        const request = axios.post(`${API}/voice/speak`, { text: sentence, lang }, { responseType: "blob", timeout: 45000 })
+            .then(({ data }) => data)
+            .catch((error) => { clips.delete(key); throw error; });
+        clips.set(key, request);
+    }
+    return clips.get(key);
+};
 const SILENCE_MS = 900;
 const MAX_MS = 9000;
 
@@ -66,26 +79,36 @@ export default function VoiceQuizMode() {
         setStatus("idle");
     }, []);
 
-    const say = useCallback(async (sentence, token) => {
+    const play = useCallback(async (blob, token) => {
+        if (token !== tokenRef.current) return false;
+        const url = URL.createObjectURL(blob);
+        const audio = audioRef.current || new Audio();
+        audioRef.current = audio;
+        audio.src = url;
+        await new Promise((resolve) => {
+            audio.onended = resolve;
+            audio.onerror = resolve;
+            audio.play().catch(resolve);
+        });
+        URL.revokeObjectURL(url);
+        return token === tokenRef.current;
+    }, []);
+
+    // Якчанд ҷумла: ҳамаашон фавран дархост мешаванд, баъд бо навбат хонда мешаванд —
+    // садои аввал баъди ~1–2 сония, на баъди сохтани тамоми савол (пештар ~7 сония).
+    const sayParts = useCallback(async (parts, token) => {
         setStatus("speaking");
-        try {
-            const { data } = await axios.post(`${API}/voice/speak`, { text: sentence, lang }, { responseType: "blob", timeout: 45000 });
+        const requests = parts.map((sentence) => clip(sentence, lang));
+        requests.forEach((request) => request.catch(() => {}));
+        for (const request of requests) {
             if (token !== tokenRef.current) return false;
-            const url = URL.createObjectURL(data);
-            const audio = audioRef.current || new Audio();
-            audioRef.current = audio;
-            audio.src = url;
-            await new Promise((resolve) => {
-                audio.onended = resolve;
-                audio.onerror = resolve;
-                audio.play().catch(resolve);
-            });
-            URL.revokeObjectURL(url);
-            return token === tokenRef.current;
-        } catch {
-            return token === tokenRef.current;
+            let blob = null;
+            try { blob = await request; } catch { blob = null; }
+            if (blob && !(await play(blob, token))) return false;
         }
-    }, [lang]);
+        return token === tokenRef.current;
+    }, [lang, play]);
+    const say = useCallback((sentence, token) => sayParts([sentence], token), [sayParts]);
 
     // Як навбат гӯш кардан: баъди хомӯшии кӯтоҳ ё 9 сония мебандад → /voice/stt.
     const listen = useCallback(async (token) => {
@@ -158,7 +181,7 @@ export default function VoiceQuizMode() {
                 window.dispatchEvent(new CustomEvent("quiz:command", { detail: command }));
             }
         } else if (command?.type === "repeat") {
-            if (await say(quizSpeech(current, lang), token)) answerRound(token, current);
+            if (await sayParts(quizSpeechParts(current, lang), token)) answerRound(token, current);
         } else if (command?.type === "free" || command?.type === "next" || command?.type === "back") {
             window.dispatchEvent(new CustomEvent("quiz:command", { detail: command }));
             setStatus("idle");
@@ -166,7 +189,7 @@ export default function VoiceQuizMode() {
             retriesRef.current += 1;
             if (await say(text.notUnderstood, token)) answerRound(token, current);
         } else setStatus("idle");
-    }, [lang, listen, say, text]);
+    }, [lang, listen, say, sayParts, text]);
 
     // Ҳар саволи нав: хондан → гӯш кардан.
     const run = useCallback(async (current) => {
@@ -175,9 +198,9 @@ export default function VoiceQuizMode() {
         const token = tokenRef.current;
         retriesRef.current = 0;
         setLine("");
-        if (await say(quizSpeech(current, lang), token) && micOk) answerRound(token, current);
+        if (await sayParts(quizSpeechParts(current, lang), token) && micOk) answerRound(token, current);
         else if (token === tokenRef.current) setStatus("idle");
-    }, [answerRound, lang, micOk, say, stopAll]);
+    }, [answerRound, lang, micOk, sayParts, stopAll]);
 
     const quizKey = quiz ? `${quiz.id}|${quiz.lang}` : "";
     useEffect(() => {

@@ -278,8 +278,9 @@ const Quiz = () => {
     const [adviceByLang, setAdviceByLang] = useState({});
     const uiLang = (i18n.language || "tj").slice(0, 2);
     useEffect(() => {
-        if (!results?.aiAdvice || !results.rawAnswers?.length) return;
-        const sameLang = (results.quizLang || "tj").slice(0, 2) === uiLang && adviceMatches(results.aiAdvice, uiLang);
+        // Маслиҳати AI баъд аз натиҷа меояд (adviceDeferred) ё бо забони дигар лозим аст — як роҳ барои ҳарду.
+        if ((!results?.aiAdvice && !results?.adviceDeferred) || !results.rawAnswers?.length) return;
+        const sameLang = !results.adviceDeferred && (results.quizLang || "tj").slice(0, 2) === uiLang && adviceMatches(results.aiAdvice, uiLang);
         if (sameLang || results.aiAdviceByLang?.[uiLang] || adviceByLang[uiLang] !== undefined) return;
         setAdviceByLang((old) => ({ ...old, [uiLang]: null }));
         axios.post(`${API}/quiz/advice`, { answers: results.rawAnswers, lang: uiLang, grade: results.grade ?? getGrade(), context: results.context || getQuizContext() }, { timeout: 45000 })
@@ -785,7 +786,8 @@ const Quiz = () => {
         if (busyRef.current) return;
         busyRef.current = true;
         setIsAnalyzing(true);
-        const body = { answers: finalAnswers, lang: i18n.language, grade: getGrade(), context: getQuizContext() };
+        // Натиҷа фавран; маслиҳати AI баъд аз /quiz/advice (пештар натиҷа ~4 сония интизор мешуд).
+        const body = { answers: finalAnswers, lang: i18n.language, grade: getGrade(), context: getQuizContext(), deferAdvice: true };
         sendProgress(finalAnswers.length, finalAnswers.length, true);
         try {
             const url = token ? `${API}/quiz/submit-authenticated` : `${API}/quiz/submit`;
@@ -963,7 +965,7 @@ const Quiz = () => {
         const visibleMatched = matched;
         const quick = QUICK_TEXT[(i18n.language || "tj").slice(0, 2)] || QUICK_TEXT.tj;
         // Матни маслиҳат танҳо бо забони сайт: забони дигар — интизор (null) ё пинҳон.
-        const aiAdvice = (results.quizLang || "tj").slice(0, 2) === uiLang && adviceMatches(results.aiAdvice, uiLang)
+        const aiAdvice = !results.adviceDeferred && (results.quizLang || "tj").slice(0, 2) === uiLang && adviceMatches(results.aiAdvice, uiLang)
             ? results.aiAdvice || ""
             : results.aiAdviceByLang?.[uiLang] ?? adviceByLang[uiLang] ?? (results.rawAnswers?.length ? null : "");
         // Холҳо дар миқёси 0–40 (сервер ба ин миқёс мувофиқ мекунад).

@@ -110,7 +110,7 @@ export class QuizService {
         return scores;
     }
 
-    async matchCareers(userScores: UserScores, lang: string = 'tj', rawGrade?: number | string, context?: any): Promise<any> {
+    async matchCareers(userScores: UserScores, lang: string = 'tj', rawGrade?: number | string, context?: any, deferAdvice = false): Promise<any> {
         const grade = parseGrade(rawGrade);
         const selection = await this.careerService.selectMatchedCareers(userScores, grade ?? undefined, context);
         const { clusterScores, careers: topCareers, matchPercentage: clusterMatchPct } = selection;
@@ -137,11 +137,12 @@ export class QuizService {
         }));
 
         const personality = "Натиҷаи тести шумо мутобиқати баландро бо " + topCluster.clusterName + " нишон медиҳад.";
-        const aiAdvice = await this.generateAiAdvice(userScores, topCluster, topCareers, lang, clusterScores, grade);
+        const aiAdvice = deferAdvice ? '' : await this.generateAiAdvice(userScores, topCluster, topCareers, lang, clusterScores, grade);
 
         return {
             grade,
             context: context || null,
+            ...(deferAdvice ? { adviceDeferred: true } : {}),
             topCluster: {
                 id: topCluster.id,
                 clusterName: topCluster.clusterName,

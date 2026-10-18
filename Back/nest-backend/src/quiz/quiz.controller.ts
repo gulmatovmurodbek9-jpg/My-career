@@ -113,7 +113,7 @@ export class QuizController {
     async submitQuiz(@Body() dto: SubmitQuizDto, @Req() req: any) {
         const scores = this.quizService.calculateScores(dto);
 
-        const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context);
+        const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context, dto.deferAdvice === true);
         // Хонандаи бе почта дар синф — натиҷа ба омӯзгор намоён мешавад.
         const guestId = await this.classrooms.resolveGuest(req.headers?.['x-class-guest']);
         const attemptId = await this.stats.record(dto.answers, scores, result?.topCluster?.clusterNumber ? `c${result.topCluster.clusterNumber}` : null, parseGrade(dto.grade), undefined, { guestId, topCareers: topCareers(result) });
@@ -131,7 +131,7 @@ export class QuizController {
     @ApiOperation({ summary: 'Фиристодани ҷавобҳо (бо аутентификатсия) — натиҷаҳо захира мешаванд' })
     async submitQuizAuthenticated(@Body() dto: SubmitQuizDto, @Req() req: any) {
         const scores = this.quizService.calculateScores(dto);
-        const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context);
+        const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context, dto.deferAdvice === true);
 
         await this.usersService.saveQuizResults(req.user.userId, scores);
         const attemptId = await this.stats.record(dto.answers, scores, result?.topCluster?.clusterNumber ? `c${result.topCluster.clusterNumber}` : null, parseGrade(dto.grade), req.user.userId, { topCareers: topCareers(result) });

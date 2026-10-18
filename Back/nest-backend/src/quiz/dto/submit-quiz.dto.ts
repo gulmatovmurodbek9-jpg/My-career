@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, ValidateNested, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, ValidateNested, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -32,4 +32,10 @@ export class SubmitQuizDto {
     @ApiProperty({ required: false, example: { subjects: ['math'], budget: 'free', city: 'Хуҷанд' } })
     @IsOptional()
     context?: { subjects?: string[]; budget?: 'free' | 'any'; city?: string };
+
+    // true: натиҷа фавран, бе маслиҳати AI (~4 с); саҳифа маслиҳатро баъд аз /quiz/advice мегирад.
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsBoolean()
+    deferAdvice?: boolean;
 }

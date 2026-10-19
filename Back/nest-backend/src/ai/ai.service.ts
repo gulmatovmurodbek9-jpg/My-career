@@ -26,6 +26,7 @@ export class AiService implements OnModuleInit {
     private assistantModel: any = null;
     private vertex: GoogleGenAI | null = null;
     private vertexModel = 'gemini-2.5-flash';
+    private vertexFastModel = 'gemini-2.5-flash-lite';
     private providerDownUntil = new Map<AiProvider, number>();
     private providerFailures = new Map<AiProvider, number>();
     private providerProven = new Set<AiProvider>();
@@ -49,6 +50,7 @@ export class AiService implements OnModuleInit {
         }
 
         this.vertexModel = this.configService.get<string>('VERTEX_MODEL') || 'gemini-2.5-flash';
+        this.vertexFastModel = this.configService.get<string>('VERTEX_FAST_MODEL') || 'gemini-2.5-flash-lite';
 
         const project =
             this.configService.get<string>('VERTEX_PROJECT_ID') ||
@@ -140,6 +142,26 @@ export class AiService implements OnModuleInit {
     // Сӯҳбати зинда (ёвар, ҷавоби озод дар санҷиш): аввал модели тез; агар хато
     // ё дер кунад — ҳамон занҷири муқаррарӣ, то корбар бе ҷавоб намонад.
     async generateFast(prompt: string, timeoutMs = 6000): Promise<string> {
+        // 19.10: аввал Vertex (модели тез, ~0,9 с) — квотаи калонтар аз калиди ройгони Gemini API.
+        // Агар Vertex наояд ё дар «танаффус» бошад — Gemini API, баъд занҷири муқаррарӣ.
+        if (this.vertex && (this.providerDownUntil.get('vertex') ?? 0) <= Date.now()) {
+            try {
+                const response = await this.withTimeout(this.vertex.models.generateContent({
+                    model: this.vertexFastModel,
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    config: { thinkingConfig: { thinkingBudget: 0 } },
+                }), 'vertex-lite', Math.min(timeoutMs, 4000));
+                if (response.text) {
+                    this.providerFailures.delete('vertex');
+                    return response.text;
+                }
+            } catch (error) {
+                const failures = (this.providerFailures.get('vertex') ?? 0) + 1;
+                this.providerFailures.set('vertex', failures);
+                if (failures >= 2) this.providerDownUntil.set('vertex', Date.now() + AI_PROVIDER_COOLDOWN_MS);
+                console.error('Vertex lite:', (error as any)?.message || error);
+            }
+        }
         if (this.assistantModel) {
             try {
                 const result = await this.withTimeout(this.assistantModel.generateContent(prompt), 'gemini-lite', Math.min(timeoutMs, 3500)) as any;

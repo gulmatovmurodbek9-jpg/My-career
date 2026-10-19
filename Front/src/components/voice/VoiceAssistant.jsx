@@ -26,6 +26,20 @@ const VOICE_VERSION = "murod-10";
 // (504 TTS_TIMEOUT) гӯяд, корбар паёми фаҳмо мебинад, на «овоз нарасид»-и умумӣ.
 // Ҷумлаи навбатӣ дар вақти гуфтани ҷумлаи ҷорӣ ҳамин тавр пешакӣ гирифта мешавад.
 const voiceUrl = (text, lang) => `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}&v=${VOICE_VERSION}`;
+// Ҷавобҳои маъмултарини ёвар: ҳангоми оғози сӯҳбат дар пасзамина гирифта мешаванд ва ба
+// кеши браузер (Cache-Control 1 рӯз) мераванд — роҳи интернет то сервер (~0,8–1,4 с) дигар интизорӣ намедиҳад.
+const COMMON_REPLIES = {
+    tj: ["Кушодам.", "Ана ин ихтисосҳо.", "Ана донишгоҳҳо.", "Ана донишгоҳ ва донишкадаҳо.", "Ана ҳамаи коллеҷҳо.",
+        "Санҷишро сар мекунам.", "Захира шуд.", "Он дар шаҳри Душанбе ҷойгир аст.", "Саҳифаашро кушодам."],
+};
+let commonPrefetched = false;
+const prefetchCommonReplies = (lang) => {
+    if (commonPrefetched) return;
+    commonPrefetched = true;
+    (COMMON_REPLIES[lang] || COMMON_REPLIES.tj).forEach((text, index) => {
+        setTimeout(() => { fetch(voiceUrl(text, lang)).then((r) => r.blob()).catch(() => { }); }, 300 * index);
+    });
+};
 const fetchVoice = (text, lang) => fetch(voiceUrl(text, lang)).then(async (response) => {
     if (!response.ok) {
         let code = "";
@@ -892,6 +906,7 @@ export default function VoiceAssistant() {
         unlockAudio();
         // То салом тамом шавад, токен тайёр аст — микрофон фавран мекушояд.
         prefetchSttToken();
+        prefetchCommonReplies(voiceLangRef.current);
         setStarted(true);
         handsFreeRef.current = true; setHandsFree(true);
         setSaid(greeting);

@@ -30,6 +30,8 @@ const KEYTERMS = [
     // «шудан») низ нестанд — онҳо садоҳои монандро ба худ мекашиданд.
     "Хуҷанд", "Бохтар", "Кӯлоб", "Хоруғ", "Истаравшан", "Панҷакент",
     "дӯстам",
+    // Номҳои хоси донишгоҳҳо (20.10): «Осимӣ» пештар «Ҳосимӣ» ё «Ҳосиими…» шинохта мешуд.
+    "Осимӣ", "Айнӣ", "Рӯдакӣ", "Ғафуров", "Сино", "биохимия", "тиббӣ", "техникӣ",
 ].slice(0, 50);
 
 const toBase64 = (bytes) => {
@@ -127,7 +129,8 @@ export class RealtimeStt {
         url.searchParams.set("language_code", LANG[this.lang] || LANG.tj);
         url.searchParams.set("audio_format", `pcm_${SAMPLE_RATE}`);
         url.searchParams.set("commit_strategy", "vad");
-        url.searchParams.set("vad_silence_threshold_secs", "0.5");
+        // 0,5 с гапро дар мобайн мебурид (нафас ё фикри кӯтоҳ) — корбар ҷумларо то охир гуфта наметавонист.
+        url.searchParams.set("vad_silence_threshold_secs", "1.0");
         // Сервер садоро сахттар аз гап ҷудо кунад (пешфарз 0.4) — садои атроф камтар «гап» мешавад.
         url.searchParams.set("vad_threshold", "0.6");
         // Сервер танҳо такрори параметрро қабул мекунад, на рӯйхати JSON.

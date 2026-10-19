@@ -42,7 +42,7 @@ const fetchVoice = (text, lang) => fetch(voiceUrl(text, lang)).then(async (respo
 const SILENT_WAV =
     "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
-const SILENCE_MS = 750;        // ин қадар хомӯшӣ — яъне ҷумла тамом шуд
+const SILENCE_MS = 1100;       // ин қадар хомӯшӣ — яъне ҷумла тамом шуд (750 гапро мебурид)
 const NO_SPEECH_MS = 8000;     // чизе нагуфт — боз гӯш мекунем
 const MAX_RECORD_MS = 15000;   // ҳадди аксар як навбат
 
@@ -752,7 +752,12 @@ export default function VoiceAssistant() {
             // муаррифии пурраи ҳамон саҳифа. Ду бор гап задан лозим нест.
             if (window.location.pathname + window.location.hash !== before) {
                 const guide = guideFor(window.location.pathname, window.location.hash, !token, voiceLangRef.current);
-                if (guide && !spokenGuidesRef.current.has(guide.id)) {
+                // Ҷустуҷӯ ва донишгоҳи мушаххас: ҷавоби худи ёвар («Ана ихтисосҳои биохимия»), на муаррифии
+                // умумии саҳифа — вагарна корбар фикр мекунад, ки ёвар нафаҳмид.
+                const specific = data?.action === "search" || (data?.action === "open_universities" && (data?.params?.id || data?.params?.city));
+                if (specific) {
+                    if (guide) spokenGuidesRef.current.add(guide.id);
+                } else if (guide && !spokenGuidesRef.current.has(guide.id)) {
                     spokenGuidesRef.current.add(guide.id);
                     reply = guide.text;
                     setSaid(reply);

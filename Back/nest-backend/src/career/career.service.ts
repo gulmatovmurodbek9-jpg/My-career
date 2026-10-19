@@ -805,6 +805,62 @@ export class CareerService {
 
     // Ҷавоби собит барои ҳар амал: ҳамеша якхела — яъне садояш як бор сохта
     // мешавад ва баъд аз кеш меояд. AI танҳо барои сӯҳбати озод ҷавоб менависад.
+    // Ёвар: номи донишгоҳ тақрибан (20.10). Шинохти нутқ «Осимӣ»-ро «Ҳосимӣ», «М. С. Осимӣ»-ро
+    // «МС осимӣ» менависад — LIKE-и айнан намеёфт ва рӯйхати умумӣ мекушод. Акнун ҳар калимаи хоси
+    // ном бо калимаҳои номи муассисаҳо бо таҳаммули 1–2 ҳарф муқоиса мешавад.
+    private uniFuzzyCache: { at: number; rows: Array<{ id: string; name: string; city: string | null; words: string[]; size: number; isState: boolean }> } | null = null;
+    private static readonly UNI_STOP = new Set(['донишгох', 'донишгохи', 'давлати', 'давлатии', 'точикистон', 'ба', 'номи', 'академик', 'шахри', 'дар', 'коллеч', 'коллечи', 'донишкада', 'донишкадаи', 'филиал', 'филиали', 'университет', 'университета', 'институт', 'колледж', 'вуз', 'куча', 'кучо', 'хаст', 'аст', 'нишон', 'дех', 'кушо', 'ёб', 'кун', 'дидан', 'ро', 'ва', 'и', 'the', 'university', 'college']);
+    private static similar(a: string, b: string): number {
+        if (a === b) return 1;
+        const m = a.length;
+        const n = b.length;
+        if (!m || !n) return 0;
+        let prev = Array.from({ length: n + 1 }, (_, j) => j);
+        for (let i = 1; i <= m; i += 1) {
+            const cur = [i];
+            for (let j = 1; j <= n; j += 1) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+            prev = cur;
+        }
+        return 1 - prev[n] / Math.max(m, n);
+    }
+    private static wordsOf(text: string): string[] {
+        return foldTajik(text).toLowerCase().split(/[^a-zа-яё0-9]+/i).filter(Boolean);
+    }
+    // Калимаи гуфташуда ба калимаи номи муассиса чӣ қадар монанд аст (бо пешвандҳои «х», ки шинохт илова мекунад,
+    // ва калимаҳои якҷояшуда: «хосиимидардушанби» → «осими» дар дохил).
+    private static wordScore(said: string, word: string): number {
+        if (word.length < 4 || said.length < 3) return said === word ? 1 : 0;
+        let best = Math.max(CareerService.similar(said, word), said.startsWith('х') ? CareerService.similar(said.slice(1), word) : 0);
+        if (said.length > word.length + 2) {
+            for (let i = 0; i + word.length <= said.length; i += 1) best = Math.max(best, CareerService.similar(said.slice(i, i + word.length), word) - 0.05);
+        }
+        return best;
+    }
+    private async findUniversityFuzzy(name: string): Promise<{ id: string; name: string; city: string | null } | null> {
+        const said = CareerService.wordsOf(name).filter((word) => word.length >= 3 && !CareerService.UNI_STOP.has(word));
+        if (!said.length) return null;
+        if (!this.uniFuzzyCache || Date.now() - this.uniFuzzyCache.at > 10 * 60_000) {
+            const rows: Array<{ id: string; name: string; shortName: string | null; city: string | null; isState: boolean; size: string }> = await this.careerRepository.manager.query(
+                `SELECT u.id, u.name, u."shortName", u.city, u."isState",
+                        (SELECT count(*) FROM career_universities cu WHERE cu."universitiesId" = u.id) AS size
+                 FROM universities u`);
+            this.uniFuzzyCache = {
+                at: Date.now(),
+                rows: rows.map((r) => ({ id: r.id, name: r.name, city: r.city, isState: !!r.isState, size: Number(r.size) || 0,
+                    words: [...new Set(CareerService.wordsOf(`${r.name} ${r.shortName || ''}`).filter((w) => !CareerService.UNI_STOP.has(w)))] })),
+            };
+        }
+        let best: { row: any; score: number } | null = null;
+        for (const row of this.uniFuzzyCache.rows) {
+            // Ҳар калимаи гуфташуда беҳтарин ҷуфташро меёбад; ҳамаашон бояд мувофиқ бошанд.
+            const scores = said.map((w) => Math.max(0, ...row.words.map((u) => CareerService.wordScore(w, u))));
+            if (scores.some((score) => score < 0.75)) continue;
+            const score = scores.reduce((a, b) => a + b, 0) / scores.length + (row.isState ? 0.01 : 0) + Math.min(row.size, 200) / 20000;
+            if (!best || score > best.score) best = { row, score };
+        }
+        return best ? { id: best.row.id, name: best.row.name, city: best.row.city } : null;
+    }
+
     private static readonly ASSISTANT_REPLIES: Record<string, Record<string, string>> = {
         tj: {
             search: 'Ана ин ихтисосҳо.',
@@ -893,6 +949,15 @@ export class CareerService {
             ru: 'Здравствуйте! Выберем специальность, посмотрим университеты или пройдём тест?',
             en: 'Hello! Shall we choose a specialty, look at universities or take the test?',
         };
+        // «Барои чӣ гапро намефаҳмӣ?» — узр ва маслиҳат, на муаррифии ёвар.
+        const SORRY: Record<string, string> = {
+            tj: 'Мебахшед, ман шуморо нодуруст фаҳмидам. Лутфан оҳистатар ва бо ҷумлаи кӯтоҳ гӯед, масалан «донишгоҳи Осимӣ» ё «ихтисоси биохимия». Ё тугмаи клавиатураро пахш карда нависед.',
+            ru: 'Извините, я неправильно вас понял. Скажите, пожалуйста, медленнее и короче, например «университет Осими». Или нажмите клавиатуру и напишите.',
+            en: 'Sorry, I misunderstood you. Please speak a bit slower and shorter, or tap the keyboard button and type.',
+        };
+        if (has('намефахми', 'намефахмед', 'нафахмиди', 'нафахмидед', 'намефахмад', 'не понимаешь', 'не понимаете', 'не понял', 'не поняла', 'dont understand', 'do not understand', 'not understand', 'misunderstood')) {
+            return { action: 'answer', params: {}, reply: SORRY[lang] || SORRY.tj };
+        }
         if (has('who are you', 'what can you do', 'кто ты', 'кто вы', 'что ты умеешь', 'что вы умеете', 'ту киста', 'ту кисти', 'шумо киста', 'шумо кисти', 'чи кор карда метавони', 'чи кор карда метавонед')) {
             return { action: 'answer', params: {}, reply: IDENTITY[lang] || IDENTITY.tj };
         }
@@ -1119,7 +1184,12 @@ export class CareerService {
         lang = 'tj',
         context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number } = {},
     ) {
-        const message = String(rawMessage || '').trim().slice(0, 400);
+        // Калимаҳои пуркунандаи нутқ («а-а-а», «э-э», «х-х», «мм», «ну») — шинохти нутқ онҳоро менависад
+        // ва онҳо ҷустуҷӯро вайрон мекарданд («А-а-а, ба ман, х-х, ихтисоси биохимияро…»).
+        const message = String(rawMessage || '')
+            .replace(/(^|[\s,.!?])(?:[аэыоуеихмaeum]+(?:-[аэыоуеихмaeum]+)+|э+|а+|мм+|хм+|ну|эм+|uh+|um+)(?=[\s,.!?]|$)/giu, '$1')
+            .replace(/\s*,(\s*,)+/g, ',').replace(/^[\s,.]+/, '').replace(/\s{2,}/g, ' ')
+            .trim().slice(0, 400);
         const answerLang = ['tj', 'ru', 'en'].includes(lang) ? lang : 'tj';
         const grade = parseGrade(context.grade);
 
@@ -1305,7 +1375,9 @@ export class CareerService {
 
             // «Дар бораи ихтисосҳо гӯй» — калимаи умумӣ филтр нест, онро мебарорем.
             const generic = /ихтисос[а-яёғӣқӯҳҷ]*|касб[а-яёғӣқӯҳҷ]*|профессия[а-я]*|специальност[а-я]*|специалност[а-я]*/gi;
-            const cleaned = rawQuery.replace(generic, ' ').replace(/ {2,}/g, ' ').trim();
+            // Нарх («то 4000 сомонӣ», «арзон») филтр аст, на калимаи ихтисос — онро ҷудо мекунем.
+            const PRICE = /(то|аз|до|от|under|below|up to|less than)?\s*\d[\d\s]*\s*(сомон[а-яёӣ]*|сом|somoni|tjs)?|арзон[а-яёӣ]*|дешев[а-я]*|cheap[a-z]*|сомон[а-яёӣ]*/gi;
+            const cleaned = rawQuery.replace(generic, ' ').replace(PRICE, ' ').replace(/ {2,}/g, ' ').trim();
 
             if (!rawQuery) {
                 action = 'answer';
@@ -1334,16 +1406,12 @@ export class CareerService {
                 }
 
                 if (found.length === 0) {
-                    action = 'answer';
-                    params = {};
+                    // «Наёфтам» намегӯем: ҷустуҷӯи AI-и саҳифа ҷумлаи пурраро (нарх, шаҳр, калимаҳо) худаш мефаҳмад
+                    // ва пештар саҳифа «4 ихтисос ёфт шуд» нишон медод, вале ёвар «чизе наёфтам» мегуфт.
                     return {
-                        reply: answerLang === 'ru'
-                            ? `По запросу «${cleaned}» ничего не нашлось. Попробуйте другое слово.`
-                            : answerLang === 'en'
-                                ? `I found nothing for "${cleaned}". Try another word.`
-                                : `Аз рӯи «${cleaned}» чизе наёфтам. Калимаи дигар бигӯед.`,
-                        action,
-                        params,
+                        reply: CareerService.ASSISTANT_REPLIES[answerLang]?.search || '',
+                        action: 'search',
+                        params: { query: message },
                         answerLang,
                     };
                 }
@@ -1444,6 +1512,12 @@ export class CareerService {
                 );
                 const inCity = !wantedCity || foldTajik(rows[0]?.city || '').includes(foldTajik(wantedCity));
                 if (rows[0] && inCity) params = { id: rows[0].id, name: rows[0].name };
+                // Айнан ёфт нашуд — тақрибан (хатои шинохти нутқ ё ихтисори «МС»).
+                if (!params.id) {
+                    const near = await this.findUniversityFuzzy(wantedName);
+                    const nearInCity = near && (!wantedCity || foldTajik(near.city || '').includes(foldTajik(wantedCity)));
+                    if (near && nearInCity) params = { id: near.id, name: near.name };
+                }
             }
 
             if (!params.id) {

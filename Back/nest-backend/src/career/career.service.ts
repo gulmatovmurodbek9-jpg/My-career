@@ -809,7 +809,9 @@ export class CareerService {
     // «МС осимӣ» менависад — LIKE-и айнан намеёфт ва рӯйхати умумӣ мекушод. Акнун ҳар калимаи хоси
     // ном бо калимаҳои номи муассисаҳо бо таҳаммули 1–2 ҳарф муқоиса мешавад.
     private uniFuzzyCache: { at: number; rows: Array<{ id: string; name: string; city: string | null; words: string[]; size: number; isState: boolean }> } | null = null;
-    private static readonly UNI_STOP = new Set(['донишгох', 'донишгохи', 'давлати', 'давлатии', 'точикистон', 'ба', 'номи', 'академик', 'шахри', 'дар', 'коллеч', 'коллечи', 'донишкада', 'донишкадаи', 'филиал', 'филиали', 'университет', 'университета', 'институт', 'колледж', 'вуз', 'куча', 'кучо', 'хаст', 'аст', 'нишон', 'дех', 'кушо', 'ёб', 'кун', 'дидан', 'ро', 'ва', 'и', 'the', 'university', 'college']);
+    private static readonly UNI_STOP = new Set(['донишгох', 'донишгохи', 'давлати', 'давлатии', 'точикистон', 'ба', 'номи', 'академик', 'шахри', 'дар', 'коллеч', 'коллечи', 'донишкада', 'донишкадаи', 'филиал', 'филиали', 'университет', 'университета', 'институт', 'колледж', 'вуз', 'куча', 'кучо', 'хаст', 'аст', 'нишон', 'дех', 'кушо', 'ёб', 'кун', 'дидан', 'ро', 'ва', 'и', 'the', 'university', 'college',
+        // Шаҳрҳо: «…дардушанбӣ» номи донишгоҳ нест — шаҳр алоҳида санҷида мешавад.
+        'душанбе', 'душанби', 'хучанд', 'бохтар', 'кулоб', 'хоруг', 'истаравшан', 'панчакент', 'вахдат', 'турсунзода', 'хисор', 'исфара', 'дангара', 'конибодом', 'мухассиса', 'мухассисаи']);
     private static similar(a: string, b: string): number {
         if (a === b) return 1;
         const m = a.length;
@@ -832,7 +834,12 @@ export class CareerService {
         if (word.length < 4 || said.length < 3) return said === word ? 1 : 0;
         let best = Math.max(CareerService.similar(said, word), said.startsWith('х') ? CareerService.similar(said.slice(1), word) : 0);
         if (said.length > word.length + 2) {
-            for (let i = 0; i + word.length <= said.length; i += 1) best = Math.max(best, CareerService.similar(said.slice(i, i + word.length), word) - 0.05);
+            // Калимаҳои якҷояшуда: пораҳои ба дарозии калима ±1 ҳарф («хосиими…» → «осими»).
+            const city = /(душанб|хучанд|бохтар|кулоб|хоруг|вахдат)/.exec(said);
+            const body = city ? said.slice(0, city.index) : said;
+            for (const len of [word.length - 1, word.length, word.length + 1]) {
+                for (let i = 0; len >= 4 && i + len <= body.length; i += 1) best = Math.max(best, CareerService.similar(body.slice(i, i + len), word) - 0.05);
+            }
         }
         return best;
     }

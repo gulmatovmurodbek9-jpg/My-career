@@ -380,7 +380,8 @@ export default function VoiceAssistant() {
     }, []);
 
     const runAction = useCallback(async (action, params) => {
-        const offered = action === "choose_direction" && Array.isArray(params?.options) ? params.options : [];
+        // Самтҳои касб ё донишгоҳҳои наздик (choose_university) — тугмаҳо ва «якумашро кушо».
+        const offered = (action === "choose_direction" || action === "choose_university") && Array.isArray(params?.options) ? params.options : [];
         optionsRef.current = offered;
         setOptions(offered);
         switch (action) {
@@ -1078,7 +1079,7 @@ export default function VoiceAssistant() {
                                             stopAudio();
                                             optionsRef.current = [];
                                             setOptions([]);
-                                            navigate(`/info/${option.id}`);
+                                            navigate(option.kind === "university" ? `/universities/${option.id}` : `/info/${option.id}`);
                                         }}
                                         className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-[13px] font-semibold text-foreground focus-ring"
                                     >

@@ -100,6 +100,9 @@ export default function VoiceAssistant() {
     // аз байни инҳо интихоб мешавад.
     const [options, setOptions] = useState([]);
     const optionsRef = useRef([]);
+    // Хотираи сӯҳбат (20.10): ихтисоси охирин («ин ихтисос») ва ҷойгиршавӣ (як бор бо иҷозат).
+    const lastCareerRef = useRef("");
+    const locationRef = useRef(null);
     const [said, setSaid] = useState("");
     const [input, setInput] = useState("");
     const [showKeyboard, setShowKeyboard] = useState(false);
@@ -356,14 +359,35 @@ export default function VoiceAssistant() {
     // Номи ихтисоси кушодашуда, то «инро захира кун» маъно дошта бошад.
     const currentCareerName = useCallback(async () => {
         const match = location.pathname.match(/^\/info\/([^/]+)$/);
-        if (!match) return undefined;
+        // Дар саҳифаи ихтисос ном дар сарлавҳа аст — дархости иловагӣ ба сервер (~0,5–1 с) лозим нест.
+        if (!match) return lastCareerRef.current || undefined;
+        const heading = document.querySelector("main h1, h1")?.textContent?.trim();
+        if (heading) {
+            lastCareerRef.current = heading;
+            return heading;
+        }
         try {
             const { data } = await axios.get(`${API}/careers/${match[1]}`, { timeout: 8000 });
+            if (data?.name) lastCareerRef.current = data.name;
             return data?.name;
         } catch {
-            return undefined;
+            return lastCareerRef.current || undefined;
         }
     }, [location.pathname]);
+
+    // Ҷойгиршавӣ барои «наздик ба ман»: як бор мепурсем ва дар сессия нигоҳ медорем.
+    const getLocation = useCallback(() => new Promise((resolve) => {
+        if (locationRef.current) { resolve(locationRef.current); return; }
+        if (!navigator.geolocation) { resolve(null); return; }
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                locationRef.current = { lat: position.coords.latitude, lng: position.coords.longitude };
+                resolve(locationRef.current);
+            },
+            () => resolve(null),
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 },
+        );
+    }), []);
 
     // Муаррифии ихтисос аз база (~20 мс). Ҳар ихтисос дар сессия як бор;
     // агар саҳифа ихтисос набошад ё аллакай гуфта шуда бошад — null.
@@ -394,6 +418,7 @@ export default function VoiceAssistant() {
                 break;
             }
             case "open_career":
+                if (params?.name) lastCareerRef.current = params.name;
                 if (params?.id) navigate(`/info/${params.id}`);
                 break;
             case "compare": {
@@ -754,11 +779,19 @@ export default function VoiceAssistant() {
         lastSaidRef.current = text;
         try {
             const careerName = await currentCareerName();
-            const { data } = await axios.post(
-                `${API}/careers/assistant`,
-                { message: text, lang, careerName, options: optionsRef.current, grade: getGrade() },
-                { timeout: 30000 },
-            );
+            const body = { message: text, lang, careerName, options: optionsRef.current, grade: getGrade(), location: locationRef.current || undefined };
+            let { data } = await axios.post(`${API}/careers/assistant`, body, { timeout: 30000 });
+            // «Наздик ба ман»: сервер ҷойгиршавӣ мехоҳад — мегирем ва ҳамон саволро боз мефиристем.
+            // Иҷозат надод — харита худаш ҷойгиршавиро мепурсад (рафтори пештара).
+            if (data?.action === "nearest_universities" && data?.params?.needLocation) {
+                setSaid(data.reply || "");
+                const where = await getLocation();
+                if (where) {
+                    ({ data } = await axios.post(`${API}/careers/assistant`, { ...body, location: where }, { timeout: 30000 }));
+                } else {
+                    data = { ...data, params: {} };
+                }
+            }
             voiceLog("reply", { ms: Date.now() - asked, action: data?.action });
             reply = data?.reply || t("assistant.no_reply", "Мебахшед, нафаҳмидам. Бори дигар бигӯед.");
             setSaid(reply);
@@ -797,7 +830,7 @@ export default function VoiceAssistant() {
         busyRef.current = false;
         setState("idle");
         if (handsFreeRef.current) startListening();
-    }, [careerBrief, currentCareerName, lang, pauseMic, runAction, speak, startListening, t, token]);
+    }, [careerBrief, currentCareerName, getLocation, lang, pauseMic, runAction, speak, startListening, t, token]);
 
     // Муаррифии саҳифа: пеш аз гап задан микрофонро мебандем, вагарна ёвар
     // садои худашро мешунавад ва онро ҳамчун гапи корбар мефаҳмад.

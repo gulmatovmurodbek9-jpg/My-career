@@ -800,6 +800,58 @@ export class CareerService {
         return { reply: parts.join(' '), action: 'choose_direction', params: { role: query, options }, answerLang: lang };
     }
 
+    private async nearestToPoint(point: { lat: number; lng: number }, careerName: string, grade: number | null, lang: string) {
+        let careerIds: string[] = [];
+        let careerLabel = '';
+        if (careerName.length >= 3) {
+            const career = await this.resolveCareer(careerName);
+            if (career) {
+                const same: Array<{ id: string }> = await this.careerRepository.manager.query('SELECT id FROM career WHERE name = $1', [career.name]);
+                careerIds = same.map((row) => row.id);
+                careerLabel = career.name;
+            }
+        }
+        const rows: Array<{ id: string; name: string; shortName: string | null; city: string | null; latitude: number; longitude: number; careers: string; fee: number | null; free: boolean }> =
+            await this.careerRepository.manager.query(
+                `SELECT u.id, u.name, u."shortName", u.city, u.latitude, u.longitude,
+                        (SELECT count(*) FROM career_universities cu WHERE cu."universitiesId" = u.id) AS careers,
+                        min(o."tuitionFee") FILTER (WHERE o."tuitionFee" > 0) AS fee,
+                        coalesce(bool_or(o."paymentType" = 'ройгон'), false) AS free
+                 FROM universities u
+                 LEFT JOIN career_offerings o ON o."universityId" = u.id AND ($1::uuid[] IS NULL OR o."careerId" = ANY($1)) AND ($2::int IS NULL OR o."basedOn" = $2)
+                 WHERE u.latitude IS NOT NULL AND u.longitude IS NOT NULL AND u."hasExactLocation" = true
+                 GROUP BY u.id
+                 HAVING $1::uuid[] IS NULL OR count(o.id) > 0`,
+                [careerIds.length ? careerIds : null, grade || null]);
+        if (!rows.length) {
+            return careerLabel
+                ? { reply: `Ихтисоси «${careerLabel}»-ро дар харита ёфта натавонистам.`, action: 'answer', params: {}, answerLang: lang }
+                : null;
+        }
+        const rad = (deg: number) => (Number(deg) * Math.PI) / 180;
+        const km = (u: { latitude: number; longitude: number }) => {
+            const dLat = rad(u.latitude - point.lat);
+            const dLng = rad(u.longitude - point.lng);
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(point.lat)) * Math.cos(rad(u.latitude)) * Math.sin(dLng / 2) ** 2;
+            return 6371 * 2 * Math.asin(Math.sqrt(h));
+        };
+        const nearest = rows.map((u) => ({ ...u, km: km(u) })).sort((a, b) => a.km - b.km).slice(0, 3);
+        const short = (u: { name: string; shortName: string | null }) => (u.shortName && u.shortName.length < u.name.length ? u.shortName : u.name).replace(/\s*ба номи .*$/i, '').trim();
+        const dist = (value: number) => (value < 1 ? `${Math.round(value * 1000)} метр` : `${value < 10 ? value.toFixed(1).replace('.', ',') : Math.round(value)} километр`);
+        const money = (n: number) => Math.round(n).toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+        const detail = (u: typeof nearest[number]) => careerLabel
+            ? (u.free ? 'ҷои буҷетӣ ҳаст' : u.fee ? `${money(Number(u.fee))} сомонӣ дар сол` : '')
+            : `${u.careers} ихтисос`;
+        const list = nearest.map((u, i) => `${i + 1}. ${short(u)}, ${dist(u.km)}${detail(u) ? `, ${detail(u)}` : ''}`).join('. ');
+        const head = careerLabel ? `Ихтисоси «${careerLabel}» ба шумо наздиктар дар инҳост:` : 'Ба шумо наздиктарин инҳоянд:';
+        return {
+            reply: `${head} ${list}. Кадомашро кушоям?`,
+            action: 'choose_university',
+            params: { options: nearest.map((u) => ({ id: u.id, name: u.name, label: short(u), kind: 'university' })) },
+            answerLang: lang,
+        };
+    }
+
     // Ихтисорҳои маъмул, ки дар база нестанд.
     private static readonly UNI_ALIASES: Array<[RegExp, string]> = [
         [/(^|[^а-я])дмт([^а-я]|$)/, 'миллии точикистон'],
@@ -824,7 +876,7 @@ export class CareerService {
             await this.careerRepository.manager.query(
                 `SELECT u.id, u.name, u."shortName", u.city, u.latitude, u.longitude,
                         (SELECT count(*) FROM career_universities cu WHERE cu."universitiesId" = u.id) AS careers
-                 FROM universities u WHERE u.latitude IS NOT NULL AND u.longitude IS NOT NULL`);
+                 FROM universities u WHERE u.latitude IS NOT NULL AND u.longitude IS NOT NULL AND u."hasExactLocation" = true`);
         const anchor = all.find((u) => u.id === anchorRef.id);
         if (!anchor) return null;
         // «Коллеҷ» гуфт — коллеҷҳо; «донишгоҳ» ё синфи 11 — муассисаҳои олӣ; синфи 9 — танҳо коллеҷҳо.
@@ -1296,7 +1348,7 @@ export class CareerService {
     async assistant(
         rawMessage: string,
         lang = 'tj',
-        context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number } = {},
+        context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number; location?: { lat: number; lng: number } } = {},
     ) {
         // Калимаҳои пуркунандаи нутқ («а-а-а», «э-э», «х-х», «мм», «ну») — шинохти нутқ онҳоро менависад
         // ва онҳо ҷустуҷӯро вайрон мекарданд («А-а-а, ба ман, х-х, ихтисоси биохимияро…»).
@@ -1425,7 +1477,7 @@ export class CareerService {
             '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "НОМИ ХОСИ муассиса ё холӣ", "city": "шаҳр", "type": "college" ё "higher" ё холӣ}. «ҳамаи коллеҷҳо», «колледжи», «colleges» → {"type":"college"} БЕ name; «донишгоҳҳо/вузы/universities» → {"type":"higher"} БЕ name. Ном ва шаҳр бо тоҷикӣ («Худжанд» → «Хуҷанд», «medical» → «тиббӣ»)',
             '- open_report — ҳисоботи AI аз рӯи санҷиш. params: {}',
             '- open_plan — рӯйхати ҳуҷҷатсупорӣ. params: {}',
-            '- nearest_universities — «донишгоҳи наздиктарин», «дар наздикии ман». params: {}. Агар корбар ҷой ё муассисаи дигарро гӯяд («наздик ба Донишгоҳи молия», «назди хонаи хешовандон дар паҳлӯи ДМТ»), params: {"near": "номи ҳамон муассиса"}. Танҳо «ҳа»/«ан» дар аввали ҷумла фармони санҷиш НЕСТ: start_quiz танҳо вақте ки корбар санҷиш ё тестро мехоҳад.',
+            '- nearest_universities — «донишгоҳи наздиктарин», «дар наздикии ман». params: {} ё {"career": "номи ихтисос"}, агар корбар ихтисоси мушаххасро гӯяд ё «ин ихтисос»-ро дар назар дошта бошад (он гоҳ ихтисоси КОРБАР ҲОЗИР МЕБИНАД-ро гир). Агар корбар ҷой ё муассисаи дигарро гӯяд («наздик ба Донишгоҳи молия», «назди хонаи хешовандон дар паҳлӯи ДМТ»), params: {"near": "номи ҳамон муассиса"}. Танҳо «ҳа»/«ан» дар аввали ҷумла фармони санҷиш НЕСТ: start_quiz танҳо вақте ки корбар санҷиш ё тестро мехоҳад.',
             '- open_cluster — кушодани яке аз 5 кластер. params: {"number": 1-5}',
             '- open_chat — чати матнӣ бо AI. params: {}',
             '- open_favorites — захираҳои корбар. params: {}',
@@ -1460,6 +1512,8 @@ export class CareerService {
             '«Ман ҳамагӣ панҷ ҳазор сомонӣ дорам, мехоҳам барномасозӣ хонам, дар куҷо мешавад?» → {"action":"search","params":{"query":"барномасозӣ","maxFee":5000},"reply":""}',
             '«Хешовандони мо назди Донишгоҳи молия зиндагӣ мекунанд, донишгоҳҳои наздик ба онро нишон деҳ» → {"action":"nearest_universities","params":{"near":"Донишгоҳи молия"},"reply":""}',
             '«Хешовандон назди ДМТ зиндагӣ мекунанд, кадом коллеҷҳо наздиканд?» → {"action":"nearest_universities","params":{"near":"ДМТ"},"reply":""}',
+            '«Стоматологияро кадом донишгоҳи наздик ба ман дорад?» → {"action":"nearest_universities","params":{"career":"стоматология"},"reply":""}',
+            '«Ин ихтисосро кадом донишгоҳи наздик ба ман дорад?» → {"action":"nearest_universities","params":{"career":"<ихтисосе, ки корбар ҳозир мебинад>"},"reply":""}',
             '«Духтуриро кушо» → {"action":"open_career","params":{"name":"Духтур"},"reply":"Кушодам."}',
             '«Маоши барномасоз чанд аст?» → {"action":"open_career","params":{"name":"барномасоз"},"reply":"Кушодам."}',
             '«Донишгоҳи тиббӣ дар куҷост?» → {"action":"open_universities","params":{"name":"тиббӣ"},"reply":"Кушодам."}',
@@ -1628,6 +1682,20 @@ export class CareerService {
 
         // «Донишгоҳҳои наздик ба Молия» (20.10): муассисаи номбурдаро меёбем ва наздиктаринҳоро бо масофа
         // ва шумораи ихтисосҳо мегӯем (худи ҳамон муассиса нест). Тугмаҳо/«якумашро кушо» кор мекунанд.
+        // «Кадом донишгоҳ ин ихтисосро дорад ва ба ман наздик аст?» (20.10): ҷойгиршавии корбар + ихтисоси
+        // сӯҳбат (саҳифа ё охирин гуфташуда). Бе ҷойгиршавӣ — саҳифа онро мепурсад ва ҳамон саволро боз мефиристад.
+        if (action === 'nearest_universities' && !String(given.near || '').trim()) {
+            const foldedAsk = foldTajik(message).toLowerCase();
+            const givenCareer = String(given.career || '').trim();
+            const careerWanted = (givenCareer && !/[<>]|^ин |ихтисосе, ки/.test(givenCareer) ? givenCareer : '')
+                || (/(^|\s)(ин|хамин|хамон|эту|этой|this)\s/.test(foldedAsk) || /ихтисос|специальност|specialty|касб/.test(foldedAsk) ? String(context.careerName || '') : '');
+            if (!context.location) {
+                return { reply: answerLang === 'ru' ? 'Определяю ваше местоположение.' : answerLang === 'en' ? 'Finding your location.' : 'Ҷойгиршавии шуморо муайян мекунам.', action: 'nearest_universities', params: { needLocation: true }, answerLang };
+            }
+            const near = await this.nearestToPoint(context.location, careerWanted, grade, answerLang);
+            if (near) return near;
+        }
+
         if (action === 'nearest_universities' && String(given.near || '').trim().length >= 3) {
             const near = await this.nearUniversities(String(given.near), message, grade, answerLang);
             if (near) return near;

@@ -170,12 +170,15 @@ export class CareerController {
 
     @Post('assistant')
     @ApiOperation({ summary: 'Voice assistant: turns a spoken request into one allowed app action' })
-    async assistant(@Body() body: { message: string; lang?: string; careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number }, @Ip() ip: string) {
+    async assistant(@Body() body: { message: string; lang?: string; careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number; location?: { lat?: number; lng?: number } }, @Ip() ip: string) {
         assertAiAllowed(ip);
+        const lat = Number(body?.location?.lat);
+        const lng = Number(body?.location?.lng);
         return this.careerService.assistant(body?.message, body?.lang, {
             grade: body?.grade,
             careerName: body?.careerName,
             options: body?.options,
+            location: Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat, lng } : undefined,
         });
     }
 

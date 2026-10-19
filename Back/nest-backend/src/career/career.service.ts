@@ -757,6 +757,49 @@ export class CareerService {
 
     // Корбар аз рӯйхати пешниҳодшуда интихоб мекунад: «дуюмаш», «охиринаш»,
     // «духтури дандон» ё «стоматология». Агар ба ҳеҷ кадом монанд набошад — null.
+    private async budgetAnswer(query: string, maxFee: number, years: number, grade: number | null, lang: string) {
+        const careers = await this.findRelevantCareers(query);
+        if ((careers as any).isFallback || !careers.length) return null;
+        const rows: Array<{ careerId: string; career: string; university: string; shortName: string | null; city: string | null; fee: number | null; paymentType: string; seats: number | null }> =
+            await this.careerRepository.manager.query(
+                `SELECT o."careerId", c.name AS career, u.name AS university, u."shortName", u.city, o."tuitionFee" AS fee, o."paymentType", o.seats
+                 FROM career_offerings o JOIN career c ON c.id = o."careerId" JOIN universities u ON u.id = o."universityId"
+                 WHERE o."careerId" = ANY($1) AND ($2::int IS NULL OR o."basedOn" = $2)`,
+                [careers.slice(0, 25).map((c) => c.id), grade || null]);
+        if (!rows.length) return null;
+        const short = (r: { university: string; shortName: string | null }) =>
+            (r.shortName && r.shortName.length < r.university.length ? r.shortName : r.university).replace(/\s*ба номи .*$/i, '').trim();
+        const money = (n: number) => Math.round(n).toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+        const seen = new Set<string>();
+        const paid = rows
+            .filter((r) => r.paymentType !== 'ройгон' && Number(r.fee) > 0 && Number(r.fee) <= maxFee)
+            .sort((a, b) => Number(a.fee) - Number(b.fee))
+            .filter((r) => { const key = `${r.career}|${r.university}`; if (seen.has(key)) return false; seen.add(key); return true; })
+            .slice(0, 3);
+        const free = rows.filter((r) => r.paymentType === 'ройгон');
+        const cheapest = rows.filter((r) => Number(r.fee) > 0).sort((a, b) => Number(a.fee) - Number(b.fee))[0];
+        const parts: string[] = [];
+        if (paid.length) {
+            parts.push(`Бо ${money(maxFee)} сомонӣ дар сол ин пешниҳодҳо мувофиқанд: ${paid.map((r, i) => `${i + 1}. ${r.career}, ${short(r)}${r.city ? `, ${r.city}` : ''}, ${money(Number(r.fee))} сомонӣ дар сол`).join('. ')}.`);
+        } else if (cheapest) {
+            parts.push(`Пешниҳоди пулакӣ то ${money(maxFee)} сомонӣ дар сол нест. Арзонтаринаш ${cheapest.career}, ${short(cheapest)}, ${money(Number(cheapest.fee))} сомонӣ дар сол.`);
+        }
+        if (free.length) {
+            const places = [...new Set(free.map((r) => short(r)))].slice(0, 2).join(' ва ');
+            parts.push(`Ҷойҳои буҷетӣ (ройгон) низ ҳастанд: ${free.length} пешниҳод, масалан дар ${places}. Барои онҳо бали баланд лозим аст.`);
+        }
+        if (years > 1 && paid.length) {
+            parts.push(`Агар ин пул барои ${years} сол бошад, ҳар сол тақрибан ${money(maxFee / years)} сомонӣ мерасад.`);
+        }
+        if (!parts.length) return null;
+        const used = new Set<string>();
+        const options = (paid.length ? paid : free.slice(0, 3))
+            .filter((r) => !used.has(r.careerId) && used.add(r.careerId))
+            .map((r) => ({ id: r.careerId, name: r.career, label: `${r.career} · ${short(r)}`.slice(0, 60) }));
+        parts.push('Кадомашро кушоям?');
+        return { reply: parts.join(' '), action: 'choose_direction', params: { role: query, options }, answerLang: lang };
+    }
+
     // Ихтисорҳои маъмул, ки дар база нестанд.
     private static readonly UNI_ALIASES: Array<[RegExp, string]> = [
         [/(^|[^а-я])дмт([^а-я]|$)/, 'миллии точикистон'],
@@ -1301,7 +1344,34 @@ export class CareerService {
         }
 
         // «Духтур шудан мехоҳам» — самтҳоро мегӯем ва мепурсем, кадомаш.
-        const role = this.detectRole(message);
+        // «Падарам мегӯяд барномасоз шав, модарам мегӯяд духтур, намедонам чӣ кор кунам» (20.10): мисли мушовир —
+        // ҳарду роҳро эҳтиром мекунем ва пешниҳод мекунем, ки ҳардуро худаш бисанҷад. Тугма барои ҳар ду.
+        {
+            const foldedAll = foldTajik(message).toLowerCase();
+            const torn = /намедонам|чи кор кунам|чи кунам|кадомаш|не знаю|dont know|don't know/.test(foldedAll)
+                || (/падар|модар|папа|мама|отец|мать|father|mother|parents/.test(foldedAll) && /мегуяд|мегуянд|говорит|says|want/.test(foldedAll));
+            const words = foldedAll.split(/[^a-zа-яё0-9]+/i).filter(Boolean);
+            const found = CareerService.DIRECTIONS.filter((entry) => entry.roles.some((stem) => words.some((word) => word.startsWith(stem))));
+            if (torn && found.length >= 2) {
+                const pick = found.slice(0, 2);
+                const chosen = await Promise.all(pick.map((entry) => this.directionsFor(entry.roles[0], answerLang)));
+                const options = chosen.map((result) => result.options[0]).filter(Boolean);
+                if (options.length === 2) {
+                    const [a, b] = pick.map((entry) => (answerLang === 'ru' ? entry.sayRu : answerLang === 'en' ? entry.sayEn : entry.say) || entry.say);
+                    const reply = answerLang === 'ru'
+                        ? `Понимаю, это непросто: родители хотят вам добра, но выбирать вам. Давайте проверим оба пути: в «Попробуйте себя в профессии» есть задания и для ${a}, и для ${b}. Ещё пройдите тест, он покажет, к чему вы ближе. С чего начнём?`
+                        : answerLang === 'en'
+                            ? `I understand, that is hard: your parents mean well, but it is your choice. Let's try both paths: "Try the career" has tasks for both ${a} and ${b}. The career test will also show what suits you more. Where shall we start?`
+                            : `Фаҳмидам, ин интихоби душвор аст: падару модар ба шумо некӣ мехоҳанд, вале интихоб аз шумост. Беҳтар аст ҳарду роҳро худатон санҷед: дар «Худро дар касб санҷед» барои ${a} ва ${b} вазифаҳои воқеӣ ҳастанд. Санҷиши касбӣ низ нишон медиҳад, ки ба кадомаш бештар майл доред. Аз кадомаш сар кунем?`;
+                    return { reply, action: 'choose_direction', params: { role: `${a} / ${b}`, options }, answerLang };
+                }
+            }
+        }
+
+        // Ҷумлаи мураккаб (пул, сол, шаҳр ё дароз): «5000 сомонӣ дорам, барномасозӣ мехонам» — на рӯйхати
+        // тайёри самтҳо, балки AI ва ҷустуҷӯ бо буҷет (20.10).
+        const complexAsk = /\d|хазор|сомон|сол|шахр|арзон|пул|буч/.test(foldTajik(message).toLowerCase()) || message.split(/\s+/).length > 12;
+        const role = complexAsk ? null : this.detectRole(message);
         if (role) {
             const { say, options } = await this.directionsFor(role, answerLang);
             if (options.length) {
@@ -1345,7 +1415,7 @@ export class CareerService {
             context.careerName ? `КОРБАР ҲОЗИР ИН ИХТИСОСРО МЕБИНАД: ${context.careerName}` : '',
             '',
             'АМАЛҲОИ ИҶОЗАТДОДАШУДА:',
-            '- search — ҷустуҷӯи ихтисос («барномасозиро нишон деҳ», «то 4000 сомонӣ»). params: {"query": "матни ҷустуҷӯ"}',
+            '- search — ҷустуҷӯи ихтисос («барномасозиро нишон деҳ», «то 4000 сомонӣ»). params: {"query": "матни ҷустуҷӯ", "maxFee": рақам ё холӣ, "years": рақам ё холӣ}. Агар корбар пулашро гӯяд («5000 сомонӣ дорам», «панҷ ҳазор») — "maxFee": 5000 (ҳамеша бо рақам); "query" танҳо номи соҳа («барномасозӣ»), бе пул. Агар гӯяд, ки пул барои чанд сол бошад — "years".',
             '  МУҲИМ: номҳои ихтисос дар база ТОҶИКӢ ҳастанд — "query"-ро ҲАМЕША бо тоҷикӣ нависед, ҳатто агар корбар русӣ ё англисӣ гӯяд:',
             '  «programming» → «барномасозӣ», «AI / искусственный интеллект» → «зеҳни сунъӣ», «medicine» → «тиб», «law» → «ҳуқуқ».',
             '- open_career — кушодани як ихтисоси мушаххас. params: {"name": "номи ихтисос"}',
@@ -1387,6 +1457,7 @@ export class CareerService {
             'МИСОЛҲО:',
             '«Салом, ман намедонам кадом касбро интихоб кунам» → {"action":"answer","params":{},"reply":"Биёед санҷиш гузарем. Сар кунам?"}',
             '«Санҷишро сар кун» → {"action":"start_quiz","params":{},"reply":"Санҷиш оғоз ёфт."}',
+            '«Ман ҳамагӣ панҷ ҳазор сомонӣ дорам, мехоҳам барномасозӣ хонам, дар куҷо мешавад?» → {"action":"search","params":{"query":"барномасозӣ","maxFee":5000},"reply":""}',
             '«Хешовандони мо назди Донишгоҳи молия зиндагӣ мекунанд, донишгоҳҳои наздик ба онро нишон деҳ» → {"action":"nearest_universities","params":{"near":"Донишгоҳи молия"},"reply":""}',
             '«Хешовандон назди ДМТ зиндагӣ мекунанд, кадом коллеҷҳо наздиканд?» → {"action":"nearest_universities","params":{"near":"ДМТ"},"reply":""}',
             '«Духтуриро кушо» → {"action":"open_career","params":{"name":"Духтур"},"reply":"Кушодам."}',
@@ -1443,6 +1514,13 @@ export class CareerService {
                 params: { query: String(given.query || '') },
                 answerLang,
             };
+        }
+
+        // Буҷети корбар (20.10): пешниҳодҳои воқеӣ бо нарх ва ҷойҳои ройгон, на рӯйхати умумӣ.
+        const maxFee = Number(String(given.maxFee ?? '').replace(/[^0-9.]/g, ''));
+        if (action === 'search' && maxFee >= 100 && String(given.query || '').trim().length >= 3) {
+            const budget = await this.budgetAnswer(String(given.query), maxFee, Number(given.years) || 0, grade, answerLang);
+            if (budget) return budget;
         }
 
         if (action === 'search') {

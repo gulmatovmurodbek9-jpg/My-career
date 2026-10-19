@@ -58,6 +58,8 @@ export default function VoiceQuizMode() {
     const audioRef = useRef(null);
     const recRef = useRef(null);
     const streamRef = useRef(null);
+    const ctxRef = useRef(null); // Web Audio: ҷумлаҳо бе танаффуси тасодуфӣ паи ҳам
+    const sourcesRef = useRef([]);
     const tokenRef = useRef(0); // ҳар савол — як «навбат»; ҷавобҳои дер омада партофта мешаванд
     const retriesRef = useRef(0);
 
@@ -72,6 +74,8 @@ export default function VoiceQuizMode() {
     const stopAll = useCallback(() => {
         tokenRef.current += 1;
         audioRef.current?.pause();
+        sourcesRef.current.forEach((source) => { try { source.stop(); } catch { /* аллакай қатъ */ } });
+        sourcesRef.current = [];
         if (recRef.current?.state === "recording") { recRef.current.onstop = null; recRef.current.stop(); }
         recRef.current = null;
         streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -96,10 +100,55 @@ export default function VoiceQuizMode() {
 
     // Якчанд ҷумла: ҳамаашон фавран дархост мешаванд, баъд бо навбат хонда мешаванд —
     // садои аввал баъди ~1–2 сония, на баъди сохтани тамоми савол (пештар ~7 сония).
+    const audioContext = useCallback(() => {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        if (!ctxRef.current) { try { ctxRef.current = new Ctx(); } catch { return null; } }
+        if (ctxRef.current.state === "suspended") ctxRef.current.resume().catch(() => {});
+        return ctxRef.current;
+    }, []);
+
+    // Якчанд ҷумла: ҳамаашон фавран дархост мешаванд ва бо Web Audio паи ҳам гузошта мешаванд —
+    // пас аз «Якум.» паузаи кӯтоҳ, пас аз ҷумлаи пурра каме дарозтар (на танаффуси тасодуфии <audio>).
+    // Агар Web Audio кор накунад — ҳамон пахши пештара бо <audio>.
     const sayParts = useCallback(async (parts, token) => {
         setStatus("speaking");
         const requests = parts.map((sentence) => clip(sentence, lang));
         requests.forEach((request) => request.catch(() => {}));
+        const ctx = audioContext();
+        // Танҳо агар AudioContext воқеан кор кунад (баъди клик); вагарна source.onended ҳеҷ гоҳ намеояд.
+        if (ctx && ctx.state === "running") {
+            try {
+                let at = ctx.currentTime + 0.05;
+                let lastEnd = Promise.resolve();
+                for (const [index, request] of requests.entries()) {
+                    if (token !== tokenRef.current) return false;
+                    let blob = null;
+                    try { blob = await request; } catch { blob = null; }
+                    if (!blob) continue;
+                    const buffer = await ctx.decodeAudioData(await blob.arrayBuffer());
+                    if (token !== tokenRef.current) return false;
+                    const source = ctx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(ctx.destination);
+                    at = Math.max(at, ctx.currentTime + 0.02);
+                    source.start(at);
+                    sourcesRef.current.push(source);
+                    lastEnd = new Promise((resolve) => { source.onended = resolve; });
+                    const short = parts[index].length <= 12;
+                    at += buffer.duration + (index === parts.length - 1 ? 0 : short ? 0.12 : 0.32);
+                }
+                // Эҳтиёт: агар onended наояд, баъди дарозии садо + 1,5 с идома медиҳем.
+                await Promise.race([lastEnd, new Promise((resolve) => setTimeout(resolve, Math.max(0, at - ctx.currentTime) * 1000 + 1500))]);
+                sourcesRef.current = [];
+                return token === tokenRef.current;
+            } catch {
+                sourcesRef.current.forEach((source) => { try { source.stop(); } catch { /* холӣ */ } });
+                sourcesRef.current = [];
+                if (token !== tokenRef.current) return false;
+                // Ба пахши <audio> мегузарем.
+            }
+        }
         for (const request of requests) {
             if (token !== tokenRef.current) return false;
             let blob = null;
@@ -107,7 +156,7 @@ export default function VoiceQuizMode() {
             if (blob && !(await play(blob, token))) return false;
         }
         return token === tokenRef.current;
-    }, [lang, play]);
+    }, [audioContext, lang, play]);
     const say = useCallback((sentence, token) => sayParts([sentence], token), [sayParts]);
 
     // Як навбат гӯш кардан: баъди хомӯшии кӯтоҳ ё 9 сония мебандад → /voice/stt.
@@ -213,6 +262,7 @@ export default function VoiceQuizMode() {
         const next = !on;
         try { localStorage.setItem(KEY, next ? "1" : "0"); } catch { /* холӣ */ }
         if (!next) stopAll();
+        else audioContext(); // AudioContext бояд аз клики корбар сар шавад (сиёсати autoplay)
         setOn(next);
     };
     const manual = () => {

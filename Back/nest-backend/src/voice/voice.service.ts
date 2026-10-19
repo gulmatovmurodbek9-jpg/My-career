@@ -342,7 +342,7 @@ export class VoiceService implements OnModuleInit, OnModuleDestroy {
         }
 
         const spoken = this.prepare(rawText);
-        const hash = createHash('sha1').update(`${spoken}|${speed ?? 'auto'}`).digest('hex');
+        const hash = createHash('sha1').update(`v2|${spoken}|${speed ?? 'auto'}`).digest('hex');
         const file = join(this.cacheDir, `${hash}.wav`);
 
         if (existsSync(file)) {

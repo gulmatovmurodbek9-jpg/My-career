@@ -11,6 +11,15 @@ import { Logger } from '@nestjs/common';
 const MAX_CHUNK = 160;
 const PAUSE_SECONDS = 0.35;
 const COMMA_PAUSE_SECONDS = 0.14;
+// Коркарди садо (20.10): пештар порчаҳо бе коркард часпонида мешуданд — ~200 мс хомӯшӣ дар
+// аввали ҳар порча, қатъи ногаҳонӣ («клик») дар охир ва баландии гуногун. Ин овозро «бурида» мекард.
+const EDGE_KEEP_SECONDS = 0.03; // хомӯшии боқимонда дар аввали порча
+const TAIL_KEEP_SECONDS = 0.06; // хомӯшии боқимонда дар охири порча
+const FADE_IN_SECONDS = 0.008;
+const FADE_OUT_SECONDS = 0.025;
+const END_SILENCE_SECONDS = 0.12; // охири садо нарм тамом шавад
+const TARGET_PEAK = 0.89; // −1 dBFS: ҳамаи садоҳо як хел баланд
+const MAX_GAIN = 3;
 
 interface TtsMeta {
     vocab: Record<string, number>;
@@ -143,6 +152,48 @@ export class TajikTts {
         return Buffer.concat([header, data]);
     }
 
+    // Порчаи садо: DC-ро бардоштан, хомӯшии канорҳоро буридан, fade дар аввал ва охир.
+    private clean(wave: Float32Array): Float32Array {
+        const rate = this.sampleRate;
+        let mean = 0;
+        for (let i = 0; i < wave.length; i += 1) mean += wave[i];
+        mean /= wave.length || 1;
+        let peak = 0;
+        for (let i = 0; i < wave.length; i += 1) peak = Math.max(peak, Math.abs(wave[i] - mean));
+        if (peak < 1e-4) return new Float32Array(0);
+        // Ҳадди «хомӯшӣ» нисбат ба баландии худи порча, дар тирезаҳои 10 мс.
+        const threshold = Math.max(0.008, peak * 0.04);
+        const win = Math.max(1, Math.round(rate * 0.01));
+        const loud = (start: number) => {
+            let m = 0;
+            for (let i = start; i < Math.min(start + win, wave.length); i += 1) m = Math.max(m, Math.abs(wave[i] - mean));
+            return m >= threshold;
+        };
+        let first = 0;
+        while (first < wave.length && !loud(first)) first += win;
+        let last = wave.length - win;
+        while (last > first && !loud(last)) last -= win;
+        const start = Math.max(0, first - Math.round(rate * EDGE_KEEP_SECONDS));
+        const end = Math.min(wave.length, last + win + Math.round(rate * TAIL_KEEP_SECONDS));
+        const out = new Float32Array(Math.max(0, end - start));
+        for (let i = 0; i < out.length; i += 1) out[i] = wave[start + i] - mean;
+        const fadeIn = Math.min(out.length, Math.round(rate * FADE_IN_SECONDS));
+        const fadeOut = Math.min(out.length, Math.round(rate * FADE_OUT_SECONDS));
+        for (let i = 0; i < fadeIn; i += 1) out[i] *= i / fadeIn;
+        for (let i = 0; i < fadeOut; i += 1) out[out.length - 1 - i] *= i / fadeOut;
+        return out;
+    }
+
+    // Баландии ҳамаи садоҳо як хел (авҷ ба −1 dBFS, вале на беш аз 3 маротиба баланд).
+    private static normalize(all: Float32Array): Float32Array {
+        let peak = 0;
+        for (let i = 0; i < all.length; i += 1) peak = Math.max(peak, Math.abs(all[i]));
+        if (peak < 1e-4) return all;
+        const gain = Math.min(MAX_GAIN, TARGET_PEAK / peak);
+        for (let i = 0; i < all.length; i += 1) all[i] *= gain;
+        return all;
+    }
+
     // Матнро ба ҷумлаҳо мебурад; ҷумлаи дароз аз рӯи вергул ё фосила бурида мешавад.
     static split(text: string, maxLen = MAX_CHUNK): string[] {
         const sentences = text.match(/[^.!?…]+[.!?…]*/g) || [text];
@@ -211,7 +262,8 @@ export class TajikTts {
             for (const [index, chunk] of chunks.entries()) {
                 const phrases = TajikTts.phrases(chunk);
                 for (const [phraseIndex, phrase] of phrases.entries()) {
-                    const wave = await this.synthesize(phrase);
+                    const raw = await this.synthesize(phrase);
+                    const wave = raw?.length ? this.clean(raw) : null;
                     if (!wave?.length) continue;
                     pieces.push(wave);
                     if (phraseIndex < phrases.length - 1) pieces.push(new Float32Array(commaGap));
@@ -224,6 +276,7 @@ export class TajikTts {
         }
 
         if (!pieces.length) return null;
+        pieces.push(new Float32Array(Math.round(this.sampleRate * END_SILENCE_SECONDS)));
 
         const total = pieces.reduce((sum, piece) => sum + piece.length, 0);
         const all = new Float32Array(total);
@@ -236,6 +289,6 @@ export class TajikTts {
         // Суръат ҳангоми табдил ба ONNX дар худи модел сабт шудааст —
         // баъдан онро тағйир дода намешавад, вале дар кеш фарқ мекунад.
         void speed;
-        return this.toWav(all);
+        return this.toWav(TajikTts.normalize(all));
     }
 }

@@ -1052,7 +1052,7 @@ export default function VoiceAssistant() {
     return (
         <>
             {open && (
-                <div data-voice-panel className="no-print fixed inset-x-0 bottom-0 z-[60] max-h-[60dvh] overflow-y-auto overscroll-contain rounded-t-[1.5rem] border border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_40px_-12px_rgba(15,23,42,0.35)] sm:inset-x-auto sm:bottom-24 sm:right-5 sm:mx-auto sm:w-[26rem] sm:max-h-[calc(100dvh-7.5rem)] sm:rounded-[1.75rem] sm:pb-0 sm:shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)]">
+                <div data-voice-panel className="no-print fixed inset-x-0 bottom-0 z-[60] max-h-[60dvh] overflow-y-auto overscroll-contain rounded-t-[1.5rem] border border-border bg-card pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_-12px_rgba(15,23,42,0.35)] sm:inset-x-auto sm:bottom-24 sm:right-5 sm:mx-auto sm:w-[26rem] sm:max-h-[calc(100dvh-7.5rem)] sm:rounded-[1.75rem] sm:pb-0 sm:shadow-[0_24px_70px_-20px_rgba(15,23,42,0.45)]">
                     <button
                         type="button"
                         onClick={close}

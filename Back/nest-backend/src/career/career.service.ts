@@ -632,6 +632,7 @@ export class CareerService {
         'start_quiz', 'open_universities', 'nearest_universities', 'open_cluster',
         'open_report', 'open_plan', 'open_chat', 'open_favorites', 'open_about',
         'go_home', 'set_language', 'set_theme', 'set_grade', 'answer', 'choose_direction',
+        'open_page', 'choose_page',
     ];
 
     // «Духтур шудан мехоҳам» — дар номи ихтисосҳо калимаи «духтур» нест,
@@ -911,6 +912,92 @@ export class CareerService {
             params: { near: anchor.name, options },
             answerLang: lang,
         };
+    }
+
+    private static refusesTest(message: string): boolean {
+        const text = ` ${foldTajik(message).toLowerCase().replace(/[^a-zа-яё0-9\s']/gi, ' ').replace(/\s+/g, ' ').trim()} `;
+        if (!/тест|санчиш|test|quiz|опрос/.test(text)) return false;
+        return / (намехох\S*|нахох\S*|намегузар\S*|намесупор\S*|нагузар\S*|не хочу|не хотим|не надо|не буду|не нужен|не нужно|не хочется|без теста|лозим нест|даркор нест|кор надорам|don't|dont|do not|no test|without) /.test(text)
+            || (/^ (нет|не|no|nope|на) /.test(text) && / (другой|дигар|other|another|иной) /.test(text));
+    }
+
+    private static otherChecks(lang: string) {
+        const reply = lang === 'ru'
+            ? 'Хорошо, без теста. Можно пройти «Карьер-свайп» — листайте карточки работы, или «Попробуйте себя в профессии» — короткие задания. Что открыть?'
+            : lang === 'en'
+                ? 'Okay, no test. You can try Career Swipe — swipe work cards, or Try the job — short real tasks. Which one shall I open?'
+                : 'Хуб, бе тест. Метавонед «Касб-свайп»-ро бозӣ кунед — кортҳои корро варақ мезанед, ё «Худро дар касб санҷед» — супоришҳои кӯтоҳи воқеӣ. Кадомашро кушоям?';
+        const label = (tj: string, ru: string, en: string) => (lang === 'ru' ? ru : lang === 'en' ? en : tj);
+        return {
+            reply,
+            action: 'choose_page',
+            params: {
+                options: [
+                    { id: 'page:swipe', name: 'Касб-свайп свайп swipe', label: label('Касб-свайп', 'Карьер-свайп', 'Career Swipe'), kind: 'page', path: '/swipe' },
+                    { id: 'page:trial', name: 'Худро дар касб санчед супориш задания trial', label: label('Худро дар касб санҷед', 'Попробуйте себя', 'Try the job'), kind: 'page', path: '/trial' },
+                ],
+            },
+            answerLang: lang,
+        };
+    }
+
+    // Саволи маслиҳатӣ ва шахсӣ: на фармон («кушо», «нишон деҳ»), балки «чӣ кунам», «беҳтар», «хориҷ» ва ғ.
+    private static wantsAdvice(message: string): boolean {
+        const text = ` ${foldTajik(message).toLowerCase().replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim()} `;
+        if (/\d/.test(text) || /намефахм|нафахмид|не понима|не понял|understand/.test(text)) return false;
+        if (text.trim().split(' ').length < 4) return false;
+        if (/ (кушо|нишон дех|покажи|открой|show|open|мукоиса|сравни|compare)/.test(text)) return false;
+        return /ба фикри ту|ба фикрат|ба фикри шумо|маслихат|чи кунам|чи хел кунам|чи кор кунам|бехтар аст|бехтарин|хорич|за границ|за рубеж|abroad|foreign|намехохам|нахостам|не хочу|чаро|почему|why|should i|advice|посовет|что лучше|что мне делать|падару модар|падарам|модарам|волидон|родител|parents|метарсам|ташвиш|переживаю|worried/.test(text);
+    }
+
+    private async adviseAnswer(message: string, history: Array<{ q: string; a: string }>, lang: string, grade: number | null, careerName?: string) {
+        const unis: Array<{ id: string; name: string; city: string | null }> = await this.careerRepository.manager.query(
+            `SELECT u.id, u.name, u.city FROM universities u
+             WHERE ${grade === 9 ? '' : 'NOT'} (u.name ~* 'коллеҷ|колледж')
+             ORDER BY (SELECT count(*) FROM career_universities cu WHERE cu."universitiesId" = u.id) DESC LIMIT 60`);
+        const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+        const nl = String.fromCharCode(10);
+        // Номи кӯтоҳ: «Филиали МГУ дар Душанбе», на номи пурраи расмӣ — овоз онро дароз мехонд.
+        const short = (name: string) => name
+            .replace(/Донишгоҳи давлатии Москва ба номи М\. ?В\. Ломоносов/i, 'МГУ')
+            .replace(/"?Донишгоҳи миллии (таҳқиқотии|тадқиқотӣ) технологӣ "?МИСиС"?/i, 'МИСиС')
+            .replace(/"?Донишгоҳи миллии тадқиқотӣ"?-и Донишкадаи энергетикии Москва/i, 'МЭИ')
+            .replace(/\s*ба номи .*?(?= дар шаҳри|$)/i, '')
+            .replace(/\s*дар шаҳри Душанбе$/i, ' дар Душанбе')
+            .replace(/\s{2,}/g, ' ').trim().slice(0, 60);
+        const prompt = [
+            'Ту мушовири касбии меҳрубон ва ростгӯи сомонаи «Ихтисоси ман» (Тоҷикистон) ҳастӣ. Бо хонанда мисли одами зинда гап зан, бо «шумо».',
+            `Ҷавоб ҲАТМАН бо забони ${langName}, 2–3 ҷумла, то 55 калима (онро овоз мехонад). Бе рӯйхати рақамдор ва бе аломатҳои markdown.`,
+            'Маслиҳати мушаххас деҳ: ба саволаш рост ҷавоб деҳ, як-ду муассисаи мувофиқро аз РӮЙХАТ бо ҳамон номи кӯтоҳ ном бар ва гӯ чаро. Агар лозим бошад, як қадами амалӣ пешниҳод кун (санҷиш, Касб-свайп, саҳифаи ихтисос).',
+            'Далелҳо: филиалҳои донишгоҳҳои Русия (МГУ, МИСиС, МЭИ) ва Донишгоҳи славянии Россия ва Тоҷикистон бо забони русӣ дарс медиҳанд — барои идомаи таҳсил дар Русия ва хориҷ қулайанд; донишгоҳҳои калони давлатӣ барномаҳои мубодила ва магистратура доранд. Рақам, нарх ва далели навро аз худ насоз.',
+            'Агар корбар чизеро рад кунад («коллеҷ намехоҳам»), онро эҳтиром кун ва алтернатива деҳ. Агар саволаш дар бораи падару модар ё тарс бошад — аввал дастгирӣ, баъд роҳи амалӣ.',
+            'Агар корбар тест намехоҳад — тестро пешниҳод накун, «Касб-свайп» ё «Худро дар касб санҷед»-ро гӯй.',
+            grade === 9 ? 'Корбар баъди синфи 9 аст: танҳо коллеҷ мумкин; инро нарм шарҳ деҳ.' : '',
+            careerName ? `Корбар ҳозир саҳифаи ихтисоси «${careerName}»-ро мебинад.` : '',
+            'РӮЙХАТИ МУАССИСАҲО (рақам. ном — шаҳр):',
+            ...unis.map((u, i) => `${i + 1}. ${short(u.name)} — ${u.city || ''}`),
+            history.length ? 'СӮҲБАТИ ПЕШТАРА:' : '',
+            ...history.map((turn) => `Корбар: ${turn.q}${nl}Ёвар: ${turn.a}`),
+            'САВОЛИ ҲОЗИРА:',
+            message,
+            'Танҳо JSON: {"reply": "ҷавоб", "universities": [рақамҳои муассисаҳое, ки дар ҷавоб ном бурдӣ, то 3]}',
+        ].filter(Boolean).join(nl);
+        let parsed: any;
+        try {
+            const raw = await this.aiService.generateFast(prompt, 7000);
+            const match = String(raw || '').match(/\{[\s\S]*\}/);
+            parsed = match ? JSON.parse(match[0]) : null;
+        } catch {
+            return null;
+        }
+        const reply = typeof parsed?.reply === 'string' ? parsed.reply.replace(/[*#_`]/g, '').trim().slice(0, 500) : '';
+        if (reply.length < 10) return null;
+        const options = (Array.isArray(parsed?.universities) ? parsed.universities : [])
+            .map((n: any) => unis[Number(n) - 1]).filter(Boolean).slice(0, 3)
+            .map((u: any) => ({ id: u.id, name: u.name, label: short(u.name), kind: 'university' }));
+        return options.length
+            ? { reply, action: 'choose_university', params: { options }, answerLang: lang }
+            : { reply, action: 'answer', params: {}, answerLang: lang };
     }
 
     private pickOption(message: string, options: Array<{ id: string; name: string; label?: string }>) {
@@ -1348,7 +1435,7 @@ export class CareerService {
     async assistant(
         rawMessage: string,
         lang = 'tj',
-        context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number; location?: { lat: number; lng: number } } = {},
+        context: { careerName?: string; options?: Array<{ id: string; name: string; label?: string }>; grade?: string | number; location?: { lat: number; lng: number }; history?: Array<{ q: string; a: string }> } = {},
     ) {
         // Калимаҳои пуркунандаи нутқ («а-а-а», «э-э», «х-х», «мм», «ну») — шинохти нутқ онҳоро менависад
         // ва онҳо ҷустуҷӯро вайрон мекарданд («А-а-а, ба ман, х-х, ихтисоси биохимияро…»).
@@ -1375,9 +1462,13 @@ export class CareerService {
         // Ёвар қаблан самтҳо пешниҳод карда буд — ҷавоби корбар интихоб аст.
         const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const pending = (Array.isArray(context.options) ? context.options : [])
-            .filter((option) => option && uuid.test(String(option.id)) && typeof option.name === 'string')
+            .filter((option) => option && (uuid.test(String(option.id)) || /^page:(swipe|trial)$/.test(String(option.id))) && typeof option.name === 'string')
             .slice(0, 6);
         const picked = this.pickOption(message, pending);
+        if (picked && String(picked.id).startsWith('page:')) {
+            const path = picked.id === 'page:swipe' ? '/swipe' : '/trial';
+            return { reply: CareerService.ASSISTANT_REPLIES[answerLang]?.open_career || '', action: 'open_page', params: { path }, answerLang };
+        }
         if (picked && (picked as any).kind === 'university') {
             return {
                 reply: CareerService.ASSISTANT_REPLIES[answerLang]?.open_career || '',
@@ -1393,6 +1484,17 @@ export class CareerService {
                 params: { id: picked.id, name: picked.name },
                 answerLang,
             };
+        }
+
+        // «Не хочу тест», «тест намехоҳам, дигар роҳ лозим» (20.10): тестро сар намекунем — роҳҳои
+        // дигари санҷишро пешниҳод мекунем (Касб-свайп ва «Худро дар касб санҷед»).
+        if (CareerService.refusesTest(message)) return CareerService.otherChecks(answerLang);
+
+        // Саволи шахсӣ ё маслиҳат («донишгоҳе мехоҳам, ки баъд хориҷ равам», «Не, коллеҷ намехоҳам») —
+        // ҷавоби мушовир бо далелҳои база ва сӯҳбати пештара, на фармон.
+        if (CareerService.wantsAdvice(message)) {
+            const advice = await this.adviseAnswer(message, context.history || [], answerLang, grade, context.careerName);
+            if (advice) return advice;
         }
 
         // «Духтур шудан мехоҳам» — самтҳоро мегӯем ва мепурсем, кадомаш.
@@ -1462,6 +1564,8 @@ export class CareerService {
             'Маънои наздиктаринро гир, ба ҳарфҳо часпида намон.',
             `ДИҚҚАТ: «reply» ҲАТМАН бо забони ${langName} бошад — ҳатто агар корбар бо забони дигар гап занад.`,
             '',
+            (context.history || []).length ? 'СӮҲБАТИ ПЕШТАРА (барои фаҳмидани «ин», «не», «ҳамон»):' : '',
+            ...(context.history || []).map((turn) => `Корбар: ${turn.q}${String.fromCharCode(10)}Ёвар: ${turn.a}`),
             'ГУФТАИ КОРБАР:',
             message,
             context.careerName ? `КОРБАР ҲОЗИР ИН ИХТИСОСРО МЕБИНАД: ${context.careerName}` : '',
@@ -1499,7 +1603,8 @@ export class CareerService {
             grade === 9 ? '- ИН КОРБАР БАЪДИ СИНФИ 9 АСТ: танҳо коллеҷ ва ихтисосҳои коллеҷро пешниҳод кун, донишгоҳро не.' : '',
             grade === 11 ? '- Ин корбар баъди синфи 11 аст: ҳам коллеҷ, ҳам донишгоҳ мумкин.' : '',
             '- Сайт ва санҷиши касбӣ пурра ройгон аст.',
-            '- Се забон: тоҷикӣ, русӣ, англисӣ.',
+            '- Се забон: тоҷикӣ, русӣ, англисӣ. Ҳеҷ гоҳ нагӯ, ки ягон забонро намедонӣ ё бо он гап намезанӣ. Матни нофаҳмо бошад — хоҳиш кун, ки бори дигар гӯяд.',
+            '- Агар корбар тест ё санҷишро НАМЕХОҲАД («не хочу тест», «тест намехоҳам») — ҳеҷ гоҳ start_quiz не.',
             '- Баъди санҷиш: ҳисоботи AI, тавсияи ихтисосҳо, муқоисаи то 5 ихтисос ва рӯйхати ҳуҷҷатсупорӣ.',
             '- Барои ҳар ихтисос: донишгоҳҳо, нарх, бали гузариш ва ҷойҳои буҷетӣ.',
             '',

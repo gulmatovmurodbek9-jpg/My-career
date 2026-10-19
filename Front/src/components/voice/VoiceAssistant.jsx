@@ -59,7 +59,7 @@ const fetchVoice = (text, lang) => fetch(voiceUrl(text, lang)).then(async (respo
 const SILENT_WAV =
     "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
-const SILENCE_MS = 1100;       // ин қадар хомӯшӣ — яъне ҷумла тамом шуд (750 гапро мебурид)
+const SILENCE_MS = 1500;       // ин қадар хомӯшӣ — яъне ҷумла тамом шуд (750 гапро мебурид)
 const NO_SPEECH_MS = 8000;     // чизе нагуфт — боз гӯш мекунем
 const MAX_RECORD_MS = 15000;   // ҳадди аксар як навбат
 
@@ -102,6 +102,8 @@ export default function VoiceAssistant() {
     const optionsRef = useRef([]);
     // Хотираи сӯҳбат (20.10): ихтисоси охирин («ин ихтисос») ва ҷойгиршавӣ (як бор бо иҷозат).
     const lastCareerRef = useRef("");
+    // Ду-се гапи охирин: «Не, ман коллеҷ намехоҳам» бе саволи пештара маъно надорад.
+    const historyRef = useRef([]);
     const locationRef = useRef(null);
     const [said, setSaid] = useState("");
     const [input, setInput] = useState("");
@@ -406,7 +408,7 @@ export default function VoiceAssistant() {
 
     const runAction = useCallback(async (action, params) => {
         // Самтҳои касб ё донишгоҳҳои наздик (choose_university) — тугмаҳо ва «якумашро кушо».
-        const offered = (action === "choose_direction" || action === "choose_university") && Array.isArray(params?.options) ? params.options : [];
+        const offered = (action === "choose_direction" || action === "choose_university" || action === "choose_page") && Array.isArray(params?.options) ? params.options : [];
         optionsRef.current = offered;
         setOptions(offered);
         switch (action) {
@@ -437,6 +439,10 @@ export default function VoiceAssistant() {
                 break;
             case "start_quiz":
                 navigate("/quiz");
+                break;
+            // «Тест намехоҳам» — Касб-свайп ё «Худро дар касб санҷед».
+            case "open_page":
+                if (params?.path === "/swipe" || params?.path === "/trial") navigate(params.path);
                 break;
             case "open_universities":
                 if (params?.id) {
@@ -779,7 +785,7 @@ export default function VoiceAssistant() {
         lastSaidRef.current = text;
         try {
             const careerName = await currentCareerName();
-            const body = { message: text, lang, careerName, options: optionsRef.current, grade: getGrade(), location: locationRef.current || undefined };
+            const body = { message: text, lang, careerName, options: optionsRef.current, grade: getGrade(), location: locationRef.current || undefined, history: historyRef.current.slice(-4) };
             let { data } = await axios.post(`${API}/careers/assistant`, body, { timeout: 30000 });
             // «Наздик ба ман»: сервер ҷойгиршавӣ мехоҳад — мегирем ва ҳамон саволро боз мефиристем.
             // Иҷозат надод — харита худаш ҷойгиршавиро мепурсад (рафтори пештара).
@@ -795,6 +801,7 @@ export default function VoiceAssistant() {
             voiceLog("reply", { ms: Date.now() - asked, action: data?.action });
             reply = data?.reply || t("assistant.no_reply", "Мебахшед, нафаҳмидам. Бори дигар бигӯед.");
             setSaid(reply);
+            historyRef.current = [...historyRef.current, { q: text.slice(0, 300), a: reply.slice(0, 400) }].slice(-4);
 
             const before = window.location.pathname + window.location.hash;
             await runAction(data?.action, data?.params);
@@ -1107,7 +1114,7 @@ export default function VoiceAssistant() {
                                             stopAudio();
                                             optionsRef.current = [];
                                             setOptions([]);
-                                            navigate(option.kind === "university" ? `/universities/${option.id}` : `/info/${option.id}`);
+                                            navigate(option.kind === "page" ? option.path : option.kind === "university" ? `/universities/${option.id}` : `/info/${option.id}`);
                                         }}
                                         className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-[13px] font-semibold text-foreground focus-ring"
                                     >

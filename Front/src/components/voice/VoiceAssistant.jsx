@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Keyboard, Mic, Send, Square, X } from "lucide-react";
 import axios from "axios";
@@ -14,7 +14,8 @@ import { API } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
 import { matchQuizCommand, quizSpeech } from "../../lib/quizVoice";
 
-const Avatar3D = lazy(() => import("./Avatar3D"));
+// 20.10: модели 3D (Avatar3D.jsx) ба доираи Jarvis иваз шуд — сабуктар ва «зинда»-тар.
+import JarvisOrb from "./JarvisOrb";
 
 const GREETED_KEY = "assistant_greeted_v1";
 
@@ -1041,14 +1042,8 @@ export default function VoiceAssistant() {
                         ) : (
                             <>
                                 <div className="relative h-[15rem] w-full">
-                                    <span
-                                        ref={orbRef}
-                                        className={`pointer-events-none absolute inset-x-8 bottom-2 top-10 rounded-full bg-gradient-to-br ${glow} opacity-30 blur-3xl`}
-                                        style={{ willChange: "transform, opacity" }}
-                                    />
-                                    <Suspense fallback={<div className="h-full w-full animate-pulse rounded-[1.25rem] bg-muted/40" />}>
-                                        <Avatar3D state={state} levelRef={levelRef} />
-                                    </Suspense>
+                                    <span ref={orbRef} className="hidden" />
+                                    <JarvisOrb state={state} levelRef={levelRef} />
                                 </div>
 
                                 <p className="mt-5 text-[13px] font-semibold text-muted-foreground" aria-live="polite">

@@ -665,9 +665,9 @@ export class CareerService {
             roles: ['барномасоз', 'программист', 'разработчик', 'айти', 'programmer', 'developer', 'coder', 'software'],
             say: 'барномасоз', sayRu: 'программистом', sayEn: 'a programmer',
             options: [
+                { label: 'Таъмини барномавӣ', name: 'Таъмини барномавии технологияи иттилоотӣ', ru: 'Программное обеспечение ИТ', en: 'IT software' },
                 { label: 'Муҳандисии барномавӣ', name: 'Муҳандисии барномавӣ', ru: 'Программная инженерия', en: 'Software engineering' },
-                { label: 'Амнияти киберӣ', name: 'Амнияти киберӣ', ru: 'Кибербезопасность', en: 'Cyber security' },
-                { label: 'Веб-дизайн', name: 'WEB-дизайн ва графикаи компютерӣ', ru: 'Веб-дизайн', en: 'Web design' },
+                { label: 'Зеҳни сунъӣ', name: 'Зеҳни сунъӣ', ru: 'Искусственный интеллект', en: 'Artificial intelligence' },
                 { label: 'Информатика', name: 'Информатика', ru: 'Информатика', en: 'Computer science' },
             ],
         },
@@ -912,6 +912,46 @@ export class CareerService {
             params: { near: anchor.name, options },
             answerLang: lang,
         };
+    }
+
+    private static asksAboutOptions(message: string): boolean {
+        const text = ` ${foldTajik(message).toLowerCase().replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim()} `;
+        return /инхо|онхо|кадомаш|кадомаш|кадомаш|кадом|маош|моош|моши|музд|фарк|маълумот|чи кор|дар бораи|фахмон|гап зан|бехтар|which|salary|differ|explain|зарплат|какая|какой|чем отлич|расскажи|объясни|лучше/.test(text);
+    }
+
+    private async aboutOptions(message: string, options: Array<{ id: string; name: string; label?: string }>, history: Array<{ q: string; a: string }>, lang: string) {
+        const rows: Array<{ id: string; name: string; salary: any; description: string | null; unis: string }> = await this.careerRepository.manager.query(
+            `SELECT c.id, c.name, c."salaryAndMarket" AS salary, left(c.description, 300) AS description,
+                    (SELECT count(*) FROM career_universities cu WHERE cu."careerId" = c.id) AS unis
+             FROM career c WHERE c.id = ANY($1)`, [options.map((o) => o.id)]);
+        if (!rows.length) return null;
+        const facts = options.map((o) => rows.find((r) => r.id === o.id)).filter(Boolean).map((r: any) =>
+            `- ${r.name}: ${String(r.description || '').split(/(?<=[.!?])\s/)[0]} Маош: аввал ${r.salary?.junior || '?'}, миёна ${r.salary?.mid || '?'}, баланд ${r.salary?.senior || '?'}. Муассисаҳо: ${r.unis}.`);
+        const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
+        const nl = String.fromCharCode(10);
+        const prompt = [
+            'Ту мушовири касбии меҳрубони сомонаи «Ихтисоси ман» ҳастӣ. Корбар дар бораи самтҳое мепурсад, ки ҳозир ба ӯ пешниҳод шуданд.',
+            `Ҷавоб ҲАТМАН бо забони ${langName}, 2–4 ҷумлаи кӯтоҳ, то 60 калима (овоз мехонад), бе markdown ва бе рӯйхати рақамдор.`,
+            'Танҳо аз ДАЛЕЛҲО истифода бар; рақами маошро аз худ насоз. Агар маош пурсад — аз баланд ба паст муқоиса кун. Агар гӯяд, ки маълумот надорад — ҳар самтро бо як ибораи содда шарҳ деҳ. Дар охир бипурс, ки кадомашро кушояд. Салом нагӯ — сӯҳбат аллакай идома дорад.',
+            'ДАЛЕЛҲО:',
+            ...facts,
+            history.length ? 'СӮҲБАТИ ПЕШТАРА:' : '',
+            ...history.map((turn) => `Корбар: ${turn.q}${nl}Ёвар: ${turn.a}`),
+            'САВОЛИ ҲОЗИРА:',
+            message,
+            'Танҳо JSON: {"reply": "ҷавоб"}',
+        ].filter(Boolean).join(nl);
+        let reply = '';
+        try {
+            const raw = await this.aiService.generateFast(prompt, 7000);
+            const match = String(raw || '').match(/\{[\s\S]*\}/);
+            reply = match ? String(JSON.parse(match[0])?.reply || '') : '';
+        } catch {
+            reply = '';
+        }
+        reply = reply.replace(/[*#_`]/g, '').trim().slice(0, 500);
+        if (reply.length < 10) return null;
+        return { reply, action: 'choose_direction', params: { options }, answerLang: lang };
     }
 
     private static refusesTest(message: string): boolean {
@@ -1465,6 +1505,14 @@ export class CareerService {
             .filter((option) => option && (uuid.test(String(option.id)) || /^page:(swipe|trial)$/.test(String(option.id))) && typeof option.name === 'string')
             .slice(0, 6);
         const picked = this.pickOption(message, pending);
+        // «Дар бораи инҳо маълумот надорам», «кадомаш маоши баланд дорад?» — савол дар бораи ҳамон
+        // самтҳои пешниҳодшуда (20.10): фарқ ва маошро аз база мегӯем, тугмаҳо мемонанд.
+        const careerOptions = pending.filter((option) => uuid.test(String(option.id)) && (option as any).kind !== 'university');
+        if (!picked && careerOptions.length >= 2 && CareerService.asksAboutOptions(message)) {
+            const about = await this.aboutOptions(message, careerOptions, context.history || [], answerLang);
+            if (about) return about;
+        }
+
         if (picked && String(picked.id).startsWith('page:')) {
             const path = picked.id === 'page:swipe' ? '/swipe' : '/trial';
             return { reply: CareerService.ASSISTANT_REPLIES[answerLang]?.open_career || '', action: 'open_page', params: { path }, answerLang };

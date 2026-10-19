@@ -980,7 +980,7 @@ export class CareerService {
             ...history.map((turn) => `Корбар: ${turn.q}${nl}Ёвар: ${turn.a}`),
             'САВОЛИ ҲОЗИРА:',
             message,
-            'Танҳо JSON: {"reply": "ҷавоб", "universities": [рақамҳои муассисаҳое, ки дар ҷавоб ном бурдӣ, то 3]}',
+            'Дар reply рақами рӯйхатро нанавис. Танҳо JSON: {"reply": "ҷавоб", "universities": [рақамҳои муассисаҳое, ки дар ҷавоб ном бурдӣ, то 3]}',
         ].filter(Boolean).join(nl);
         let parsed: any;
         try {
@@ -990,7 +990,7 @@ export class CareerService {
         } catch {
             return null;
         }
-        const reply = typeof parsed?.reply === 'string' ? parsed.reply.replace(/[*#_`]/g, '').trim().slice(0, 500) : '';
+        const reply = typeof parsed?.reply === 'string' ? parsed.reply.replace(/[*#_`]/g, '').replace(/\s*\(\s*(№\s*)?\d{1,2}\s*\)/g, '').trim().slice(0, 500) : '';
         if (reply.length < 10) return null;
         const options = (Array.isArray(parsed?.universities) ? parsed.universities : [])
             .map((n: any) => unis[Number(n) - 1]).filter(Boolean).slice(0, 3)

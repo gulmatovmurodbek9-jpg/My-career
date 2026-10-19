@@ -62,7 +62,7 @@ export default function SpecialistInterview({ careerId }) {
         audioRef.current?.pause();
         setSpeaking(index);
         try {
-            const res = await fetch(`${API}/voice/speak`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: value.slice(0, 900), lang }) });
+            const res = await fetch(`${API}/voice/speak`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: value.slice(0, 900), lang, format: "mp3" }) });
             if (!res.ok) throw new Error("tts");
             const audio = new Audio(URL.createObjectURL(await res.blob()));
             audioRef.current = audio;

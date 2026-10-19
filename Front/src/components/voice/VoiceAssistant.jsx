@@ -5,6 +5,7 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
 import { prefetchSttToken, RealtimeStt } from "./realtimeStt";
+import { recorderFor, slowNetwork } from "../../lib/network";
 import { createVoiceGate } from "./voiceGate";
 import { getGrade, setGrade } from "../../lib/grade";
 import { voiceLog } from "./voiceLog";
@@ -25,7 +26,8 @@ const VOICE_VERSION = "murod-10";
 // Садо аввал бо fetch гирифта мешавад: агар сервер «банд» (503 TTS_BUSY) ё «дер шуд»
 // (504 TTS_TIMEOUT) гӯяд, корбар паёми фаҳмо мебинад, на «овоз нарасид»-и умумӣ.
 // Ҷумлаи навбатӣ дар вақти гуфтани ҷумлаи ҷорӣ ҳамин тавр пешакӣ гирифта мешавад.
-const voiceUrl = (text, lang) => `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}&v=${VOICE_VERSION}`;
+// format=mp3: садо ~8 маротиба хурдтар — дар интернети суст ҳам зуд меояд.
+const voiceUrl = (text, lang) => `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}&format=mp3&v=${VOICE_VERSION}`;
 // Ҷавобҳои маъмултарини ёвар: ҳангоми оғози сӯҳбат дар пасзамина гирифта мешаванд ва ба
 // кеши браузер (Cache-Control 1 рӯз) мераванд — роҳи интернет то сервер (~0,8–1,4 с) дигар интизорӣ намедиҳад.
 const COMMON_REPLIES = {
@@ -576,7 +578,7 @@ export default function VoiceAssistant() {
             const stream = streamRef.current || await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
 
-            const recorder = new MediaRecorder(stream);
+            const recorder = recorderFor(stream);
             const chunks = [];
             const meta = { spoke: false };
 
@@ -587,7 +589,7 @@ export default function VoiceAssistant() {
                 recorderRef.current = null;
                 setOrbLevel(0);
                 const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
-                if (meta.spoke && blob.size > 2000) {
+                if (meta.spoke && blob.size > 700) { // Opus 24 кбит/с: «якум» ~1,5 КБ
                     transcribe(blob);
                 } else {
                     setState("idle");
@@ -615,7 +617,8 @@ export default function VoiceAssistant() {
             realtimeFailedRef.current = 0;
         }
 
-        if (!realtimeFailedRef.current) {
+        // Интернети суст: ҷараёни садои хом (~256 кбит/с) намерасад — сабт ва як бор фиристодан (Opus 24 кбит/с).
+        if (!realtimeFailedRef.current && !slowNetwork()) {
             stopAudio();
             try {
                 const openedAt = Date.now();

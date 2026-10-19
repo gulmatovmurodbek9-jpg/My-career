@@ -3,6 +3,28 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { VoiceService } from './voice.service';
+import { createHash } from 'crypto';
+import { existsSync } from 'fs';
+import { mkdir, readFile, writeFile } from 'fs/promises';
+import { join } from 'path';
+import { wavToMp3 } from './mp3';
+
+// MP3-и тайёр барои ҳар WAV (калид — hash-и худи WAV), то ҳар бор аз нав рамзгузорӣ нашавад.
+const MP3_DIR = join(process.cwd(), 'voice-cache', 'mp3');
+async function mp3For(wav: Buffer): Promise<Buffer | null> {
+    const file = join(MP3_DIR, `${createHash('sha1').update(wav).digest('hex')}.mp3`);
+    if (existsSync(file)) {
+        try { return await readFile(file); } catch { /* аз нав месозем */ }
+    }
+    let mp3: Buffer | null = null;
+    try { mp3 = wavToMp3(wav); } catch { mp3 = null; }
+    if (!mp3) return null;
+    try {
+        await mkdir(MP3_DIR, { recursive: true });
+        await writeFile(file, mp3);
+    } catch { /* кеш нашуд — садо ба ҳар ҳол меравад */ }
+    return mp3;
+}
 
 // Дархостҳои худи сервер (prewarm-voice.js) ва сайти мо.
 const LOCAL_IPS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
@@ -79,29 +101,30 @@ export class VoiceController {
         @Query('text') text: string,
         @Query('speed') speed: string,
         @Query('lang') lang: string,
+        @Query('format') format: string,
         @Ip() ip: string,
         @Req() req: Request,
         @Res() res: Response,
     ) {
         if (!fromOurSite(req, ip)) throw new ForbiddenException();
         this.voiceService.guardSpeak(ip);
-        await this.send(text, Number(speed) || undefined, res, lang);
+        await this.send(text, Number(speed) || undefined, res, lang, format === 'mp3');
     }
 
     @Post('speak')
     @ApiOperation({ summary: 'Матн → овоз: тоҷикӣ (модели худамон), русӣ (Piper Ruslan), англисӣ (Piper Ryan)' })
     async speakPost(
-        @Body() body: { text: string; speed?: number; lang?: string },
+        @Body() body: { text: string; speed?: number; lang?: string; format?: string },
         @Ip() ip: string,
         @Req() req: Request,
         @Res() res: Response,
     ) {
         if (!fromOurSite(req, ip)) throw new ForbiddenException();
         this.voiceService.guardSpeak(ip);
-        await this.send(body?.text, Number(body?.speed) || undefined, res, body?.lang);
+        await this.send(body?.text, Number(body?.speed) || undefined, res, body?.lang, body?.format === 'mp3');
     }
 
-    private async send(text: string, speed: number | undefined, res: Response, lang?: string) {
+    private async send(text: string, speed: number | undefined, res: Response, lang?: string, mp3 = false) {
         // Хато («банд аст», «дер шуд») набояд дар кеши браузер монад — кеш танҳо барои садо.
         res.setHeader('Cache-Control', 'no-store');
 
@@ -119,6 +142,15 @@ export class VoiceController {
         const { audio, cached } = await this.voiceService.speak(text, speed, lang);
         // Як рӯз, на як сол: агар модели овоз иваз шавад, браузер садои нав мегирад.
         res.setHeader('Cache-Control', 'public, max-age=86400');
+        // Интернети суст: MP3 ~8 маротиба хурдтар. Агар рамзгузорӣ нашавад — ҳамон WAV.
+        const compact = mp3 ? await mp3For(audio) : null;
+        if (compact) {
+            res.setHeader('Content-Type', 'audio/mpeg');
+            res.setHeader('X-Voice-Source', cached ? 'cache' : 'model');
+            res.setHeader('Content-Length', String(compact.length));
+            res.end(compact);
+            return;
+        }
         res.setHeader('Content-Type', 'audio/wav');
         res.setHeader('X-Voice-Source', cached ? 'cache' : 'model');
         res.setHeader('Content-Length', String(audio.length));

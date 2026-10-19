@@ -3,6 +3,7 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { Ear, Loader2, Mic, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { API } from "../lib/config";
+import { recorderFor } from "../lib/network";
 import { matchQuizCommand, quizSpeech, quizSpeechParts } from "../lib/quizVoice";
 
 // «Реҷаи овозӣ»-и тест (барои нобиноён, камбиноён ва онҳое, ки хондан душвор аст):
@@ -36,7 +37,7 @@ const clip = (sentence, lang) => {
     const key = `${lang}|${sentence}`;
     if (!clips.has(key)) {
         if (clips.size > 400) clips.clear();
-        const request = axios.post(`${API}/voice/speak`, { text: sentence, lang }, { responseType: "blob", timeout: 45000 })
+        const request = axios.post(`${API}/voice/speak`, { text: sentence, lang, format: "mp3" }, { responseType: "blob", timeout: 45000 })
             .then(({ data }) => data)
             .catch((error) => { clips.delete(key); throw error; });
         clips.set(key, request);
@@ -173,7 +174,7 @@ export default function VoiceQuizMode() {
         if (token !== tokenRef.current) return null;
         streamRef.current = stream;
         setStatus("listening");
-        const recorder = new MediaRecorder(stream);
+        const recorder = recorderFor(stream);
         recRef.current = recorder;
         const chunks = [];
         recorder.ondataavailable = (event) => { if (event.data?.size) chunks.push(event.data); };
@@ -206,7 +207,7 @@ export default function VoiceQuizMode() {
         }
         const blob = await finished;
         context?.close().catch(() => {});
-        if (token !== tokenRef.current || !spoke || blob.size < 1500) return null;
+        if (token !== tokenRef.current || !spoke || blob.size < 700) return null; // Opus 24 кбит/с — порчаҳо хурданд
         setStatus("thinking");
         try {
             const form = new FormData();

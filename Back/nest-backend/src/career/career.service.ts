@@ -604,10 +604,21 @@ export class CareerService {
     // Решаҳои калимаҳои худи корбар, ки дар аввали калимаи номи ихтисос ҳастанд.
     // Барои ҳар калима — дарозтарин префикс (камаш 4 ҳарф ва нисфи калима), ки ёфт мешавад:
     // «тарҷумони» → «тарчум», «англиси» → «англис», «арабади» (ғалат) → «араб».
+    // Касбҳое, ки номашон дар номи ихтисосҳо нест: «ошпаз» → «хӯроки умумӣ», «қаннодӣ», «тарабхона».
+    private static readonly PROFESSION_STEMS: Array<[RegExp, string[]]> = [
+        [/^(ошпаз|повар|chef|cook|кулинар)/, ['хуроки', 'каннод', 'тарабхона']],
+        [/^(нонпаз|кондитер|каннод|baker)/, ['каннод', 'нони']],
+    ];
+
     private async directStems(question: string): Promise<string[]> {
         const words = [...new Set(foldTajik(question).split(/[^а-яёa-z]+/).filter((word) => word.length >= 4 && !CareerService.QUERY_STOP.has(word)))].slice(0, 6);
         const stems: string[] = [];
         for (const word of words) {
+            const profession = CareerService.PROFESSION_STEMS.find(([pattern]) => pattern.test(word.toLowerCase()));
+            if (profession) {
+                for (const stem of profession[1]) if (!stems.includes(stem)) stems.push(stem);
+                continue;
+            }
             for (let length = word.length; length >= Math.max(4, Math.ceil(word.length / 2)); length -= 1) {
                 const stem = word.slice(0, length);
                 const [row] = await this.careerRepository.query(
@@ -640,6 +651,16 @@ export class CareerService {
     // пас барои касбҳои маъмул самтҳоро дастӣ медиҳем. Барои дигар касбҳо
     // рӯйхат аз ҷустуҷӯи база сохта мешавад.
     private static readonly DIRECTIONS: Array<{ roles: string[]; say: string; sayRu?: string; sayEn?: string; options: Array<{ label: string; name: string; ru?: string; en?: string }> }> = [
+        {
+            roles: ['ошпаз', 'повар', 'кулинар', 'chef', 'cook', 'нонпаз', 'каннод', 'кондитер'],
+            say: 'ошпаз', sayRu: 'поваром', sayEn: 'a chef',
+            options: [
+                { label: 'Ошпазӣ ва хӯроки умумӣ', name: 'Технологияи маҳсулот ва ташкили хӯроки умумӣ', ru: 'Технология общественного питания', en: 'Catering technology' },
+                { label: 'Нонпазӣ ва қаннодӣ', name: 'Технологияи истеҳсолоти анвои нонӣ, макаронӣ ва қаннодӣ', ru: 'Хлебопечение и кондитерство', en: 'Bakery and confectionery' },
+                { label: 'Хизмати тарабхона', name: 'Хизматрасонии тарабхона ва меҳмонхонаҳо', ru: 'Ресторанный сервис', en: 'Restaurant service' },
+                { label: 'Менеҷменти тарабхона', name: 'Менеҷменти тарабхона ва меҳмонхона', ru: 'Ресторанный менеджмент', en: 'Restaurant management' },
+            ],
+        },
         // Пеш аз «духтур»: «духтури ҳайвонот» — байтор, на табиби одам.
         {
             roles: ['байтор', 'ветеринар', 'хайвон', 'зоотех', 'vet', 'animal'],

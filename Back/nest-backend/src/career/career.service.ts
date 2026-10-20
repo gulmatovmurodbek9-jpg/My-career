@@ -915,6 +915,53 @@ export class CareerService {
         };
     }
 
+    private static readonly UNI_CAREER_STOP = new Set(['донишгох', 'донишгохе', 'донишгоххо', 'донишгоххое', 'ихтисос', 'ихтисоси', 'ихтисосе',
+        'дорад', 'доранд', 'мехохам', 'нигох', 'дустам', 'кадом', 'коллеч', 'коллечхо', 'хонам', 'мехонанд', 'университет', 'специальность',
+        'бинам', 'нишон', 'кушо', 'кадомхо', 'барои', 'мумкин', 'хаст', 'хастанд', 'мехонанд', 'омузонанд', 'учат', 'учиться', 'which', 'university',
+        'college', 'colleges', 'universities', 'teach', 'study', 'каком', 'колледж', 'специальности', 'муассиса']);
+
+    private async universitiesForCareer(careerText: string, grade: number | null, lang: string, kind: '' | 'college' | 'higher' = '') {
+        const words = foldTajik(careerText).toLowerCase().split(/[^a-zа-яё]+/i)
+            .filter((word) => word.length >= 5 && !CareerService.UNI_CAREER_STOP.has(word));
+        // Решаи 6 ҳарф: «барномасозиро» → «барном» (дар «Таъмини барномавӣ» ҳам ҳаст).
+        const stems = [...new Set(words.map((word) => word.slice(0, 6)))].slice(0, 4);
+        if (!stems.length) return null;
+        const rows: Array<{ id: string; name: string; shortName: string | null; city: string | null; careers: number; free: boolean; fee: number | null; sample: string }> =
+            await this.careerRepository.manager.query(
+                `SELECT u.id, u.name, u."shortName", u.city,
+                        count(DISTINCT c.name)::int AS careers,
+                        coalesce(bool_or(o."paymentType" = 'ройгон'), false) AS free,
+                        min(o."tuitionFee") FILTER (WHERE o."tuitionFee" > 0) AS fee,
+                        min(c.name) AS sample
+                 FROM career_offerings o
+                 JOIN career c ON c.id = o."careerId"
+                 JOIN universities u ON u.id = o."universityId"
+                 WHERE ${TAJIK_FOLD('c.name')} LIKE ANY($1) AND ($2::int IS NULL OR o."basedOn" = $2)
+                   AND ($3 = '' OR ($3 = 'college') = (${TAJIK_FOLD('u.name')} LIKE '%коллеч%'))
+                 GROUP BY u.id
+                 ORDER BY careers DESC, free DESC, u.name
+                 LIMIT 4`,
+                [stems.map((stem) => `%${stem}%`), grade || null, kind]);
+        if (!rows.length) return null;
+        const short = (u: { name: string; shortName: string | null }) => (u.shortName && u.shortName.length < u.name.length ? u.shortName : u.name).replace(/\s*ба номи .*$/i, '').trim();
+        const money = (n: number) => Math.round(n).toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+        const list = rows.map((u, i) => {
+            const bits = [u.city || '', u.careers > 1 ? `${u.careers} ихтисос` : `«${u.sample}»`, u.free ? 'ҷои буҷетӣ ҳаст' : u.fee ? `${money(Number(u.fee))} сомонӣ дар сол` : ''].filter(Boolean);
+            return `${i + 1}. ${short(u)}, ${bits.join(', ')}`;
+        }).join('. ');
+        const reply = lang === 'ru'
+            ? `Эту специальность предлагают: ${list}. Какой открыть?`
+            : lang === 'en'
+                ? `These places offer it: ${list}. Which one shall I open?`
+                : `Ин ихтисосро инҳо доранд: ${list}. Кадомашро кушоям?`;
+        return {
+            reply,
+            action: 'choose_university',
+            params: { options: rows.map((u) => ({ id: u.id, name: u.name, label: short(u), kind: 'university' })) },
+            answerLang: lang,
+        };
+    }
+
     private static asksAboutOptions(message: string): boolean {
         const text = ` ${foldTajik(message).toLowerCase().replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ').trim()} `;
         return /инхо|онхо|кадомаш|кадомаш|кадомаш|кадом|маош|моош|моши|музд|фарк|маълумот|чи кор|дар бораи|фахмон|гап зан|бехтар|which|salary|differ|explain|зарплат|какая|какой|чем отлич|расскажи|объясни|лучше/.test(text);
@@ -1627,7 +1674,7 @@ export class CareerService {
             '- compare — муқоисаи ду ё зиёда ихтисос. params: {"names": ["ном1", "ном2"]}',
             '- save_career — захира кардани ихтисос. params: {"name": "номи ихтисос"}',
             '- start_quiz — оғози санҷиши касбӣ. params: {}',
-            '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "НОМИ ХОСИ муассиса ё холӣ", "city": "шаҳр", "type": "college" ё "higher" ё холӣ}. «ҳамаи коллеҷҳо», «колледжи», «colleges» → {"type":"college"} БЕ name; «донишгоҳҳо/вузы/universities» → {"type":"higher"} БЕ name. Ном ва шаҳр бо тоҷикӣ («Худжанд» → «Хуҷанд», «medical» → «тиббӣ»)',
+            '- open_universities — донишгоҳҳо, як донишгоҳи мушаххас ё харита. params: {"name": "НОМИ ХОСИ муассиса ё холӣ", "city": "шаҳр", "type": "college" ё "higher" ё холӣ, "career": "ихтисос ё соҳа, агар корбар донишгоҳеро ҷӯяд, ки ҳамин ихтисосро дорад («донишгоҳе, ки бофандагӣ дорад» → "бофандагӣ")"}. «ҳамаи коллеҷҳо», «колледжи», «colleges» → {"type":"college"} БЕ name; «донишгоҳҳо/вузы/universities» → {"type":"higher"} БЕ name. Ном ва шаҳр бо тоҷикӣ («Худжанд» → «Хуҷанд», «medical» → «тиббӣ»)',
             '- open_report — ҳисоботи AI аз рӯи санҷиш. params: {}',
             '- open_plan — рӯйхати ҳуҷҷатсупорӣ. params: {}',
             '- nearest_universities — «донишгоҳи наздиктарин», «дар наздикии ман». params: {} ё {"career": "номи ихтисос"}, агар корбар ихтисоси мушаххасро гӯяд ё «ин ихтисос»-ро дар назар дошта бошад (он гоҳ ихтисоси КОРБАР ҲОЗИР МЕБИНАД-ро гир). Агар корбар ҷой ё муассисаи дигарро гӯяд («наздик ба Донишгоҳи молия», «назди хонаи хешовандон дар паҳлӯи ДМТ»), params: {"near": "номи ҳамон муассиса"}. Танҳо «ҳа»/«ан» дар аввали ҷумла фармони санҷиш НЕСТ: start_quiz танҳо вақте ки корбар санҷиш ё тестро мехоҳад.',
@@ -1853,6 +1900,20 @@ export class CareerService {
         if (action === 'nearest_universities' && String(given.near || '').trim().length >= 3) {
             const near = await this.nearUniversities(String(given.near), message, grade, answerLang);
             if (near) return near;
+        }
+
+        // «Донишгоҳе, ки ихтисоси бофандагӣ дорад» (20.10): на ҳамаи донишгоҳҳо, балки онҳое,
+        // ки ҳамин ихтисосро доранд — бо шумораи ихтисосҳо, ҷойи буҷетӣ ва тугмаҳо.
+        if (action === 'open_universities' && !String(given.name || '').trim()) {
+            const careerAsked = String(given.career || '').trim()
+                || ((/ихтисос|специальност|specialt/.test(foldTajik(message).toLowerCase()) && /дор|хон|мехон|ест|есть|ҳаст|хаст|have|offer/.test(foldTajik(message).toLowerCase()))
+                    || /(дар )?кадом (донишгох|коллеч|муассиса)\S* .*(мехонанд|хонд|омузонд|тайёр)|(мехонанд|омузонанд) дар кадом|где (учат|учиться|обучают)|в каком (вуз|университ|колледж)\S* .*(учат|учиться)|which (univers|college)\S* .*(teach|offer|study)/.test(foldTajik(message).toLowerCase())
+                    ? message : '');
+            if (careerAsked.length >= 4) {
+                const saidKind = /коллеч|колледж|college/.test(foldTajik(message).toLowerCase()) ? 'college' : /донишгох|донишкад|университет|вуз|universit/.test(foldTajik(message).toLowerCase()) ? 'higher' : '';
+                const byCareer = await this.universitiesForCareer(careerAsked, grade, answerLang, saidKind);
+                if (byCareer) return byCareer;
+            }
         }
 
         if (action === 'open_universities') {

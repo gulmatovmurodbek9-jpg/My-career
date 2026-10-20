@@ -1904,7 +1904,9 @@ export class CareerService {
 
         // «Донишгоҳе, ки ихтисоси бофандагӣ дорад» (20.10): на ҳамаи донишгоҳҳо, балки онҳое,
         // ки ҳамин ихтисосро доранд — бо шумораи ихтисосҳо, ҷойи буҷетӣ ва тугмаҳо.
-        if (action === 'open_universities' && !String(given.name || '').trim()) {
+        const foldedAsk2 = foldTajik(message).toLowerCase();
+        const whichUni = /(дар )?кадом (донишгох|коллеч|муассиса)\S* .*(мехонанд|хонд|омузонд|тайёр|дорад|доранд)|(мехонанд|омузонанд) дар кадом|где (учат|учиться|обучают)|в каком (вуз|университ|колледж)\S* .*(учат|учиться|есть)|which (univers|college)\S* .*(teach|offer|study|ha)/.test(foldedAsk2);
+        if ((action === 'open_universities' && !String(given.name || '').trim()) || (whichUni && ['search', 'answer', 'open_career'].includes(action))) {
             const careerAsked = String(given.career || '').trim()
                 || ((/ихтисос|специальност|specialt/.test(foldTajik(message).toLowerCase()) && /дор|хон|мехон|ест|есть|ҳаст|хаст|have|offer/.test(foldTajik(message).toLowerCase()))
                     || /(дар )?кадом (донишгох|коллеч|муассиса)\S* .*(мехонанд|хонд|омузонд|тайёр)|(мехонанд|омузонанд) дар кадом|где (учат|учиться|обучают)|в каком (вуз|университ|колледж)\S* .*(учат|учиться)|which (univers|college)\S* .*(teach|offer|study)/.test(foldTajik(message).toLowerCase())

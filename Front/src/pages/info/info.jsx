@@ -756,8 +756,6 @@ const Info = () => {
             </Section>
           )}
 
-          {/* «Як рӯзи корӣ» — пеш аз интихоби донишгоҳ; «Худро дар касб санҷед» — дар охири саҳифа. */}
-          <TrialPreview trial={trial} careerId={id} />
 
           {offerings.length > 0 ? (
             <Section
@@ -954,6 +952,9 @@ const Info = () => {
           <motion.div {...fadeIn}>
             <CareerChat careerId={career.id} careerName={career.name} />
           </motion.div>
+
+          {/* Дар охири саҳифа: «Як рӯзи корӣ», ҷиҳатҳои мусбат/манфӣ ва «Худро дар касб санҷед». */}
+          <TrialPreview trial={trial} careerId={id} />
 
           <TrialCta career={career} />
 

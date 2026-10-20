@@ -640,6 +640,17 @@ export class CareerService {
     // пас барои касбҳои маъмул самтҳоро дастӣ медиҳем. Барои дигар касбҳо
     // рӯйхат аз ҷустуҷӯи база сохта мешавад.
     private static readonly DIRECTIONS: Array<{ roles: string[]; say: string; sayRu?: string; sayEn?: string; options: Array<{ label: string; name: string; ru?: string; en?: string }> }> = [
+        // Пеш аз «духтур»: «духтури ҳайвонот» — байтор, на табиби одам.
+        {
+            roles: ['байтор', 'ветеринар', 'хайвон', 'зоотех', 'vet', 'animal'],
+            say: 'байтор (духтури ҳайвонот)', sayRu: 'ветеринаром', sayEn: 'a veterinarian',
+            options: [
+                { label: 'Тибби байторӣ', name: 'Тибби байторӣ', ru: 'Ветеринарная медицина', en: 'Veterinary medicine' },
+                { label: 'Байтор-фарматсевт', name: 'Тибби байторӣ-фарматсевт', ru: 'Ветеринар-фармацевт', en: 'Veterinary pharmacist' },
+                { label: 'Зоотехния', name: 'Зоотехния', ru: 'Зоотехния', en: 'Animal science' },
+                { label: 'Озмоиши байтории санитарӣ', name: 'Озмоиши байтории санитарӣ', ru: 'Ветеринарно-санитарная экспертиза', en: 'Veterinary sanitary inspection' },
+            ],
+        },
         {
             roles: ['духтур', 'табиб', 'доктор', 'врач', 'пизишк', 'doctor', 'physician', 'medic'],
             say: 'духтур', sayRu: 'врачом', sayEn: 'a doctor',
@@ -1087,6 +1098,29 @@ export class CareerService {
             reply = lang === 'ru' ? `${line}. Какую специальность вы хотите изучать?` : lang === 'en' ? `${line}. Which specialty do you want to study?` : `${line}. Шумо кадом ихтисосро хондан мехоҳед?`;
         }
         return { reply, action: 'choose_university', params: { options }, answerLang: lang };
+    }
+
+    private async topCareersAnswer(lang: string) {
+        const rows: Array<{ id: string; name: string; score: number; year: number }> = await this.careerRepository.manager.query(
+            `SELECT DISTINCT ON (c.name) c.id, c.name, a.score, a.year FROM admission_scores a
+             JOIN career c ON trim(c.code) = trim(a.code)
+             WHERE a.year = (SELECT max(year) FROM admission_scores) AND a.score > 0
+             ORDER BY c.name, a.score DESC`);
+        const top = rows.sort((a, b) => Number(b.score) - Number(a.score)).slice(0, 5);
+        if (!top.length) return null;
+        const year = top[0].year;
+        const list = top.map((r, i) => `${i + 1}. ${r.name}, ${Math.round(Number(r.score))} бал`).join('. ');
+        const reply = lang === 'ru'
+            ? `По проходному баллу НЦТ ${year} года впереди: ${list}. Какую открыть?`
+            : lang === 'en'
+                ? `By the ${year} NTC passing score, the top ones are: ${list}. Which shall I open?`
+                : `Аз рӯи бали гузариши ММТ дар соли ${year} инҳо дар ҷои аввал буданд: ${list}. Ин рақобати баланд аст. Кадомашро кушоям?`;
+        return {
+            reply,
+            action: 'choose_direction',
+            params: { options: top.map((r) => ({ id: r.id, name: r.name, label: r.name })) },
+            answerLang: lang,
+        };
     }
 
     private static asksAboutOptions(message: string): boolean {
@@ -1707,6 +1741,14 @@ export class CareerService {
                 params: { id: picked.id, name: picked.name },
                 answerLang,
             };
+        }
+
+        // «Ихтисосҳое, ки дар ҷои аввал меистанд», «аз ҳама машҳур», «самые популярные» (21.10):
+        // аз рӯи бали гузариши ММТ-и соли охир — далели расмӣ, на тахмин.
+        if (/(чо(и|йи) (аввал|якум)|аз хама (машхур|маъруф|талабгор|бештар интихоб|баланд|пурталаб)|серталаб|популярн|востребован|(^|\s)топ(\s|$)|top|most popular|рейтинг|бали (аз хама )?баланд)/.test(foldTajik(message).toLowerCase())
+            && /ихтисос|касб|специальн|профес|career|special|major/.test(foldTajik(message).toLowerCase())) {
+            const top = await this.topCareersAnswer(answerLang);
+            if (top) return top;
         }
 
         // «Не хочу тест», «тест намехоҳам, дигар роҳ лозим» (20.10): тестро сар намекунем — роҳҳои

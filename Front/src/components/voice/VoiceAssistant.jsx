@@ -28,7 +28,9 @@ const VOICE_VERSION = "murod-10";
 // (504 TTS_TIMEOUT) гӯяд, корбар паёми фаҳмо мебинад, на «овоз нарасид»-и умумӣ.
 // Ҷумлаи навбатӣ дар вақти гуфтани ҷумлаи ҷорӣ ҳамин тавр пешакӣ гирифта мешавад.
 // format=mp3: садо ~8 маротиба хурдтар — дар интернети суст ҳам зуд меояд.
-const voiceUrl = (text, lang) => `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}&format=mp3&v=${VOICE_VERSION}`;
+// MP3 ~8 баробар хурдтар, аммо сохтанаш дар сервер ~0,6 с вақт мегирад: танҳо дар интернети суст.
+// Дар интернети муқаррарӣ WAV — садо зудтар сар мешавад (21.10).
+const voiceUrl = (text, lang) => `${API}/voice/speak?text=${encodeURIComponent(text)}&lang=${lang}${slowNetwork() ? "&format=mp3" : ""}&v=${VOICE_VERSION}`;
 // Ҷавобҳои маъмултарини ёвар: ҳангоми оғози сӯҳбат дар пасзамина гирифта мешаванд ва ба
 // кеши браузер (Cache-Control 1 рӯз) мераванд — роҳи интернет то сервер (~0,8–1,4 с) дигар интизорӣ намедиҳад.
 const COMMON_REPLIES = {
@@ -59,7 +61,7 @@ const fetchVoice = (text, lang) => fetch(voiceUrl(text, lang)).then(async (respo
 const SILENT_WAV =
     "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
-const SILENCE_MS = 1500;       // ин қадар хомӯшӣ — яъне ҷумла тамом шуд (750 гапро мебурид)
+const SILENCE_MS = 1300;       // ин қадар хомӯшӣ — яъне ҷумла тамом шуд (750 гапро мебурид)
 const NO_SPEECH_MS = 8000;     // чизе нагуфт — боз гӯш мекунем
 const MAX_RECORD_MS = 15000;   // ҳадди аксар як навбат
 

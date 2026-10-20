@@ -178,7 +178,7 @@ export class CareerController {
             grade: body?.grade,
             careerName: body?.careerName,
             options: body?.options,
-            history: (Array.isArray(body?.history) ? body.history : []).slice(-4)
+            history: (Array.isArray(body?.history) ? body.history : []).slice(-6)
                 .map((turn) => ({ q: String(turn?.q || '').slice(0, 300), a: String(turn?.a || '').slice(0, 400) }))
                 .filter((turn) => turn.q),
             location: Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat, lng } : undefined,

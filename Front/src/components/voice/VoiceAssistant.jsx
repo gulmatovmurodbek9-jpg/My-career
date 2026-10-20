@@ -103,7 +103,15 @@ export default function VoiceAssistant() {
     // Хотираи сӯҳбат (20.10): ихтисоси охирин («ин ихтисос») ва ҷойгиршавӣ (як бор бо иҷозат).
     const lastCareerRef = useRef("");
     // Ду-се гапи охирин: «Не, ман коллеҷ намехоҳам» бе саволи пештара маъно надорад.
-    const historyRef = useRef([]);
+    // Дар браузер 2 соат нигоҳ дошта мешавад: ёварро пӯшед ё саҳифаро нав кунед — сӯҳбат идома дорад.
+    const historyRef = useRef((() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem("assistant_history") || "null");
+            return saved && Date.now() - saved.at < 2 * 60 * 60 * 1000 && Array.isArray(saved.turns) ? saved.turns.slice(-6) : [];
+        } catch {
+            return [];
+        }
+    })());
     const locationRef = useRef(null);
     const [said, setSaid] = useState("");
     const [input, setInput] = useState("");
@@ -785,7 +793,7 @@ export default function VoiceAssistant() {
         lastSaidRef.current = text;
         try {
             const careerName = await currentCareerName();
-            const body = { message: text, lang, careerName, options: optionsRef.current, grade: getGrade(), location: locationRef.current || undefined, history: historyRef.current.slice(-4) };
+            const body = { message: text, lang, careerName, options: optionsRef.current, grade: getGrade(), location: locationRef.current || undefined, history: historyRef.current.slice(-6) };
             let { data } = await axios.post(`${API}/careers/assistant`, body, { timeout: 30000 });
             // «Наздик ба ман»: сервер ҷойгиршавӣ мехоҳад — мегирем ва ҳамон саволро боз мефиристем.
             // Иҷозат надод — харита худаш ҷойгиршавиро мепурсад (рафтори пештара).
@@ -801,7 +809,8 @@ export default function VoiceAssistant() {
             voiceLog("reply", { ms: Date.now() - asked, action: data?.action });
             reply = data?.reply || t("assistant.no_reply", "Мебахшед, нафаҳмидам. Бори дигар бигӯед.");
             setSaid(reply);
-            historyRef.current = [...historyRef.current, { q: text.slice(0, 300), a: reply.slice(0, 400) }].slice(-4);
+            historyRef.current = [...historyRef.current, { q: text.slice(0, 300), a: reply.slice(0, 400) }].slice(-6);
+            try { localStorage.setItem("assistant_history", JSON.stringify({ at: Date.now(), turns: historyRef.current })); } catch { /* хотираи браузер баста */ }
 
             const before = window.location.pathname + window.location.hash;
             await runAction(data?.action, data?.params);

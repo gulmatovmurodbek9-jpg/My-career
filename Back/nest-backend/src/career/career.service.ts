@@ -1219,6 +1219,56 @@ export class CareerService {
         return { reply, action: 'choose_direction', params: { options: [{ id: career.id, name: career.name, label: career.name }] }, answerLang: lang };
     }
 
+    private async topicInUniversity(message: string, grade: number | null, lang: string) {
+        const folded = ` ${foldTajik(message).toLowerCase().replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ')} `;
+        // «…ё …», «или», «беҳтар» — муқоисаи ду муассиса аст (detectUniversityPair), на ин.
+        if (/ (ё|е|или|or|vs) |мукоиса|бехтар|хубтар|лучше|better/.test(folded)) return null;
+        // Номи муассиса: ихтисор (ДМТ, ДТТ…) ё «донишгоҳи/коллеҷи/донишкадаи» + 1–3 калимаи баъдӣ.
+        const alias = CareerService.UNI_ALIASES.find(([pattern]) => pattern.test(folded));
+        const named = folded.match(/(донишгох\S*|донишкада\S*|коллеч\S*|университет\S*)\s+((?:\S+\s+){0,2}\S+)/);
+        if (!alias && !named) return null;
+        let uniPhrase = alias ? alias[1] : named![2];
+        uniPhrase = uniPhrase.split(' ').filter((word) => word.length >= 3 && !CareerService.PAIR_FILLER.has(word) && !CareerService.UNI_CAREER_STOP.has(word)).slice(0, 2).join(' ');
+        if (uniPhrase.length < 4) return null;
+        const uni = await this.findUniversityFuzzy(uniPhrase);
+        if (!uni) return null;
+        const uniWords = new Set(CareerService.wordsOf(uni.name));
+        const userStems = [...new Set(folded.split(' ')
+            .filter((word) => word.length >= 5 && !uniWords.has(word) && !uniPhrase.includes(word)
+                && !CareerService.UNI_CAREER_STOP.has(word) && !CareerService.PAIR_FILLER.has(word) && !CareerService.CITY_FILLER.has(word) && !CareerService.UNI_STOP.has(word)
+                && !/^(даркор|равона|шудаан|мехох|лозим|нишон|бигу|кадомх|ихтисосх|ихтисосхо|ихтисосхое|шудааст|доранд|мебош|мехонан)/.test(word))
+            .map((word) => word.slice(0, 6)))].slice(0, 3);
+        if (!userStems.length) return null;
+        const RELATED: Record<string, string[]> = { барном: ['информ', 'компют'], програ: ['барном', 'информ', 'компют'], духтур: ['тибб', 'табоб'], врач: ['тибб', 'табоб'] };
+        const stems = [...userStems];
+        for (const stem of userStems) for (const extra of RELATED[stem] || []) if (!stems.includes(extra)) stems.push(extra);
+        const rows: Array<{ id: string; name: string; free: boolean; fee: number | null; direct: boolean }> = await this.careerRepository.manager.query(
+            `SELECT DISTINCT ON (c.name) c.id, c.name,
+                    bool_or(o."paymentType" = 'ройгон') OVER (PARTITION BY c.name) AS free,
+                    min(o."tuitionFee") FILTER (WHERE o."tuitionFee" > 0) OVER (PARTITION BY c.name) AS fee,
+                    ${TAJIK_FOLD('c.name')} LIKE ANY($3) AS direct
+             FROM career_offerings o JOIN career c ON c.id = o."careerId"
+             WHERE o."universityId" = $1 AND ${TAJIK_FOLD('c.name')} LIKE ANY($2) AND ($4::int IS NULL OR o."basedOn" = $4)
+             ORDER BY c.name`,
+            [uni.id, stems.map((stem) => `%${stem}%`), userStems.map((stem) => `%${stem}%`), grade || null]);
+        const short = uni.name.replace(/\s*ба номи .*$/i, '').trim();
+        const options = [{ id: uni.id, name: uni.name, label: short.slice(0, 50), kind: 'university' }];
+        if (!rows.length) {
+            if (lang !== 'tj') return null;
+            return { reply: `Дар ${short} ихтисоси ин соҳа ёфт нашуд. Мехоҳед бигӯям, ки онро дар кадом донишгоҳҳо мехонанд?`, action: 'choose_university', params: { options }, answerLang: lang };
+        }
+        rows.sort((a, b) => Number(b.direct) - Number(a.direct));
+        const money = (n: number) => Math.round(n).toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+        const list = rows.slice(0, 5).map((r, i) => `${i + 1}. ${r.name.replace(/\s*\(.*?\)\s*$/, '')}${r.free ? ', буҷетӣ ҳаст' : r.fee ? `, ${money(Number(r.fee))} сомонӣ` : ''}`).join('. ');
+        if (lang !== 'tj') return null;
+        return {
+            reply: `Дар ${short} ин ихтисосҳо ҳастанд: ${list}${rows.length > 5 ? `. Боз ${rows.length - 5} ихтисос` : ''}. Кадомашро кушоям?`,
+            action: 'choose_direction',
+            params: { options: rows.slice(0, 5).map((r) => ({ id: r.id, name: r.name, label: r.name.replace(/\s*\(.*?\)\s*$/, '').slice(0, 60) })) },
+            answerLang: lang,
+        };
+    }
+
     private async topCareersAnswer(lang: string) {
         const rows: Array<{ id: string; name: string; score: number; year: number }> = await this.careerRepository.manager.query(
             `SELECT DISTINCT ON (c.name) c.id, c.name, a.score, a.year FROM admission_scores a
@@ -1877,6 +1927,13 @@ export class CareerService {
                 const byCity = await this.careerInCities(message, cities, grade, answerLang);
                 if (byCity) return byCity;
             }
+        }
+
+        // «Дар донишгоҳи техникӣ ба ман ихтисосҳое даркоранд, ки ба барномасозӣ равона шудаанд» (21.10):
+        // ЯК муассиса + соҳа → ихтисосҳои ҳамон соҳа дар ҳамон муассиса (буҷет, нарх), рост аз база.
+        {
+            const inUni = await this.topicInUniversity(message, grade, answerLang);
+            if (inUni) return inUni;
         }
 
         // «Ихтисосҳое, ки дар ҷои аввал меистанд», «аз ҳама машҳур», «самые популярные» (21.10):

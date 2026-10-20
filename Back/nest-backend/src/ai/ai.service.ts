@@ -141,6 +141,32 @@ export class AiService implements OnModuleInit {
 
     // Сӯҳбати зинда (ёвар, ҷавоби озод дар санҷиш): аввал модели тез; агар хато
     // ё дер кунад — ҳамон занҷири муқаррарӣ, то корбар бе ҷавоб намонад.
+    // Модели тез барои матни дароз (ҳисоботи AI): мӯҳлати худаш, на 4 сонияи сӯҳбат.
+    // Агар наояд — занҷири муқаррарӣ (модели пурра).
+    async generateLite(prompt: string, timeoutMs = 20000): Promise<string> {
+        if (this.vertex && (this.providerDownUntil.get('vertex') ?? 0) <= Date.now()) {
+            try {
+                const response = await this.withTimeout(this.vertex.models.generateContent({
+                    model: this.vertexFastModel,
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    config: { thinkingConfig: { thinkingBudget: 0 } },
+                }), 'vertex-lite', timeoutMs);
+                if (response.text) return response.text;
+            } catch (error) {
+                console.error('Vertex lite (дароз):', (error as any)?.message || error);
+            }
+        }
+        if (this.assistantModel) {
+            try {
+                const result = await this.withTimeout(this.assistantModel.generateContent(prompt), 'gemini-lite', timeoutMs) as any;
+                return result.response.text();
+            } catch (error) {
+                console.error('Gemini lite (дароз):', (error as any)?.message || error);
+            }
+        }
+        return this.generateContent(prompt, { timeoutMs: 55_000 });
+    }
+
     async generateFast(prompt: string, timeoutMs = 6000): Promise<string> {
         // 19.10: аввал Vertex (модели тез, ~0,9 с) — квотаи калонтар аз калиди ройгони Gemini API.
         // Агар Vertex наояд ё дар «танаффус» бошад — Gemini API, баъд занҷири муқаррарӣ.

@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
 import { resourcesForAi } from '../common/resource-filters';
 import { offeredForGrade, parseGrade } from '../common/grade';
@@ -3050,7 +3051,35 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         ].filter(Boolean).join('\n');
     }
 
+    // Ҳисоботи AI ~10–20 сония мегирад. Ҳамон холҳо + забон + ҷавобҳо → ҳамон ҳисобот:
+    // бори дуюм аз хотираи сервер фавран (24 соат).
+    private static readonly advisorCache = new Map<string, { at: number; report: any }>();
+    private static readonly advisorRunning = new Map<string, Promise<any>>();
+
     async generateCareerAdvisorReport(scores: any, lang: string = 'tj', quizProfile?: any): Promise<any> {
+        const cacheKey = createHash('sha1').update(JSON.stringify([
+            lang, scores?.mmtClusters || scores, scores?.specialtyKeywords || [], scores?.chosenCluster || '',
+        ])).digest('hex');
+        const cached = CareerService.advisorCache.get(cacheKey);
+        if (cached && Date.now() - cached.at < 24 * 60 * 60 * 1000) return cached.report;
+        // Як ҳисобот якбора: агар пешакӣ сохта шуда истода бошад, ҳамонро интизор мешавем.
+        const running = CareerService.advisorRunning.get(cacheKey);
+        if (running) return running;
+        const work = this.buildCareerAdvisorReport(scores, lang, quizProfile);
+        CareerService.advisorRunning.set(cacheKey, work);
+        let report: any;
+        try {
+            report = await work;
+        } finally {
+            CareerService.advisorRunning.delete(cacheKey);
+        }
+        if (CareerService.advisorCache.size > 500) CareerService.advisorCache.clear();
+        // Ҳисоботи захиравӣ (AI наомад) нигоҳ дошта намешавад — бори дигар аз нав кӯшиш мекунем.
+        if (!report?.report?.fallback && !report?.fallback) CareerService.advisorCache.set(cacheKey, { at: Date.now(), report });
+        return report;
+    }
+
+    private async buildCareerAdvisorReport(scores: any, lang: string = 'tj', quizProfile?: any): Promise<any> {
         const mmt = scores?.mmtClusters || scores;
         const hasScores = mmt && (
             (mmt.c1 !== undefined && mmt.c1 !== null) ||
@@ -3066,7 +3095,7 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
         const topMatches = await this.matchCareers(scores);
         const top3 = topMatches.slice(0, 3);
 
-        const candidates = topMatches.slice(0, 8);
+        const candidates = topMatches.slice(0, 6);
         const topNames = candidates.map((career) => career.name).filter(Boolean);
         const detailedCareers = topNames.length
             ? await this.careerRepository.find({
@@ -3079,12 +3108,10 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
             `- ${c.name}: ${c.description || c.purpose || ''}`,
             c.cluster?.clusterName ? `  cluster: ${c.cluster.clusterName}` : '',
             c.skills ? `  skills: ${JSON.stringify(c.skills)}` : '',
-            c.technologies?.length ? `  technologies: ${c.technologies.join(', ')}` : '',
-            c.learningResources ? `  learningResources: ${JSON.stringify(resourcesForAi(c.learningResources))}` : '',
-            c.roadmap ? `  roadmap: ${JSON.stringify(c.roadmap)}` : '',
+            c.technologies?.length ? `  technologies: ${c.technologies.slice(0, 8).join(', ')}` : '',
             c.salaryAndMarket ? `  salaryAndMarket: ${JSON.stringify(c.salaryAndMarket)}` : '',
             c.careerOpportunities?.length ? `  opportunities: ${c.careerOpportunities.join(', ')}` : '',
-            c.universities?.length ? `  universities: ${c.universities.map((u) => `${u.name} (${u.city || 'city unknown'})`).join('; ')}` : '',
+            c.universities?.length ? `  universities: ${c.universities.slice(0, 6).map((u) => `${u.name} (${u.city || 'city unknown'})`).join('; ')}` : '',
         ].filter(Boolean).join('\n')).join('\n\n');
 
         const quizAnswers = (quizProfile?.answers || []).slice(0, 30);
@@ -3210,21 +3237,33 @@ ${instr.format}
 
         let rawResponse: string;
         try {
-            rawResponse = await this.aiService.generateContent(prompt, { timeoutMs: 55_000 });
+            // Модели тез (Flash-Lite): ~2–3 баробар тезтар аз модели пурра барои ҳамин ҳисоботи дароз.
+            rawResponse = await this.aiService.generateLite(prompt, 20_000);
         } catch (error) {
             if (error instanceof HttpException) throw error;
             throw new InternalServerErrorException('Хатогӣ ҳангоми тавлиди тавсияи AI');
         }
 
+        const parseReport = (raw: string) => {
+            const text = String(raw || '').replace(/```(?:json)?/gi, '').trim();
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}');
+            return JSON.parse(start >= 0 && end > start ? text.slice(start, end + 1) : text);
+        };
         let report: any;
         try {
-            let cleaned = rawResponse.trim();
-            if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
-            else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
-            if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
-            report = JSON.parse(cleaned.trim());
-        } catch (e) {
+            report = parseReport(rawResponse);
+        } catch {
+            // Модели тез JSON-ро вайрон кард — як бор бо модели пурра.
+            try {
+                report = parseReport(await this.aiService.generateContent(prompt, { timeoutMs: 55_000 }));
+            } catch {
+                report = null;
+            }
+        }
+        if (!report) {
             report = {
+                fallback: true,
                 personalityAnalysis: "Test completed.",
                 careerRecommendations: top3.map(m => ({ name: m.name, matchPercentage: m.matchPercentage, shortDescription: '' })),
                 explanation: [],

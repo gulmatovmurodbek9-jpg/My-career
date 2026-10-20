@@ -10,6 +10,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { parseGrade } from '../common/grade';
 import { ClassroomService } from '../classroom/classroom.service';
+import { CareerService } from '../career/career.service';
 
 // 3 ихтисоси беҳтарин (id + ном) — барои саҳифаи омӯзгор.
 const topCareers = (result: any) => {
@@ -29,6 +30,7 @@ export class QuizController {
         private readonly usersService: UsersService,
         private readonly stats: QuizStatsService,
         private readonly classrooms: ClassroomService,
+        private readonly careerService: CareerService,
     ) { }
 
     // Баъди тест: «Натиҷа ба шумо мувофиқ буд? 1–5».
@@ -134,6 +136,8 @@ export class QuizController {
         const result = await this.quizService.matchCareers(scores, dto.lang, dto.grade, dto.context, dto.deferAdvice === true);
 
         await this.usersService.saveQuizResults(req.user.userId, scores);
+        // Ҳисоботи AI-ро дар пасзамина пешакӣ месозем — вақте корбар онро мекушояд, тайёр аст.
+        this.careerService.generateCareerAdvisorReport(scores, dto.lang || 'tj').catch(() => undefined);
         const attemptId = await this.stats.record(dto.answers, scores, result?.topCluster?.clusterNumber ? `c${result.topCluster.clusterNumber}` : null, parseGrade(dto.grade), req.user.userId, { topCareers: topCareers(result) });
 
         return {

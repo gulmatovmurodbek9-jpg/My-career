@@ -335,7 +335,18 @@ const CareerAdvisorReport = () => {
                     scores: quizScores,
                     lang,
                     quizProfile: {
-                        answers: storedQuiz?.answers || [],
+                        // Танҳо он чи сервер истифода мебарад (ҳадди 30 ҷавоб): пештар объекти пурра
+                        // аз 100 КБ мегузашт ва сервер «request entity too large» медод.
+                        answers: (storedQuiz?.answers || []).slice(0, 30).map((answer) => ({
+                            questionId: answer?.questionId,
+                            question: String(answer?.question || "").slice(0, 300),
+                            selectedText: String(answer?.selectedText || "").slice(0, 200),
+                            selectedValue: answer?.selectedValue,
+                            type: answer?.type,
+                            part: answer?.part,
+                            targetCluster: answer?.targetCluster,
+                            keywords: Array.isArray(answer?.keywords) ? answer.keywords.slice(0, 8) : [],
+                        })),
                         topCluster: storedQuiz?.topCluster || null,
                         topType: storedQuiz?.topType || null,
                         answeredAt: storedQuiz?.answeredAt || null,

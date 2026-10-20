@@ -1,11 +1,14 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { QueryErrorFilter } from './common/query-error.filter';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    // Ҳисоботи AI ҷавобҳои тестро мефиристад — ҳадди пешфарзи 100 КБ кам буд.
+    app.useBodyParser('json', { limit: '1mb' });
 
     // Технологияи серверро ошкор намекунем (X-Powered-By: Express).
     app.getHttpAdapter().getInstance().disable('x-powered-by');

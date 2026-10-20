@@ -756,9 +756,7 @@ const Info = () => {
             </Section>
           )}
 
-          {/* «Худро дар касб санҷед» ва «Як рӯзи корӣ» — пеш аз интихоби донишгоҳ. */}
-          <TrialCta career={career} />
-
+          {/* «Як рӯзи корӣ» — пеш аз интихоби донишгоҳ; «Худро дар касб санҷед» — дар охири саҳифа. */}
           <TrialPreview trial={trial} careerId={id} />
 
           {offerings.length > 0 ? (
@@ -956,6 +954,8 @@ const Info = () => {
           <motion.div {...fadeIn}>
             <CareerChat careerId={career.id} careerName={career.name} />
           </motion.div>
+
+          <TrialCta career={career} />
 
           <motion.div {...fadeIn} className="text-center pt-8 pb-4">
             <p className="text-sm text-muted-foreground mb-4">{t("career_page.more_careers")}</p>

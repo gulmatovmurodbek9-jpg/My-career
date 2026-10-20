@@ -1003,7 +1003,8 @@ export class CareerService {
             .filter((word) => !pair.some((u) => foldTajik(u.name).toLowerCase().includes(word.slice(0, 6))))
             .map((word) => word.slice(0, 6)))].slice(0, 3);
         // Соҳаҳои наздик: «барномасозӣ» — информатика ва компютер ҳам; «духтур» — тиб.
-        const RELATED: Record<string, string[]> = { барном: ['информ', 'компют', 'иттило'], програ: ['барном', 'информ', 'компют'], духтур: ['тибб', 'табоб'], врач: ['тибб', 'табоб'], тибби: ['табоб'] };
+        const RELATED: Record<string, string[]> = { барном: ['информ', 'компют'], програ: ['барном', 'информ', 'компют'], духтур: ['тибб', 'табоб'], врач: ['тибб', 'табоб'], тибби: ['табоб'] };
+        const userStems = [...stems];
         for (const stem of [...stems]) for (const extra of RELATED[stem] || []) if (!stems.includes(extra)) stems.push(extra);
         const matches: Array<{ universityId: string; name: string; free: boolean; fee: number | null }> = stems.length
             ? await this.careerRepository.manager.query(
@@ -1023,6 +1024,35 @@ export class CareerService {
         });
         const short = (name: string) => name.replace(/\s*ба номи .*$/i, '').replace(/\s*Тоҷикистон$/i, '').trim();
         const options = pair.map((u) => ({ id: u.id, name: u.name, label: short(u.name).slice(0, 50), kind: 'university' }));
+        // Мақсад маълум — ҷавоб бе AI, рост аз база: AI ихтисосҳои ду донишгоҳро омехта мекард.
+        if (stems.length) {
+            const place = (u: { id: string; name: string }) => {
+                const r = rows.find((row) => row.id === u.id);
+                // Аввал ихтисосҳое, ки калимаи худи корбарро доранд («барном»), баъд наздикҳо («информ»).
+                const primary = userStems;
+                const own = matches.filter((m) => m.universityId === u.id)
+                    .sort((a, b) => Number(primary.some((st) => foldTajik(b.name).toLowerCase().includes(st))) - Number(primary.some((st) => foldTajik(a.name).toLowerCase().includes(st))));
+                if (!own.length) return { u, own, text: `${short(u.name)}: ихтисоси ин соҳа нест` };
+                const names = own.slice(0, 2).map((m) => m.name.replace(/\s*\(.*?\)\s*$/, '')).join(', ');
+                const free = own.some((m) => m.free);
+                return { u, own, text: `${short(u.name)}: ${names}${own.length > 2 ? ` ва боз ${own.length - 2}` : ''}, ${free ? 'ҷойи буҷетӣ ҳаст' : 'танҳо пулакӣ'}${r?.maxFee ? `, пулакӣ то ${money(r.maxFee)}` : ''}` };
+            };
+            const info = pair.map(place);
+            const having = info.filter((x) => x.own.length);
+            const verdict = having.length === 0
+                ? 'Дар ҳеҷ кадомаш ин ихтисос нест.'
+                : having.length === 1
+                    ? `Барои ин мақсад ${short(having[0].u.name)} мувофиқ аст.`
+                    : (() => {
+                        const best = [...having].sort((a, b) => Number(b.own.some((m) => m.free)) - Number(a.own.some((m) => m.free)) || b.own.length - a.own.length)[0];
+                        const tie = having.every((x) => x.own.length === best.own.length && x.own.some((m) => m.free) === best.own.some((m) => m.free));
+                        return tie ? 'Ҳарду барои ин мақсад мувофиқанд.' : `Ҳарду мувофиқанд; дар ${short(best.u.name)} интихоб бештар аст.`;
+                    })();
+            if (lang === 'tj') {
+                return { reply: `${info.map((x) => x.text).join('. ')}. ${verdict} Кадомашро кушоям?`, action: 'choose_university', params: { options }, answerLang: lang };
+            }
+        }
+
         const langName = lang === 'ru' ? 'русӣ' : lang === 'en' ? 'англисӣ' : 'тоҷикӣ';
         const nl = String.fromCharCode(10);
         const prompt = [

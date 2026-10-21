@@ -1,4 +1,4 @@
-// Интернети суст (20.10): 2G/3G ё «сарфаи трафик». Safari ин маълумотро намедиҳад — он гоҳ false.
+// Интернети суст: 2G/3G ё «сарфаи трафик». Safari ин маълумотро намедиҳад — он гоҳ false.
 export const slowNetwork = () => {
     const connection = typeof navigator !== "undefined" ? navigator.connection : null;
     if (!connection) return false;

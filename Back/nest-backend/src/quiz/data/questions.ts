@@ -1681,5 +1681,5 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     }
 ];
 
-// Қадами 1 — саволҳои нав (01.10.2026), алоҳида дар questions-mmt.ts.
+// Қадами 1 — саволҳои нав, алоҳида дар questions-mmt.ts.
 QUIZ_QUESTIONS.push(...MMT_QUESTIONS);

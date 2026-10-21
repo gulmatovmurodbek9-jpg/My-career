@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { createContext, runInContext } from 'vm';
 
-// WAV → MP3 барои интернети суст (20.10): нутқи 16 kHz дар MP3-и 32 кбит/с ~8 маротиба хурдтар аст
+// WAV → MP3 барои интернети суст: нутқи 16 kHz дар MP3-и 32 кбит/с ~8 маротиба хурдтар аст
 // (садои 9-сонияӣ: 288 КБ → 36 КБ), сифаташ барои овоз фарқ надорад. lamejs (JS-и тоза, бе ffmpeg);
 // версияи npm-и он дар Node хато дорад («MPEGMode is not defined»), бинобар ин файли тайёри
 // lame.min.js дар контексти алоҳида бор мешавад.

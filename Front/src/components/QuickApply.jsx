@@ -148,7 +148,7 @@ export default function QuickApply({ careerId, grade, token, planIds, setPlanIds
 
     return (
         <div className="rounded-xl border border-border bg-card/60">
-            {/* Ду тугма (22.10): «Буҷетӣ · N» ва «Шартномавӣ · N» — ҳар кадом танҳо ҳамон навъро мекушояд. */}
+            {/* Ду тугма: «Буҷетӣ · N» ва «Шартномавӣ · N» — ҳар кадом танҳо ҳамон навъро мекушояд. */}
             <div className="flex flex-wrap gap-1.5 p-1.5">
                 {["free", "paid"].map((key) => {
                     const active = open && filter === key;

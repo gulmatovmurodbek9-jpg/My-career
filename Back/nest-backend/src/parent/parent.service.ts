@@ -8,7 +8,7 @@ import { SALARY_SOURCE, sectorFor } from '../common/salary-sectors';
 // «Волидайн ҳам бигӯянд»: хонанда пайванд месозад (бо холҳои тести худ), волид бе ворид шудан
 // ба 10 савол дар бораи фарзандаш ҷавоб медиҳад; ҳарду муқоисаро мебинанд. Ном ва почта нест —
 // танҳо номи ихтиёрии фарзанд (барои «Ҷамшед аз шумо мепурсад»). 90 рӯз нигоҳ дошта мешавад.
-// 17.10: як пайванди доимӣ барои тамоми оила — ихтисосҳо фавран намоёнанд (10 савол ихтиёрӣ),
+// як пайванди доимӣ барои тамоми оила — ихтисосҳо фавран намоёнанд (10 савол ихтиёрӣ),
 // хешовандон зери ҳар ихтисос аз AI мепурсанд ё ба фарзанд менависанд (parent_notes);
 // баъди тести нав фарзанд ҳамон пайвандро нав мекунад (refresh).
 const CLUSTERS = ['c1', 'c2', 'c3', 'c4', 'c5'];
@@ -69,7 +69,7 @@ export class ParentService implements OnModuleInit {
                 "createdAt" timestamptz NOT NULL DEFAULT now(),
                 "answeredAt" timestamptz NULL
             )`);
-        // Ихтисосҳои фарзанд (12.10): рӯйхати тест ва ҳисоби фарзанд (захираҳо, рӯйхати ҳуҷҷатсупорӣ).
+        // Ихтисосҳои фарзанд: рӯйхати тест ва ҳисоби фарзанд (захираҳо, рӯйхати ҳуҷҷатсупорӣ).
         await this.dataSource.query('ALTER TABLE parent_invites ADD COLUMN IF NOT EXISTS "childCareers" jsonb NULL');
         await this.dataSource.query('ALTER TABLE parent_invites ADD COLUMN IF NOT EXISTS "userId" uuid NULL');
         await this.dataSource.query('ALTER TABLE parent_invites ADD COLUMN IF NOT EXISTS "updatedAt" timestamptz NULL');

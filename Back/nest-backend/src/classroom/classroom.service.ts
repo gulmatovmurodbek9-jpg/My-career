@@ -86,7 +86,7 @@ export class ClassroomService implements OnModuleInit {
                 "createdAt" timestamptz NOT NULL DEFAULT now()
             )`);
         await this.dataSource.query('CREATE INDEX IF NOT EXISTS classrooms_teacher ON classrooms ("teacherId")');
-        // Ноҳия ва соли таҳсил (12.10): баъди соли таҳсил синф худкор ба бойгонӣ меравад.
+        // Ноҳия ва соли таҳсил: баъди соли таҳсил синф худкор ба бойгонӣ меравад.
         await this.dataSource.query('ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS district varchar(60) NULL');
         await this.dataSource.query('ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS "schoolYear" varchar(9) NULL');
         await this.dataSource.query(`
@@ -120,7 +120,7 @@ export class ClassroomService implements OnModuleInit {
                 "createdAt" timestamptz NOT NULL DEFAULT now(),
                 "decidedAt" timestamptz NULL
             )`);
-        // Дархости пурра (12.10): ному насаб, роҳбари синф, директор/котиба барои тасдиқ.
+        // Дархости пурра: ному насаб, роҳбари синф, директор/котиба барои тасдиқ.
         for (const column of ['"fullName" varchar(100)', 'homeroom varchar(40)', '"contactName" varchar(100)', '"contactPhone" varchar(30)']) {
             await this.dataSource.query(`ALTER TABLE teacher_requests ADD COLUMN IF NOT EXISTS ${column} NULL`);
         }

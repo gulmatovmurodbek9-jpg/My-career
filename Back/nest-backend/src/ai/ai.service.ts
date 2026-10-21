@@ -168,7 +168,7 @@ export class AiService implements OnModuleInit {
     }
 
     async generateFast(prompt: string, timeoutMs = 6000): Promise<string> {
-        // 19.10: аввал Vertex (модели тез, ~0,9 с) — квотаи калонтар аз калиди ройгони Gemini API.
+        // аввал Vertex (модели тез, ~0,9 с) — квотаи калонтар аз калиди ройгони Gemini API.
         // Агар Vertex наояд ё дар «танаффус» бошад — Gemini API, баъд занҷири муқаррарӣ.
         if (this.vertex && (this.providerDownUntil.get('vertex') ?? 0) <= Date.now()) {
             try {

@@ -767,7 +767,7 @@ const Info = () => {
             >
               <ChoosingHelp offerings={offerings} />
 
-              {/* Телефон (22.10): ба ҷои ҷадвали васеъ — карточкаҳо; аввал буҷетӣ. Компютер — ҷадвал. */}
+              {/* Телефон: ба ҷои ҷадвали васеъ — карточкаҳо; аввал буҷетӣ. Компютер — ҷадвал. */}
               <ul className="space-y-2.5 md:hidden">
                 {[...offerings].sort((a, b) => Number(b.paymentType === 'ройгон') - Number(a.paymentType === 'ройгон')).map((offering) => {
                   const free = offering.paymentType === 'ройгон';

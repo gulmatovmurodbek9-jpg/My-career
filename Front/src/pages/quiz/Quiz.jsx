@@ -1283,7 +1283,7 @@ const Quiz = () => {
                                                 {career.free && <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[12px] font-semibold text-primary">{(CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj).freeSeat}</span>}
                                             </div>
                                         )}
-                                        {/* Нарх дар карточка нест (22.10): буҷетӣ/шартномавӣ — дар ду тугмаи поён. */}
+                                        {/* Нарх дар карточка нест: буҷетӣ/шартномавӣ — дар ду тугмаи поён. */}
                                         <div className="mt-auto flex items-center justify-end gap-3 pt-1">
                                             <Link to={`/info/${career.id}`} className="inline-flex items-center gap-1 text-xs font-black text-primary-strong hover:underline">
                                                 {t('common.read_more')}

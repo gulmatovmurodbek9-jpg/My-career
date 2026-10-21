@@ -558,7 +558,7 @@ const resources = {
                 of_distance: "заочная",
                 of_remote: "дистанционная",
                 of_free: "бюджет",
-                of_paid: "платно",
+                of_paid: "контракт",
                 of_lang_tj: "таджикский",
                 of_lang_ru: "русский",
                 of_lang_en: "английский",

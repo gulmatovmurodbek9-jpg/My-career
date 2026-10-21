@@ -767,8 +767,54 @@ const Info = () => {
             >
               <ChoosingHelp offerings={offerings} />
 
-              <p className="mb-2 text-xs text-muted-foreground sm:hidden" aria-hidden="true">← {t("career_page.scroll_hint", "Ҷадвалро ба паҳлӯ кашед")} →</p>
-              <div className="overflow-x-auto -mx-2 px-2">
+              {/* Телефон (22.10): ба ҷои ҷадвали васеъ — карточкаҳо; аввал буҷетӣ. Компютер — ҷадвал. */}
+              <ul className="space-y-2.5 md:hidden">
+                {[...offerings].sort((a, b) => Number(b.paymentType === 'ройгон') - Number(a.paymentType === 'ройгон')).map((offering) => {
+                  const free = offering.paymentType === 'ройгон';
+                  const inPlan = planIds.has(offering.id);
+                  const uniName = offering.university?.nameTranslated || offering.university?.name;
+                  return (
+                    <li key={offering.id} className={`rounded-2xl border p-3.5 ${inPlan ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          {offering.university?.id ? (
+                            <Link to={`/universities/${offering.university.id}`} className="text-[15px] font-bold leading-snug text-foreground hover:text-primary">{uniName}</Link>
+                          ) : (
+                            <div className="text-[15px] font-bold leading-snug text-foreground">{uniName}</div>
+                          )}
+                          {offering.university?.isState === false && (
+                            <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-500">{t("career_page.non_state")}</div>
+                          )}
+                        </div>
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${free ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-primary/10 text-primary"}`}>
+                          {free
+                            ? t("career_page.of_free")
+                            : offering.tuitionFee != null
+                              ? `${offering.tuitionFee.toLocaleString('ru-RU')} ${t("career_page.sal_somoni")}`
+                              : t("career_page.of_paid", "Шартномавӣ")}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
+                        {offering.university?.city && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden />{offering.university.city}</span>}
+                        {offering.studyForm && <span>{studyFormLabel(t, offering.studyForm)}</span>}
+                        {offering.language && <span>{languageLabel(t, offering.language)}</span>}
+                        {offering.seats > 0 && <span>{t("career_page.th_seats")}: {offering.seats}</span>}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => togglePlan(offering.id)}
+                        disabled={planBusyId === offering.id}
+                        aria-pressed={inPlan}
+                        className={`mt-3 w-full cursor-pointer rounded-xl py-2.5 text-[13px] font-bold transition-colors disabled:opacity-50 ${inPlan ? "bg-primary text-primary-foreground" : "border border-border text-foreground hover:border-primary/40 hover:text-primary"}`}
+                      >
+                        {planBusyId === offering.id ? "…" : inPlan ? t("career_page.in_list") : t("career_page.add")}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="hidden overflow-x-auto -mx-2 px-2 md:block">
                 <table className="w-full min-w-[720px] text-sm border-separate border-spacing-y-1.5">
                   <caption className="sr-only">{t("career_page.where_title")}</caption>
                   <thead>
@@ -806,8 +852,10 @@ const Info = () => {
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{languageLabel(t, offering.language)}</td>
                         <td className="px-4 py-3 text-center text-muted-foreground">{offering.seats || '—'}</td>
                         <td className="px-4 py-3 text-right whitespace-nowrap">
-                          {offering.paymentType === 'ройгон' || offering.tuitionFee === null ? (
+                          {offering.paymentType === 'ройгон' ? (
                             <span className="font-bold text-emerald-500">{t("career_page.of_free")}</span>
+                          ) : offering.tuitionFee == null ? (
+                            <span className="font-bold text-foreground">{t("career_page.of_paid", "Шартномавӣ")}</span>
                           ) : (
                             <span className="font-bold text-foreground">
                               {offering.tuitionFee.toLocaleString('ru-RU')} {t("career_page.sal_somoni")}

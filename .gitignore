@@ -109,3 +109,8 @@ tajik-tts/suret/
 # Барномаи мобилӣ (1 коммит, кор намекунад) — маҳаллӣ мемонад, дар репо не
 Mobile/
 Alll Senaria/
+
+# Ҳуҷҷатҳои шахсӣ ва абзорҳои маҳаллӣ (дар компютер мемонанд, дар GitHub не)
+docs/
+Back/nest-backend/CLAUDE.md
+Back/nest-backend/backup_ai.js

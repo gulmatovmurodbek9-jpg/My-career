@@ -1223,12 +1223,20 @@ export class CareerService {
         const folded = ` ${foldTajik(message).toLowerCase().replace(/[^a-zа-яё0-9\s]/gi, ' ').replace(/\s+/g, ' ')} `;
         // «…ё …», «или», «беҳтар» — муқоисаи ду муассиса аст (detectUniversityPair), на ин.
         if (/ (ё|е|или|or|vs) |мукоиса|бехтар|хубтар|лучше|better/.test(folded)) return null;
+        // «Донишгоҳҳои наздик ба Молия» — масофа (nearUniversities), на ихтисосҳои як муассиса.
+        if (/наздик|рядом|near/.test(folded)) return null;
         // Номи муассиса: ихтисор (ДМТ, ДТТ…) ё «донишгоҳи/коллеҷи/донишкадаи» + 1–3 калимаи баъдӣ.
         const alias = CareerService.UNI_ALIASES.find(([pattern]) => pattern.test(folded));
         const named = folded.match(/(донишгох\S*|донишкада\S*|коллеч\S*|университет\S*)\s+((?:\S+\s+){0,2}\S+)/);
         if (!alias && !named) return null;
         let uniPhrase = alias ? alias[1] : named![2];
-        uniPhrase = uniPhrase.split(' ').filter((word) => word.length >= 3 && !CareerService.PAIR_FILLER.has(word) && !CareerService.UNI_CAREER_STOP.has(word)).slice(0, 2).join(' ');
+        // Номи муассиса то калимаи савол ё «ихтисос…» тамом мешавад: «техникӣ | кадом ихтисосҳои…».
+        const phraseWords: string[] = [];
+        for (const word of uniPhrase.split(' ')) {
+            if (/^(ихтисос|кадом|ки|ба|ман|чи|чанд|хаст|доранд|дорад|мехонанд|специальн|какие|which)/.test(word)) break;
+            phraseWords.push(word);
+        }
+        uniPhrase = phraseWords.filter((word) => word.length >= 3 && !CareerService.PAIR_FILLER.has(word) && !CareerService.UNI_CAREER_STOP.has(word)).slice(0, 2).join(' ');
         if (uniPhrase.length < 4) return null;
         const uni = await this.findUniversityFuzzy(uniPhrase);
         if (!uni) return null;
@@ -2909,14 +2917,26 @@ export class CareerService {
         }
         const bonus = (id: string) => (extra.get(id)?.local ? 2 : 0) + (wantsFree && extra.get(id)?.free ? 2 : 0);
 
+        // Холи баробар (22.10): пештар алифбо ҳал мекард — «География…» бо «Г» ҳамеша пеш мебаромад.
+        // Ҳоло ихтисосе, ки дар муассисаҳои бештар хонда мешавад (дастрастар), пеш; баъд алифбо.
+        const availability = new Map<string, number>();
+        if (pool.length && this.careerRepository.manager) {
+            const counts: Array<{ id: string; n: number }> = await this.careerRepository.manager.query(
+                `SELECT "careerId" AS id, count(DISTINCT "universityId")::int AS n FROM career_offerings
+                 WHERE "careerId" = ANY($1) AND ($2::int IS NULL OR "basedOn" = $2) GROUP BY 1`,
+                [pool.map((c) => c.id), grade]).catch(() => []);
+            for (const row of counts || []) availability.set(row.id, Number(row.n) || 0);
+        }
+
         // Як ном дар якчанд рамз (донишгоҳҳои гуногун) — як бор, то ҳамеша 12 ихтисоси гуногун бошад.
         const seenNames = new Set<string>();
         const ranked = pool
             .map(career => ({ career, rank: scoreOf(career) + bonus(career.id) }))
             // Лайкҳо ба тартиб таъсир намекунанд (вагарна «ҳалқаи маъруфият» мешуд):
-            // аввал мувофиқат бо ҷавобҳо, баъд алифбо.
+            // аввал мувофиқат бо ҷавобҳо, баъд дастрасӣ (шумораи муассисаҳо), баъд алифбо.
             .sort((a, b) =>
                 b.rank - a.rank ||
+                (availability.get(b.career.id) ?? 0) - (availability.get(a.career.id) ?? 0) ||
                 (a.career.name || '').localeCompare(b.career.name || ''))
             .filter(({ career }) => {
                 const key = (career.name || '').trim().toLowerCase();

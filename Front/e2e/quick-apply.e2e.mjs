@@ -1,5 +1,4 @@
-// E2E: натиҷаи тест — 12 ихтисос бо фоиз (аз баланд ба паст), «Донишгоҳ ва ҳуҷҷатсупорӣ»:
-// филтри буҷетӣ/пулакӣ ва «Ба рӯйхат» → дар «Нақшаи ҳуҷҷатсупорӣ» пайдо мешавад.
+// E2E: натиҷаи тест — 12 ихтисос бо фоиз (аз баланд ба паст), ду тугмаи «Буҷетӣ» / «Шартномавӣ» ва «Ба рӯйхат» → дар «Нақшаи ҳуҷҷатсупорӣ» пайдо мешавад.
 //   USER_TOKEN=… USER_JSON='{"id":…}' BASE_URL=http://localhost:5173 node e2e/quick-apply.e2e.mjs
 // Натиҷаи тест тавассути API гирифта шуда, ба браузер (localStorage) гузошта мешавад.
 // Пешниҳоди иловашуда дар охир аз рӯйхат бароварда мешавад.
@@ -45,16 +44,15 @@ await page.evaluate((token, user, stored) => {
 await page.goto(`${BASE}/quiz`, { waitUntil: "networkidle2" });
 // «Натиҷаи қаблиро бинед», агар пурсад.
 await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => /натиҷа/i.test(b.innerText) && /бин|қаблӣ|пешин/i.test(b.innerText))?.click());
-await page.waitForFunction(() => document.body.innerText.includes("Донишгоҳ ва ҳуҷҷатсупорӣ"), { timeout: 20000 });
+await page.waitForFunction(() => document.body.innerText.includes("Шартномавӣ"), { timeout: 20000 });
 
 const shown = await page.evaluate(() => [...document.querySelectorAll("article")]
-    .filter((a) => a.innerText.includes("Донишгоҳ ва ҳуҷҷатсупорӣ"))
+    .filter((a) => a.innerText.includes("Шартномавӣ"))
     .map((a) => Number((a.innerText.match(/(\d+)%/) || [])[1])));
 check("Саҳифа: 12 корт бо фоиз", shown.length === 12 && shown.every(Number.isFinite), shown.join(","));
 check("Саҳифа: аз баланд ба паст", shown.every((p, i) => i === 0 || shown[i - 1] >= p));
 
 // Корти аввал: кушодан → филтри «Буҷетӣ» → «Ба рӯйхат».
-await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.innerText.includes("Донишгоҳ ва ҳуҷҷатсупорӣ")).click());
 await page.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => /^Буҷетӣ/.test(b.innerText.trim())), { timeout: 15000 });
 const before = await page.evaluate(() => document.querySelectorAll("article li").length);
 await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => /^Буҷетӣ/.test(b.innerText.trim())).click());
@@ -62,7 +60,7 @@ await sleep(300);
 const freeText = await page.evaluate(() => [...document.querySelectorAll("article li")].map((li) => li.innerText).join("\n"));
 const freeCount = await page.evaluate(() => document.querySelectorAll("article li").length);
 check("Филтри «Буҷетӣ»", freeCount === 0 || !/сомонӣ\/сол/.test(freeText), `${before} → ${freeCount}`);
-if (!freeCount) await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => /^Ҳама/.test(b.innerText.trim())).click());
+if (!freeCount) await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => /^Шартномавӣ/.test(b.innerText.trim())).click());
 await sleep(300);
 if (SHOTS) await page.screenshot({ path: `${SHOTS}/quick-open.png`, fullPage: false });
 

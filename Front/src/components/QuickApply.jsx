@@ -17,7 +17,8 @@ export const QUICK_TEXT = {
         open: "Донишгоҳ ва ҳуҷҷатсупорӣ",
         all: "Ҳама",
         free: "Буҷетӣ",
-        paid: "Пулакӣ",
+        paid: "Шартномавӣ",
+        noneOfType: "нест",
         add: "Ба рӯйхат",
         added: "Дар рӯйхат",
         none: "Барои ин филтр пешниҳод нест.",
@@ -38,7 +39,8 @@ export const QUICK_TEXT = {
         open: "Вуз и подача документов",
         all: "Все",
         free: "Бюджет",
-        paid: "Платно",
+        paid: "Контракт",
+        noneOfType: "нет",
         add: "В список",
         added: "В списке",
         none: "Для этого фильтра предложений нет.",
@@ -60,6 +62,7 @@ export const QUICK_TEXT = {
         all: "All",
         free: "State-funded",
         paid: "Paid",
+        noneOfType: "none",
         add: "Add to list",
         added: "In list",
         none: "No offers for this filter.",
@@ -82,19 +85,20 @@ export default function QuickApply({ careerId, grade, token, planIds, setPlanIds
     const text = QUICK_TEXT[(i18n.language || "tj").slice(0, 2)] || QUICK_TEXT.tj;
     const [open, setOpen] = useState(false);
     const [offerings, setOfferings] = useState(null);
-    const [filter, setFilter] = useState("all");
+    const [filter, setFilter] = useState("free");
     const [busy, setBusy] = useState(null);
     const [conflict, setConflict] = useState(null);
     const [error, setError] = useState("");
 
+    // Шумораи буҷетӣ/шартномавӣ дар тугмаҳо фавран намоён аст — бинобар ин аз аввал мегирем.
     useEffect(() => {
-        if (!open || offerings) return undefined;
+        if (offerings) return undefined;
         let alive = true;
         axios.get(`${API}/careers/${careerId}/offerings`, { params: withLang(grade ? { grade } : {}) })
             .then(({ data }) => alive && setOfferings(Array.isArray(data) ? data : []))
             .catch(() => alive && setOfferings([]));
         return () => { alive = false; };
-    }, [open, offerings, careerId, grade]);
+    }, [offerings, careerId, grade]);
 
     const counts = useMemo(() => ({
         all: offerings?.length || 0,
@@ -144,18 +148,34 @@ export default function QuickApply({ careerId, grade, token, planIds, setPlanIds
 
     return (
         <div className="rounded-xl border border-border bg-card/60">
-            <button
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                aria-expanded={open}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[13px] font-bold text-primary cursor-pointer"
-            >
-                <span className="flex items-center gap-1.5">
-                    <GraduationCap className="h-4 w-4" aria-hidden /> {text.open}
-                    {plannedHere > 0 && <span className="whitespace-nowrap rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-400">✓ {plannedHere}</span>}
-                </span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
-            </button>
+            {/* Ду тугма (22.10): «Буҷетӣ · N» ва «Шартномавӣ · N» — ҳар кадом танҳо ҳамон навъро мекушояд. */}
+            <div className="flex flex-wrap gap-1.5 p-1.5">
+                {["free", "paid"].map((key) => {
+                    const active = open && filter === key;
+                    const n = counts[key];
+                    return (
+                        <button
+                            key={key}
+                            type="button"
+                            disabled={offerings !== null && n === 0}
+                            onClick={() => { if (active) setOpen(false); else { setFilter(key); setOpen(true); } }}
+                            aria-expanded={active}
+                            className={`flex min-w-0 flex-1 basis-[8.5rem] items-center justify-center gap-1 rounded-lg px-1.5 py-2 text-[12.5px] font-bold cursor-pointer transition-colors disabled:cursor-default disabled:opacity-50 ${active
+                                ? (key === "free" ? "bg-emerald-600 text-white" : "bg-primary text-primary-foreground")
+                                : (key === "free" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-primary/10 text-primary")}`}
+                        >
+                            <span className="whitespace-nowrap">{text[key]}</span>
+                            <span className={`whitespace-nowrap rounded-full px-1.5 text-[11px] leading-5 ${active ? "bg-white/25" : "bg-current/10 bg-black/5 dark:bg-white/10"}`}>
+                                {offerings === null ? "…" : n > 0 ? n : text.noneOfType}
+                            </span>
+                            {active && <ChevronDown className="h-3.5 w-3.5 shrink-0 rotate-180" aria-hidden />}
+                        </button>
+                    );
+                })}
+            </div>
+            {plannedHere > 0 && (
+                <div className="px-3 pb-1.5 text-[11.5px] font-bold text-emerald-700 dark:text-emerald-400">✓ {fill(text.planCount, { n: plannedHere })}</div>
+            )}
 
             {open && (
                 <div className="space-y-2.5 border-t border-border p-3">
@@ -165,15 +185,6 @@ export default function QuickApply({ careerId, grade, token, planIds, setPlanIds
                         <p className="text-[13px] text-muted-foreground">{text.noOfferings}</p>
                     ) : (
                         <>
-                            <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted/50 p-1">
-                                {["all", "free", "paid"].map((key) => (
-                                    <button key={key} type="button" onClick={() => setFilter(key)} aria-pressed={filter === key}
-                                        className={`rounded-lg px-1 py-1.5 text-[12px] font-bold cursor-pointer ${filter === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
-                                        {text[key]} <span className="opacity-60">{counts[key]}</span>
-                                    </button>
-                                ))}
-                            </div>
-
                             {!token && (
                                 <Link to="/login?next=%2Fquiz" className="block rounded-lg bg-primary/10 px-3 py-2 text-[13px] font-bold text-primary">{text.login} →</Link>
                             )}
@@ -191,9 +202,11 @@ export default function QuickApply({ careerId, grade, token, planIds, setPlanIds
                                                     {uni.city && <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" aria-hidden />{uni.city}</span>}
                                                     {offering.studyForm && <span>{studyFormLabel(t, offering.studyForm)}</span>}
                                                     {offering.seats > 0 && <span>{fill(text.seats, { n: offering.seats })}</span>}
-                                                    {isFree(offering) || offering.tuitionFee == null
+                                                    {isFree(offering)
                                                         ? <span className="font-bold text-emerald-600 dark:text-emerald-400">{text.free}</span>
-                                                        : <span className="font-bold text-foreground">{fill(text.perYear, { n: offering.tuitionFee.toLocaleString("ru-RU") })}</span>}
+                                                        : offering.tuitionFee != null
+                                                            ? <span className="font-bold text-foreground">{fill(text.perYear, { n: offering.tuitionFee.toLocaleString("ru-RU") })}</span>
+                                                            : <span className="font-bold text-foreground">{text.paid}</span>}
                                                 </div>
                                             </div>
                                             {token && (

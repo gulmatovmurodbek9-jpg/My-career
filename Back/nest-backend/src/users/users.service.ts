@@ -574,19 +574,28 @@ export class UsersService {
                 .getRawMany<{ role: string; count: string }>(),
         ]);
 
-        const onlineUsers = await this.usersRepository.find({
+        // Ҳисобҳои худи соҳиби сайт (OWN_ACCOUNTS дар .env, бо вергул) — дар охири рӯйхат,
+        // то корбарони воқеӣ дар боло намоён бошанд.
+        const own = new Set(String(process.env.OWN_ACCOUNTS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
+        const ownLast = <T extends { email?: string | null }>(list: T[], take: number) => {
+            const others = list.filter((u) => !own.has(String(u.email || '').toLowerCase()));
+            const mine = list.filter((u) => own.has(String(u.email || '').toLowerCase()));
+            return [...others.slice(0, take), ...mine];
+        };
+
+        const onlineUsers = ownLast(await this.usersRepository.find({
             where: { lastSeenAt: MoreThan(since(ONLINE_WINDOW_MS)) },
             select: ['id', 'name', 'email', 'role', 'lastSeenAt'],
             order: { lastSeenAt: 'DESC' },
-            take: 20,
-        });
+            take: 20 + own.size,
+        }), 20);
 
-        const recentUsers = await this.usersRepository.find({
+        const recentUsers = ownLast(await this.usersRepository.find({
             where: { lastSeenAt: Not(IsNull()) },
             select: ['id', 'name', 'email', 'role', 'lastSeenAt'],
             order: { lastSeenAt: 'DESC' },
-            take: 10,
-        });
+            take: 10 + own.size,
+        }), 10);
 
         return {
             total,

@@ -102,3 +102,63 @@ describe('Сифати тест', () => {
         expect(QuizStatsService.isClear({ c1: 30, c2: 28 })).toBe(false);
     });
 });
+
+// Баробарии математикии тест: ҳеҷ самт аз сохтори саволҳо бартарӣ надорад.
+describe('Баробарии тест (ҳамаи 5 кластер)', () => {
+    const K = ['c1', 'c2', 'c3', 'c4', 'c5'] as const;
+    const mmt = MMT_QUESTIONS;
+    const hidden = (id: string) => Number(id.slice(1)) > 16;
+
+    it('ҳадди имконпазир барои ҳар кластер баробар аст (64)', () => {
+        for (const k of K) {
+            const max = mmt.reduce((sum, q) => sum + Math.max(0, ...q.options.map((o) => o.scores?.[k] || 0)), 0);
+            expect(max).toBe(64);
+        }
+    });
+
+    it('холи миёна ҳангоми ҷавоби тасодуфӣ барои ҳар кластер баробар аст', () => {
+        const expected = K.map((k) => mmt.reduce((sum, q) => sum + q.options.reduce((a, o) => a + (o.scores?.[k] || 0), 0) / q.options.length, 0));
+        for (const value of expected) expect(value).toBeCloseTo(expected[0], 6);
+    });
+
+    it('холҳои иловагӣ (+1) байни кластерҳо баробар тақсим шудаанд', () => {
+        for (const part of [false, true]) {
+            const counts: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+            for (const q of mmt.filter((item) => hidden(item.id) === part)) {
+                for (const o of q.options) {
+                    const entries = Object.entries(o.scores || {}).sort((a, b) => b[1] - a[1]);
+                    for (const [k, v] of entries.slice(1)) counts[k] += v;
+                }
+            }
+            expect(new Set(Object.values(counts)).size).toBe(1);
+        }
+    });
+
+    it('симулятсия: бо ҷавобҳои тасодуфӣ ҳар кластер ~20% ғолиб мешавад', () => {
+        // Тасодуфии такроршаванда (mulberry32), то тест ҳамеша якхела бошад.
+        let seed = 12345;
+        const random = () => {
+            seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+            let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        const N = 20000;
+        const wins: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+        for (let i = 0; i < N; i += 1) {
+            const raw: Record<string, number> = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
+            for (const q of mmt) {
+                const o = q.options[Math.floor(random() * q.options.length)];
+                for (const k of K) raw[k] += o.scores?.[k] || 0;
+            }
+            const best = Math.max(...K.map((k) => raw[k]));
+            const top = K.filter((k) => raw[k] === best);
+            for (const k of top) wins[k] += 1 / top.length;
+        }
+        for (const k of K) {
+            const share = wins[k] / N;
+            expect(share).toBeGreaterThan(0.185);
+            expect(share).toBeLessThan(0.215);
+        }
+    });
+});

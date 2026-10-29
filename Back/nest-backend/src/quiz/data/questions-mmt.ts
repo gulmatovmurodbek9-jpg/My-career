@@ -1,9 +1,16 @@
 import type { QuizQuestion } from './questions';
 
-// Қадами 1 — 16 вазъияти ҳаёти хонанда. Ҳар ҷавоб ба самти асосӣ 3 хол ва
-// баъзан ба самти наздик 1 хол медиҳад, то натиҷаҳо камтар баробар бароянд.
+// Қадами 1 — 24 савол дар бораи ҳаёти хонанда.
+//   m01–m16: ҳар ҷавоб ба самти асосӣ 3 хол медиҳад; 10 ҷавоб ба самти наздик низ 1 хол.
+//   m17–m24 (саволҳои «пинҳон»): ҳар ҷавоб 2 хол ба самти асосӣ ва 1 хол ба самти дуюм.
 // c1 — табиӣ ва техникӣ; c2 — иқтисод ва география; c3 — филология, педагогика
 // ва санъат; c4 — ҷомеашиносӣ ва ҳуқуқ; c5 — тиб, биология ва варзиш.
+//
+// Қоидаи баробарӣ (санҷида мешавад дар quiz.service.spec.ts):
+//   - ҳадди имконпазир барои ҳар кластер 64 (16×3 + 8×2);
+//   - холҳои +1 байни кластерҳо баробар: дар m01–m16 ба ҳар кластер 2, дар m17–m24 ба ҳар кластер 8;
+//   - пас холи миёна ҳангоми ҷавоби тасодуфӣ барои ҳар кластер баробар аст ва
+//     ҳар кластер ~20% ғолиб мешавад. Ҳар тағйири холҳо бояд ин қоидаро нигоҳ дорад.
 // Холҳо дар quiz.service ба миқёси 0–40 мувофиқ карда мешаванд.
 
 type Lang = { tj: string; ru: string; en: string };
@@ -37,7 +44,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         [{ tj: 'Биология ё химия', ru: 'Биология или химия', en: 'Biology or chemistry' }, { c5: 3 }],
         [{ tj: 'Забон ва адабиёт ё забони хориҷӣ', ru: 'Язык и литература или иностранный язык', en: 'Language and literature or a foreign language' }, { c3: 3 }],
         [{ tj: 'Таърих ё ҳуқуқ', ru: 'История или право', en: 'History or law' }, { c4: 3 }],
-        [{ tj: 'География ё иқтисод', ru: 'География или экономика', en: 'Geography or economics' }, { c2: 3 }],
+        [{ tj: 'География ё иқтисод', ru: 'География или экономика', en: 'Geography or economics' }, { c2: 3, c5: 1 }],
     ]),
     q('m03', 'motivation', {
         tj: 'Хешовандон аз шумо ёрӣ мепурсанд. Кадом ёриро бо хурсандӣ мекунед?',
@@ -45,7 +52,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         en: 'Your relatives ask for help. Which kind of help would you give gladly?',
     }, [
         [{ tj: 'Компютер ё телефонро танзим мекунам', ru: 'Настрою компьютер или телефон', en: 'Set up a computer or a phone' }, { c1: 3 }],
-        [{ tj: 'Хароҷоти тӯй ё хариди калонро ҳисоб мекунам', ru: 'Посчитаю расходы на свадьбу или крупную покупку', en: 'Work out the budget for a wedding or a big purchase' }, { c2: 3, c1: 1 }],
+        [{ tj: 'Хароҷоти тӯй ё хариди калонро ҳисоб мекунам', ru: 'Посчитаю расходы на свадьбу или крупную покупку', en: 'Work out the budget for a wedding or a big purchase' }, { c2: 3 }],
         [{ tj: 'Ба бародару хоҳари хурд дарс мефаҳмонам', ru: 'Объясню уроки младшим братьям и сёстрам', en: 'Explain lessons to younger siblings' }, { c3: 3 }],
         [{ tj: 'Ҳуҷҷат ё аризаро дуруст пур мекунам ва ҳаққашонро мефаҳмонам', ru: 'Правильно заполню документы или заявление и объясню их права', en: 'Fill in documents correctly and explain their rights' }, { c4: 3 }],
         [{ tj: 'Аз бемор нигоҳубин мекунам ё доруҳояшро ба тартиб медарорам', ru: 'Поухаживаю за больным или разберусь с его лекарствами', en: 'Look after someone ill or sort out their medicines' }, { c5: 3 }],
@@ -70,7 +77,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         [{ tj: 'Ба бонк ё ширкати сайёҳӣ', ru: 'В банк или туристическую компанию', en: 'A bank or a travel company' }, { c2: 3 }],
         [{ tj: 'Ба ширкати IT ё корхонаи сохтмонӣ', ru: 'В IT-компанию или на стройку', en: 'An IT company or a construction firm' }, { c1: 3 }],
         [{ tj: 'Ба суд, прокуратура ё дафтари адвокат', ru: 'В суд, прокуратуру или к адвокату', en: 'A court, prosecutor’s office or a law firm' }, { c4: 3 }],
-        [{ tj: 'Ба радио, телевизион ё боғча', ru: 'На радио, телевидение или в детский сад', en: 'A radio or TV station, or a kindergarten' }, { c3: 3 }],
+        [{ tj: 'Ба радио, телевизион ё боғча', ru: 'На радио, телевидение или в детский сад', en: 'A radio or TV station, or a kindergarten' }, { c3: 3, c5: 1 }],
     ]),
     q('m06', 'motivation', {
         tj: 'Кадом хабарро дар интернет аввал мекушоед?',
@@ -99,7 +106,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         ru: 'Что о вас обычно говорят учителя?',
         en: 'What do teachers usually say about you?',
     }, [
-        [{ tj: '«Масъаларо аз ҳама зудтар ҳал мекунад»', ru: '«Решает задачи быстрее всех»', en: '“Solves problems faster than anyone”' }, { c1: 3, c2: 1 }],
+        [{ tj: '«Масъаларо аз ҳама зудтар ҳал мекунад»', ru: '«Решает задачи быстрее всех»', en: '“Solves problems faster than anyone”' }, { c1: 3 }],
         [{ tj: '«Иншояш беҳтарин аст, зебо гап мезанад»', ru: '«Лучшие сочинения, красиво говорит»', en: '“Writes the best essays, speaks beautifully”' }, { c3: 3 }],
         [{ tj: '«Бодиққат ва меҳрубон аст, ба ҳама ёрӣ медиҳад»', ru: '«Внимательный и добрый, всем помогает»', en: '“Attentive and kind, helps everyone”' }, { c5: 3, c3: 1 }],
         [{ tj: '«Ҳаққашро медонад ва далел меорад»', ru: '«Знает свои права и приводит доводы»', en: '“Knows their rights and argues with evidence”' }, { c4: 3 }],
@@ -146,7 +153,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         [{ tj: 'Роҳ ва харитаро меомӯзам, хароҷотро ҳисоб мекунам', ru: 'Изучу маршрут и карту, посчитаю расходы', en: 'Plan the route on the map and count the costs' }, { c2: 3 }],
         [{ tj: 'Қуттии дору ва бехатарии ҳамаро ба дӯш мегирам', ru: 'Возьму аптечку и отвечаю за безопасность', en: 'Carry the first-aid kit and keep everyone safe' }, { c5: 3 }],
         [{ tj: 'Аксу видео мегирам ва дар бораи сафар менависам', ru: 'Буду снимать фото и видео и напишу о поездке', en: 'Take photos and videos and write about the trip' }, { c3: 3 }],
-        [{ tj: 'Қоидаҳоро муқаррар мекунам ва баҳсҳоро ҳал мекунам', ru: 'Установлю правила и буду решать споры', en: 'Set the rules and settle arguments' }, { c4: 3, c2: 1 }],
+        [{ tj: 'Қоидаҳоро муқаррар мекунам ва баҳсҳоро ҳал мекунам', ru: 'Установлю правила и буду решать споры', en: 'Set the rules and settle arguments' }, { c4: 3 }],
         [{ tj: 'Техника — пауэрбанк, чароғ, интернет — бо ман', ru: 'Техника — пауэрбанк, фонарь, интернет — на мне', en: 'Gear — power bank, torch, internet — is on me' }, { c1: 3 }],
     ]),
     q('m13', 'motivation', {
@@ -202,9 +209,9 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         ru: 'Группе дали большую работу. Какую часть вы обычно берёте на себя?',
         en: 'Your group gets a big assignment. Which part do you usually take?',
     }, [
-        [{ tj: 'Нақша мекашам ва вақту захираҳоро тақсим мекунам', ru: 'Составляю план и распределяю время и ресурсы', en: 'I make the plan and split the time and resources' }, { c2: 2, c4: 1 }],
+        [{ tj: 'Нақша мекашам ва вақту захираҳоро тақсим мекунам', ru: 'Составляю план и распределяю время и ресурсы', en: 'I make the plan and split the time and resources' }, { c2: 2, c1: 1 }],
         [{ tj: 'Қисми душвортаринро, ки дақиқӣ мехоҳад, худам месозам', ru: 'Сам делаю самую сложную часть, где нужна точность', en: 'I do the hardest part that needs precision myself' }, { c1: 2, c5: 1 }],
-        [{ tj: 'Матн ва намоиши ниҳоиро зебо месозам', ru: 'Делаю красивыми итоговый текст и презентацию', en: 'I make the final text and presentation look good' }, { c3: 2, c2: 1 }],
+        [{ tj: 'Матн ва намоиши ниҳоиро зебо месозам', ru: 'Делаю красивыми итоговый текст и презентацию', en: 'I make the final text and presentation look good' }, { c3: 2, c1: 1 }],
         [{ tj: 'Мебинам, ки касе хаста ё бемор нашуда бошад, ва ғамхорӣ мекунам', ru: 'Слежу, чтобы никто не устал и не заболел, и забочусь о ребятах', en: 'Make sure nobody gets exhausted or ill, and look after people' }, { c5: 2, c3: 1 }],
         [{ tj: 'Вақте баҳс сар мешавад, ҳамаро оштӣ медиҳам ва қоида мегузорам', ru: 'Когда начинается спор, мирю всех и ввожу правила', en: 'When an argument starts, I settle it and set the rules' }, { c4: 2, c3: 1 }],
     ]),
@@ -225,7 +232,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         en: 'Which compliment pleases you most?',
     }, [
         [{ tj: '«Бо ту ҳама чиз дақиқ ва бехато аст»', ru: '«С тобой всё точно и без ошибок»', en: '«With you everything is exact and error-free»' }, { c1: 2, c2: 1 }],
-        [{ tj: '«Ту ҳамеша роҳи фоиданокро меёбӣ»', ru: '«Ты всегда находишь выгодный путь»', en: '«You always find the profitable way»' }, { c2: 2, c4: 1 }],
+        [{ tj: '«Ту ҳамеша роҳи фоиданокро меёбӣ»', ru: '«Ты всегда находишь выгодный путь»', en: '«You always find the profitable way»' }, { c2: 2, c1: 1 }],
         [{ tj: '«Ту хеле зебо гап мезанӣ»', ru: '«Ты очень красиво говоришь»', en: '«You speak so beautifully»' }, { c3: 2, c4: 1 }],
         [{ tj: '«Бо ту одам худро бехатар ҳис мекунад»', ru: '«Рядом с тобой чувствуешь себя в безопасности»', en: '«People feel safe around you»' }, { c5: 2, c4: 1 }],
         [{ tj: '«Ту ҳамеша ҳаққониятро ҳимоя мекунӣ»', ru: '«Ты всегда защищаешь справедливость»', en: '«You always stand up for what is fair»' }, { c4: 2, c3: 1 }],
@@ -280,7 +287,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
         en: 'Which problem annoys you the most?',
     }, [
         [{ tj: 'Вақте чизе бад сохта шудааст ва кор намекунад', ru: 'Когда что-то плохо сделано и не работает', en: 'When something is badly made and does not work' }, { c1: 2, c3: 1 }],
-        [{ tj: 'Вақте пул беҳуда сарф мешавад', ru: 'Когда деньги тратятся впустую', en: 'When money is wasted' }, { c2: 2, c4: 1 }],
+        [{ tj: 'Вақте пул беҳуда сарф мешавад', ru: 'Когда деньги тратятся впустую', en: 'When money is wasted' }, { c2: 2, c1: 1 }],
         [{ tj: 'Вақте одамон якдигарро намефаҳманд', ru: 'Когда люди не понимают друг друга', en: 'When people do not understand each other' }, { c3: 2, c5: 1 }],
         [{ tj: 'Вақте касе бемор аст ва ёрӣ намерасад', ru: 'Когда кто-то болен, а помощь не приходит', en: 'When someone is ill and help does not come' }, { c5: 2, c4: 1 }],
         [{ tj: 'Вақте ба касе беадолатӣ мекунанд', ru: 'Когда с кем-то поступают несправедливо', en: 'When someone is treated unfairly' }, { c4: 2, c5: 1 }],

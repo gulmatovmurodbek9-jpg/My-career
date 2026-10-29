@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api.dart';
 import '../api/models.dart';
+import '../app/auth.dart';
 import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
@@ -255,7 +256,17 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
       'deferAdvice': true,
     };
     try {
-      final data = await Api.instance.post('/quiz/submit', body);
+      dynamic data;
+      // Агар корбар ворид шуда бошад, натиҷа дар ҳисобаш нигоҳ дошта мешавад.
+      if (authStore.isLoggedIn) {
+        try {
+          data = await Api.instance.post('/quiz/submit-authenticated', body);
+        } on ApiException catch (e) {
+          if (e.status != 401) rethrow;
+          await authStore.logout(); // токен кӯҳна шудааст
+        }
+      }
+      data ??= await Api.instance.post('/quiz/submit', body);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(MaterialPageRoute(
         builder: (_) => ResultsScreen(result: QuizResult.fromJson(Map<String, dynamic>.from(data)), requestBody: body),

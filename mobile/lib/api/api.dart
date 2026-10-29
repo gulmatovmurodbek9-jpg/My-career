@@ -6,8 +6,11 @@ import 'package:http/http.dart' as http;
 const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://ikhtisosiman.qobus.tj/api');
 
 class ApiException implements Exception {
-  ApiException(this.message);
+  ApiException(this.message, {this.status = 0, this.code, this.data});
   final String message;
+  final int status;
+  final String? code; // масалан EMAIL_NOT_VERIFIED
+  final Map<String, dynamic>? data;
   @override
   String toString() => message;
 }
@@ -17,14 +20,42 @@ class Api {
   static final instance = Api._();
   final _client = http.Client();
 
-  Future<dynamic> get(String path, [Map<String, String>? query]) async {
+  // Токени воридшавӣ; AuthStore онро мегузорад.
+  String? token;
+
+  Map<String, String> get _headers => {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
+
+  // Кеши GET дар хотира: рӯйхатҳо (ихтисос, донишгоҳ) дубора фавран кушода мешаванд,
+  // ду дархости якхела дар як вақт ба сервер як бор мераванд.
+  static const _cacheTtl = Duration(minutes: 10);
+  final _cache = <String, (DateTime, Future<dynamic>)>{};
+
+  Future<dynamic> get(String path, [Map<String, String>? query]) {
     final uri = Uri.parse('$apiBase$path').replace(queryParameters: {'lang': 'tj', ...?query});
-    return _send(() => _client.get(uri));
+    final key = uri.toString();
+    final hit = _cache[key];
+    if (hit != null && DateTime.now().difference(hit.$1) < _cacheTtl) return hit.$2;
+    final future = _send(() => _client.get(uri, headers: _headers));
+    _cache[key] = (DateTime.now(), future);
+    future.catchError((_) {
+      _cache.remove(key); // хаторо нигоҳ намедорем — «Боз кӯшиш» дархости нав мекунад
+      return null;
+    });
+    if (_cache.length > 300) _cache.remove(_cache.keys.first);
+    return future;
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> body) async {
     final uri = Uri.parse('$apiBase$path');
-    return _send(() => _client.post(uri, headers: {'Content-Type': 'application/json'}, body: jsonEncode(body)));
+    return _send(() => _client.post(uri, headers: _headers, body: jsonEncode(body)));
+  }
+
+  Future<dynamic> delete(String path) async {
+    final uri = Uri.parse('$apiBase$path');
+    return _send(() => _client.delete(uri, headers: _headers));
   }
 
   Future<dynamic> _send(Future<http.Response> Function() request) async {
@@ -35,11 +66,30 @@ class Api {
       throw ApiException('Интернет нест ё суст аст. Пайвастро санҷед ва боз кӯшиш кунед.');
     }
     final text = utf8.decode(response.bodyBytes);
-    final data = text.isEmpty ? null : jsonDecode(text);
+    dynamic data;
+    try {
+      data = text.isEmpty ? null : jsonDecode(text);
+    } catch (_) {
+      data = null;
+    }
     if (response.statusCode >= 400) {
-      final message = data is Map && data['message'] is String ? data['message'] as String : 'Хатогӣ рӯй дод. Боз кӯшиш кунед.';
-      throw ApiException(message);
+      throw ApiException(
+        _message(data, response.statusCode),
+        status: response.statusCode,
+        code: data is Map && data['code'] is String ? data['code'] as String : null,
+        data: data is Map ? Map<String, dynamic>.from(data) : null,
+      );
     }
     return data;
+  }
+
+  // Паёми сервер: сатр ё рӯйхат (хатоҳои санҷиши майдонҳо).
+  static String _message(dynamic data, int status) {
+    final m = data is Map ? data['message'] : null;
+    if (m is String && m.trim().isNotEmpty) return m;
+    if (m is List && m.isNotEmpty) return m.map((e) => '$e').join('\n');
+    if (status == 429) return 'Кӯшишҳо зиёд шуданд. Каме сабр кунед.';
+    if (status >= 500) return 'Сервер ҳозир ҷавоб намедиҳад. Баъдтар кӯшиш кунед.';
+    return 'Хатогӣ рӯй дод. Боз кӯшиш кунед.';
   }
 }

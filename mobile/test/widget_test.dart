@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ikhtisosi_man/api/models.dart';
+import 'package:ikhtisosi_man/app/auth.dart';
 import 'package:ikhtisosi_man/app/settings.dart';
+import 'package:ikhtisosi_man/screens/auth/auth_ui.dart';
+import 'package:ikhtisosi_man/screens/auth/login_screen.dart';
 import 'package:ikhtisosi_man/main.dart';
 import 'package:ikhtisosi_man/ui/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,5 +76,35 @@ void main() {
     expect(find.text('Ихтисосҳо'), findsWidgets);
     expect(find.text('Донишгоҳҳо ва коллеҷҳо'), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  test('почта ва парол: хатоҳо пеш аз фиристодан', () {
+    expect(validateEmail(''), isNotNull);
+    expect(validateEmail('ali@gmail'), isNotNull);
+    expect(validateEmail(' ali@gmail.com '), isNull);
+    expect(validatePassword('12345'), isNotNull);
+    expect(validatePassword('123456'), isNull);
+  });
+
+  testWidgets('воридшавӣ: майдонҳои холӣ хато нишон медиҳанд, «фаромӯш кардам» ҳаст', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: const LoginScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Паролро фаромӯш кардам?'), findsOneWidget);
+    await tester.ensureVisible(find.text('Ворид шудан'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ворид шудан'));
+    await tester.pumpAndSettle();
+    expect(find.text('Почтаро нависед'), findsOneWidget);
+    expect(find.text('Паролро нависед'), findsOneWidget);
+  });
+
+  testWidgets('рамзи 6-рақама: танҳо рақам, баъди 6-ум худаш мефиристад', (tester) async {
+    final controller = TextEditingController();
+    String? done;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CodeInput(controller: controller, onCompleted: (c) => done = c))));
+    await tester.enterText(find.byType(TextField), '12a3456789');
+    await tester.pump();
+    expect(controller.text, '123456');
+    expect(done, '123456');
   });
 }

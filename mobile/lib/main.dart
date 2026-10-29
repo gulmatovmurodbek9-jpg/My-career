@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'app/auth.dart';
 import 'app/settings.dart';
 import 'app/theme.dart';
 import 'screens/shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await appSettings.load();
+  await Future.wait([appSettings.load(), authStore.load()]);
   runApp(const IkhtisosiManApp());
 }
 

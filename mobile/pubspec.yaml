@@ -37,6 +37,7 @@ dependencies:
   http: ^1.6.0
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +60,31 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Шрифтҳои сайт: Golos Text (матн) ва Geologica (сарлавҳаҳо). Ҳамаи ҳарфҳои тоҷикиро доранд.
+  fonts:
+    - family: GolosText
+      fonts:
+        - asset: assets/fonts/GolosText-400.ttf
+        - asset: assets/fonts/GolosText-500.ttf
+          weight: 500
+        - asset: assets/fonts/GolosText-600.ttf
+          weight: 600
+        - asset: assets/fonts/GolosText-700.ttf
+          weight: 700
+        - asset: assets/fonts/GolosText-800.ttf
+          weight: 800
+    - family: Geologica
+      fonts:
+        - asset: assets/fonts/Geologica-400.ttf
+        - asset: assets/fonts/Geologica-500.ttf
+          weight: 500
+        - asset: assets/fonts/Geologica-600.ttf
+          weight: 600
+        - asset: assets/fonts/Geologica-700.ttf
+          weight: 700
+        - asset: assets/fonts/Geologica-800.ttf
+          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -82,7 +82,7 @@ class GradientButton extends StatelessWidget {
                     child: loading
                         ? const SizedBox(key: ValueKey('l'), width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
                         : Row(key: const ValueKey('t'), mainAxisSize: MainAxisSize.min, children: [
-                            Text(label, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: Colors.white)),
+                            Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0.1)),
                             if (icon != null) ...[const SizedBox(width: 8), Icon(icon, color: Colors.white, size: 21)],
                           ]),
                   ),
@@ -132,7 +132,7 @@ class LabeledField extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Text(label, style: TextStyle(fontSize: dense ? 15 : 16, fontWeight: FontWeight.w700, color: AppColors.text))),
+          Expanded(child: Text(label, style: TextStyle(fontSize: dense ? 15 : 16, fontWeight: FontWeight.w600, color: AppColors.text))),
           ?trailing,
         ]),
         SizedBox(height: dense ? 6 : 8),
@@ -210,7 +210,7 @@ class ActionCard extends StatelessWidget {
           gradient: primary ? AppColors.brandGradient : null,
           color: primary ? null : AppColors.card,
           borderRadius: radius,
-          border: primary ? null : Border.all(color: AppColors.border, width: 1.5),
+          border: primary ? null : Border.all(color: AppColors.border),
           boxShadow: primary ? buttonShadow : cardShadow,
         ),
         child: Material(
@@ -233,7 +233,7 @@ class ActionCard extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title, style: TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w800, color: fg)),
+                    Text(title, style: TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w700, color: fg)),
                     const SizedBox(height: 2),
                     Text(subtitle, style: TextStyle(fontSize: 14, height: 1.35, color: primary ? Colors.white.withValues(alpha: 0.92) : AppColors.textSoft)),
                   ]),
@@ -258,7 +258,7 @@ class Badge2 extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
-        child: Text(text, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: color)),
+        child: Text(text, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: color)),
       );
 }
 
@@ -273,7 +273,7 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AppSizes.cardRadius);
     return Container(
-      decoration: BoxDecoration(color: AppColors.card, borderRadius: radius, border: Border.all(color: AppColors.border, width: 1.5), boxShadow: cardShadow),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: radius, border: Border.all(color: AppColors.border), boxShadow: cardShadow),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

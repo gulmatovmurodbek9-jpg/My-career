@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => Navigator.of(context).push(authRoute(ForgotPasswordScreen(email: _email.text.trim()))),
-                child: Text(t('Паролро фаромӯш кардед?'), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800)),
+                child: Text(t('Паролро фаромӯш кардед?'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
             ),
             const SizedBox(height: 4),

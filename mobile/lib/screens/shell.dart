@@ -50,7 +50,7 @@ class _AppShellState extends State<AppShell> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: AppColors.border, width: 1.2),
+              border: Border.all(color: AppColors.border),
               boxShadow: const [BoxShadow(color: Color(0x240D2E8C), blurRadius: 30, offset: Offset(0, 10), spreadRadius: -12)],
             ),
             child: Row(
@@ -76,7 +76,7 @@ class _AppShellState extends State<AppShell> {
                                 decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient),
                                 child: Text(
                                   name.characters.first.toUpperCase(),
-                                  style: const TextStyle(fontFamily: AppFonts.display, fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                                  style: const TextStyle(fontFamily: AppFonts.display, fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
                                 ),
                               )
                             : const Icon(Icons.person_outline_rounded, size: 24, color: AppColors.textSoft),
@@ -150,7 +150,7 @@ class _NavButton extends StatelessWidget {
               maxLines: 1,
               // Номи бахш бо андозаи доимӣ, то дар «Хеле калон» ҳам менюи поён вайрон нашавад.
               textScaler: TextScaler.noScaling,
-              style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w800 : FontWeight.w600, color: selected ? AppColors.primary : AppColors.textSoft),
+              style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: selected ? AppColors.primary : AppColors.textSoft),
             ),
           ),
         ],
@@ -202,7 +202,7 @@ class _CenterItem extends StatelessWidget {
               child: Text(
                 t('Тест'),
                 textScaler: TextScaler.noScaling,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: selected ? AppColors.primary : AppColors.text),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? AppColors.primary : AppColors.text),
               ),
             ),
           ],

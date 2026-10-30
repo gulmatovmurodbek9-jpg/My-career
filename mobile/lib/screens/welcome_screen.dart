@@ -44,7 +44,7 @@ class WelcomeScreen extends StatelessWidget {
                           child: Row(mainAxisSize: MainAxisSize.min, children: [
                             Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
                             const SizedBox(width: 7),
-                            Text(t('РОҲНАМОИ КАСБӢ'), style: const TextStyle(fontSize: 11.5, letterSpacing: 0.6, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                            Text(t('РОҲНАМОИ КАСБӢ'), style: const TextStyle(fontSize: 11.5, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: AppColors.primary)),
                           ]),
                         ),
                         const Spacer(),
@@ -71,10 +71,10 @@ class WelcomeScreen extends StatelessWidget {
                       _Appear(
                         delay: 200,
                         child: Column(children: [
-                          Text(t('Хуш омадед ба'), textAlign: TextAlign.center, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 27, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.15)),
+                          Text(t('Хуш омадед ба'), textAlign: TextAlign.center, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 27, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.15)),
                           ShaderMask(
                             shaderCallback: (r) => AppColors.brandGradient.createShader(r),
-                            child: Text(t('«Ихтисоси ман»'), textAlign: TextAlign.center, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 29, fontWeight: FontWeight.w800, color: Colors.white, height: 1.25)),
+                            child: Text(t('«Ихтисоси ман»'), textAlign: TextAlign.center, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 29, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25)),
                           ),
                           const SizedBox(height: 10),
                           Text(
@@ -99,7 +99,7 @@ class WelcomeScreen extends StatelessWidget {
                               style: OutlinedButton.styleFrom(
                                 minimumSize: const Size.fromHeight(54),
                                 foregroundColor: AppColors.primary,
-                                side: const BorderSide(color: AppColors.primary, width: 1.5),
+                                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.55)),
                               ),
                               onPressed: () => _start(context, login: true),
                               icon: const Icon(Icons.login_rounded, size: 20),
@@ -130,7 +130,7 @@ class _Facts extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget item(String n, String label) => Expanded(
           child: Column(children: [
-            Text(n, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primary)),
+            Text(n, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primary)),
             const SizedBox(height: 2),
             Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.textSoft)),
           ]),

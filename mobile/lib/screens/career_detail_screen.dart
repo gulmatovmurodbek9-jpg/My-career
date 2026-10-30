@@ -70,7 +70,7 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
     return ListView(
       padding: AppSizes.page,
       children: [
-        if (c.cluster.isNotEmpty) Text(c.cluster.toUpperCase(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.primary)),
+        if (c.cluster.isNotEmpty) Text(c.cluster.toUpperCase(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.primary)),
         const SizedBox(height: 6),
         Text(c.name, style: text.headlineMedium),
         const SizedBox(height: 14),
@@ -147,7 +147,7 @@ class _TypeButton extends StatelessWidget {
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: FittedBox(
-                child: Text('$label · $count', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: selected ? Colors.white : color.withValues(alpha: count == 0 ? 0.5 : 1))),
+                child: Text('$label · $count', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : color.withValues(alpha: count == 0 ? 0.5 : 1))),
               ),
             ),
           ),

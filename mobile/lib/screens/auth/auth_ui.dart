@@ -41,7 +41,7 @@ class AuthScaffold extends StatelessWidget {
         centerTitle: true,
         automaticallyImplyLeading: false,
         leading: canPop ? IconButton(tooltip: t('Баргаштан'), icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20), onPressed: () => Navigator.of(context).maybePop()) : null,
-        title: Text(barTitle, style: const TextStyle(fontFamily: AppFonts.body, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.text)),
+        title: Text(barTitle, style: const TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.text)),
         actions: const [LangButton(), SizedBox(width: 12)],
       ),
       body: SafeArea(
@@ -63,7 +63,7 @@ class AuthScaffold extends StatelessWidget {
                   else if (icon != null)
                     Center(child: HeroIcon(icon!)),
                   const SizedBox(height: 14),
-                  Text(heading, textAlign: TextAlign.center, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 25, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.2)),
+                  Text(heading, textAlign: TextAlign.center, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.2, letterSpacing: -0.2)),
                   const SizedBox(height: 6),
                   Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, height: 1.45, color: AppColors.textSoft)),
                   ?belowSubtitle,
@@ -132,7 +132,7 @@ class LangButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text(t('Забон'), style: const TextStyle(fontFamily: AppFonts.display, fontSize: 20, fontWeight: FontWeight.w800)),
+              Text(t('Забон'), style: const TextStyle(fontFamily: AppFonts.display, fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: 10),
               for (final code in AppSettings.langs)
                 Padding(
@@ -149,7 +149,7 @@ class LangButton extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         child: Row(children: [
-                          Text(langShort[code]!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                          Text(langShort[code]!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
                           const SizedBox(width: 14),
                           Expanded(child: Text(langNames[code]!, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.text))),
                           if (appSettings.lang == code) const Icon(Icons.check_circle_rounded, color: AppColors.primary),
@@ -178,7 +178,7 @@ class LangButton extends StatelessWidget {
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.translate_rounded, size: 16, color: AppColors.primary),
                 const SizedBox(width: 5),
-                Text(langShort[appSettings.lang]!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                Text(langShort[appSettings.lang]!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
               ]),
             ),
           ),
@@ -226,9 +226,9 @@ class _AuthFieldState extends State<AuthField> {
 
   @override
   Widget build(BuildContext context) {
-    final border = OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 1.3));
+    final border = OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border));
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(widget.label, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text)),
+      Text(widget.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF3B4357))),
       const SizedBox(height: 7),
       DecoratedBox(
         decoration: BoxDecoration(
@@ -256,9 +256,9 @@ class _AuthFieldState extends State<AuthField> {
             contentPadding: const EdgeInsets.fromLTRB(16, 15, 8, 15),
             border: border,
             enabledBorder: border,
-            focusedBorder: border.copyWith(borderSide: const BorderSide(color: AppColors.accent, width: 1.8)),
-            errorBorder: border.copyWith(borderSide: const BorderSide(color: AppColors.danger, width: 1.3)),
-            focusedErrorBorder: border.copyWith(borderSide: const BorderSide(color: AppColors.danger, width: 1.8)),
+            focusedBorder: border.copyWith(borderSide: const BorderSide(color: AppColors.accent, width: 1.4)),
+            errorBorder: border.copyWith(borderSide: const BorderSide(color: AppColors.danger)),
+            focusedErrorBorder: border.copyWith(borderSide: const BorderSide(color: AppColors.danger, width: 1.4)),
             suffixIcon: Row(mainAxisSize: MainAxisSize.min, children: [
               ?widget.trailing,
               if (widget.password)
@@ -290,7 +290,7 @@ class GoogleButton extends StatelessWidget {
           onPressed: loading ? null : onPressed,
           style: OutlinedButton.styleFrom(
             backgroundColor: Colors.white,
-            side: const BorderSide(color: AppColors.borderStrong, width: 1.3),
+            side: const BorderSide(color: AppColors.border),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radius)),
             minimumSize: const Size.fromHeight(54),
           ),
@@ -302,10 +302,10 @@ class GoogleButton extends StatelessWidget {
                       colors: [Color(0xFFEA4335), Color(0xFFFBBC05), Color(0xFF34A853), Color(0xFF4285F4), Color(0xFFEA4335)],
                       stops: [0.0, 0.25, 0.5, 0.75, 1.0],
                     ).createShader(r),
-                    child: const Text('G', style: TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+                    child: const Text('G', style: TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                   const SizedBox(width: 12),
-                  Text(t('Бо Google ворид шудан'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text)),
+                  Text(t('Бо Google ворид шудан'), style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w500, color: AppColors.text)),
                 ]),
         ),
       );
@@ -339,7 +339,7 @@ class AuthFooter extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(text, style: const TextStyle(fontSize: 15, color: AppColors.textSoft)),
-          TextButton(onPressed: onTap, child: Text(action, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800))),
+          TextButton(onPressed: onTap, child: Text(action, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600))),
         ],
       );
 }
@@ -359,7 +359,7 @@ class InfoChip extends StatelessWidget {
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 16, color: color),
             const SizedBox(width: 6),
-            Flexible(child: Text(text, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: color))),
+            Flexible(child: Text(text, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: color))),
           ]),
         ),
       );
@@ -423,7 +423,7 @@ class PasswordStrength extends StatelessWidget {
                 decoration: BoxDecoration(color: i < filled ? color : AppColors.border, borderRadius: BorderRadius.circular(9)),
               ),
             ),
-          Text(labels[score], style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: score == 0 ? AppColors.textSoft : color)),
+          Text(labels[score], style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: score == 0 ? AppColors.textSoft : color)),
         ]),
         rule(longEnough, t('Камаш 6 аломат')),
         rule(mixed, t('Ҳарф ва рақам дошта бошад (тавсия)')),
@@ -492,11 +492,11 @@ class _CodeInputState extends State<CodeInput> {
                   decoration: BoxDecoration(
                     color: active ? Colors.white : AppColors.muted,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: color, width: 1.8),
+                    border: Border.all(color: color, width: 1.4),
                     boxShadow: active ? const [BoxShadow(color: Color(0x290D2E8C), blurRadius: 16, offset: Offset(0, 6), spreadRadius: -4)] : null,
                   ),
                   child: filled
-                      ? Text(code[i], style: const TextStyle(fontFamily: AppFonts.display, fontSize: 23, fontWeight: FontWeight.w700, color: AppColors.text))
+                      ? Text(code[i], style: const TextStyle(fontFamily: AppFonts.display, fontSize: 23, fontWeight: FontWeight.w600, color: AppColors.text))
                       : active
                           ? Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle))
                           : null,
@@ -548,7 +548,7 @@ class ResendRow extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
         Text(t('Рамз наомад?'), style: const TextStyle(fontSize: 14.5, color: AppColors.textSoft)),
-        TextButton(onPressed: onResend, child: Text(t('Боз фиристед'), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800))),
+        TextButton(onPressed: onResend, child: Text(t('Боз фиристед'), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700))),
       ]),
     );
   }

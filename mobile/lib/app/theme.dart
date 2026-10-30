@@ -56,13 +56,13 @@ ThemeData buildTheme() {
   );
   const display = AppFonts.display;
   const text = TextTheme(
-    headlineLarge: TextStyle(fontFamily: display, fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.2, letterSpacing: -0.3),
-    headlineMedium: TextStyle(fontFamily: display, fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.25, letterSpacing: -0.2),
-    titleLarge: TextStyle(fontFamily: display, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.3),
-    titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.3),
+    headlineLarge: TextStyle(fontFamily: display, fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.2, letterSpacing: -0.3),
+    headlineMedium: TextStyle(fontFamily: display, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.25, letterSpacing: -0.2),
+    titleLarge: TextStyle(fontFamily: display, fontSize: 19, fontWeight: FontWeight.w600, color: AppColors.text, height: 1.3),
+    titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.text, height: 1.3),
     bodyLarge: TextStyle(fontSize: 16, color: AppColors.text, height: 1.45),
     bodyMedium: TextStyle(fontSize: 15, color: AppColors.textSoft, height: 1.4),
-    labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+    labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
   );
   return ThemeData(
     useMaterial3: true,
@@ -81,14 +81,14 @@ ThemeData buildTheme() {
       elevation: 0,
       scrolledUnderElevation: 0.5,
       centerTitle: false,
-      titleTextStyle: TextStyle(fontFamily: display, fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
+      titleTextStyle: TextStyle(fontFamily: display, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.text),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
         backgroundColor: AppColors.primary,
         disabledBackgroundColor: AppColors.borderStrong,
-        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w700),
+        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w600),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radius)),
       ),
     ),
@@ -97,16 +97,20 @@ ThemeData buildTheme() {
         minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
         foregroundColor: AppColors.text,
         backgroundColor: Colors.white,
-        side: const BorderSide(color: AppColors.borderStrong, width: 1.5),
-        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w700),
+        side: const BorderSide(color: AppColors.border),
+        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w600),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radius)),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
-        minimumSize: const Size(48, 48),
-        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 15, fontWeight: FontWeight.w700),
+        minimumSize: const Size(44, 40),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        tapTargetSize: MaterialTapTargetSize.padded,
+        overlayColor: AppColors.primary.withValues(alpha: 0.05),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 15, fontWeight: FontWeight.w600),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -117,11 +121,11 @@ ThemeData buildTheme() {
       prefixIconColor: AppColors.textSoft,
       suffixIconColor: AppColors.textSoft,
       errorStyle: const TextStyle(fontSize: 15, height: 1.3, color: AppColors.danger),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.accent, width: 2)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.danger, width: 1.5)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.danger, width: 2)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.accent, width: 1.4)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.danger)),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.danger, width: 1.4)),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
@@ -137,7 +141,7 @@ ThemeData buildTheme() {
       labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
             fontFamily: AppFonts.body,
             fontSize: 12.5,
-            fontWeight: states.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w600,
+            fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w600,
             color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSoft,
           )),
       iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(

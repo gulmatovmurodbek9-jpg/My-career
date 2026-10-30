@@ -80,12 +80,12 @@ class _Choice extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSizes.radius),
-                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 2.5 : 2),
+                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
               ),
               child: Row(children: [
                 Icon(selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, size: 26, color: selected ? AppColors.primary : AppColors.textSoft),
                 const SizedBox(width: 14),
-                Expanded(child: Text(label, style: TextStyle(fontSize: preview ?? 19, fontWeight: FontWeight.w700, color: AppColors.text))),
+                Expanded(child: Text(label, style: TextStyle(fontSize: preview ?? 19, fontWeight: FontWeight.w600, color: AppColors.text))),
               ]),
             ),
           ),

@@ -73,7 +73,7 @@ class _Step extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 14),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          CircleAvatar(radius: 17, backgroundColor: AppColors.contractSoft, child: Text(number, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: AppColors.primary))),
+          CircleAvatar(radius: 17, backgroundColor: AppColors.contractSoft, child: Text(number, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.primary))),
           const SizedBox(width: 14),
           Expanded(child: Padding(padding: const EdgeInsets.only(top: 6), child: Text(text, style: Theme.of(context).textTheme.bodyLarge))),
         ]),
@@ -99,14 +99,14 @@ class _GradeButton extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSizes.radius),
-                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 2.5 : 2),
+                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
               ),
               child: Row(children: [
                 Icon(selected ? Icons.check_circle_rounded : Icons.circle_outlined, size: 26, color: selected ? AppColors.primary : AppColors.textSoft),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(t('Баъди синфи {n}', {'n': grade}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+                    Text(t('Баъди синфи {n}', {'n': grade}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text)),
                     Text(grade == 9 ? t('Метавонед ба коллеҷ дароед') : t('Метавонед ба донишгоҳ ё коллеҷ дароед'), style: Theme.of(context).textTheme.bodyMedium),
                   ]),
                 ),
@@ -363,7 +363,7 @@ class _AnswerButton extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSizes.radius),
-                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 2.5 : 2),
+                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
               ),
               child: Row(children: [
                 Container(
@@ -371,7 +371,7 @@ class _AnswerButton extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(color: selected ? AppColors.primary : AppColors.contractSoft, shape: BoxShape.circle),
-                  child: Text(letter, style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.primary)),
+                  child: Text(letter, style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.primary)),
                 ),
                 const SizedBox(width: 14),
                 Expanded(child: Text(text, style: const TextStyle(fontSize: 16.5, height: 1.35, fontWeight: FontWeight.w600, color: AppColors.text))),

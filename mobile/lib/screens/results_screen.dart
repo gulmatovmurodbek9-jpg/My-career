@@ -53,9 +53,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(t('Самти мувофиқи шумо'), style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.9))),
                 const SizedBox(height: 6),
-                Text(r.clusterName, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: Colors.white, height: 1.2)),
+                Text(r.clusterName, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2)),
                 const SizedBox(height: 12),
-                Text(t('Мувофиқат: {n}%', {'n': r.clusterPercent}), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                Text(t('Мувофиқат: {n}%', {'n': r.clusterPercent}), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
               ]),
             ),
             SectionTitle(t('Маслиҳат')),
@@ -109,7 +109,7 @@ class _DirectionBar extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(child: Text(name, style: Theme.of(context).textTheme.titleMedium)),
-            Text('$percent%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
+            Text('$percent%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary)),
           ]),
           const SizedBox(height: 6),
           ClipRRect(
@@ -129,7 +129,7 @@ class _CareerResultCard extends StatelessWidget {
   Widget build(BuildContext context) => AppCard(
         onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CareerDetailScreen(careerId: career.id, title: career.name))),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          CircleAvatar(radius: 17, backgroundColor: AppColors.contractSoft, child: Text('$rank', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary))),
+          CircleAvatar(radius: 17, backgroundColor: AppColors.contractSoft, child: Text('$rank', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary))),
           const SizedBox(width: 14),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -143,7 +143,7 @@ class _CareerResultCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text('${career.percent}%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                Text('${career.percent}%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary)),
               ]),
               if (career.free) ...[
                 const SizedBox(height: 10),

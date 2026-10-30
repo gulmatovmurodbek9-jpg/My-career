@@ -142,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     height: 24,
                     child: Checkbox(
                       value: _agree,
-                      side: BorderSide(color: _agreeError ? AppColors.danger : AppColors.borderStrong, width: 1.6),
+                      side: BorderSide(color: _agreeError ? AppColors.danger : AppColors.borderStrong, width: 1.2),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                       onChanged: (v) => setState(() {
                         _agree = v ?? false;
@@ -158,7 +158,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         TextSpan(
                           text: t('Сиёсати махфият'),
                           recognizer: _privacyTap,
-                          style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
+                          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
                         ),
                         TextSpan(text: t(' розӣ ҳастам')),
                       ]),

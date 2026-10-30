@@ -113,7 +113,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             FormMessage(text: _error),
             FormMessage(text: _info, success: true),
-            Text(t('Рамз аз почта'), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text)),
+            Text(t('Рамз аз почта'), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: AppColors.text)),
             const SizedBox(height: 7),
             CodeInput(controller: _code),
             ResendRow(wait: _wait, onResend: _resend),

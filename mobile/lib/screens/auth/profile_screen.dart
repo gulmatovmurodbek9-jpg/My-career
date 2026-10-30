@@ -54,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         title: Text(
           title,
-          style: const TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w800),
+          style: const TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w700),
         ),
         content: Text(body, style: const TextStyle(fontSize: 17, height: 1.45, color: AppColors.textSoft)),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -100,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient, boxShadow: buttonShadow),
                     child: Text(
                       name.isEmpty ? '?' : name.characters.first.toUpperCase(),
-                      style: const TextStyle(fontFamily: AppFonts.display, fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white),
+                      style: const TextStyle(fontFamily: AppFonts.display, fontSize: 38, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 14),

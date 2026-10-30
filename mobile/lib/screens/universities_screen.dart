@@ -133,8 +133,8 @@ class _Segment extends StatelessWidget {
             child: Container(
               height: 54,
               alignment: Alignment.center,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: 2)),
-              child: FittedBox(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: Text(label, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.text)))),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1)),
+              child: FittedBox(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: Text(label, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.text)))),
             ),
           ),
         ),

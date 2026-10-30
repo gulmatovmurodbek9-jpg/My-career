@@ -158,7 +158,7 @@ class CareerCard extends StatelessWidget {
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (career.cluster.isNotEmpty) Text(career.cluster.toUpperCase(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.primary)),
+              if (career.cluster.isNotEmpty) Text(career.cluster.toUpperCase(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.primary)),
               const SizedBox(height: 4),
               Text(career.name, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 10),

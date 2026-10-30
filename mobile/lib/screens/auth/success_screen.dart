@@ -35,7 +35,7 @@ class PasswordChangedScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(t('Парол нав шуд'), style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: AppColors.text)),
+                Text(t('Парол нав шуд'), style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: AppColors.text)),
                 const SizedBox(height: 2),
                 Text(email, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, color: AppColors.textSoft)),
               ]),

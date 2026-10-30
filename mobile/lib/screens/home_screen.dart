@@ -154,7 +154,11 @@ class _TestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget chip(IconData icon, String label) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -167,67 +171,98 @@ class _TestCard extends StatelessWidget {
         ],
       ),
     );
+    // Кабуди чуқур (мисли шаби тира) бо ду нури нарм дар гӯшаҳо — на кабуди ҳамвору тез.
+    Widget glow(double size, Color color) => Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
+      ),
+    );
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-      decoration: BoxDecoration(gradient: AppColors.brandGradient, borderRadius: BorderRadius.circular(24), boxShadow: buttonShadow),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0B1F57), Color(0xFF1739A6), Color(0xFF2F5FE8)], stops: [0, 0.55, 1]),
+        boxShadow: AppColors.dark ? null : const [BoxShadow(color: Color(0x40102A7A), blurRadius: 24, offset: Offset(0, 12), spreadRadius: -10)],
+      ),
       child: Stack(
         children: [
-          Positioned(right: -8, top: -6, child: Icon(Icons.psychology_alt_rounded, size: 76, color: Colors.white.withValues(alpha: 0.12))),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(999)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.lightbulb_rounded, size: 14, color: Color(0xFFFCD34D)),
-                    const SizedBox(width: 5),
-                    Text(
-                      t('Тести касбӣ'),
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
-                  ],
+          Positioned(right: -70, top: -80, child: glow(220, const Color(0xFF60A5FA).withValues(alpha: 0.45))),
+          Positioned(left: -60, bottom: -90, child: glow(200, const Color(0xFF22D3EE).withValues(alpha: 0.18))),
+          Positioned(
+            right: 18,
+            top: 18,
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              ),
+              child: const Icon(Icons.explore_rounded, color: Colors.white, size: 24),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(999)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.lightbulb_rounded, size: 14, color: Color(0xFFFCD34D)),
+                      const SizedBox(width: 5),
+                      Text(
+                        t('Тести касбӣ'),
+                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                t('Касби мувофиқи худро ёбед'),
-                style: const TextStyle(fontFamily: AppFonts.display, fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                t('Ба саволҳои содда ҷавоб диҳед — мебинед, ки кадом самт ва ихтисосҳо ба шумо наздиканд.'),
-                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.88), height: 1.4),
-              ),
-              const SizedBox(height: 12),
-              Wrap(spacing: 6, runSpacing: 6, children: [chip(Icons.checklist_rounded, t('29 савол')), chip(Icons.schedule_rounded, t('~7 дақиқа')), chip(Icons.hub_rounded, t('5 самт'))]),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  child: InkWell(
+                const SizedBox(height: 12),
+                Text(
+                  t('Касби мувофиқи худро ёбед'),
+                  style: const TextStyle(fontFamily: AppFonts.display, fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  t('Ба саволҳои содда ҷавоб диҳед — мебинед, ки кадом самт ва ихтисосҳо ба шумо наздиканд.'),
+                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.78), height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                Wrap(spacing: 6, runSpacing: 6, children: [chip(Icons.checklist_rounded, t('29 савол')), chip(Icons.schedule_rounded, t('~7 дақиқа')), chip(Icons.hub_rounded, t('5 самт'))]),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: Material(
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    onTap: onStart,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          t('Оғози тест'),
-                          style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600, color: Color(0xFF003BB3)),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward_rounded, size: 19, color: Color(0xFF003BB3)),
-                      ],
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: onStart,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            t('Оғози тест'),
+                            style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600, color: Color(0xFF0B1F57)),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded, size: 19, color: Color(0xFF0B1F57)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

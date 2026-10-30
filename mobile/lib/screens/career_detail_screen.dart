@@ -6,6 +6,7 @@ import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'university_detail_screen.dart';
+import '../app/i18n.dart';
 
 class CareerDetailScreen extends StatefulWidget {
   const CareerDetailScreen({super.key, required this.careerId, required this.title});
@@ -49,7 +50,7 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ихтисос')),
+      appBar: AppBar(title: Text(t('Ихтисос'))),
       body: SafeArea(
         child: _error != null
             ? ErrorView(message: _error!, onRetry: _load)
@@ -75,19 +76,19 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
         const SizedBox(height: 14),
         if (c.description.isNotEmpty) Text(c.description, style: text.bodyLarge),
         if (salary('junior').isNotEmpty) ...[
-          const SectionTitle('Маош дар як моҳ'),
+          SectionTitle(t('Маош дар як моҳ')),
           AppCard(
             child: Column(children: [
-              InfoRow('Навкор', salary('junior')),
-              if (salary('mid').isNotEmpty) InfoRow('Бо таҷриба', salary('mid')),
-              if (salary('senior').isNotEmpty) InfoRow('Мутахассиси калон', salary('senior')),
+              InfoRow(t('Навкор'), salary('junior')),
+              if (salary('mid').isNotEmpty) InfoRow(t('Бо таҷриба'), salary('mid')),
+              if (salary('senior').isNotEmpty) InfoRow(t('Мутахассиси калон'), salary('senior')),
             ]),
           ),
           const SizedBox(height: 6),
-          Text('Маош тахминӣ аст, аз эълонҳои кор.', style: text.bodyMedium),
+          Text(t('Маош тахминӣ аст, аз эълонҳои кор.'), style: text.bodyMedium),
         ],
         if (c.jobs.isNotEmpty) ...[
-          const SectionTitle('Дар куҷо кор мекунанд'),
+          SectionTitle(t('Дар куҷо кор мекунанд')),
           for (final job in c.jobs.take(6))
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -98,19 +99,19 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
               ]),
             ),
         ],
-        const SectionTitle('Дар куҷо мехонанд'),
+        SectionTitle(t('Дар куҷо мехонанд')),
         if (_offerings.isEmpty)
-          Text('Ҳоло ягон муассиса ин ихтисосро қабул намекунад.', style: text.bodyLarge)
+          Text(t('Ҳоло ягон муассиса ин ихтисосро қабул намекунад.'), style: text.bodyLarge)
         else ...[
           // Ду тугмаи калон: буҷетӣ ва шартномавӣ — ҳар кадом рӯйхати худро нишон медиҳад.
           Row(children: [
-            Expanded(child: _TypeButton(label: 'Буҷетӣ', count: free.length, selected: _showFree, color: AppColors.budget, soft: AppColors.budgetSoft, onTap: () => setState(() => _showFree = true))),
+            Expanded(child: _TypeButton(label: t('Буҷетӣ'), count: free.length, selected: _showFree, color: AppColors.budget, soft: AppColors.budgetSoft, onTap: () => setState(() => _showFree = true))),
             const SizedBox(width: 10),
-            Expanded(child: _TypeButton(label: 'Шартномавӣ', count: paid.length, selected: !_showFree, color: AppColors.contract, soft: AppColors.contractSoft, onTap: () => setState(() => _showFree = false))),
+            Expanded(child: _TypeButton(label: t('Шартномавӣ'), count: paid.length, selected: !_showFree, color: AppColors.contract, soft: AppColors.contractSoft, onTap: () => setState(() => _showFree = false))),
           ]),
           const SizedBox(height: 14),
           if (shown.isEmpty)
-            Text(_showFree ? 'Ҷойи буҷетӣ нест.' : 'Ҷойи шартномавӣ нест.', style: text.bodyLarge)
+            Text(_showFree ? t('Ҷойи буҷетӣ нест.') : t('Ҷойи шартномавӣ нест.'), style: text.bodyLarge)
           else
             for (final o in shown) ...[
               _OfferingCard(offering: o),
@@ -165,7 +166,7 @@ class _OfferingCard extends StatelessWidget {
       if (o.city.isNotEmpty) o.city,
       if (o.studyForm.isNotEmpty) o.studyForm,
       if (o.language.isNotEmpty) o.language,
-      if (o.seats != null && o.seats! > 0) '${o.seats} ҷой',
+      if (o.seats != null && o.seats! > 0) t('{n} ҷой', {'n': o.seats}),
     ].join(' · ');
     return AppCard(
       onTap: o.universityId.isEmpty ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => UniversityDetailScreen(universityId: o.universityId, title: o.universityName))),
@@ -177,8 +178,8 @@ class _OfferingCard extends StatelessWidget {
         ],
         const SizedBox(height: 10),
         o.free
-            ? const Badge2('Буҷетӣ (ройгон)', color: AppColors.budget, background: AppColors.budgetSoft)
-            : Badge2(o.fee != null ? '${money(o.fee!)} сомонӣ дар сол' : 'Шартномавӣ'),
+            ? Badge2(t('Буҷетӣ (ройгон)'), color: AppColors.budget, background: AppColors.budgetSoft)
+            : Badge2(o.fee != null ? t('{n} сомонӣ дар сол', {'n': money(o.fee!)}) : t('Шартномавӣ')),
       ]),
     );
   }

@@ -1,14 +1,35 @@
 import 'package:flutter/material.dart';
 
 import 'app/auth.dart';
+import 'app/i18n.dart';
 import 'app/settings.dart';
 import 'app/theme.dart';
 import 'screens/shell.dart';
+import 'screens/welcome_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([appSettings.load(), authStore.load()]);
+  _rebuildOnLanguageChange();
   runApp(const IkhtisosiManApp());
+}
+
+// Вақте забон иваз мешавад, ҳамаи экранҳои кушода (ҳатто онҳое, ки дар тӯдаи Navigator ҳастанд)
+// аз нав сохта мешаванд, то матнҳои t(...) фавран ба забони нав гузаранд.
+void _rebuildOnLanguageChange() {
+  var lang = appSettings.lang;
+  appSettings.addListener(() {
+    if (appSettings.lang == lang) return;
+    lang = appSettings.lang;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      void rebuild(Element el) {
+        el.markNeedsBuild();
+        el.visitChildren(rebuild);
+      }
+
+      WidgetsBinding.instance.rootElement?.visitChildren(rebuild);
+    });
+  });
 }
 
 class IkhtisosiManApp extends StatelessWidget {
@@ -18,7 +39,7 @@ class IkhtisosiManApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: appSettings,
       builder: (context, _) => MaterialApp(
-        title: 'Ихтисоси ман',
+        title: t('Ихтисоси ман'),
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
         // Андозаи ҳарф аз танзимоти барнома (Муқаррарӣ / Калон / Хеле калон), бо андозаи системаи телефон.
@@ -30,7 +51,8 @@ class IkhtisosiManApp extends StatelessWidget {
             child: child!,
           );
         },
-        home: const AppShell(),
+        // Калиди забон: маълумоти аз сервер омада (ихтисосҳо, донишгоҳҳо) бо забони нав аз нав бор мешавад.
+        home: appSettings.seenWelcome ? AppShell(key: ValueKey(appSettings.lang)) : const WelcomeScreen(),
       ),
     );
   }

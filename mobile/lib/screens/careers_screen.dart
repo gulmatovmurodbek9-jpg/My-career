@@ -8,6 +8,7 @@ import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
+import '../app/i18n.dart';
 
 // Рӯйхати 884 ихтисос: ҷустуҷӯи калон дар боло, саҳифа ба саҳифа бор мешавад.
 class CareersScreen extends StatefulWidget {
@@ -89,7 +90,7 @@ class _CareersScreenState extends State<CareersScreen> {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ихтисосҳо')),
+      appBar: AppBar(title: Text(t('Ихтисосҳо'))),
       body: SafeArea(
         child: Column(children: [
           Padding(
@@ -100,12 +101,12 @@ class _CareersScreenState extends State<CareersScreen> {
               textInputAction: TextInputAction.search,
               style: const TextStyle(fontSize: 16.5),
               decoration: InputDecoration(
-                hintText: 'Номи ихтисос, масалан «духтур»',
+                hintText: t('Номи ихтисос, масалан «духтур»'),
                 prefixIcon: const Icon(Icons.search_rounded, size: 26),
                 suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Тоза кардан',
+                        tooltip: t('Тоза кардан'),
                         iconSize: 28,
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () {
@@ -118,7 +119,7 @@ class _CareersScreenState extends State<CareersScreen> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Align(alignment: Alignment.centerLeft, child: Text(_loading && _items.isEmpty ? '' : 'Ёфт шуд: $_total', style: text.bodyMedium)),
+            child: Align(alignment: Alignment.centerLeft, child: Text(_loading && _items.isEmpty ? '' : t('Ёфт шуд: {n}', {'n': _total}), style: text.bodyMedium)),
           ),
           Expanded(
             child: _error != null && _items.isEmpty
@@ -126,7 +127,7 @@ class _CareersScreenState extends State<CareersScreen> {
                 : _items.isEmpty && _loading
                     ? const LoadingView()
                     : _items.isEmpty
-                        ? Center(child: Padding(padding: const EdgeInsets.all(28), child: Text('Чунин ихтисос ёфт нашуд. Калимаи дигарро нависед.', textAlign: TextAlign.center, style: text.bodyLarge)))
+                        ? Center(child: Padding(padding: const EdgeInsets.all(28), child: Text(t('Чунин ихтисос ёфт нашуд. Калимаи дигарро нависед.'), textAlign: TextAlign.center, style: text.bodyLarge)))
                         : RefreshIndicator(
                             onRefresh: () => _load(reset: true),
                             child: ListView.separated(
@@ -162,9 +163,9 @@ class CareerCard extends StatelessWidget {
               Text(career.name, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 10),
               Wrap(spacing: 8, runSpacing: 8, children: [
-                if (career.hasFreeSeats) const Badge2('Буҷетӣ ҳаст', color: AppColors.budget, background: AppColors.budgetSoft),
-                if (career.minFee != null && career.minFee! > 0) Badge2('аз ${money(career.minFee!)} сомонӣ'),
-                if (career.years != null) Badge2('${career.years} сол', color: AppColors.textSoft, background: const Color(0xFFF1F5F9)),
+                if (career.hasFreeSeats) Badge2(t('Буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft),
+                if (career.minFee != null && career.minFee! > 0) Badge2(t('аз {n} сомонӣ', {'n': money(career.minFee!)})),
+                if (career.years != null) Badge2(t('{n} сол', {'n': career.years}), color: AppColors.textSoft, background: const Color(0xFFF1F5F9)),
               ]),
             ]),
           ),

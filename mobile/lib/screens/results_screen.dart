@@ -6,6 +6,7 @@ import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
 import 'quiz_screen.dart';
+import '../app/i18n.dart';
 
 class ResultsScreen extends StatefulWidget {
   const ResultsScreen({super.key, required this.result, required this.requestBody});
@@ -41,7 +42,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
     final text = Theme.of(context).textTheme;
     final r = widget.result;
     return Scaffold(
-      appBar: AppBar(title: const Text('Натиҷаи шумо')),
+      appBar: AppBar(title: Text(t('Натиҷаи шумо'))),
       body: SafeArea(
         child: ListView(
           padding: AppSizes.page,
@@ -50,35 +51,35 @@ class _ResultsScreenState extends State<ResultsScreen> {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(AppSizes.radius + 4)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Самти мувофиқи шумо', style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.9))),
+                Text(t('Самти мувофиқи шумо'), style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.9))),
                 const SizedBox(height: 6),
                 Text(r.clusterName, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: Colors.white, height: 1.2)),
                 const SizedBox(height: 12),
-                Text('Мувофиқат: ${r.clusterPercent}%', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                Text(t('Мувофиқат: {n}%', {'n': r.clusterPercent}), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
               ]),
             ),
-            const SectionTitle('Маслиҳат'),
+            SectionTitle(t('Маслиҳат')),
             AppCard(
               child: _advice != null && _advice!.isNotEmpty
                   ? Text(_advice!, style: text.bodyLarge)
                   : _adviceFailed
-                      ? Text('Маслиҳат ҳоло наомад. Ихтисосҳои поёнро бинед.', style: text.bodyMedium)
+                      ? Text(t('Маслиҳат ҳоло наомад. Ихтисосҳои поёнро бинед.'), style: text.bodyMedium)
                       : Row(children: [
                           const SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 3)),
                           const SizedBox(width: 14),
-                          Expanded(child: Text('Маслиҳат тайёр мешавад…', style: text.bodyMedium)),
+                          Expanded(child: Text(t('Маслиҳат тайёр мешавад…'), style: text.bodyMedium)),
                         ]),
             ),
             if (r.directions.isNotEmpty) ...[
-              const SectionTitle('Ҳамаи 5 самт'),
+              SectionTitle(t('Ҳамаи 5 самт')),
               AppCard(
                 child: Column(children: [
                   for (final d in r.directions) _DirectionBar(name: d.key, percent: d.value),
                 ]),
               ),
             ],
-            SectionTitle('Ихтисосҳои мувофиқ (${r.careers.length})'),
-            Text('Ба ихтисос пахш кунед, то маош ва донишгоҳҳоро бинед.', style: text.bodyMedium),
+            SectionTitle(t('Ихтисосҳои мувофиқ ({n})', {'n': r.careers.length})),
+            Text(t('Ба ихтисос пахш кунед, то маош ва донишгоҳҳоро бинед.'), style: text.bodyMedium),
             const SizedBox(height: 12),
             for (var i = 0; i < r.careers.length; i++) ...[
               _CareerResultCard(rank: i + 1, career: r.careers[i]),
@@ -88,7 +89,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const QuizFlowScreen())),
               icon: const Icon(Icons.refresh_rounded, size: 28),
-              label: const Text('Тестро аз нав супоред'),
+              label: Text(t('Тестро аз нав супоред')),
             ),
           ],
         ),
@@ -146,7 +147,7 @@ class _CareerResultCard extends StatelessWidget {
               ]),
               if (career.free) ...[
                 const SizedBox(height: 10),
-                const Badge2('Ҷойи буҷетӣ ҳаст', color: AppColors.budget, background: AppColors.budgetSoft),
+                Badge2(t('Ҷойи буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft),
               ],
             ]),
           ),

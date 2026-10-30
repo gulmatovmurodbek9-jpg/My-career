@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/theme.dart';
+import '../app/i18n.dart';
 
 String money(int n) {
   final s = n.toString();
@@ -286,8 +287,8 @@ class AppCard extends StatelessWidget {
 }
 
 class LoadingView extends StatelessWidget {
-  const LoadingView({super.key, this.text = 'Каме интизор шавед…'});
-  final String text;
+  const LoadingView({super.key, this.text});
+  final String? text;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -296,7 +297,7 @@ class LoadingView extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             const SizedBox(width: 48, height: 48, child: CircularProgressIndicator(strokeWidth: 5)),
             const SizedBox(height: 20),
-            Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+            Text(text ?? t('Каме интизор шавед…'), textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
           ]),
         ),
       );
@@ -316,7 +317,7 @@ class ErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 24),
-            FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded, size: 28), label: const Text('Боз кӯшиш кунед')),
+            FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded, size: 28), label: Text(t('Боз кӯшиш кунед'))),
           ]),
         ),
       );

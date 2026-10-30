@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../app/settings.dart';
+import '../app/i18n.dart';
+
 // Ҳамон API-и сайт. Барои санҷиш дар компютер: --dart-define=API_BASE=http://localhost:3005/api
 const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://ikhtisosiman.qobus.tj/api');
 
@@ -34,7 +37,7 @@ class Api {
   final _cache = <String, (DateTime, Future<dynamic>)>{};
 
   Future<dynamic> get(String path, [Map<String, String>? query]) {
-    final uri = Uri.parse('$apiBase$path').replace(queryParameters: {'lang': 'tj', ...?query});
+    final uri = Uri.parse('$apiBase$path').replace(queryParameters: {'lang': appSettings.lang, ...?query});
     final key = uri.toString();
     final hit = _cache[key];
     if (hit != null && DateTime.now().difference(hit.$1) < _cacheTtl) return hit.$2;
@@ -63,7 +66,7 @@ class Api {
     try {
       response = await request().timeout(const Duration(seconds: 25));
     } catch (_) {
-      throw ApiException('Интернет нест ё суст аст. Пайвастро санҷед ва боз кӯшиш кунед.');
+      throw ApiException(t('Интернет нест ё суст аст. Пайвастро санҷед ва боз кӯшиш кунед.'));
     }
     final text = utf8.decode(response.bodyBytes);
     dynamic data;
@@ -88,8 +91,8 @@ class Api {
     final m = data is Map ? data['message'] : null;
     if (m is String && m.trim().isNotEmpty) return m;
     if (m is List && m.isNotEmpty) return m.map((e) => '$e').join('\n');
-    if (status == 429) return 'Кӯшишҳо зиёд шуданд. Каме сабр кунед.';
-    if (status >= 500) return 'Сервер ҳозир ҷавоб намедиҳад. Баъдтар кӯшиш кунед.';
-    return 'Хатогӣ рӯй дод. Боз кӯшиш кунед.';
+    if (status == 429) return t('Кӯшишҳо зиёд шуданд. Каме сабр кунед.');
+    if (status >= 500) return t('Сервер ҳозир ҷавоб намедиҳад. Баъдтар кӯшиш кунед.');
+    return t('Хатогӣ рӯй дод. Боз кӯшиш кунед.');
   }
 }

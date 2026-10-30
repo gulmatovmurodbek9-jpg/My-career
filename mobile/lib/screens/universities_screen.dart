@@ -5,6 +5,7 @@ import '../api/models.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'university_detail_screen.dart';
+import '../app/i18n.dart';
 
 // 128 муассиса: як бор бор мешаванд, ҷустуҷӯ ва филтр дар худи телефон (тез).
 class UniversitiesScreen extends StatefulWidget {
@@ -61,7 +62,7 @@ class _UniversitiesScreenState extends State<UniversitiesScreen> {
     final cities = <String>{for (final u in _all ?? <University>[]) if (u.city.isNotEmpty) u.city}.toList()..sort();
     final shown = _shown;
     return Scaffold(
-      appBar: AppBar(title: const Text('Донишгоҳҳо')),
+      appBar: AppBar(title: Text(t('Донишгоҳҳо'))),
       body: SafeArea(
         child: _error != null
             ? ErrorView(message: _error!, onRetry: _load)
@@ -74,11 +75,11 @@ class _UniversitiesScreenState extends State<UniversitiesScreen> {
                         controller: _search,
                         onChanged: (_) => setState(() {}),
                         style: const TextStyle(fontSize: 16.5),
-                        decoration: const InputDecoration(hintText: 'Номи донишгоҳ ё шаҳр', prefixIcon: Icon(Icons.search_rounded, size: 26)),
+                        decoration: InputDecoration(hintText: t('Номи донишгоҳ ё шаҳр'), prefixIcon: Icon(Icons.search_rounded, size: 26)),
                       ),
                       const SizedBox(height: 12),
                       Row(children: [
-                        for (final k in const [['all', 'Ҳама'], ['higher', 'Донишгоҳ'], ['college', 'Коллеҷ']]) ...[
+                        for (final k in [['all', t('Ҳама')], ['higher', t('Донишгоҳ')], ['college', t('Коллеҷ')]]) ...[
                           Expanded(child: _Segment(label: k[1], selected: _kind == k[0], onTap: () => setState(() => _kind = k[0]))),
                           if (k[0] != 'college') const SizedBox(width: 8),
                         ],
@@ -91,16 +92,16 @@ class _UniversitiesScreenState extends State<UniversitiesScreen> {
                         style: const TextStyle(fontSize: 16.5, color: AppColors.text),
                         decoration: const InputDecoration(prefixIcon: Icon(Icons.location_city_rounded, size: 28)),
                         items: [
-                          const DropdownMenuItem(value: '', child: Text('Ҳамаи шаҳрҳо')),
+                          DropdownMenuItem(value: '', child: Text(t('Ҳамаи шаҳрҳо'))),
                           for (final c in cities) DropdownMenuItem(value: c, child: Text(c)),
                         ],
                         onChanged: (v) => setState(() => _city = v ?? ''),
                       ),
                       const SizedBox(height: 12),
-                      Text('Ёфт шуд: ${shown.length}', style: text.bodyMedium),
+                      Text(t('Ёфт шуд: {n}', {'n': shown.length}), style: text.bodyMedium),
                       const SizedBox(height: 10),
                       if (shown.isEmpty)
-                        Padding(padding: const EdgeInsets.all(20), child: Text('Чизе ёфт нашуд.', textAlign: TextAlign.center, style: text.bodyLarge))
+                        Padding(padding: const EdgeInsets.all(20), child: Text(t('Чизе ёфт нашуд.'), textAlign: TextAlign.center, style: text.bodyLarge))
                       else
                         for (final u in shown) ...[
                           _UniversityCard(university: u),
@@ -156,8 +157,8 @@ class _UniversityCard extends StatelessWidget {
             const SizedBox(height: 8),
             Wrap(spacing: 8, runSpacing: 8, children: [
               if (u.city.isNotEmpty) Badge2(u.city, color: AppColors.textSoft, background: const Color(0xFFF1F5F9)),
-              Badge2('${u.careerCount} ихтисос'),
-              if (!u.isState) const Badge2('Ғайридавлатӣ', color: Color(0xFFB45309), background: Color(0xFFFEF3C7)),
+              Badge2(t('{n} ихтисос', {'n': u.careerCount})),
+              if (!u.isState) Badge2(t('Ғайридавлатӣ'), color: Color(0xFFB45309), background: Color(0xFFFEF3C7)),
             ]),
           ]),
         ),

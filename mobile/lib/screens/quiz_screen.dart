@@ -7,6 +7,7 @@ import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'results_screen.dart';
+import '../app/i18n.dart';
 
 // Экрани аввали тест: синф ва тугмаи «Сар кардан».
 class QuizStartScreen extends StatelessWidget {
@@ -16,7 +17,7 @@ class QuizStartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Тести касбӣ')),
+      appBar: AppBar(title: Text(t('Тести касбӣ'))),
       // Тугмаи асосӣ ҳамеша дар поён намоён аст — лозим нест, ки ба поён кашед.
       bottomNavigationBar: ListenableBuilder(
         listenable: appSettings,
@@ -27,13 +28,13 @@ class QuizStartScreen extends StatelessWidget {
             top: false,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               if (appSettings.grade == null)
-                Padding(padding: const EdgeInsets.only(bottom: 8), child: Text('Аввал синфро интихоб кунед', style: text.bodyMedium)),
+                Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(t('Аввал синфро интихоб кунед'), style: text.bodyMedium)),
               FilledButton.icon(
                 onPressed: appSettings.grade == null
                     ? null
                     : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuizFlowScreen())),
                 icon: const Icon(Icons.play_arrow_rounded, size: 26),
-                label: const Text('Тестро сар кунед'),
+                label: Text(t('Тестро сар кунед')),
               ),
             ]),
           ),
@@ -44,14 +45,14 @@ class QuizStartScreen extends StatelessWidget {
         builder: (context, _) => ListView(
           padding: AppSizes.page,
           children: [
-            Text('Чӣ тавр мегузарад?', style: text.headlineMedium),
+            Text(t('Чӣ тавр мегузарад?'), style: text.headlineMedium),
             const SizedBox(height: 14),
-            const _Step(number: '1', text: 'Ба 24 саволи содда дар бораи ҳаёти худ ҷавоб медиҳед.'),
-            const _Step(number: '2', text: 'Баъд 5 саволи дигар дар бораи самти шумо.'),
-            const _Step(number: '3', text: 'Мебинед, ки кадом ихтисосҳо ба шумо мувофиқанд ва онҳоро дар куҷо мехонанд.'),
+            _Step(number: '1', text: t('Ба 24 саволи содда дар бораи ҳаёти худ ҷавоб медиҳед.')),
+            _Step(number: '2', text: t('Баъд 5 саволи дигар дар бораи самти шумо.')),
+            _Step(number: '3', text: t('Мебинед, ки кадом ихтисосҳо ба шумо мувофиқанд ва онҳоро дар куҷо мехонанд.')),
             const SizedBox(height: 10),
-            Text('Ҷавоби «дуруст» ё «нодуруст» нест. Он чиро интихоб кунед, ки ба шумо наздиктар аст.', style: text.bodyLarge),
-            const SectionTitle('Шумо баъди кадом синф ҳастед?'),
+            Text(t('Ҷавоби «дуруст» ё «нодуруст» нест. Он чиро интихоб кунед, ки ба шумо наздиктар аст.'), style: text.bodyLarge),
+            SectionTitle(t('Шумо баъди кадом синф ҳастед?')),
             for (final g in [9, 11]) ...[
               _GradeButton(grade: g, selected: appSettings.grade == g),
               const SizedBox(height: 12),
@@ -105,8 +106,8 @@ class _GradeButton extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Баъди синфи $grade', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
-                    Text(grade == 9 ? 'Метавонед ба коллеҷ дароед' : 'Метавонед ба донишгоҳ ё коллеҷ дароед', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(t('Баъди синфи {n}', {'n': grade}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+                    Text(grade == 9 ? t('Метавонед ба коллеҷ дароед') : t('Метавонед ба донишгоҳ ё коллеҷ дароед'), style: Theme.of(context).textTheme.bodyMedium),
                   ]),
                 ),
               ]),
@@ -133,7 +134,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
   Map<int, String> _clusterNames = {};
   int _index = 0;
   bool _stage2 = false;
-  String? _loading = 'Саволҳо бор мешаванд…';
+  String? _loading = t('Саволҳо бор мешаванд…');
   String? _error;
 
   @override
@@ -144,7 +145,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
 
   Future<void> _start() async {
     setState(() {
-      _loading = 'Саволҳо бор мешаванд…';
+      _loading = t('Саволҳо бор мешаванд…');
       _error = null;
     });
     try {
@@ -188,7 +189,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
   List<MapEntry<String, double>> _rankedClusters = [];
 
   Future<void> _afterStage1() async {
-    setState(() => _loading = 'Ҷавобҳо ҳисоб мешаванд…');
+    setState(() => _loading = t('Ҷавобҳо ҳисоб мешаванд…'));
     try {
       final data = await Api.instance.post('/quiz/score', {'answers': _answerList});
       final scores = Map<String, dynamic>.from(data['scores']['mmtClusters']);
@@ -203,11 +204,11 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
           _questions.add(QuizQuestion(
             id: 'tiebreak',
             part: 'tiebreak',
-            text: 'Ду самт ба шумо баробар наздик баромад. Кадомаш ба дилатон наздиктар аст?',
+            text: t('Ду самт ба шумо баробар наздик баромад. Кадомаш ба дилатон наздиктар аст?'),
             options: [
               QuizOption('${name(first.key)} (${percent(first.value)}%)', first.key),
               QuizOption('${name(second.key)} (${percent(second.value)}%)', second.key),
-              QuizOption('Намедонам, ҳарду ба ман наздиканд', 'both'),
+              QuizOption(t('Намедонам, ҳарду ба ман наздиканд'), 'both'),
             ],
           ));
           _index++;
@@ -225,7 +226,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
   }
 
   Future<void> _loadStage2(String clusterKey) async {
-    setState(() => _loading = 'Саволҳои самти шумо бор мешаванд…');
+    setState(() => _loading = t('Саволҳои самти шумо бор мешаванд…'));
     try {
       final data = await Api.instance.get('/quiz/specialty-questions', {'clusterNumber': clusterKey.replaceAll(RegExp(r'\D'), '')});
       final more = (data as List).map((e) => QuizQuestion.fromJson(Map<String, dynamic>.from(e))).toList();
@@ -248,10 +249,10 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
   }
 
   Future<void> _submit() async {
-    setState(() => _loading = 'Натиҷа тайёр мешавад…');
+    setState(() => _loading = t('Натиҷа тайёр мешавад…'));
     final body = {
       'answers': _answerList,
-      'lang': 'tj',
+      'lang': appSettings.lang,
       'grade': appSettings.grade ?? 11,
       'deferAdvice': true,
     };
@@ -302,7 +303,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
       body = ListView(
         padding: AppSizes.page,
         children: [
-          Text('Савол ${_index + 1} аз $total', style: text.titleMedium?.copyWith(color: AppColors.primary)),
+          Text(t('Савол {v1} аз {v2}', {'v1': _index + 1, 'v2': total}), style: text.titleMedium?.copyWith(color: AppColors.primary)),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
@@ -330,8 +331,8 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(iconSize: 26, tooltip: 'Баргаштан', icon: const Icon(Icons.arrow_back_rounded), onPressed: _back),
-          title: const Text('Тест'),
+          leading: IconButton(iconSize: 26, tooltip: t('Баргаштан'), icon: const Icon(Icons.arrow_back_rounded), onPressed: _back),
+          title: Text(t('Тест')),
         ),
         body: SafeArea(child: body),
       ),

@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ikhtisosi_man/api/models.dart';
 import 'package:ikhtisosi_man/app/auth.dart';
+import 'package:ikhtisosi_man/app/i18n.dart';
+import 'package:ikhtisosi_man/app/i18n_en.dart';
+import 'package:ikhtisosi_man/app/i18n_ru.dart';
 import 'package:ikhtisosi_man/app/settings.dart';
 import 'package:ikhtisosi_man/screens/auth/auth_ui.dart';
 import 'package:ikhtisosi_man/screens/auth/login_screen.dart';
@@ -67,7 +72,7 @@ void main() {
   });
 
   testWidgets('экрани асосӣ: се амали калон ва 4 бахш дар поён', (tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'seenWelcome': true});
     await appSettings.load();
     await tester.pumpWidget(const IkhtisosiManApp());
     await tester.pumpAndSettle();
@@ -90,11 +95,12 @@ void main() {
   testWidgets('воридшавӣ: майдонҳои холӣ хато нишон медиҳанд, «фаромӯш кардам» ҳаст', (tester) async {
     await tester.pumpWidget(MaterialApp(home: const LoginScreen()));
     await tester.pumpAndSettle();
-    expect(find.text('Паролро фаромӯш кардам?'), findsOneWidget);
+    expect(find.text('Паролро фаромӯш кардед?'), findsOneWidget);
     await tester.ensureVisible(find.text('Ворид шудан'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ворид шудан'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Почтаро нависед'));
     expect(find.text('Почтаро нависед'), findsOneWidget);
     expect(find.text('Паролро нависед'), findsOneWidget);
   });
@@ -107,5 +113,45 @@ void main() {
     await tester.pump();
     expect(controller.text, '123456');
     expect(done, '123456');
+  });
+
+  testWidgets('бори аввал «Хуш омадед», «Оғоз кардан» ба экрани асосӣ мебарад', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await appSettings.load();
+    await tester.pumpWidget(const IkhtisosiManApp());
+    await tester.pumpAndSettle();
+    expect(find.text('Хуш омадед ба'), findsOneWidget);
+    await tester.tap(find.text('Оғоз кардан'));
+    await tester.pumpAndSettle();
+    expect(find.text('Тестро сар кунед'), findsOneWidget);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('seenWelcome'), isTrue);
+  });
+
+  testWidgets('забон: русӣ интихоб шуд — матнҳо фавран русӣ мешаванд', (tester) async {
+    SharedPreferences.setMockInitialValues({'seenWelcome': true});
+    await appSettings.load();
+    await tester.pumpWidget(const IkhtisosiManApp());
+    await tester.pumpAndSettle();
+    await appSettings.setLang('ru');
+    await tester.pumpAndSettle();
+    expect(find.text('Начать тест'), findsOneWidget);
+    expect(t('Хуш омадед, {name}!', {'name': 'Алӣ'}), 'Добро пожаловать, Алӣ!');
+    await appSettings.setLang('tj');
+    await tester.pumpAndSettle();
+  });
+
+  // Ҳар матне, ки дар код ба t('…') дода шудааст, бояд тарҷумаи русӣ ва англисӣ дошта бошад.
+  test('тарҷума: ҳамаи матнҳои t() русӣ ва англисӣ доранд', () {
+    final keys = <String>{};
+    final pattern = RegExp(r"(?<![A-Za-z0-9_])t\('((?:[^'\\]|\\.)*)'");
+    for (final f in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
+      for (final m in pattern.allMatches(f.readAsStringSync())) {
+        keys.add(m.group(1)!.replaceAll(r"\'", "'"));
+      }
+    }
+    expect(keys.length, greaterThan(150));
+    expect(keys.where((k) => !ru.containsKey(k)).toList(), isEmpty, reason: 'русӣ нест');
+    expect(keys.where((k) => !en.containsKey(k)).toList(), isEmpty, reason: 'англисӣ нест');
   });
 }

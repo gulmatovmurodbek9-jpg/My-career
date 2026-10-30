@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../api/api.dart';
+import 'config.dart';
+import 'i18n.dart';
 
 class AppUser {
   AppUser.fromJson(Map<String, dynamic> j)
@@ -46,7 +49,7 @@ class AuthStore extends ChangeNotifier {
 
   Future<void> _save(Map<String, dynamic> data) async {
     final token = data['access_token'];
-    if (token is! String || token.isEmpty) throw ApiException('Ворид шудан нашуд. Боз кӯшиш кунед.');
+    if (token is! String || token.isEmpty) throw ApiException(t('Ворид шудан нашуд. Боз кӯшиш кунед.'));
     _token = token;
     _user = data['user'] is Map ? AppUser.fromJson(Map<String, dynamic>.from(data['user'])) : null;
     Api.instance.token = token;
@@ -74,13 +77,37 @@ class AuthStore extends ChangeNotifier {
     await _save(Map<String, dynamic>.from(data));
   }
 
+  // «Бо Google ворид шудан»: Google idToken медиҳад, сервер онро месанҷад ва токени худро медиҳад.
+  // Агар корбар равзанаро пӯшад, null бармегардад (хато нест).
+  static bool get googleAvailable => !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
+  bool _googleReady = false;
+
+  Future<bool> googleLogin() async {
+    final google = GoogleSignIn.instance;
+    try {
+      if (!_googleReady) {
+        await google.initialize(serverClientId: googleServerClientId);
+        _googleReady = true;
+      }
+      final account = await google.authenticate();
+      final idToken = account.authentication.idToken;
+      if (idToken == null) throw ApiException(t('Google ҷавоб надод. Боз кӯшиш кунед.'));
+      final data = await Api.instance.post('/auth/google', {'idToken': idToken});
+      await _save(Map<String, dynamic>.from(data));
+      return true;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return false;
+      throw ApiException(t('Бо Google ворид шудан нашуд. Боз кӯшиш кунед ё бо почта ворид шавед.'));
+    }
+  }
+
   Future<void> resendCode(String email) => Api.instance.post('/auth/resend-code', {'email': email.trim()});
 
   Future<void> forgotPassword(String email) => Api.instance.post('/auth/forgot-password', {'email': email.trim()});
 
   Future<String> resetPassword(String email, String code, String password) async {
     final data = await Api.instance.post('/auth/reset-password', {'email': email.trim(), 'code': code, 'password': password});
-    return data is Map && data['message'] is String ? data['message'] as String : 'Парол иваз шуд.';
+    return data is Map && data['message'] is String ? data['message'] as String : t('Парол иваз шуд.');
   }
 
   Future<void> logout() async {
@@ -90,6 +117,7 @@ class AuthStore extends ChangeNotifier {
     notifyListeners();
     try {
       await _storage.deleteAll();
+      if (_googleReady) await GoogleSignIn.instance.signOut();
     } catch (_) {}
   }
 
@@ -105,14 +133,23 @@ final authStore = AuthStore();
 // Санҷиши почта ва парол дар телефон — то ба сервер нарафта, хаторо гӯем.
 String? validateEmail(String? v) {
   final s = (v ?? '').trim();
-  if (s.isEmpty) return 'Почтаро нависед';
-  if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$').hasMatch(s)) return 'Почта нодуруст аст. Масалан: nom@gmail.com';
+  if (s.isEmpty) return t('Почтаро нависед');
+  if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$').hasMatch(s)) return t('Почта нодуруст аст. Масалан: nom@gmail.com');
   return null;
 }
 
 String? validatePassword(String? v) {
   final s = v ?? '';
-  if (s.isEmpty) return 'Паролро нависед';
-  if (s.length < 6) return 'Парол камаш 6 аломат бошад';
+  if (s.isEmpty) return t('Паролро нависед');
+  if (s.length < 6) return t('Парол камаш 6 аломат бошад');
   return null;
+}
+
+// Қувваи парол барои нишондиҳанда: 0 — суст … 3 — қавӣ.
+int passwordStrength(String s) {
+  if (s.length < 6) return s.isEmpty ? 0 : 1;
+  var score = 1;
+  if (s.length >= 8) score++;
+  if (RegExp(r'[0-9]').hasMatch(s) && RegExp(r'[^0-9]').hasMatch(s) || RegExp(r'[^A-Za-z0-9А-Яа-яӮӯҚқҲҳҶҷҒғӢӣЁё]').hasMatch(s)) score++;
+  return score;
 }

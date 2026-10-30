@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 
 import '../../api/api.dart';
 import '../../app/auth.dart';
+import '../../app/i18n.dart';
 import '../../app/theme.dart';
 import '../../ui/widgets.dart';
 import 'auth_ui.dart';
 import 'login_screen.dart';
+import 'success_screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key, required this.email});
@@ -23,7 +25,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _code = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
-  bool _showPassword = false;
   bool _loading = false;
   String? _error;
   String? _info;
@@ -48,10 +49,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   void _startTimer(int seconds) {
     _timer?.cancel();
     setState(() => _wait = seconds);
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return t.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return timer.cancel();
       setState(() => _wait--);
-      if (_wait <= 0) t.cancel();
+      if (_wait <= 0) timer.cancel();
     });
   }
 
@@ -59,7 +60,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     FocusScope.of(context).unfocus();
     final codeOk = _code.text.length == 6;
     if (!_form.currentState!.validate() || !codeOk) {
-      if (!codeOk) setState(() => _error = 'Рамзи 6-рақамаро аз почта нависед');
+      if (!codeOk) setState(() => _error = t('Рамзи 6-рақамаро аз почта нависед'));
       return;
     }
     setState(() {
@@ -68,11 +69,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       _info = null;
     });
     try {
-      final message = await authStore.resetPassword(widget.email, _code.text, _password.text);
+      await authStore.resetPassword(widget.email, _code.text, _password.text);
       if (!mounted) return;
       TextInput.finishAutofillContext();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-      Navigator.of(context).pushReplacement(authRoute(LoginScreen(email: widget.email)));
+      Navigator.of(context).pushReplacement(authRoute(PasswordChangedScreen(email: widget.email)));
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -90,7 +90,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     try {
       await authStore.forgotPassword(widget.email);
       if (!mounted) return;
-      setState(() => _info = 'Рамзи нав фиристода шуд.');
+      setState(() => _info = t('Рамзи нав фиристода шуд.'));
       _startTimer(60);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -100,65 +100,54 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final matches = _confirm.text.isNotEmpty && _confirm.text == _password.text;
     return AuthScaffold(
+      barTitle: t('Пароли нав'),
       icon: Icons.lock_reset_rounded,
-      title: 'Пароли нав',
-      subtitle: 'Агар ${widget.email} дар сайт бошад, ба он рамзи 6-рақама фиристодем. Почта ва «Спам»-ро санҷед.',
+      heading: t('Пароли нав гузоред'),
+      subtitle: t('Агар ин почта дар сайт бошад, ба он рамзи 6-рақама фиристодем.'),
+      belowSubtitle: Padding(padding: const EdgeInsets.only(top: 10), child: InfoChip(icon: Icons.mail_outline_rounded, text: widget.email)),
       child: AutofillGroup(
         child: Form(
           key: _form,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FormMessage(text: _error),
-              FormMessage(text: _info, success: true),
-              const Text(
-                'Рамз аз почта',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text),
-              ),
-              const SizedBox(height: 8),
-              CodeInput(controller: _code),
-              Center(
-                child: _wait > 0
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'Рамзи навро баъди $_wait сония гирифта метавонед',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 15, color: AppColors.textSoft),
-                        ),
-                      )
-                    : TextButton.icon(onPressed: _resend, icon: const Icon(Icons.refresh_rounded), label: const Text('Рамзро боз фиристед')),
-              ),
-              const SizedBox(height: 6),
-              LabeledField(
-                dense: true,
-                label: 'Пароли нав',
-                controller: _password,
-                icon: Icons.lock_outline_rounded,
-                hint: 'Камаш 6 аломат',
-                obscure: !_showPassword,
-                autofillHints: const [AutofillHints.newPassword],
-                validator: validatePassword,
-                suffix: EyeButton(visible: _showPassword, onTap: () => setState(() => _showPassword = !_showPassword)),
-              ),
-              const SizedBox(height: 14),
-              LabeledField(
-                dense: true,
-                label: 'Паролро такрор кунед',
-                controller: _confirm,
-                icon: Icons.lock_outline_rounded,
-                hint: 'Ҳамон паролро боз нависед',
-                obscure: !_showPassword,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
-                autofillHints: const [AutofillHints.newPassword],
-                validator: (v) => v != _password.text ? 'Паролҳо як хел нестанд' : null,
-              ),
-              const SizedBox(height: 18),
-              GradientButton(label: 'Паролро иваз кардан', icon: Icons.check_rounded, loading: _loading, onPressed: _submit, height: 54),
-            ],
-          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            FormMessage(text: _error),
+            FormMessage(text: _info, success: true),
+            Text(t('Рамз аз почта'), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text)),
+            const SizedBox(height: 7),
+            CodeInput(controller: _code),
+            ResendRow(wait: _wait, onResend: _resend),
+            const SizedBox(height: 14),
+            AuthField(
+              label: t('Пароли нав'),
+              controller: _password,
+              icon: Icons.lock_outline_rounded,
+              hint: t('Камаш 6 аломат'),
+              password: true,
+              onChanged: (_) => setState(() {}),
+              autofillHints: const [AutofillHints.newPassword],
+              validator: validatePassword,
+            ),
+            PasswordStrength(password: _password.text),
+            const SizedBox(height: 14),
+            AuthField(
+              label: t('Паролро такрор кунед'),
+              controller: _confirm,
+              icon: Icons.lock_reset_rounded,
+              hint: '••••••••',
+              password: true,
+              onChanged: (_) => setState(() {}),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+              autofillHints: const [AutofillHints.newPassword],
+              trailing: matches ? const Icon(Icons.check_circle_rounded, size: 20, color: AppColors.budget) : null,
+              validator: (v) => v != _password.text ? t('Паролҳо як хел нестанд') : null,
+            ),
+            const SizedBox(height: 20),
+            GradientButton(label: t('Паролро иваз кардан'), loading: _loading, onPressed: _submit, height: 54),
+            const SizedBox(height: 12),
+            InfoChip(icon: Icons.verified_user_outlined, text: t('Пароли шумо рамзгузорӣ карда нигоҳ дошта мешавад'), color: AppColors.textSoft),
+          ]),
         ),
       ),
     );

@@ -10,6 +10,7 @@ import 'careers_screen.dart';
 import 'home_screen.dart';
 import 'quiz_screen.dart';
 import 'universities_screen.dart';
+import '../app/i18n.dart';
 
 // Бахшҳои асосӣ: 0 Асосӣ, 1 Тест, 2 Ихтисосҳо, 3 Донишгоҳҳо.
 // Менюи поён мисли сайт: панели сафеди мудаввар, «Тест» — тугмаи калон дар мобайн, «Ҳисоб» дар канор.
@@ -39,10 +40,7 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _tab,
-        children: const [HomeScreen(), QuizStartScreen(), CareersScreen(), UniversitiesScreen()],
-      ),
+      body: IndexedStack(index: _tab, children: const [HomeScreen(), QuizStartScreen(), CareersScreen(), UniversitiesScreen()]),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.only(bottom: 10),
         child: Padding(
@@ -55,34 +53,39 @@ class _AppShellState extends State<AppShell> {
               border: Border.all(color: AppColors.border, width: 1.2),
               boxShadow: const [BoxShadow(color: Color(0x240D2E8C), blurRadius: 30, offset: Offset(0, 10), spreadRadius: -12)],
             ),
-            child: Row(children: [
-              _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Асосӣ', selected: _tab == 0, onTap: () => select(0)),
-              _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: 'Ихтисосҳо', selected: _tab == 2, onTap: () => select(2)),
-              _CenterItem(selected: _tab == 1, onTap: () => select(1)),
-              _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: 'Донишгоҳҳо', selected: _tab == 3, onTap: () => select(3)),
-              Expanded(
-                child: ListenableBuilder(
-                  listenable: authStore,
-                  builder: (context, _) {
-                    final name = authStore.user?.displayName ?? '';
-                    return _NavButton(
-                      label: authStore.isLoggedIn ? 'Ҳисоб' : 'Ворид',
-                      selected: false,
-                      onTap: _openAccount,
-                      icon: authStore.isLoggedIn && name.isNotEmpty
-                          ? Container(
-                              width: 26,
-                              height: 26,
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient),
-                              child: Text(name.characters.first.toUpperCase(), style: const TextStyle(fontFamily: AppFonts.display, fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
-                            )
-                          : const Icon(Icons.person_outline_rounded, size: 24, color: AppColors.textSoft),
-                    );
-                  },
+            child: Row(
+              children: [
+                _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: t('Асосӣ'), selected: _tab == 0, onTap: () => select(0)),
+                _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: t('Ихтисосҳо'), selected: _tab == 2, onTap: () => select(2)),
+                _CenterItem(selected: _tab == 1, onTap: () => select(1)),
+                _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: t('Донишгоҳҳо'), selected: _tab == 3, onTap: () => select(3)),
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: authStore,
+                    builder: (context, _) {
+                      final name = authStore.user?.displayName ?? '';
+                      return _NavButton(
+                        label: authStore.isLoggedIn ? t('Ҳисоб') : t('Ворид'),
+                        selected: false,
+                        onTap: _openAccount,
+                        icon: authStore.isLoggedIn && name.isNotEmpty
+                            ? Container(
+                                width: 26,
+                                height: 26,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient),
+                                child: Text(
+                                  name.characters.first.toUpperCase(),
+                                  style: const TextStyle(fontFamily: AppFonts.display, fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.person_outline_rounded, size: 24, color: AppColors.textSoft),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
         ),
       ),
@@ -100,13 +103,13 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Expanded(
-        child: _NavButton(
-          label: label,
-          selected: selected,
-          onTap: onTap,
-          icon: Icon(selected ? activeIcon : icon, size: 23, color: selected ? AppColors.primary : AppColors.textSoft),
-        ),
-      );
+    child: _NavButton(
+      label: label,
+      selected: selected,
+      onTap: onTap,
+      icon: Icon(selected ? activeIcon : icon, size: 23, color: selected ? AppColors.primary : AppColors.textSoft),
+    ),
+  );
 }
 
 // Нишона бо «қурси» нарми кабуд дар зери бахши интихобшуда ва номи бахш.
@@ -119,35 +122,41 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        excludeSemantics: true,
-        child: InkResponse(
-          onTap: onTap,
-          radius: 34,
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              width: selected ? 46 : 34,
-              height: 28,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: selected ? AppColors.contractSoft : Colors.transparent, borderRadius: BorderRadius.circular(14)),
-              child: icon,
-            ),
-            const SizedBox(height: 3),
-            Text(
+    button: true,
+    selected: selected,
+    label: label,
+    excludeSemantics: true,
+    child: InkResponse(
+      onTap: onTap,
+      radius: 34,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            width: selected ? 46 : 34,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: selected ? AppColors.contractSoft : Colors.transparent, borderRadius: BorderRadius.circular(14)),
+            child: icon,
+          ),
+          const SizedBox(height: 3),
+          // Номи дароз (масалан «Специальности») хурдтар мешавад, вале бурида намешавад.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
               label,
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               // Номи бахш бо андозаи доимӣ, то дар «Хеле калон» ҳам менюи поён вайрон нашавад.
               textScaler: TextScaler.noScaling,
               style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w800 : FontWeight.w600, color: selected ? AppColors.primary : AppColors.textSoft),
             ),
-          ]),
-        ),
-      );
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // «Тест» — доираи калони градиентӣ, ки аз панел каме боло баромадааст (мисли «Ёвар» дар сайт).
@@ -158,43 +167,47 @@ class _CenterItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Expanded(
-        child: Semantics(
-          button: true,
-          selected: selected,
-          label: 'Тест',
-          excludeSemantics: true,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: Stack(clipBehavior: Clip.none, alignment: Alignment.bottomCenter, children: [
-              Positioned(
-                top: -18,
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 220),
-                  scale: selected ? 1.06 : 1,
-                  child: Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppColors.brandGradient,
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: const [BoxShadow(color: Color(0x55003BB3), blurRadius: 18, offset: Offset(0, 8), spreadRadius: -4)],
-                    ),
-                    child: const Icon(Icons.quiz_rounded, color: Colors.white, size: 26),
+    child: Semantics(
+      button: true,
+      selected: selected,
+      label: t('Тест'),
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.bottomCenter,
+          children: [
+            Positioned(
+              top: -18,
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 220),
+                scale: selected ? 1.06 : 1,
+                child: Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppColors.brandGradient,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: const [BoxShadow(color: Color(0x55003BB3), blurRadius: 18, offset: Offset(0, 8), spreadRadius: -4)],
                   ),
+                  child: const Icon(Icons.quiz_rounded, color: Colors.white, size: 26),
                 ),
               ),
-              Positioned(
-                bottom: 9,
-                child: Text(
-                  'Тест',
-                  textScaler: TextScaler.noScaling,
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: selected ? AppColors.primary : AppColors.text),
-                ),
+            ),
+            Positioned(
+              bottom: 9,
+              child: Text(
+                t('Тест'),
+                textScaler: TextScaler.noScaling,
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: selected ? AppColors.primary : AppColors.text),
               ),
-            ]),
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }

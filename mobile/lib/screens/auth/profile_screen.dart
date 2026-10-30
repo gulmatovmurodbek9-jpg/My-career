@@ -5,6 +5,7 @@ import '../../app/auth.dart';
 import '../../app/theme.dart';
 import '../../ui/widgets.dart';
 import '../settings_screen.dart';
+import '../../app/i18n.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,19 +18,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _deleting = false;
 
   Future<void> _logout() async {
-    final ok = await _confirm(title: 'Аз ҳисоб баромадан?', body: 'Натиҷаҳоятон дар ҳисоб мемонанд. Баъд боз бо почта ва парол ворид шуда метавонед.', action: 'Баромадан');
+    final ok = await _confirm(title: t('Аз ҳисоб баромадан?'), body: t('Натиҷаҳоятон дар ҳисоб мемонанд. Баъд боз бо почта ва парол ворид шуда метавонед.'), action: t('Баромадан'));
     if (ok != true || !mounted) return;
     await authStore.logout();
     if (!mounted) return;
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Шумо аз ҳисоб баромадед')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t('Шумо аз ҳисоб баромадед'))));
   }
 
   Future<void> _delete() async {
     final ok = await _confirm(
-      title: 'Ҳисобро нест кардан?',
-      body: 'Ҳисоб, натиҷаҳои тест ва ихтисосҳои интихобшуда пурра нест мешаванд. Инро баргардондан мумкин нест.',
-      action: 'Ҳа, нест кунед',
+      title: t('Ҳисобро нест кардан?'),
+      body: t('Ҳисоб, натиҷаҳои тест ва ихтисосҳои интихобшуда пурра нест мешаванд. Инро баргардондан мумкин нест.'),
+      action: t('Ҳа, нест кунед'),
       danger: true,
     );
     if (ok != true || !mounted) return;
@@ -38,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await authStore.deleteAccount();
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ҳисоб нест карда шуд')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t('Ҳисоб нест карда шуд'))));
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _deleting = false);
@@ -61,7 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Не')),
+                child: OutlinedButton(onPressed: () => Navigator.pop(context, false), child: Text(t('Не'))),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -83,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = authStore.user;
     final name = user?.displayName ?? '';
     return Scaffold(
-      appBar: AppBar(title: const Text('Ҳисоби ман')),
+      appBar: AppBar(title: Text(t('Ҳисоби ман'))),
       body: SafeArea(
         child: ListView(
           padding: AppSizes.page,
@@ -112,14 +113,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: AppSizes.gap),
             AppCard(
               padding: const EdgeInsets.all(18),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.cloud_done_rounded, color: AppColors.budget, size: 30),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Натиҷаи ҳар тесте, ки ҳоло мегузаред, дар ҳисобатон нигоҳ дошта мешавад — дар сайт ҳам онро мебинед.',
+                      t('Натиҷаи ҳар тесте, ки ҳоло мегузаред, дар ҳисобатон нигоҳ дошта мешавад — дар сайт ҳам онро мебинед.'),
                       style: TextStyle(fontSize: 17, height: 1.45, color: AppColors.text),
                     ),
                   ),
@@ -130,16 +131,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).push(smoothRoute(const SettingsScreen())),
               icon: const Icon(Icons.text_increase_rounded),
-              label: const Text('Андозаи ҳарф ва синф'),
+              label: Text(t('Андозаи ҳарф ва синф')),
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(onPressed: _deleting ? null : _logout, icon: const Icon(Icons.logout_rounded), label: const Text('Аз ҳисоб баромадан')),
+            OutlinedButton.icon(onPressed: _deleting ? null : _logout, icon: const Icon(Icons.logout_rounded), label: Text(t('Аз ҳисоб баромадан'))),
             const SizedBox(height: 36),
             TextButton.icon(
               style: TextButton.styleFrom(foregroundColor: AppColors.danger),
               onPressed: _deleting ? null : _delete,
               icon: _deleting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Icon(Icons.delete_outline_rounded),
-              label: const Text('Ҳисобро нест кардан'),
+              label: Text(t('Ҳисобро нест кардан')),
             ),
           ],
         ),

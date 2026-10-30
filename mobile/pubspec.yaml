@@ -38,6 +38,7 @@ dependencies:
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
   flutter_secure_storage: ^11.2.0
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +61,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/images/
 
   # Шрифтҳои сайт: Golos Text (матн) ва Geologica (сарлавҳаҳо). Ҳамаи ҳарфҳои тоҷикиро доранд.
   fonts:

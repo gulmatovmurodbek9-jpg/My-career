@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Танзимоти корбар: забон, андозаи ҳарф, синф (баъди 9 ё 11) ва оё экрани «Хуш омадед» дида шудааст.
@@ -11,11 +11,13 @@ class AppSettings extends ChangeNotifier {
   int? _grade;
   String _lang = 'tj';
   bool _seenWelcome = false;
+  bool _dark = false;
 
   double get textScale => _textScale;
   int? get grade => _grade;
   String get lang => _lang;
   bool get seenWelcome => _seenWelcome;
+  bool get dark => _dark;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -24,6 +26,8 @@ class AppSettings extends ChangeNotifier {
     final lang = prefs.getString('lang');
     _lang = langs.contains(lang) ? lang! : 'tj';
     _seenWelcome = prefs.getBool('seenWelcome') ?? false;
+    // Бори аввал — мисли телефон (агар телефон торик бошад, барнома ҳам торик).
+    _dark = prefs.getBool('dark') ?? WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
     notifyListeners();
   }
 
@@ -47,6 +51,14 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('lang', value);
+  }
+
+  Future<void> setDark(bool value) async {
+    if (value == _dark) return;
+    _dark = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('dark', value);
   }
 
   Future<void> markWelcomeSeen() async {

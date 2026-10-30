@@ -66,8 +66,8 @@ class _UniversityDetailScreenState extends State<UniversityDetailScreen> {
         child: _error != null
             ? ErrorView(message: _error!, onRetry: _load)
             : _uni == null
-                ? const LoadingView()
-                : _content(context, _uni!),
+            ? const LoadingView()
+            : _content(context, _uni!),
       ),
     );
   }
@@ -82,37 +82,45 @@ class _UniversityDetailScreenState extends State<UniversityDetailScreen> {
       children: [
         Text(u.name, style: text.headlineMedium),
         const SizedBox(height: 12),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          if (u.city.isNotEmpty) Badge2(u.city, color: AppColors.textSoft, background: const Color(0xFFF1F5F9)),
-          if (u.type.isNotEmpty) Badge2(u.type),
-          Badge2(u.isState ? t('Давлатӣ') : t('Ғайридавлатӣ'), color: u.isState ? AppColors.budget : const Color(0xFFB45309), background: u.isState ? AppColors.budgetSoft : const Color(0xFFFEF3C7)),
-        ]),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (u.city.isNotEmpty) Badge2(u.city, color: AppColors.textSoft, background: AppColors.muted),
+            if (u.type.isNotEmpty) Badge2(u.type),
+            Badge2(u.isState ? t('Давлатӣ') : t('Ғайридавлатӣ'), color: u.isState ? AppColors.budget : AppColors.warning, background: u.isState ? AppColors.budgetSoft : AppColors.warningSoft),
+          ],
+        ),
         if (u.address.isNotEmpty) ...[
           const SizedBox(height: 14),
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Icon(Icons.place_rounded, size: 26, color: AppColors.textSoft),
-            const SizedBox(width: 8),
-            Expanded(child: Text(u.address, style: text.bodyLarge)),
-          ]),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.place_rounded, size: 26, color: AppColors.textSoft),
+              const SizedBox(width: 8),
+              Expanded(child: Text(u.address, style: text.bodyLarge)),
+            ],
+          ),
         ],
         const SizedBox(height: 18),
-        Row(children: [
-          if (website != null)
-            Expanded(child: OutlinedButton.icon(onPressed: () => _open(website), icon: const Icon(Icons.language_rounded, size: 26), label: Text(t('Сомона')))),
-          if (website != null && u.lat != null) const SizedBox(width: 10),
-          if (u.lat != null && u.lng != null)
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _open(Uri.parse('https://www.google.com/maps/search/?api=1&query=${u.lat},${u.lng}')),
-                icon: const Icon(Icons.map_rounded, size: 26),
-                label: Text(t('Харита')),
+        Row(
+          children: [
+            if (website != null)
+              Expanded(
+                child: OutlinedButton.icon(onPressed: () => _open(website), icon: const Icon(Icons.language_rounded, size: 26), label: Text(t('Сомона'))),
               ),
-            ),
-        ]),
-        if (u.description.isNotEmpty) ...[
-          SectionTitle(t('Дар бораи муассиса')),
-          Text(u.description, style: text.bodyLarge),
-        ],
+            if (website != null && u.lat != null) const SizedBox(width: 10),
+            if (u.lat != null && u.lng != null)
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _open(Uri.parse('https://www.google.com/maps/search/?api=1&query=${u.lat},${u.lng}')),
+                  icon: const Icon(Icons.map_rounded, size: 26),
+                  label: Text(t('Харита')),
+                ),
+              ),
+          ],
+        ),
+        if (u.description.isNotEmpty) ...[SectionTitle(t('Дар бораи муассиса')), Text(u.description, style: text.bodyLarge)],
         SectionTitle(t('Ихтисосҳо ({n})', {'n': _specialties.length})),
         if (_specialties.length > 8) ...[
           TextField(
@@ -123,10 +131,7 @@ class _UniversityDetailScreenState extends State<UniversityDetailScreen> {
           ),
           const SizedBox(height: 12),
         ],
-        for (final s in list) ...[
-          _SpecialtyCard(data: s),
-          const SizedBox(height: 10),
-        ],
+        for (final s in list) ...[_SpecialtyCard(data: s), const SizedBox(height: 10)],
       ],
     );
   }
@@ -143,20 +148,33 @@ class _SpecialtyCard extends StatelessWidget {
     final fees = offerings.map((o) => o['tuitionFee']).whereType<num>().where((n) => n > 0).toList()..sort();
     final name = cleanName('${data['name'] ?? ''}');
     return AppCard(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CareerDetailScreen(careerId: '${data['id']}', title: name))),
-      child: Row(children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              if (free) Badge2(t('Буҷетӣ'), color: AppColors.budget, background: AppColors.budgetSoft),
-              if (fees.isNotEmpty) Badge2(t('{n} сомонӣ', {'n': money(fees.first.toInt())})),
-            ]),
-          ]),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CareerDetailScreen(careerId: '${data['id']}', title: name),
         ),
-        const Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
-      ]),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (free) Badge2(t('Буҷетӣ'), color: AppColors.budget, background: AppColors.budgetSoft),
+                    if (fees.isNotEmpty) Badge2(t('{n} сомонӣ', {'n': money(fees.first.toInt())})),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
+        ],
+      ),
     );
   }
 }

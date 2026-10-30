@@ -99,17 +99,23 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       icon: Icons.mark_email_read_rounded,
       heading: t('Почтаро тасдиқ кунед'),
       subtitle: t('Ба почтаи шумо рамзи 6-рақама фиристодем'),
-      belowSubtitle: Padding(padding: const EdgeInsets.only(top: 10), child: InfoChip(icon: Icons.mail_outline_rounded, text: widget.email)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        FormMessage(text: _error),
-        FormMessage(text: _info, success: true),
-        CodeInput(controller: _code, hasError: _error != null && _code.text.isEmpty, onCompleted: _submit),
-        ResendRow(wait: _wait, onResend: _resend),
-        const SizedBox(height: 16),
-        GradientButton(label: t('Тасдиқ кардан'), loading: _loading, onPressed: _submit, height: 54),
-        const SizedBox(height: 14),
-        NoteBox(icon: Icons.info_outline_rounded, text: t('Агар нома наояд, ҷузвдони «Спам»-ро ҳам санҷед.')),
-      ]),
+      belowSubtitle: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: InfoChip(icon: Icons.mail_outline_rounded, text: widget.email),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FormMessage(text: _error),
+          FormMessage(text: _info, success: true),
+          CodeInput(controller: _code, hasError: _error != null && _code.text.isEmpty, onCompleted: _submit),
+          ResendRow(wait: _wait, onResend: _resend),
+          const SizedBox(height: 16),
+          GradientButton(label: t('Тасдиқ кардан'), loading: _loading, onPressed: _submit, height: 54),
+          const SizedBox(height: 14),
+          NoteBox(icon: Icons.info_outline_rounded, text: t('Агар нома наояд, ҷузвдони «Спам»-ро ҳам санҷед.')),
+        ],
+      ),
     );
   }
 }

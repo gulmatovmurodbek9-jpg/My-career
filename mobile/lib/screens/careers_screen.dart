@@ -57,12 +57,7 @@ class _CareersScreenState extends State<CareersScreen> {
       _error = null;
     });
     try {
-      final query = {
-        'page': '$_page',
-        'limit': '20',
-        if (_search.text.trim().isNotEmpty) 'search': _search.text.trim(),
-        if (appSettings.grade != null) 'grade': '${appSettings.grade}',
-      };
+      final query = {'page': '$_page', 'limit': '20', if (_search.text.trim().isNotEmpty) 'search': _search.text.trim(), if (appSettings.grade != null) 'grade': '${appSettings.grade}'};
       final data = await Api.instance.get('/careers', query);
       final list = (data['data'] as List).map((e) => Career.fromJson(Map<String, dynamic>.from(e))).toList();
       setState(() {
@@ -92,57 +87,72 @@ class _CareersScreenState extends State<CareersScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(t('Ихтисосҳо'))),
       body: SafeArea(
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-            child: TextField(
-              controller: _search,
-              onChanged: _onSearch,
-              textInputAction: TextInputAction.search,
-              style: const TextStyle(fontSize: 16.5),
-              decoration: InputDecoration(
-                hintText: t('Номи ихтисос, масалан «духтур»'),
-                prefixIcon: const Icon(Icons.search_rounded, size: 26),
-                suffixIcon: _search.text.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: t('Тоза кардан'),
-                        iconSize: 28,
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () {
-                          _search.clear();
-                          _load(reset: true);
-                        },
-                      ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: TextField(
+                controller: _search,
+                onChanged: _onSearch,
+                textInputAction: TextInputAction.search,
+                style: const TextStyle(fontSize: 16.5),
+                decoration: InputDecoration(
+                  hintText: t('Номи ихтисос, масалан «духтур»'),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 26),
+                  suffixIcon: _search.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: t('Тоза кардан'),
+                          iconSize: 28,
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () {
+                            _search.clear();
+                            _load(reset: true);
+                          },
+                        ),
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Align(alignment: Alignment.centerLeft, child: Text(_loading && _items.isEmpty ? '' : t('Ёфт шуд: {n}', {'n': _total}), style: text.bodyMedium)),
-          ),
-          Expanded(
-            child: _error != null && _items.isEmpty
-                ? ErrorView(message: _error!, onRetry: () => _load(reset: true))
-                : _items.isEmpty && _loading
-                    ? const LoadingView()
-                    : _items.isEmpty
-                        ? Center(child: Padding(padding: const EdgeInsets.all(28), child: Text(t('Чунин ихтисос ёфт нашуд. Калимаи дигарро нависед.'), textAlign: TextAlign.center, style: text.bodyLarge)))
-                        : RefreshIndicator(
-                            onRefresh: () => _load(reset: true),
-                            child: ListView.separated(
-                              controller: _scroll,
-                              padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
-                              itemCount: _items.length + (_done ? 0 : 1),
-                              separatorBuilder: (_, _) => const SizedBox(height: 12),
-                              itemBuilder: (context, i) {
-                                if (i >= _items.length) return const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()));
-                                return CareerCard(career: _items[i]);
-                              },
-                            ),
-                          ),
-          ),
-        ]),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(_loading && _items.isEmpty ? '' : t('Ёфт шуд: {n}', {'n': _total}), style: text.bodyMedium),
+              ),
+            ),
+            Expanded(
+              child: _error != null && _items.isEmpty
+                  ? ErrorView(message: _error!, onRetry: () => _load(reset: true))
+                  : _items.isEmpty && _loading
+                  ? const LoadingView()
+                  : _items.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(28),
+                        child: Text(t('Чунин ихтисос ёфт нашуд. Калимаи дигарро нависед.'), textAlign: TextAlign.center, style: text.bodyLarge),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () => _load(reset: true),
+                      child: ListView.separated(
+                        controller: _scroll,
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+                        itemCount: _items.length + (_done ? 0 : 1),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          if (i >= _items.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          return CareerCard(career: _items[i]);
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -154,22 +164,39 @@ class CareerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AppCard(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CareerDetailScreen(careerId: career.id, title: career.name))),
-        child: Row(children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (career.cluster.isNotEmpty) Text(career.cluster.toUpperCase(), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.primary)),
+    onTap: () => Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CareerDetailScreen(careerId: career.id, title: career.name),
+      ),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (career.cluster.isNotEmpty)
+                Text(
+                  career.cluster.toUpperCase(),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.primary),
+                ),
               const SizedBox(height: 4),
               Text(career.name, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 10),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                if (career.hasFreeSeats) Badge2(t('Буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft),
-                if (career.minFee != null && career.minFee! > 0) Badge2(t('аз {n} сомонӣ', {'n': money(career.minFee!)})),
-                if (career.years != null) Badge2(t('{n} сол', {'n': career.years}), color: AppColors.textSoft, background: const Color(0xFFF1F5F9)),
-              ]),
-            ]),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (career.hasFreeSeats) Badge2(t('Буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft),
+                  if (career.minFee != null && career.minFee! > 0) Badge2(t('аз {n} сомонӣ', {'n': money(career.minFee!)})),
+                  if (career.years != null) Badge2(t('{n} сол', {'n': career.years}), color: AppColors.textSoft, background: AppColors.muted),
+                ],
+              ),
+            ],
           ),
-          const Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
-        ]),
-      );
+        ),
+        Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
+      ],
+    ),
+  );
 }

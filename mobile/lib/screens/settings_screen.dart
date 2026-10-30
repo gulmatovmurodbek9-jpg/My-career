@@ -22,10 +22,7 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Text(t('Забон'), style: text.titleLarge),
             const SizedBox(height: 12),
-            for (final code in AppSettings.langs) ...[
-              _Choice(label: langNames[code]!, selected: appSettings.lang == code, onTap: () => appSettings.setLang(code)),
-              const SizedBox(height: 10),
-            ],
+            for (final code in AppSettings.langs) ...[_Choice(label: langNames[code]!, selected: appSettings.lang == code, onTap: () => appSettings.setLang(code)), const SizedBox(height: 10)],
             const SizedBox(height: 14),
             Text(t('Андозаи ҳарфҳо'), style: text.titleLarge),
             const SizedBox(height: 6),
@@ -42,11 +39,7 @@ class SettingsScreen extends StatelessWidget {
             ],
             SectionTitle(t('Шумо баъди кадом синф ҳастед?')),
             for (final g in [9, 11]) ...[
-              _Choice(
-                label: g == 9 ? t('Баъди синфи 9 (коллеҷ)') : t('Баъди синфи 11 (донишгоҳ ё коллеҷ)'),
-                selected: appSettings.grade == g,
-                onTap: () => appSettings.setGrade(g),
-              ),
+              _Choice(label: g == 9 ? t('Баъди синфи 9 (коллеҷ)') : t('Баъди синфи 11 (донишгоҳ ё коллеҷ)'), selected: appSettings.grade == g, onTap: () => appSettings.setGrade(g)),
               const SizedBox(height: 10),
             ],
             const SizedBox(height: 18),
@@ -67,28 +60,35 @@ class _Choice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        selected: selected,
-        button: true,
-        child: Material(
-          color: selected ? AppColors.contractSoft : Colors.white,
-          borderRadius: BorderRadius.circular(AppSizes.radius),
-          child: InkWell(
+    selected: selected,
+    button: true,
+    child: Material(
+      color: selected ? AppColors.contractSoft : AppColors.card,
+      borderRadius: BorderRadius.circular(AppSizes.radius),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: AppSizes.buttonHeight + 4),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSizes.radius),
-            onTap: onTap,
-            child: Container(
-              constraints: const BoxConstraints(minHeight: AppSizes.buttonHeight + 4),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSizes.radius),
-                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
+            border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
+          ),
+          child: Row(
+            children: [
+              Icon(selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, size: 26, color: selected ? AppColors.primary : AppColors.textSoft),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: preview ?? 19, fontWeight: FontWeight.w600, color: AppColors.text),
+                ),
               ),
-              child: Row(children: [
-                Icon(selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, size: 26, color: selected ? AppColors.primary : AppColors.textSoft),
-                const SizedBox(width: 14),
-                Expanded(child: Text(label, style: TextStyle(fontSize: preview ?? 19, fontWeight: FontWeight.w600, color: AppColors.text))),
-              ]),
-            ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }

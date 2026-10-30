@@ -7,11 +7,7 @@ import 'config.dart';
 import 'i18n.dart';
 
 class AppUser {
-  AppUser.fromJson(Map<String, dynamic> j)
-      : id = '${j['id'] ?? ''}',
-        name = '${j['name'] ?? ''}'.trim(),
-        email = '${j['email'] ?? ''}',
-        role = '${j['role'] ?? 'user'}';
+  AppUser.fromJson(Map<String, dynamic> j) : id = '${j['id'] ?? ''}', name = '${j['name'] ?? ''}'.trim(), email = '${j['email'] ?? ''}', role = '${j['role'] ?? 'user'}';
 
   final String id;
   final String name;
@@ -59,7 +55,9 @@ class AuthStore extends ChangeNotifier {
       await _storage.write(key: 'user_id', value: _user?.id);
       await _storage.write(key: 'user_name', value: _user?.name);
       await _storage.write(key: 'user_email', value: _user?.email);
-    } catch (_) {/* нигоҳ дошта нашуд — танҳо то бастани барнома */}
+    } catch (_) {
+      /* нигоҳ дошта нашуд — танҳо то бастани барнома */
+    }
   }
 
   Future<void> login(String email, String password) async {

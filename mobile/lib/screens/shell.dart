@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../app/auth.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
-import 'auth/login_screen.dart';
-import 'auth/profile_screen.dart';
 import 'careers_screen.dart';
+import 'settings_screen.dart';
 import 'home_screen.dart';
 import 'quiz_screen.dart';
 import 'universities_screen.dart';
 import '../app/i18n.dart';
 
 // Бахшҳои асосӣ: 0 Асосӣ, 1 Тест, 2 Ихтисосҳо, 3 Донишгоҳҳо.
-// Менюи поён мисли сайт: панели сафеди мудаввар, «Тест» — тугмаи калон дар мобайн, «Ҳисоб» дар канор.
+// Менюи поён мисли сайт: панели мудаввар, «Тест» — тугмаи калон дар мобайн, «Танзимот» дар канор.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -32,11 +30,6 @@ class _AppShellState extends State<AppShell> {
     setState(() => _tab = tab);
   }
 
-  void _openAccount() {
-    HapticFeedback.selectionClick();
-    Navigator.of(context).push(authStore.isLoggedIn ? smoothRoute(const ProfileScreen()) : authRoute(const LoginScreen()));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,10 +41,10 @@ class _AppShellState extends State<AppShell> {
           child: Container(
             height: 66,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card,
               borderRadius: BorderRadius.circular(26),
               border: Border.all(color: AppColors.border),
-              boxShadow: const [BoxShadow(color: Color(0x240D2E8C), blurRadius: 30, offset: Offset(0, 10), spreadRadius: -12)],
+              boxShadow: AppColors.dark ? null : const [BoxShadow(color: Color(0x1F0D2E8C), blurRadius: 20, offset: Offset(0, 8), spreadRadius: -10)],
             ),
             child: Row(
               children: [
@@ -59,31 +52,7 @@ class _AppShellState extends State<AppShell> {
                 _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: t('Ихтисосҳо'), selected: _tab == 2, onTap: () => select(2)),
                 _CenterItem(selected: _tab == 1, onTap: () => select(1)),
                 _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: t('Донишгоҳҳо'), selected: _tab == 3, onTap: () => select(3)),
-                Expanded(
-                  child: ListenableBuilder(
-                    listenable: authStore,
-                    builder: (context, _) {
-                      final name = authStore.user?.displayName ?? '';
-                      return _NavButton(
-                        label: authStore.isLoggedIn ? t('Ҳисоб') : t('Ворид'),
-                        selected: false,
-                        onTap: _openAccount,
-                        icon: authStore.isLoggedIn && name.isNotEmpty
-                            ? Container(
-                                width: 26,
-                                height: 26,
-                                alignment: Alignment.center,
-                                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient),
-                                child: Text(
-                                  name.characters.first.toUpperCase(),
-                                  style: const TextStyle(fontFamily: AppFonts.display, fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
-                                ),
-                              )
-                            : const Icon(Icons.person_outline_rounded, size: 24, color: AppColors.textSoft),
-                      );
-                    },
-                  ),
-                ),
+                _NavItem(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: t('Танзимот'), selected: false, onTap: () => Navigator.of(context).push(smoothRoute(const SettingsScreen()))),
               ],
             ),
           ),
@@ -190,7 +159,7 @@ class _CenterItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: AppColors.brandGradient,
-                    border: Border.all(color: Colors.white, width: 3),
+                    border: Border.all(color: AppColors.card, width: 3),
                     boxShadow: const [BoxShadow(color: Color(0x55003BB3), blurRadius: 18, offset: Offset(0, 8), spreadRadius: -4)],
                   ),
                   child: const Icon(Icons.quiz_rounded, color: Colors.white, size: 26),

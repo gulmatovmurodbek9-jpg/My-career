@@ -18,18 +18,21 @@ void closeAuthFlow(BuildContext context) {
 const authRouteName = 'auth';
 
 Route<T> authRoute<T>(Widget page) => PageRouteBuilder<T>(
-      settings: const RouteSettings(name: authRouteName),
-      transitionDuration: const Duration(milliseconds: 320),
-      reverseTransitionDuration: const Duration(milliseconds: 240),
-      pageBuilder: (_, _, _) => page,
-      transitionsBuilder: (_, animation, _, child) {
-        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-        return FadeTransition(
-          opacity: curved,
-          child: SlideTransition(position: Tween(begin: const Offset(0.06, 0), end: Offset.zero).animate(curved), child: child),
-        );
-      },
+  settings: RouteSettings(name: authRouteName),
+  transitionDuration: Duration(milliseconds: 320),
+  reverseTransitionDuration: Duration(milliseconds: 240),
+  pageBuilder: (_, _, _) => page,
+  transitionsBuilder: (_, animation, _, child) {
+    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween(begin: Offset(0.06, 0), end: Offset.zero).animate(curved),
+        child: child,
+      ),
     );
+  },
+);
 
 void welcomeSnack(BuildContext context, String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
@@ -64,11 +67,14 @@ class _GoogleLoginSectionState extends State<GoogleLoginSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (!AuthStore.googleAvailable) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const OrDivider(),
-      GoogleButton(onPressed: _go, loading: _loading),
-    ]);
+    if (!AuthStore.googleAvailable) return SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const OrDivider(),
+        GoogleButton(onPressed: _go, loading: _loading),
+      ],
+    );
   }
 }
 
@@ -131,48 +137,47 @@ class _LoginScreenState extends State<LoginScreen> {
       image: 'assets/images/login_boy.webp',
       heading: t('Хуш омадед!'),
       subtitle: t('Барои идомаи роҳи касбӣ ба ҳисоби худ ворид шавед'),
-      footer: AuthFooter(
-        text: t('Ҳисоб надоред?'),
-        action: t('Бақайдгирӣ'),
-        onTap: () => Navigator.of(context).pushReplacement(authRoute(const RegisterScreen())),
-      ),
+      footer: AuthFooter(text: t('Ҳисоб надоред?'), action: t('Бақайдгирӣ'), onTap: () => Navigator.of(context).pushReplacement(authRoute(const RegisterScreen()))),
       child: AutofillGroup(
         child: Form(
           key: _form,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            FormMessage(text: _error),
-            AuthField(
-              label: t('Почтаи электронӣ'),
-              controller: _email,
-              icon: Icons.mail_outline_rounded,
-              hint: 'nom@gmail.com',
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-              validator: validateEmail,
-            ),
-            const SizedBox(height: 14),
-            AuthField(
-              label: t('Парол'),
-              controller: _password,
-              icon: Icons.lock_outline_rounded,
-              hint: '••••••••',
-              password: true,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              autofillHints: const [AutofillHints.password],
-              validator: (v) => (v ?? '').isEmpty ? t('Паролро нависед') : null,
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).push(authRoute(ForgotPasswordScreen(email: _email.text.trim()))),
-                child: Text(t('Паролро фаромӯш кардед?'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FormMessage(text: _error),
+              AuthField(
+                label: t('Почтаи электронӣ'),
+                controller: _email,
+                icon: Icons.mail_outline_rounded,
+                hint: 'nom@gmail.com',
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                validator: validateEmail,
               ),
-            ),
-            const SizedBox(height: 4),
-            GradientButton(label: t('Ворид шудан'), loading: _loading, onPressed: _submit, height: 54),
-            GoogleLoginSection(onError: (m) => setState(() => _error = m)),
-          ]),
+              const SizedBox(height: 14),
+              AuthField(
+                label: t('Парол'),
+                controller: _password,
+                icon: Icons.lock_outline_rounded,
+                hint: '••••••••',
+                password: true,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+                autofillHints: const [AutofillHints.password],
+                validator: (v) => (v ?? '').isEmpty ? t('Паролро нависед') : null,
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).push(authRoute(ForgotPasswordScreen(email: _email.text.trim()))),
+                  child: Text(t('Паролро фаромӯш кардед?'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                ),
+              ),
+              const SizedBox(height: 4),
+              GradientButton(label: t('Ворид шудан'), loading: _loading, onPressed: _submit, height: 54),
+              GoogleLoginSection(onError: (m) => setState(() => _error = m)),
+            ],
+          ),
         ),
       ),
     );

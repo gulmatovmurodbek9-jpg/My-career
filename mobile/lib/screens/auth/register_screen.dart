@@ -80,97 +80,106 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: AutofillGroup(
         child: Form(
           key: _form,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            FormMessage(text: _error),
-            AuthField(
-              label: t('Ному насаб'),
-              controller: _name,
-              icon: Icons.person_outline_rounded,
-              hint: t('Масалан: Фарҳод Самиев'),
-              keyboardType: TextInputType.name,
-              autofillHints: const [AutofillHints.name],
-              validator: (v) => (v ?? '').trim().length < 2 ? t('Номи худро нависед') : null,
-            ),
-            const SizedBox(height: 14),
-            AuthField(
-              label: t('Почтаи электронӣ'),
-              controller: _email,
-              icon: Icons.mail_outline_rounded,
-              hint: 'nom@gmail.com',
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-              validator: validateEmail,
-            ),
-            const SizedBox(height: 14),
-            AuthField(
-              label: t('Парол'),
-              controller: _password,
-              icon: Icons.lock_outline_rounded,
-              hint: t('Камаш 6 аломат'),
-              password: true,
-              onChanged: (_) => setState(() {}),
-              autofillHints: const [AutofillHints.newPassword],
-              validator: validatePassword,
-            ),
-            if (_password.text.isNotEmpty) PasswordStrength(password: _password.text),
-            const SizedBox(height: 14),
-            AuthField(
-              label: t('Паролро такрор кунед'),
-              controller: _confirm,
-              icon: Icons.lock_reset_rounded,
-              hint: '••••••••',
-              password: true,
-              onChanged: (_) => setState(() {}),
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              autofillHints: const [AutofillHints.newPassword],
-              trailing: matches ? const Icon(Icons.check_circle_rounded, size: 20, color: AppColors.budget) : null,
-              validator: (v) => v != _password.text ? t('Паролҳо як хел нестанд') : null,
-            ),
-            const SizedBox(height: 10),
-            InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () => setState(() {
-                _agree = !_agree;
-                _agreeError = false;
-              }),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SizedBox(
-                    width: 28,
-                    height: 24,
-                    child: Checkbox(
-                      value: _agree,
-                      side: BorderSide(color: _agreeError ? AppColors.danger : AppColors.borderStrong, width: 1.2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                      onChanged: (v) => setState(() {
-                        _agree = v ?? false;
-                        _agreeError = false;
-                      }),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text.rich(
-                      TextSpan(style: TextStyle(fontSize: 14, height: 1.4, color: _agreeError ? AppColors.danger : AppColors.textSoft), children: [
-                        TextSpan(text: t('Ман бо ')),
-                        TextSpan(
-                          text: t('Сиёсати махфият'),
-                          recognizer: _privacyTap,
-                          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
-                        ),
-                        TextSpan(text: t(' розӣ ҳастам')),
-                      ]),
-                    ),
-                  ),
-                ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FormMessage(text: _error),
+              AuthField(
+                label: t('Ному насаб'),
+                controller: _name,
+                icon: Icons.person_outline_rounded,
+                hint: t('Масалан: Фарҳод Самиев'),
+                keyboardType: TextInputType.name,
+                autofillHints: const [AutofillHints.name],
+                validator: (v) => (v ?? '').trim().length < 2 ? t('Номи худро нависед') : null,
               ),
-            ),
-            const SizedBox(height: 12),
-            GradientButton(label: t('Ҳисоб сохтан'), loading: _loading, onPressed: _submit, height: 54),
-            GoogleLoginSection(onError: (m) => setState(() => _error = m)),
-          ]),
+              const SizedBox(height: 14),
+              AuthField(
+                label: t('Почтаи электронӣ'),
+                controller: _email,
+                icon: Icons.mail_outline_rounded,
+                hint: 'nom@gmail.com',
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                validator: validateEmail,
+              ),
+              const SizedBox(height: 14),
+              AuthField(
+                label: t('Парол'),
+                controller: _password,
+                icon: Icons.lock_outline_rounded,
+                hint: t('Камаш 6 аломат'),
+                password: true,
+                onChanged: (_) => setState(() {}),
+                autofillHints: const [AutofillHints.newPassword],
+                validator: validatePassword,
+              ),
+              if (_password.text.isNotEmpty) PasswordStrength(password: _password.text),
+              const SizedBox(height: 14),
+              AuthField(
+                label: t('Паролро такрор кунед'),
+                controller: _confirm,
+                icon: Icons.lock_reset_rounded,
+                hint: '••••••••',
+                password: true,
+                onChanged: (_) => setState(() {}),
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+                autofillHints: const [AutofillHints.newPassword],
+                trailing: matches ? Icon(Icons.check_circle_rounded, size: 20, color: AppColors.budget) : null,
+                validator: (v) => v != _password.text ? t('Паролҳо як хел нестанд') : null,
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => setState(() {
+                  _agree = !_agree;
+                  _agreeError = false;
+                }),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 28,
+                        height: 24,
+                        child: Checkbox(
+                          value: _agree,
+                          side: BorderSide(color: _agreeError ? AppColors.danger : AppColors.borderStrong, width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          onChanged: (v) => setState(() {
+                            _agree = v ?? false;
+                            _agreeError = false;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text.rich(
+                          TextSpan(
+                            style: TextStyle(fontSize: 14, height: 1.4, color: _agreeError ? AppColors.danger : AppColors.textSoft),
+                            children: [
+                              TextSpan(text: t('Ман бо ')),
+                              TextSpan(
+                                text: t('Сиёсати махфият'),
+                                recognizer: _privacyTap,
+                                style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
+                              ),
+                              TextSpan(text: t(' розӣ ҳастам')),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              GradientButton(label: t('Ҳисоб сохтан'), loading: _loading, onPressed: _submit, height: 54),
+              GoogleLoginSection(onError: (m) => setState(() => _error = m)),
+            ],
+          ),
         ),
       ),
     );

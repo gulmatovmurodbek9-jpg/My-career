@@ -14,13 +14,17 @@ Future<void> main() async {
   runApp(const IkhtisosiManApp());
 }
 
-// Вақте забон иваз мешавад, ҳамаи экранҳои кушода (ҳатто онҳое, ки дар тӯдаи Navigator ҳастанд)
-// аз нав сохта мешаванд, то матнҳои t(...) фавран ба забони нав гузаранд.
+// Вақте забон ё мавзӯъ (торик/равшан) иваз мешавад, ҳамаи экранҳои кушода (ҳатто онҳое, ки дар тӯдаи
+// Navigator ҳастанд) аз нав сохта мешаванд, то матнҳои t(...) ва рангҳои AppColors фавран нав шаванд.
 void _rebuildOnLanguageChange() {
   var lang = appSettings.lang;
+  var dark = appSettings.dark;
+  AppColors.dark = dark;
   appSettings.addListener(() {
-    if (appSettings.lang == lang) return;
+    if (appSettings.lang == lang && appSettings.dark == dark) return;
     lang = appSettings.lang;
+    dark = appSettings.dark;
+    AppColors.dark = dark;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       void rebuild(Element el) {
         el.markNeedsBuild();

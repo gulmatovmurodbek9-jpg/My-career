@@ -26,10 +26,7 @@ class Api {
   // Токени воридшавӣ; AuthStore онро мегузорад.
   String? token;
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
+  Map<String, String> get _headers => {'Content-Type': 'application/json', if (token != null) 'Authorization': 'Bearer $token'};
 
   // Кеши GET дар хотира: рӯйхатҳо (ихтисос, донишгоҳ) дубора фавран кушода мешаванд,
   // ду дархости якхела дар як вақт ба сервер як бор мераванд.

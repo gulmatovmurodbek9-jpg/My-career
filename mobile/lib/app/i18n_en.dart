@@ -75,6 +75,8 @@ const en = <String, String>{
   'Коллеҷ': 'College',
   'Кушода нашуд': 'Couldn\'t open',
   'Кӯшишҳо зиёд шуданд. Каме сабр кунед.': 'Too many attempts. Please wait a bit.',
+  'Мавзӯи равшан': 'Light mode',
+  'Мавзӯи торик': 'Dark mode',
   'Ман бо ': 'I agree to the ',
   'Маош дар як моҳ': 'Monthly salary',
   'Маош тахминӣ аст, аз эълонҳои кор.': 'Salary is approximate, based on job ads.',

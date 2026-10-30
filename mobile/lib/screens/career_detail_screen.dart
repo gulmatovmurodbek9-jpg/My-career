@@ -55,8 +55,8 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
         child: _error != null
             ? ErrorView(message: _error!, onRetry: _load)
             : _career == null
-                ? const LoadingView()
-                : _content(context, _career!),
+            ? const LoadingView()
+            : _content(context, _career!),
       ),
     );
   }
@@ -70,7 +70,11 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
     return ListView(
       padding: AppSizes.page,
       children: [
-        if (c.cluster.isNotEmpty) Text(c.cluster.toUpperCase(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.primary)),
+        if (c.cluster.isNotEmpty)
+          Text(
+            c.cluster.toUpperCase(),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.primary),
+          ),
         const SizedBox(height: 6),
         Text(c.name, style: text.headlineMedium),
         const SizedBox(height: 14),
@@ -78,11 +82,13 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
         if (salary('junior').isNotEmpty) ...[
           SectionTitle(t('Маош дар як моҳ')),
           AppCard(
-            child: Column(children: [
-              InfoRow(t('Навкор'), salary('junior')),
-              if (salary('mid').isNotEmpty) InfoRow(t('Бо таҷриба'), salary('mid')),
-              if (salary('senior').isNotEmpty) InfoRow(t('Мутахассиси калон'), salary('senior')),
-            ]),
+            child: Column(
+              children: [
+                InfoRow(t('Навкор'), salary('junior')),
+                if (salary('mid').isNotEmpty) InfoRow(t('Бо таҷриба'), salary('mid')),
+                if (salary('senior').isNotEmpty) InfoRow(t('Мутахассиси калон'), salary('senior')),
+              ],
+            ),
           ),
           const SizedBox(height: 6),
           Text(t('Маош тахминӣ аст, аз эълонҳои кор.'), style: text.bodyMedium),
@@ -92,11 +98,17 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
           for (final job in c.jobs.take(6))
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Padding(padding: EdgeInsets.only(top: 4), child: Icon(Icons.check_circle_rounded, size: 24, color: AppColors.budget)),
-                const SizedBox(width: 10),
-                Expanded(child: Text(job, style: text.bodyLarge)),
-              ]),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Icon(Icons.check_circle_rounded, size: 24, color: AppColors.budget),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(job, style: text.bodyLarge)),
+                ],
+              ),
             ),
         ],
         SectionTitle(t('Дар куҷо мехонанд')),
@@ -104,19 +116,29 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
           Text(t('Ҳоло ягон муассиса ин ихтисосро қабул намекунад.'), style: text.bodyLarge)
         else ...[
           // Ду тугмаи калон: буҷетӣ ва шартномавӣ — ҳар кадом рӯйхати худро нишон медиҳад.
-          Row(children: [
-            Expanded(child: _TypeButton(label: t('Буҷетӣ'), count: free.length, selected: _showFree, color: AppColors.budget, soft: AppColors.budgetSoft, onTap: () => setState(() => _showFree = true))),
-            const SizedBox(width: 10),
-            Expanded(child: _TypeButton(label: t('Шартномавӣ'), count: paid.length, selected: !_showFree, color: AppColors.contract, soft: AppColors.contractSoft, onTap: () => setState(() => _showFree = false))),
-          ]),
+          Row(
+            children: [
+              Expanded(
+                child: _TypeButton(label: t('Буҷетӣ'), count: free.length, selected: _showFree, color: AppColors.budget, soft: AppColors.budgetSoft, onTap: () => setState(() => _showFree = true)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _TypeButton(
+                  label: t('Шартномавӣ'),
+                  count: paid.length,
+                  selected: !_showFree,
+                  color: AppColors.contract,
+                  soft: AppColors.contractSoft,
+                  onTap: () => setState(() => _showFree = false),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 14),
           if (shown.isEmpty)
             Text(_showFree ? t('Ҷойи буҷетӣ нест.') : t('Ҷойи шартномавӣ нест.'), style: text.bodyLarge)
           else
-            for (final o in shown) ...[
-              _OfferingCard(offering: o),
-              const SizedBox(height: 12),
-            ],
+            for (final o in shown) ...[_OfferingCard(offering: o), const SizedBox(height: 12)],
         ],
       ],
     );
@@ -134,25 +156,32 @@ class _TypeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        selected: selected,
-        child: Material(
-          color: selected ? color : soft,
-          borderRadius: BorderRadius.circular(AppSizes.radius),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppSizes.radius),
-            onTap: count == 0 ? null : onTap,
-            child: Container(
-              height: AppSizes.buttonHeight + 4,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: FittedBox(
-                child: Text('$label · $count', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : color.withValues(alpha: count == 0 ? 0.5 : 1))),
+    button: true,
+    selected: selected,
+    child: Material(
+      color: selected ? color : soft,
+      borderRadius: BorderRadius.circular(AppSizes.radius),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        onTap: count == 0 ? null : onTap,
+        child: Container(
+          height: AppSizes.buttonHeight + 4,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: FittedBox(
+            child: Text(
+              '$label · $count',
+              style: TextStyle(
+                fontSize: 16.5,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : color.withValues(alpha: count == 0 ? 0.5 : 1),
               ),
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _OfferingCard extends StatelessWidget {
@@ -169,18 +198,22 @@ class _OfferingCard extends StatelessWidget {
       if (o.seats != null && o.seats! > 0) t('{n} ҷой', {'n': o.seats}),
     ].join(' · ');
     return AppCard(
-      onTap: o.universityId.isEmpty ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => UniversityDetailScreen(universityId: o.universityId, title: o.universityName))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(o.universityName, style: Theme.of(context).textTheme.titleMedium),
-        if (details.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(details, style: Theme.of(context).textTheme.bodyMedium),
+      onTap: o.universityId.isEmpty
+          ? null
+          : () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => UniversityDetailScreen(universityId: o.universityId, title: o.universityName),
+              ),
+            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(o.universityName, style: Theme.of(context).textTheme.titleMedium),
+          if (details.isNotEmpty) ...[const SizedBox(height: 6), Text(details, style: Theme.of(context).textTheme.bodyMedium)],
+          const SizedBox(height: 10),
+          o.free ? Badge2(t('Буҷетӣ (ройгон)'), color: AppColors.budget, background: AppColors.budgetSoft) : Badge2(o.fee != null ? t('{n} сомонӣ дар сол', {'n': money(o.fee!)}) : t('Шартномавӣ')),
         ],
-        const SizedBox(height: 10),
-        o.free
-            ? Badge2(t('Буҷетӣ (ройгон)'), color: AppColors.budget, background: AppColors.budgetSoft)
-            : Badge2(o.fee != null ? t('{n} сомонӣ дар сол', {'n': money(o.fee!)}) : t('Шартномавӣ')),
-      ]),
+      ),
     );
   }
 }

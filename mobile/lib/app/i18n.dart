@@ -6,7 +6,11 @@ import 'settings.dart';
 // Ҷойҳои холӣ: {n}, {email} ва ғ. — t('Баъди {n} сония', {'n': 5}).
 String t(String tj, [Map<String, Object?> args = const {}]) {
   final lang = appSettings.lang;
-  var s = lang == 'ru' ? (ru[tj] ?? tj) : lang == 'en' ? (en[tj] ?? tj) : tj;
+  var s = lang == 'ru'
+      ? (ru[tj] ?? tj)
+      : lang == 'en'
+      ? (en[tj] ?? tj)
+      : tj;
   args.forEach((k, v) => s = s.replaceAll('{$k}', '$v'));
   return s;
 }

@@ -144,7 +144,7 @@ void main() {
   // Ҳар матне, ки дар код ба t('…') дода шудааст, бояд тарҷумаи русӣ ва англисӣ дошта бошад.
   test('тарҷума: ҳамаи матнҳои t() русӣ ва англисӣ доранд', () {
     final keys = <String>{};
-    final pattern = RegExp(r"(?<![A-Za-z0-9_])t\('((?:[^'\\]|\\.)*)'");
+    final pattern = RegExp(r"(?<![A-Za-z0-9_])t\(\s*'((?:[^'\\]|\\.)*)'");
     for (final f in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
       for (final m in pattern.allMatches(f.readAsStringSync())) {
         keys.add(m.group(1)!.replaceAll(r"\'", "'"));

@@ -23,20 +23,27 @@ class QuizStartScreen extends StatelessWidget {
         listenable: appSettings,
         builder: (context, _) => Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-          decoration: const BoxDecoration(color: AppColors.background, border: Border(top: BorderSide(color: AppColors.border))),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            border: Border(top: BorderSide(color: AppColors.border)),
+          ),
           child: SafeArea(
             top: false,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              if (appSettings.grade == null)
-                Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(t('Аввал синфро интихоб кунед'), style: text.bodyMedium)),
-              FilledButton.icon(
-                onPressed: appSettings.grade == null
-                    ? null
-                    : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuizFlowScreen())),
-                icon: const Icon(Icons.play_arrow_rounded, size: 26),
-                label: Text(t('Тестро сар кунед')),
-              ),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (appSettings.grade == null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(t('Аввал синфро интихоб кунед'), style: text.bodyMedium),
+                  ),
+                FilledButton.icon(
+                  onPressed: appSettings.grade == null ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuizFlowScreen())),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 26),
+                  label: Text(t('Тестро сар кунед')),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -53,10 +60,7 @@ class QuizStartScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text(t('Ҷавоби «дуруст» ё «нодуруст» нест. Он чиро интихоб кунед, ки ба шумо наздиктар аст.'), style: text.bodyLarge),
             SectionTitle(t('Шумо баъди кадом синф ҳастед?')),
-            for (final g in [9, 11]) ...[
-              _GradeButton(grade: g, selected: appSettings.grade == g),
-              const SizedBox(height: 12),
-            ],
+            for (final g in [9, 11]) ...[_GradeButton(grade: g, selected: appSettings.grade == g), const SizedBox(height: 12)],
           ],
         ),
       ),
@@ -71,13 +75,28 @@ class _Step extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          CircleAvatar(radius: 17, backgroundColor: AppColors.contractSoft, child: Text(number, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.primary))),
-          const SizedBox(width: 14),
-          Expanded(child: Padding(padding: const EdgeInsets.only(top: 6), child: Text(text, style: Theme.of(context).textTheme.bodyLarge))),
-        ]),
-      );
+    padding: const EdgeInsets.only(bottom: 14),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 17,
+          backgroundColor: AppColors.contractSoft,
+          child: Text(
+            number,
+            style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.primary),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(text, style: Theme.of(context).textTheme.bodyLarge),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _GradeButton extends StatelessWidget {
@@ -87,34 +106,42 @@ class _GradeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        selected: selected,
-        button: true,
-        child: Material(
-          color: selected ? AppColors.contractSoft : Colors.white,
-          borderRadius: BorderRadius.circular(AppSizes.radius),
-          child: InkWell(
+    selected: selected,
+    button: true,
+    child: Material(
+      color: selected ? AppColors.contractSoft : AppColors.card,
+      borderRadius: BorderRadius.circular(AppSizes.radius),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        onTap: () => appSettings.setGrade(grade),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSizes.radius),
-            onTap: () => appSettings.setGrade(grade),
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSizes.radius),
-                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
-              ),
-              child: Row(children: [
-                Icon(selected ? Icons.check_circle_rounded : Icons.circle_outlined, size: 26, color: selected ? AppColors.primary : AppColors.textSoft),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(t('Баъди синфи {n}', {'n': grade}), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text)),
+            border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
+          ),
+          child: Row(
+            children: [
+              Icon(selected ? Icons.check_circle_rounded : Icons.circle_outlined, size: 26, color: selected ? AppColors.primary : AppColors.textSoft),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t('Баъди синфи {n}', {'n': grade}),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text),
+                    ),
                     Text(grade == 9 ? t('Метавонед ба коллеҷ дароед') : t('Метавонед ба донишгоҳ ё коллеҷ дароед'), style: Theme.of(context).textTheme.bodyMedium),
-                  ]),
+                  ],
                 ),
-              ]),
-            ),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 // Худи тест: як савол дар як экран, ҷавобҳо тугмаҳои калон.
@@ -167,8 +194,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
     }
   }
 
-  List<Map<String, String>> get _answerList =>
-      _answers.entries.map((e) => {'questionId': e.key, 'selectedValue': e.value}).toList();
+  List<Map<String, String>> get _answerList => _answers.entries.map((e) => {'questionId': e.key, 'selectedValue': e.value}).toList();
 
   Future<void> _answer(String value) async {
     final question = _questions[_index];
@@ -193,24 +219,25 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
     try {
       final data = await Api.instance.post('/quiz/score', {'answers': _answerList});
       final scores = Map<String, dynamic>.from(data['scores']['mmtClusters']);
-      _rankedClusters = scores.entries.map((e) => MapEntry(e.key, (e.value as num).toDouble())).toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
+      _rankedClusters = scores.entries.map((e) => MapEntry(e.key, (e.value as num).toDouble())).toList()..sort((a, b) => b.value.compareTo(a.value));
       final first = _rankedClusters[0];
       final second = _rankedClusters[1];
       if (first.value - second.value < _tieShare * (first.value < 1 ? 1 : first.value)) {
         String name(String key) => _clusterNames[int.parse(key.substring(1))] ?? key;
         int percent(double score) => (score / 40 * 100).round();
         setState(() {
-          _questions.add(QuizQuestion(
-            id: 'tiebreak',
-            part: 'tiebreak',
-            text: t('Ду самт ба шумо баробар наздик баромад. Кадомаш ба дилатон наздиктар аст?'),
-            options: [
-              QuizOption('${name(first.key)} (${percent(first.value)}%)', first.key),
-              QuizOption('${name(second.key)} (${percent(second.value)}%)', second.key),
-              QuizOption(t('Намедонам, ҳарду ба ман наздиканд'), 'both'),
-            ],
-          ));
+          _questions.add(
+            QuizQuestion(
+              id: 'tiebreak',
+              part: 'tiebreak',
+              text: t('Ду самт ба шумо баробар наздик баромад. Кадомаш ба дилатон наздиктар аст?'),
+              options: [
+                QuizOption('${name(first.key)} (${percent(first.value)}%)', first.key),
+                QuizOption('${name(second.key)} (${percent(second.value)}%)', second.key),
+                QuizOption(t('Намедонам, ҳарду ба ман наздиканд'), 'both'),
+              ],
+            ),
+          );
           _index++;
           _loading = null;
         });
@@ -250,12 +277,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
 
   Future<void> _submit() async {
     setState(() => _loading = t('Натиҷа тайёр мешавад…'));
-    final body = {
-      'answers': _answerList,
-      'lang': appSettings.lang,
-      'grade': appSettings.grade ?? 11,
-      'deferAdvice': true,
-    };
+    final body = {'answers': _answerList, 'lang': appSettings.lang, 'grade': appSettings.grade ?? 11, 'deferAdvice': true};
     try {
       dynamic data;
       // Агар корбар ворид шуда бошад, натиҷа дар ҳисобаш нигоҳ дошта мешавад.
@@ -269,9 +291,11 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
       }
       data ??= await Api.instance.post('/quiz/submit', body);
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (_) => ResultsScreen(result: QuizResult.fromJson(Map<String, dynamic>.from(data)), requestBody: body),
-      ));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ResultsScreen(result: QuizResult.fromJson(Map<String, dynamic>.from(data)), requestBody: body),
+        ),
+      );
     } catch (e) {
       setState(() {
         _loading = null;
@@ -349,35 +373,45 @@ class _AnswerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        selected: selected,
-        label: text,
-        child: Material(
-          color: selected ? AppColors.contractSoft : Colors.white,
-          borderRadius: BorderRadius.circular(AppSizes.radius),
-          child: InkWell(
+    button: true,
+    selected: selected,
+    label: text,
+    child: Material(
+      color: selected ? AppColors.contractSoft : AppColors.card,
+      borderRadius: BorderRadius.circular(AppSizes.radius),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 68),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSizes.radius),
-            onTap: onTap,
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 68),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSizes.radius),
-                border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
-              ),
-              child: Row(children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: selected ? AppColors.primary : AppColors.contractSoft, shape: BoxShape.circle),
-                  child: Text(letter, style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.primary)),
+            border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: selected ? AppColors.primary : AppColors.contractSoft, shape: BoxShape.circle),
+                child: Text(
+                  letter,
+                  style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.primary),
                 ),
-                const SizedBox(width: 14),
-                Expanded(child: Text(text, style: const TextStyle(fontSize: 16.5, height: 1.35, fontWeight: FontWeight.w600, color: AppColors.text))),
-              ]),
-            ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(fontSize: 16.5, height: 1.35, fontWeight: FontWeight.w600, color: AppColors.text),
+                ),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }

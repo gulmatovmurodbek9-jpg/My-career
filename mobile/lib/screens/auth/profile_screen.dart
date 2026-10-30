@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title,
           style: const TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w700),
         ),
-        content: Text(body, style: const TextStyle(fontSize: 17, height: 1.45, color: AppColors.textSoft)),
+        content: Text(body, style: TextStyle(fontSize: 17, height: 1.45, color: AppColors.textSoft)),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           Row(
@@ -97,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 88,
                     height: 88,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient, boxShadow: buttonShadow),
+                    decoration: BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient, boxShadow: buttonShadow),
                     child: Text(
                       name.isEmpty ? '?' : name.characters.first.toUpperCase(),
                       style: const TextStyle(fontFamily: AppFonts.display, fontSize: 38, fontWeight: FontWeight.w700, color: Colors.white),

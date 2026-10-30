@@ -58,24 +58,24 @@ class AuthScaffold extends StatelessWidget {
                   children: [
                     if (image != null)
                       Center(
-                        child: Image.asset(image!, height: 180, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                        child: Image.asset(image!, height: (MediaQuery.sizeOf(context).height * 0.16).clamp(96.0, 150.0), fit: BoxFit.contain, filterQuality: FilterQuality.medium),
                       )
                     else if (icon != null)
                       Center(child: HeroIcon(icon!)),
-                    SizedBox(height: 14),
+                    SizedBox(height: 10),
                     Text(
                       heading,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: AppFonts.display, fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.2, letterSpacing: -0.2),
+                      style: TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.2, letterSpacing: -0.2),
                     ),
                     SizedBox(height: 6),
                     Text(
                       subtitle,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, height: 1.45, color: AppColors.textSoft),
+                      style: TextStyle(fontSize: 14, height: 1.4, color: AppColors.textSoft),
                     ),
                     ?belowSubtitle,
-                    SizedBox(height: 20),
+                    SizedBox(height: 16),
                     child,
                     if (footer != null) ...[SizedBox(height: 14), footer!],
                   ],

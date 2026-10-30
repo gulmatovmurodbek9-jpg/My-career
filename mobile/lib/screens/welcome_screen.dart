@@ -20,7 +20,7 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height;
+    // Ҳама дар як экран, бе скрол: сурат ҷои боқимондаро мегирад ва дар телефони хурд худаш хурд мешавад.
     return Scaffold(
       backgroundColor: AppColors.background,
       body: DecoratedBox(
@@ -36,128 +36,130 @@ class WelcomeScreen extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
-              child: CustomScrollView(
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.1,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                                decoration: BoxDecoration(color: AppColors.contractSoft, borderRadius: BorderRadius.circular(999)),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 7,
-                                      height: 7,
-                                      decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                    ),
-                                    const SizedBox(width: 7),
-                                    Text(
-                                      t('РОҲНАМОИ КАСБӢ'),
-                                      style: TextStyle(fontSize: 11.5, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: AppColors.primary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Spacer(),
-                              const LangButton(),
-                            ],
-                          ),
-                          const Spacer(),
-                          _Appear(
-                            delay: 0,
-                            child: Stack(
-                              alignment: Alignment.center,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                            decoration: BoxDecoration(color: AppColors.contractSoft, borderRadius: BorderRadius.circular(999)),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  width: height * 0.32,
-                                  height: height * 0.32,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: RadialGradient(colors: [AppColors.accent.withValues(alpha: 0.13), AppColors.accent.withValues(alpha: 0)]),
-                                  ),
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                                 ),
-                                Image.asset('assets/images/welcome_boy.webp', height: (height * 0.34).clamp(180, 330), fit: BoxFit.contain, filterQuality: FilterQuality.medium),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _Appear(
-                            delay: 120,
-                            child: InfoChip(icon: Icons.auto_awesome_rounded, text: t('Интихоби дуруст — ояндаи дурахшон')),
-                          ),
-                          const SizedBox(height: 14),
-                          _Appear(
-                            delay: 200,
-                            child: Column(
-                              children: [
+                                const SizedBox(width: 7),
                                 Text(
-                                  t('Хуш омадед ба'),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontFamily: AppFonts.display, fontSize: 27, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.15),
-                                ),
-                                ShaderMask(
-                                  shaderCallback: (r) => AppColors.brandGradient.createShader(r),
-                                  child: Text(
-                                    t('«Ихтисоси ман»'),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(fontFamily: AppFonts.display, fontSize: 29, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  t('Истеъдодҳои пинҳонии худро кашф кунед ва роҳи беҳтарини касбиатонро ёбед.'),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 15.5, height: 1.45, color: AppColors.textSoft),
+                                  t('РОҲНАМОИ КАСБӢ'),
+                                  style: TextStyle(fontSize: 11.5, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: AppColors.primary),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          _Appear(delay: 280, child: const _Facts()),
                           const Spacer(),
-                          const SizedBox(height: 16),
-                          _Appear(
-                            delay: 340,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                GradientButton(label: t('Оғоз кардан'), height: 54, onPressed: () => _start(context)),
-                                const SizedBox(height: 10),
-                                SizedBox(
-                                  height: 54,
-                                  child: OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(54),
-                                      foregroundColor: AppColors.primary,
-                                      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.55)),
-                                    ),
-                                    onPressed: () => _start(context, login: true),
-                                    icon: const Icon(Icons.login_rounded, size: 20),
-                                    label: Text(t('Воридшавӣ')),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  t('Ройгон • Тест тақрибан 7 дақиқа'),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 13, color: AppColors.textSoft),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const LangButton(),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 6),
+                      Expanded(
+                        child: _Appear(
+                          delay: 0,
+                          child: LayoutBuilder(
+                            builder: (context, box) {
+                              final size = box.maxHeight.clamp(0.0, 300.0);
+                              return Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Container(
+                                    width: size * 0.95,
+                                    height: size * 0.95,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: RadialGradient(colors: [AppColors.accent.withValues(alpha: 0.13), AppColors.accent.withValues(alpha: 0)]),
+                                    ),
+                                  ),
+                                  Image.asset('assets/images/welcome_boy.webp', height: size, fit: BoxFit.contain, filterQuality: FilterQuality.medium),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _Appear(
+                        delay: 120,
+                        child: InfoChip(icon: Icons.auto_awesome_rounded, text: t('Интихоби дуруст — ояндаи дурахшон')),
+                      ),
+                      const SizedBox(height: 14),
+                      _Appear(
+                        delay: 200,
+                        child: Column(
+                          children: [
+                            Text(
+                              t('Хуш омадед ба'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontFamily: AppFonts.display, fontSize: 23, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.15),
+                            ),
+                            ShaderMask(
+                              shaderCallback: (r) => AppColors.brandGradient.createShader(r),
+                              child: Text(
+                                t('«Ихтисоси ман»'),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontFamily: AppFonts.display, fontSize: 25, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              t('Истеъдодҳои пинҳонии худро кашф кунед ва роҳи беҳтарини касбиатонро ёбед.'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 14, height: 1.4, color: AppColors.textSoft),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _Appear(delay: 280, child: const _Facts()),
+                      const SizedBox(height: 16),
+                      _Appear(
+                        delay: 340,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            GradientButton(label: t('Оғоз кардан'), height: 50, onPressed: () => _start(context)),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: 50,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(50),
+                                  foregroundColor: AppColors.primary,
+                                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.55)),
+                                ),
+                                onPressed: () => _start(context, login: true),
+                                icon: const Icon(Icons.login_rounded, size: 20),
+                                label: Text(t('Воридшавӣ')),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              t('Ройгон • Тест тақрибан 7 дақиқа'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12, color: AppColors.textSoft),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -178,7 +180,7 @@ class _Facts extends StatelessWidget {
         children: [
           Text(
             n,
-            style: TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primary),
+            style: TextStyle(fontFamily: AppFonts.display, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.primary),
           ),
           const SizedBox(height: 2),
           Text(
@@ -193,7 +195,7 @@ class _Facts extends StatelessWidget {
     );
     Widget line() => Container(width: 1, height: 28, color: AppColors.border);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(color: AppColors.contractSoft.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(16)),
       child: Row(children: [item('884', t('ихтисос')), line(), item('128', t('муассиса')), line(), item('5', t('самти касбӣ'))]),
     );

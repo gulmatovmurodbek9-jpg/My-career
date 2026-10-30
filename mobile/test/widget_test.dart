@@ -75,7 +75,8 @@ void main() {
     expect(find.text('Тестро сар кунед'), findsOneWidget);
     expect(find.text('Ихтисосҳо'), findsWidgets);
     expect(find.text('Донишгоҳҳо ва коллеҷҳо'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text('Донишгоҳҳо'), findsOneWidget);
+    expect(find.text('Тест'), findsOneWidget);
   });
 
   test('почта ва парол: хатоҳо пеш аз фиристодан', () {

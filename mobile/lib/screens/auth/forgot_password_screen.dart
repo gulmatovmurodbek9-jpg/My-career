@@ -54,29 +54,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       icon: Icons.key_rounded,
       title: 'Паролро фаромӯш кардед?',
       subtitle: 'Почтаатонро нависед — ба он рамзи 6-рақама мефиристем, то пароли нав гузоред',
-      footer: AuthFooter(
-        text: 'Паролро ёд овардед?',
-        action: 'Ворид шудан',
-        onTap: () => Navigator.of(context).maybePop(),
-      ),
+      footer: AuthFooter(text: 'Паролро ёд овардед?', action: 'Ворид шудан', onTap: () => Navigator.of(context).maybePop()),
       child: Form(
         key: _form,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          FormMessage(text: _error),
-          LabeledField(
-            label: 'Почтаи электронӣ',
-            controller: _email,
-            icon: Icons.mail_outline_rounded,
-            hint: 'nom@gmail.com',
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
-            autofillHints: const [AutofillHints.email],
-            validator: validateEmail,
-          ),
-          const SizedBox(height: 22),
-          GradientButton(label: 'Рамзро фиристед', icon: Icons.send_rounded, loading: _loading, onPressed: _submit),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormMessage(text: _error),
+            LabeledField(
+              dense: true,
+              label: 'Почтаи электронӣ',
+              controller: _email,
+              icon: Icons.mail_outline_rounded,
+              hint: 'nom@gmail.com',
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+              autofillHints: const [AutofillHints.email],
+              validator: validateEmail,
+            ),
+            const SizedBox(height: 18),
+            GradientButton(label: 'Рамзро фиристед', icon: Icons.send_rounded, loading: _loading, onPressed: _submit, height: 54),
+          ],
+        ),
       ),
     );
   }

@@ -17,11 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _deleting = false;
 
   Future<void> _logout() async {
-    final ok = await _confirm(
-      title: 'Аз ҳисоб баромадан?',
-      body: 'Натиҷаҳоятон дар ҳисоб мемонанд. Баъд боз бо почта ва парол ворид шуда метавонед.',
-      action: 'Баромадан',
-    );
+    final ok = await _confirm(title: 'Аз ҳисоб баромадан?', body: 'Натиҷаҳоятон дар ҳисоб мемонанд. Баъд боз бо почта ва парол ворид шуда метавонед.', action: 'Баромадан');
     if (ok != true || !mounted) return;
     await authStore.logout();
     if (!mounted) return;
@@ -55,21 +51,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: Text(title, style: const TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w800)),
+        title: Text(
+          title,
+          style: const TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w800),
+        ),
         content: Text(body, style: const TextStyle(fontSize: 17, height: 1.45, color: AppColors.textSoft)),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          Row(children: [
-            Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Не'))),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton(
-                style: danger ? FilledButton.styleFrom(backgroundColor: AppColors.danger) : null,
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(action, textAlign: TextAlign.center),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Не')),
               ),
-            ),
-          ]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  style: danger ? FilledButton.styleFrom(backgroundColor: AppColors.danger) : null,
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(action, textAlign: TextAlign.center),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -82,55 +85,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Ҳисоби ман')),
       body: SafeArea(
-        child: ListView(padding: AppSizes.page, children: [
-          AppCard(
-            padding: const EdgeInsets.all(22),
-            child: Column(children: [
-              Container(
-                width: 88,
-                height: 88,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient, boxShadow: buttonShadow),
-                child: Text(
-                  name.isEmpty ? '?' : name.characters.first.toUpperCase(),
-                  style: const TextStyle(fontFamily: AppFonts.display, fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white),
-                ),
+        child: ListView(
+          padding: AppSizes.page,
+          children: [
+            AppCard(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                children: [
+                  Container(
+                    width: 88,
+                    height: 88,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.brandGradient, boxShadow: buttonShadow),
+                    child: Text(
+                      name.isEmpty ? '?' : name.characters.first.toUpperCase(),
+                      style: const TextStyle(fontFamily: AppFonts.display, fontSize: 38, fontWeight: FontWeight.w800, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(name, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 4),
+                  Text(user?.email ?? '', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+                ],
               ),
-              const SizedBox(height: 14),
-              Text(name, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 4),
-              Text(user?.email ?? '', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
-            ]),
-          ),
-          const SizedBox(height: AppSizes.gap),
-          AppCard(
-            padding: const EdgeInsets.all(18),
-            child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Icons.cloud_done_rounded, color: AppColors.budget, size: 30),
-              SizedBox(width: 12),
-              Expanded(child: Text('Натиҷаи ҳар тесте, ки ҳоло мегузаред, дар ҳисобатон нигоҳ дошта мешавад — дар сайт ҳам онро мебинед.', style: TextStyle(fontSize: 17, height: 1.45, color: AppColors.text))),
-            ]),
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).push(smoothRoute(const SettingsScreen())),
-            icon: const Icon(Icons.text_increase_rounded),
-            label: const Text('Андозаи ҳарф ва синф'),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _deleting ? null : _logout,
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('Аз ҳисоб баромадан'),
-          ),
-          const SizedBox(height: 36),
-          TextButton.icon(
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-            onPressed: _deleting ? null : _delete,
-            icon: _deleting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Icon(Icons.delete_outline_rounded),
-            label: const Text('Ҳисобро нест кардан'),
-          ),
-        ]),
+            ),
+            const SizedBox(height: AppSizes.gap),
+            AppCard(
+              padding: const EdgeInsets.all(18),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.cloud_done_rounded, color: AppColors.budget, size: 30),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Натиҷаи ҳар тесте, ки ҳоло мегузаред, дар ҳисобатон нигоҳ дошта мешавад — дар сайт ҳам онро мебинед.',
+                      style: TextStyle(fontSize: 17, height: 1.45, color: AppColors.text),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(smoothRoute(const SettingsScreen())),
+              icon: const Icon(Icons.text_increase_rounded),
+              label: const Text('Андозаи ҳарф ва синф'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(onPressed: _deleting ? null : _logout, icon: const Icon(Icons.logout_rounded), label: const Text('Аз ҳисоб баромадан')),
+            const SizedBox(height: 36),
+            TextButton.icon(
+              style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+              onPressed: _deleting ? null : _delete,
+              icon: _deleting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Icon(Icons.delete_outline_rounded),
+              label: const Text('Ҳисобро нест кардан'),
+            ),
+          ],
+        ),
       ),
     );
   }

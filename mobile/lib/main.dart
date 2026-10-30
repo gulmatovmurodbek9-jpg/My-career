@@ -13,7 +13,6 @@ Future<void> main() async {
 
 class IkhtisosiManApp extends StatelessWidget {
   const IkhtisosiManApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(

@@ -44,11 +44,12 @@ class GradientIcon extends StatelessWidget {
 
 // Тугмаи асосӣ бо градиент ва ҳолати боркунӣ.
 class GradientButton extends StatelessWidget {
-  const GradientButton({super.key, required this.label, required this.onPressed, this.loading = false, this.icon = Icons.arrow_forward_rounded});
+  const GradientButton({super.key, required this.label, required this.onPressed, this.loading = false, this.icon = Icons.arrow_forward_rounded, this.height = AppSizes.buttonHeight});
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
   final IconData? icon;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -73,15 +74,15 @@ class GradientButton extends StatelessWidget {
                     }
                   : null,
               child: SizedBox(
-                height: AppSizes.buttonHeight,
+                height: height,
                 child: Center(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: loading
                         ? const SizedBox(key: ValueKey('l'), width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
                         : Row(key: const ValueKey('t'), mainAxisSize: MainAxisSize.min, children: [
-                            Text(label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
-                            if (icon != null) ...[const SizedBox(width: 10), Icon(icon, color: Colors.white, size: 24)],
+                            Text(label, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: Colors.white)),
+                            if (icon != null) ...[const SizedBox(width: 8), Icon(icon, color: Colors.white, size: 21)],
                           ]),
                   ),
                 ),
@@ -110,6 +111,7 @@ class LabeledField extends StatelessWidget {
     this.obscure = false,
     this.suffix,
     this.trailing,
+    this.dense = false,
   });
 
   final String label;
@@ -124,14 +126,15 @@ class LabeledField extends StatelessWidget {
   final bool obscure;
   final Widget? suffix;
   final Widget? trailing; // масалан «Паролро фаромӯш кардам?»
+  final bool dense; // зичтар — барои формаҳои воридшавӣ, то дар як экран ҷой шаванд
 
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text))),
+          Expanded(child: Text(label, style: TextStyle(fontSize: dense ? 15 : 16, fontWeight: FontWeight.w700, color: AppColors.text))),
           ?trailing,
         ]),
-        const SizedBox(height: 8),
+        SizedBox(height: dense ? 6 : 8),
         TextFormField(
           controller: controller,
           validator: validator,
@@ -142,8 +145,15 @@ class LabeledField extends StatelessWidget {
           obscureText: obscure,
           autocorrect: false,
           enableSuggestions: !obscure,
-          style: const TextStyle(fontSize: 18, color: AppColors.text),
-          decoration: InputDecoration(hintText: hint, prefixIcon: Icon(icon, size: 24), suffixIcon: suffix),
+          style: TextStyle(fontSize: dense ? 16 : 18, color: AppColors.text),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: dense ? const TextStyle(fontSize: 15, color: AppColors.textSoft) : null,
+            isDense: dense,
+            contentPadding: dense ? const EdgeInsets.symmetric(horizontal: 14, vertical: 14) : null,
+            prefixIcon: Icon(icon, size: dense ? 21 : 24),
+            suffixIcon: suffix,
+          ),
         ),
       ]);
 }
@@ -208,26 +218,26 @@ class ActionCard extends StatelessWidget {
             borderRadius: radius,
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(16, 16, 10, 16),
               child: Row(children: [
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: primary ? Colors.white.withValues(alpha: 0.18) : AppColors.contractSoft,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, size: 32, color: primary ? Colors.white : AppColors.primary),
+                  child: Icon(icon, size: 26, color: primary ? Colors.white : AppColors.primary),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title, style: TextStyle(fontFamily: AppFonts.display, fontSize: 21, fontWeight: FontWeight.w800, color: fg)),
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: TextStyle(fontSize: 16, height: 1.35, color: primary ? Colors.white.withValues(alpha: 0.92) : AppColors.textSoft)),
+                    Text(title, style: TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w800, color: fg)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: TextStyle(fontSize: 14, height: 1.35, color: primary ? Colors.white.withValues(alpha: 0.92) : AppColors.textSoft)),
                   ]),
                 ),
-                Icon(Icons.chevron_right_rounded, size: 32, color: fg),
+                Icon(Icons.chevron_right_rounded, size: 26, color: fg),
               ]),
             ),
           ),
@@ -245,15 +255,15 @@ class Badge2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
-        child: Text(text, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
+        child: Text(text, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: color)),
       );
 }
 
 // Карточкаи сафед бо сояи нарми кабуд — мисли .glass-card дар сайт.
 class AppCard extends StatelessWidget {
-  const AppCard({super.key, required this.child, this.onTap, this.padding = const EdgeInsets.all(18)});
+  const AppCard({super.key, required this.child, this.onTap, this.padding = const EdgeInsets.all(16)});
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsets padding;
@@ -318,7 +328,7 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 26, bottom: 12),
+        padding: const EdgeInsets.only(top: 22, bottom: 10),
         child: Text(text, style: Theme.of(context).textTheme.titleLarge),
       );
 }

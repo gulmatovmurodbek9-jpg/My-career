@@ -17,18 +17,21 @@ void closeAuthFlow(BuildContext context) {
 const authRouteName = 'auth';
 
 Route<T> authRoute<T>(Widget page) => PageRouteBuilder<T>(
-      settings: const RouteSettings(name: authRouteName),
-      transitionDuration: const Duration(milliseconds: 320),
-      reverseTransitionDuration: const Duration(milliseconds: 240),
-      pageBuilder: (_, _, _) => page,
-      transitionsBuilder: (_, animation, _, child) {
-        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-        return FadeTransition(
-          opacity: curved,
-          child: SlideTransition(position: Tween(begin: const Offset(0, 0.04), end: Offset.zero).animate(curved), child: child),
-        );
-      },
+  settings: const RouteSettings(name: authRouteName),
+  transitionDuration: const Duration(milliseconds: 320),
+  reverseTransitionDuration: const Duration(milliseconds: 240),
+  pageBuilder: (_, _, _) => page,
+  transitionsBuilder: (_, animation, _, child) {
+    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween(begin: const Offset(0, 0.04), end: Offset.zero).animate(curved),
+        child: child,
+      ),
     );
+  },
+);
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.email});
@@ -89,48 +92,49 @@ class _LoginScreenState extends State<LoginScreen> {
       icon: Icons.lock_open_rounded,
       title: 'Хуш омадед!',
       subtitle: 'Барои нигоҳ доштани натиҷаҳо ба ҳисоби худ ворид шавед',
-      footer: AuthFooter(
-        text: 'Ҳисоб надоред?',
-        action: 'Бақайдгирӣ',
-        onTap: () => Navigator.of(context).pushReplacement(authRoute(const RegisterScreen())),
-      ),
+      footer: AuthFooter(text: 'Ҳисоб надоред?', action: 'Бақайдгирӣ', onTap: () => Navigator.of(context).pushReplacement(authRoute(const RegisterScreen()))),
       child: AutofillGroup(
         child: Form(
           key: _form,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            FormMessage(text: _error),
-            LabeledField(
-              label: 'Почтаи электронӣ',
-              controller: _email,
-              icon: Icons.mail_outline_rounded,
-              hint: 'nom@gmail.com',
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-              validator: validateEmail,
-            ),
-            const SizedBox(height: 18),
-            LabeledField(
-              label: 'Парол',
-              controller: _password,
-              icon: Icons.lock_outline_rounded,
-              hint: 'Пароли худро нависед',
-              obscure: !_showPassword,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              autofillHints: const [AutofillHints.password],
-              validator: (v) => (v ?? '').isEmpty ? 'Паролро нависед' : null,
-              suffix: EyeButton(visible: _showPassword, onTap: () => setState(() => _showPassword = !_showPassword)),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).push(authRoute(ForgotPasswordScreen(email: _email.text.trim()))),
-                child: const Text('Паролро фаромӯш кардам?'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FormMessage(text: _error),
+              LabeledField(
+                dense: true,
+                label: 'Почтаи электронӣ',
+                controller: _email,
+                icon: Icons.mail_outline_rounded,
+                hint: 'nom@gmail.com',
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                validator: validateEmail,
               ),
-            ),
-            const SizedBox(height: 8),
-            GradientButton(label: 'Ворид шудан', icon: Icons.login_rounded, loading: _loading, onPressed: _submit),
-          ]),
+              const SizedBox(height: 14),
+              LabeledField(
+                dense: true,
+                label: 'Парол',
+                controller: _password,
+                icon: Icons.lock_outline_rounded,
+                hint: 'Пароли худро нависед',
+                obscure: !_showPassword,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+                autofillHints: const [AutofillHints.password],
+                validator: (v) => (v ?? '').isEmpty ? 'Паролро нависед' : null,
+                suffix: EyeButton(visible: _showPassword, onTap: () => setState(() => _showPassword = !_showPassword)),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).push(authRoute(ForgotPasswordScreen(email: _email.text.trim()))),
+                  child: const Text('Паролро фаромӯш кардам?'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              GradientButton(label: 'Ворид шудан', icon: Icons.login_rounded, loading: _loading, onPressed: _submit, height: 54),
+            ],
+          ),
         ),
       ),
     );

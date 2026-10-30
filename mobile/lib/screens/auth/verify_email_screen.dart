@@ -98,22 +98,29 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       icon: Icons.mark_email_read_rounded,
       title: 'Почтаро тасдиқ кунед',
       subtitle: 'Рамзи 6-рақамаро, ки ба ${widget.email} фиристодем, нависед',
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        FormMessage(text: _error),
-        FormMessage(text: _info, success: true),
-        CodeInput(controller: _code, hasError: _error != null && _code.text.isEmpty, onCompleted: _submit),
-        const SizedBox(height: 22),
-        GradientButton(label: 'Тасдиқ кардан', icon: Icons.verified_rounded, loading: _loading, onPressed: _submit),
-        const SizedBox(height: 10),
-        Center(
-          child: _wait > 0
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: Text('Рамзи навро баъди $_wait сония гирифта метавонед', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: AppColors.textSoft)),
-                )
-              : TextButton.icon(onPressed: _resend, icon: const Icon(Icons.refresh_rounded), label: const Text('Рамзро боз фиристед')),
-        ),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FormMessage(text: _error),
+          FormMessage(text: _info, success: true),
+          CodeInput(controller: _code, hasError: _error != null && _code.text.isEmpty, onCompleted: _submit),
+          const SizedBox(height: 18),
+          GradientButton(label: 'Тасдиқ кардан', icon: Icons.verified_rounded, loading: _loading, onPressed: _submit, height: 54),
+          const SizedBox(height: 10),
+          Center(
+            child: _wait > 0
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Text(
+                      'Рамзи навро баъди $_wait сония гирифта метавонед',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16, color: AppColors.textSoft),
+                    ),
+                  )
+                : TextButton.icon(onPressed: _resend, icon: const Icon(Icons.refresh_rounded), label: const Text('Рамзро боз фиристед')),
+          ),
+        ],
+      ),
     );
   }
 }

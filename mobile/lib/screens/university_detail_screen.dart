@@ -117,8 +117,8 @@ class _UniversityDetailScreenState extends State<UniversityDetailScreen> {
           TextField(
             controller: _search,
             onChanged: (_) => setState(() {}),
-            style: const TextStyle(fontSize: 19),
-            decoration: const InputDecoration(hintText: 'Ихтисосро ёбед', prefixIcon: Icon(Icons.search_rounded, size: 30)),
+            style: const TextStyle(fontSize: 16.5),
+            decoration: const InputDecoration(hintText: 'Ихтисосро ёбед', prefixIcon: Icon(Icons.search_rounded, size: 26)),
           ),
           const SizedBox(height: 12),
         ],
@@ -154,7 +154,7 @@ class _SpecialtyCard extends StatelessWidget {
             ]),
           ]),
         ),
-        const Icon(Icons.chevron_right_rounded, size: 32, color: AppColors.textSoft),
+        const Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
       ]),
     );
   }

@@ -107,46 +107,58 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       child: AutofillGroup(
         child: Form(
           key: _form,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            FormMessage(text: _error),
-            FormMessage(text: _info, success: true),
-            const Text('Рамз аз почта', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text)),
-            const SizedBox(height: 8),
-            CodeInput(controller: _code),
-            Center(
-              child: _wait > 0
-                  ? Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Text('Рамзи навро баъди $_wait сония гирифта метавонед', textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: AppColors.textSoft)),
-                    )
-                  : TextButton.icon(onPressed: _resend, icon: const Icon(Icons.refresh_rounded), label: const Text('Рамзро боз фиристед')),
-            ),
-            const SizedBox(height: 6),
-            LabeledField(
-              label: 'Пароли нав',
-              controller: _password,
-              icon: Icons.lock_outline_rounded,
-              hint: 'Камаш 6 аломат',
-              obscure: !_showPassword,
-              autofillHints: const [AutofillHints.newPassword],
-              validator: validatePassword,
-              suffix: EyeButton(visible: _showPassword, onTap: () => setState(() => _showPassword = !_showPassword)),
-            ),
-            const SizedBox(height: 18),
-            LabeledField(
-              label: 'Паролро такрор кунед',
-              controller: _confirm,
-              icon: Icons.lock_outline_rounded,
-              hint: 'Ҳамон паролро боз нависед',
-              obscure: !_showPassword,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              autofillHints: const [AutofillHints.newPassword],
-              validator: (v) => v != _password.text ? 'Паролҳо як хел нестанд' : null,
-            ),
-            const SizedBox(height: 22),
-            GradientButton(label: 'Паролро иваз кардан', icon: Icons.check_rounded, loading: _loading, onPressed: _submit),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FormMessage(text: _error),
+              FormMessage(text: _info, success: true),
+              const Text(
+                'Рамз аз почта',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text),
+              ),
+              const SizedBox(height: 8),
+              CodeInput(controller: _code),
+              Center(
+                child: _wait > 0
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          'Рамзи навро баъди $_wait сония гирифта метавонед',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 15, color: AppColors.textSoft),
+                        ),
+                      )
+                    : TextButton.icon(onPressed: _resend, icon: const Icon(Icons.refresh_rounded), label: const Text('Рамзро боз фиристед')),
+              ),
+              const SizedBox(height: 6),
+              LabeledField(
+                dense: true,
+                label: 'Пароли нав',
+                controller: _password,
+                icon: Icons.lock_outline_rounded,
+                hint: 'Камаш 6 аломат',
+                obscure: !_showPassword,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: validatePassword,
+                suffix: EyeButton(visible: _showPassword, onTap: () => setState(() => _showPassword = !_showPassword)),
+              ),
+              const SizedBox(height: 14),
+              LabeledField(
+                dense: true,
+                label: 'Паролро такрор кунед',
+                controller: _confirm,
+                icon: Icons.lock_outline_rounded,
+                hint: 'Ҳамон паролро боз нависед',
+                obscure: !_showPassword,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+                autofillHints: const [AutofillHints.newPassword],
+                validator: (v) => v != _password.text ? 'Паролҳо як хел нестанд' : null,
+              ),
+              const SizedBox(height: 18),
+              GradientButton(label: 'Паролро иваз кардан', icon: Icons.check_rounded, loading: _loading, onPressed: _submit, height: 54),
+            ],
+          ),
         ),
       ),
     );

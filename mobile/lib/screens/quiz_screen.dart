@@ -32,7 +32,7 @@ class QuizStartScreen extends StatelessWidget {
                 onPressed: appSettings.grade == null
                     ? null
                     : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuizFlowScreen())),
-                icon: const Icon(Icons.play_arrow_rounded, size: 32),
+                icon: const Icon(Icons.play_arrow_rounded, size: 26),
                 label: const Text('Тестро сар кунед'),
               ),
             ]),
@@ -72,7 +72,7 @@ class _Step extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 14),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          CircleAvatar(radius: 20, backgroundColor: AppColors.contractSoft, child: Text(number, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.primary))),
+          CircleAvatar(radius: 17, backgroundColor: AppColors.contractSoft, child: Text(number, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: AppColors.primary))),
           const SizedBox(width: 14),
           Expanded(child: Padding(padding: const EdgeInsets.only(top: 6), child: Text(text, style: Theme.of(context).textTheme.bodyLarge))),
         ]),
@@ -101,11 +101,11 @@ class _GradeButton extends StatelessWidget {
                 border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 2.5 : 2),
               ),
               child: Row(children: [
-                Icon(selected ? Icons.check_circle_rounded : Icons.circle_outlined, size: 32, color: selected ? AppColors.primary : AppColors.textSoft),
+                Icon(selected ? Icons.check_circle_rounded : Icons.circle_outlined, size: 26, color: selected ? AppColors.primary : AppColors.textSoft),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Баъди синфи $grade', style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppColors.text)),
+                    Text('Баъди синфи $grade', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
                     Text(grade == 9 ? 'Метавонед ба коллеҷ дароед' : 'Метавонед ба донишгоҳ ё коллеҷ дароед', style: Theme.of(context).textTheme.bodyMedium),
                   ]),
                 ),
@@ -330,7 +330,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(iconSize: 30, tooltip: 'Баргаштан', icon: const Icon(Icons.arrow_back_rounded), onPressed: _back),
+          leading: IconButton(iconSize: 26, tooltip: 'Баргаштан', icon: const Icon(Icons.arrow_back_rounded), onPressed: _back),
           title: const Text('Тест'),
         ),
         body: SafeArea(child: body),
@@ -370,10 +370,10 @@ class _AnswerButton extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(color: selected ? AppColors.primary : AppColors.contractSoft, shape: BoxShape.circle),
-                  child: Text(letter, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.primary)),
+                  child: Text(letter, style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.primary)),
                 ),
                 const SizedBox(width: 14),
-                Expanded(child: Text(text, style: const TextStyle(fontSize: 19, height: 1.35, fontWeight: FontWeight.w600, color: AppColors.text))),
+                Expanded(child: Text(text, style: const TextStyle(fontSize: 16.5, height: 1.35, fontWeight: FontWeight.w600, color: AppColors.text))),
               ]),
             ),
           ),

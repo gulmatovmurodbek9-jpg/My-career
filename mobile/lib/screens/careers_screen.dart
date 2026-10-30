@@ -98,10 +98,10 @@ class _CareersScreenState extends State<CareersScreen> {
               controller: _search,
               onChanged: _onSearch,
               textInputAction: TextInputAction.search,
-              style: const TextStyle(fontSize: 19),
+              style: const TextStyle(fontSize: 16.5),
               decoration: InputDecoration(
                 hintText: 'Номи ихтисос, масалан «духтур»',
-                prefixIcon: const Icon(Icons.search_rounded, size: 30),
+                prefixIcon: const Icon(Icons.search_rounded, size: 26),
                 suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
@@ -168,7 +168,7 @@ class CareerCard extends StatelessWidget {
               ]),
             ]),
           ),
-          const Icon(Icons.chevron_right_rounded, size: 32, color: AppColors.textSoft),
+          const Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
         ]),
       );
 }

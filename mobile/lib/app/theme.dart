@@ -33,13 +33,13 @@ class AppFonts {
   static const display = 'Geologica';
 }
 
-// Андозаҳо: тугма камаш 60 пиксел, матни асосӣ 18 — барои одами калонсол ҳам қулай.
+// Андозаҳо: тугма 54 пиксел, матни асосӣ 16. Барои одами калонсол дар «Танзимот» андозаи «Калон» ҳаст.
 class AppSizes {
-  static const buttonHeight = 60.0;
-  static const radius = 20.0;
-  static const cardRadius = 24.0; // .glass-card: 1.5rem
-  static const gap = 16.0;
-  static const page = EdgeInsets.fromLTRB(20, 16, 20, 32);
+  static const buttonHeight = 54.0;
+  static const radius = 18.0;
+  static const cardRadius = 22.0; // .glass-card: 1.5rem
+  static const gap = 12.0;
+  static const page = EdgeInsets.fromLTRB(16, 8, 16, 24);
 }
 
 // Сояи нарми кабуд, мисли .glass-card дар сайт.
@@ -56,13 +56,13 @@ ThemeData buildTheme() {
   );
   const display = AppFonts.display;
   const text = TextTheme(
-    headlineLarge: TextStyle(fontFamily: display, fontSize: 30, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.2, letterSpacing: -0.3),
-    headlineMedium: TextStyle(fontFamily: display, fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.25, letterSpacing: -0.2),
-    titleLarge: TextStyle(fontFamily: display, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.3),
-    titleMedium: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.3),
-    bodyLarge: TextStyle(fontSize: 18, color: AppColors.text, height: 1.5),
-    bodyMedium: TextStyle(fontSize: 17, color: AppColors.textSoft, height: 1.45),
-    labelLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+    headlineLarge: TextStyle(fontFamily: display, fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.2, letterSpacing: -0.3),
+    headlineMedium: TextStyle(fontFamily: display, fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text, height: 1.25, letterSpacing: -0.2),
+    titleLarge: TextStyle(fontFamily: display, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.3),
+    titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.3),
+    bodyLarge: TextStyle(fontSize: 16, color: AppColors.text, height: 1.45),
+    bodyMedium: TextStyle(fontSize: 15, color: AppColors.textSoft, height: 1.4),
+    labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
   );
   return ThemeData(
     useMaterial3: true,
@@ -81,14 +81,14 @@ ThemeData buildTheme() {
       elevation: 0,
       scrolledUnderElevation: 0.5,
       centerTitle: false,
-      titleTextStyle: TextStyle(fontFamily: display, fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text),
+      titleTextStyle: TextStyle(fontFamily: display, fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
         backgroundColor: AppColors.primary,
         disabledBackgroundColor: AppColors.borderStrong,
-        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 18, fontWeight: FontWeight.w700),
+        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radius)),
       ),
     ),
@@ -98,7 +98,7 @@ ThemeData buildTheme() {
         foregroundColor: AppColors.text,
         backgroundColor: Colors.white,
         side: const BorderSide(color: AppColors.borderStrong, width: 1.5),
-        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 18, fontWeight: FontWeight.w700),
+        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radius)),
       ),
     ),
@@ -106,14 +106,14 @@ ThemeData buildTheme() {
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
         minimumSize: const Size(48, 48),
-        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 17, fontWeight: FontWeight.w700),
+        textStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 15, fontWeight: FontWeight.w700),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.muted,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      hintStyle: const TextStyle(fontSize: 17, color: AppColors.textSoft),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      hintStyle: const TextStyle(fontSize: 15, color: AppColors.textSoft),
       prefixIconColor: AppColors.textSoft,
       suffixIconColor: AppColors.textSoft,
       errorStyle: const TextStyle(fontSize: 15, height: 1.3, color: AppColors.danger),
@@ -126,22 +126,22 @@ ThemeData buildTheme() {
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: AppColors.text,
-      contentTextStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 17, color: Colors.white),
+      contentTextStyle: const TextStyle(fontFamily: AppFonts.body, fontSize: 15, color: Colors.white),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      height: 76,
+      height: 66,
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
       indicatorColor: AppColors.contractSoft,
       labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
             fontFamily: AppFonts.body,
-            fontSize: 15,
+            fontSize: 12.5,
             fontWeight: states.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w600,
             color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSoft,
           )),
       iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(
-            size: 30,
+            size: 25,
             color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSoft,
           )),
     ),

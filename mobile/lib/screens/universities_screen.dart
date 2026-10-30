@@ -73,8 +73,8 @@ class _UniversitiesScreenState extends State<UniversitiesScreen> {
                       TextField(
                         controller: _search,
                         onChanged: (_) => setState(() {}),
-                        style: const TextStyle(fontSize: 19),
-                        decoration: const InputDecoration(hintText: 'Номи донишгоҳ ё шаҳр', prefixIcon: Icon(Icons.search_rounded, size: 30)),
+                        style: const TextStyle(fontSize: 16.5),
+                        decoration: const InputDecoration(hintText: 'Номи донишгоҳ ё шаҳр', prefixIcon: Icon(Icons.search_rounded, size: 26)),
                       ),
                       const SizedBox(height: 12),
                       Row(children: [
@@ -87,8 +87,8 @@ class _UniversitiesScreenState extends State<UniversitiesScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: _city,
                         isExpanded: true,
-                        iconSize: 32,
-                        style: const TextStyle(fontSize: 19, color: AppColors.text),
+                        iconSize: 26,
+                        style: const TextStyle(fontSize: 16.5, color: AppColors.text),
                         decoration: const InputDecoration(prefixIcon: Icon(Icons.location_city_rounded, size: 28)),
                         items: [
                           const DropdownMenuItem(value: '', child: Text('Ҳамаи шаҳрҳо')),
@@ -161,7 +161,7 @@ class _UniversityCard extends StatelessWidget {
             ]),
           ]),
         ),
-        const Icon(Icons.chevron_right_rounded, size: 32, color: AppColors.textSoft),
+        const Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
       ]),
     );
   }

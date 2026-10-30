@@ -146,7 +146,7 @@ class _TypeButton extends StatelessWidget {
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: FittedBox(
-                child: Text('$label · $count', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: selected ? Colors.white : color.withValues(alpha: count == 0 ? 0.5 : 1))),
+                child: Text('$label · $count', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: selected ? Colors.white : color.withValues(alpha: count == 0 ? 0.5 : 1))),
               ),
             ),
           ),

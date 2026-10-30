@@ -71,16 +71,17 @@ void main() {
     expect(money(1000000), '1 000 000');
   });
 
-  testWidgets('экрани асосӣ: се амали калон ва 4 бахш дар поён', (tester) async {
+  testWidgets('экрани асосӣ: корти тест, 5 самт (варақзанӣ) ва бахшҳо дар поён', (tester) async {
     SharedPreferences.setMockInitialValues({'seenWelcome': true});
     await appSettings.load();
     await tester.pumpWidget(const IkhtisosiManApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Тестро сар кунед'), findsOneWidget);
+    expect(find.text('Оғози тест'), findsOneWidget);
+    expect(find.text('Самтҳои касбӣ'), findsOneWidget);
+    expect(find.text('Табиӣ ва техникӣ'), findsOneWidget);
     expect(find.text('Ихтисосҳо'), findsWidgets);
-    expect(find.text('Донишгоҳҳо ва коллеҷҳо'), findsOneWidget);
-    expect(find.text('Донишгоҳҳо'), findsOneWidget);
+    expect(find.text('Донишгоҳҳо'), findsWidgets);
     expect(find.text('Тест'), findsOneWidget);
   });
 
@@ -123,7 +124,7 @@ void main() {
     expect(find.text('Хуш омадед ба'), findsOneWidget);
     await tester.tap(find.text('Оғоз кардан'));
     await tester.pumpAndSettle();
-    expect(find.text('Тестро сар кунед'), findsOneWidget);
+    expect(find.text('Оғози тест'), findsOneWidget);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('seenWelcome'), isTrue);
   });

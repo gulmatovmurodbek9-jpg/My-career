@@ -12,7 +12,11 @@ import '../app/i18n.dart';
 
 // Рӯйхати 884 ихтисос: ҷустуҷӯи калон дар боло, саҳифа ба саҳифа бор мешавад.
 class CareersScreen extends StatefulWidget {
-  const CareersScreen({super.key});
+  const CareersScreen({super.key, this.clusterId, this.title});
+
+  // Аз саҳифаи асосӣ: танҳо ихтисосҳои як кластер.
+  final String? clusterId;
+  final String? title;
 
   @override
   State<CareersScreen> createState() => _CareersScreenState();
@@ -57,7 +61,7 @@ class _CareersScreenState extends State<CareersScreen> {
       _error = null;
     });
     try {
-      final query = {'page': '$_page', 'limit': '20', if (_search.text.trim().isNotEmpty) 'search': _search.text.trim(), if (appSettings.grade != null) 'grade': '${appSettings.grade}'};
+      final query = {'page': '$_page', 'limit': '20', if (_search.text.trim().isNotEmpty) 'search': _search.text.trim(), if (appSettings.grade != null) 'grade': '${appSettings.grade}', if (widget.clusterId != null) 'clusterId': widget.clusterId!};
       final data = await Api.instance.get('/careers', query);
       final list = (data['data'] as List).map((e) => Career.fromJson(Map<String, dynamic>.from(e))).toList();
       setState(() {
@@ -85,7 +89,7 @@ class _CareersScreenState extends State<CareersScreen> {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: Text(t('Ихтисосҳо'))),
+      appBar: AppBar(title: Text(widget.title ?? t('Ихтисосҳо'))),
       body: SafeArea(
         child: Column(
           children: [

@@ -61,7 +61,7 @@ class AuthScaffold extends StatelessWidget {
                         child: Image.asset(image!, height: (MediaQuery.sizeOf(context).height * 0.16).clamp(96.0, 150.0), fit: BoxFit.contain, filterQuality: FilterQuality.medium),
                       )
                     else if (icon != null)
-                      Center(child: HeroIcon(icon!)),
+                      Center(child: HeroIcon(icon!, size: (MediaQuery.sizeOf(context).height * 0.11).clamp(72.0, 132.0))),
                     SizedBox(height: 10),
                     Text(
                       heading,
@@ -307,9 +307,9 @@ class _AuthFieldState extends State<AuthField> {
       children: [
         Text(
           widget.label,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textSoft),
+          style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500, color: AppColors.textSoft),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 5),
         DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
@@ -333,7 +333,7 @@ class _AuthFieldState extends State<AuthField> {
               filled: true,
               fillColor: AppColors.card,
               isDense: true,
-              contentPadding: EdgeInsets.fromLTRB(16, 15, 8, 15),
+              contentPadding: EdgeInsets.fromLTRB(16, 13, 8, 13),
               border: border,
               enabledBorder: border,
               focusedBorder: border.copyWith(borderSide: BorderSide(color: AppColors.accent, width: 1.4)),

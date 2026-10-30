@@ -69,7 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final matches = _confirm.text.isNotEmpty && _confirm.text == _password.text;
     return AuthScaffold(
       barTitle: t('Бақайдгирӣ'),
-      icon: Icons.person_add_alt_1_rounded,
+      // Бе нишона: майдонҳо зиёданд, то ҳама дар як экран ҷой шаванд.
       heading: t('Ҳисоб созед'),
       subtitle: t('Роҳи касбии ояндаи худро кашф кунед'),
       footer: AuthFooter(
@@ -93,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 autofillHints: const [AutofillHints.name],
                 validator: (v) => (v ?? '').trim().length < 2 ? t('Номи худро нависед') : null,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               AuthField(
                 label: t('Почтаи электронӣ'),
                 controller: _email,
@@ -103,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 autofillHints: const [AutofillHints.email],
                 validator: validateEmail,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               AuthField(
                 label: t('Парол'),
                 controller: _password,
@@ -115,7 +115,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 validator: validatePassword,
               ),
               if (_password.text.isNotEmpty) PasswordStrength(password: _password.text),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               AuthField(
                 label: t('Паролро такрор кунед'),
                 controller: _confirm,
@@ -129,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 trailing: matches ? Icon(Icons.check_circle_rounded, size: 20, color: AppColors.budget) : null,
                 validator: (v) => v != _password.text ? t('Паролҳо як хел нестанд') : null,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               InkWell(
                 borderRadius: BorderRadius.circular(10),
                 onTap: () => setState(() {
@@ -137,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _agreeError = false;
                 }),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

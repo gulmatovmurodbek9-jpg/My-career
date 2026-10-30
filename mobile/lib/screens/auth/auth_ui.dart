@@ -156,7 +156,10 @@ class HeroIcon extends StatelessWidget {
 
 // Интихоби забон: тугмаи хурди «TJ» → варақаи поён бо се забон.
 class LangButton extends StatelessWidget {
-  const LangButton({super.key});
+  const LangButton({super.key, this.compact = false});
+
+  // compact — доираи хурд бо ҳарфҳои «TJ» (барои сарлавҳа, то ном пурра намоён шавад).
+  final bool compact;
 
   static Future<void> pick(BuildContext context) => showModalBottomSheet<void>(
     context: context,
@@ -224,7 +227,19 @@ class LangButton extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: () => pick(context),
-        child: Padding(
+        child: compact
+            ? SizedBox(
+                width: 34,
+                height: 34,
+                child: Center(
+                  child: Text(
+                    langShort[appSettings.lang]!,
+                    textScaler: TextScaler.noScaling,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                  ),
+                ),
+              )
+            : Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Row(
             mainAxisSize: MainAxisSize.min,

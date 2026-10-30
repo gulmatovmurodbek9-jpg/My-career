@@ -20,22 +20,27 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       toolbarHeight: 60,
-      titleSpacing: 16,
+      titleSpacing: 14,
       title: Row(
         children: [
-          Image.asset('assets/images/logo.png', width: 30, height: 30, filterQuality: FilterQuality.medium),
-          const SizedBox(width: 9),
+          Image.asset('assets/images/logo.png', width: 28, height: 28, filterQuality: FilterQuality.medium),
+          const SizedBox(width: 8),
+          // Ном ҳамеша пурра: агар ҷой кам бошад, ҳарфҳо каме хурд мешаванд, на «…».
           Flexible(
-            child: Text(
-              t('Ихтисоси ман').toUpperCase(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: AppColors.text),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                t('Ихтисоси ман').toUpperCase(),
+                maxLines: 1,
+                textScaler: TextScaler.noScaling,
+                style: TextStyle(fontFamily: AppFonts.body, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3, color: AppColors.text),
+              ),
             ),
           ),
         ],
       ),
-      actions: const [ThemeToggle(), SizedBox(width: 6), LangButton(), SizedBox(width: 8), AccountAvatar(), SizedBox(width: 14)],
+      actions: const [ThemeToggle(), SizedBox(width: 6), LangButton(compact: true), SizedBox(width: 6), AccountAvatar(), SizedBox(width: 12)],
     );
   }
 }
@@ -56,15 +61,15 @@ class ThemeToggle extends StatelessWidget {
           customBorder: const CircleBorder(),
           onTap: () => appSettings.setDark(!dark),
           child: SizedBox(
-            width: 36,
-            height: 36,
+            width: 34,
+            height: 34,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 260),
               transitionBuilder: (child, a) => RotationTransition(
                 turns: Tween(begin: 0.6, end: 1.0).animate(a),
                 child: FadeTransition(opacity: a, child: child),
               ),
-              child: Icon(dark ? Icons.light_mode_rounded : Icons.dark_mode_outlined, key: ValueKey(dark), size: 19, color: dark ? AppColors.secondary : AppColors.text),
+              child: Icon(dark ? Icons.light_mode_rounded : Icons.dark_mode_outlined, key: ValueKey(dark), size: 18, color: dark ? AppColors.secondary : AppColors.text),
             ),
           ),
         ),
@@ -89,8 +94,8 @@ class AccountAvatar extends StatelessWidget {
         child: GestureDetector(
           onTap: () => Navigator.of(context).push(loggedIn ? smoothRoute(const ProfileScreen()) : authRoute(const LoginScreen())),
           child: Container(
-            width: 38,
-            height: 38,
+            width: 34,
+            height: 34,
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -102,9 +107,9 @@ class AccountAvatar extends StatelessWidget {
               child: loggedIn && name.isNotEmpty
                   ? Text(
                       name.characters.first.toUpperCase(),
-                      style: const TextStyle(fontFamily: AppFonts.display, fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(fontFamily: AppFonts.display, fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
                     )
-                  : Icon(Icons.person_rounded, size: 19, color: AppColors.primary),
+                  : Icon(Icons.person_rounded, size: 18, color: AppColors.primary),
             ),
           ),
         ),

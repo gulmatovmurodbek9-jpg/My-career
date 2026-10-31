@@ -33,12 +33,15 @@ class Api {
   static const _cacheTtl = Duration(minutes: 10);
   final _cache = <String, (DateTime, Future<dynamic>)>{};
 
-  Future<dynamic> get(String path, [Map<String, String>? query]) {
+  // AI дертар ҷавоб медиҳад: ба он мӯҳлати дарозтар лозим аст.
+  static const aiTimeout = Duration(seconds: 60);
+
+  Future<dynamic> get(String path, [Map<String, String>? query, Duration timeout = const Duration(seconds: 25)]) {
     final uri = Uri.parse('$apiBase$path').replace(queryParameters: {'lang': appSettings.lang, ...?query});
     final key = uri.toString();
     final hit = _cache[key];
     if (hit != null && DateTime.now().difference(hit.$1) < _cacheTtl) return hit.$2;
-    final future = _send(() => _client.get(uri, headers: _headers));
+    final future = _send(() => _client.get(uri, headers: _headers), timeout);
     _cache[key] = (DateTime.now(), future);
     future.catchError((_) {
       _cache.remove(key); // хаторо нигоҳ намедорем — «Боз кӯшиш» дархости нав мекунад
@@ -48,9 +51,15 @@ class Api {
     return future;
   }
 
-  Future<dynamic> post(String path, Map<String, dynamic> body) async {
+  // Бе кеш: маълумоти шахсӣ (писанд, захира, рӯйхат) ҳамеша бояд нав бошад.
+  Future<dynamic> getFresh(String path) {
+    final uri = Uri.parse('$apiBase$path').replace(queryParameters: {'lang': appSettings.lang});
+    return _send(() => _client.get(uri, headers: _headers));
+  }
+
+  Future<dynamic> post(String path, Map<String, dynamic> body, {Duration timeout = const Duration(seconds: 25)}) async {
     final uri = Uri.parse('$apiBase$path');
-    return _send(() => _client.post(uri, headers: _headers, body: jsonEncode(body)));
+    return _send(() => _client.post(uri, headers: _headers, body: jsonEncode(body)), timeout);
   }
 
   Future<dynamic> delete(String path) async {
@@ -58,10 +67,10 @@ class Api {
     return _send(() => _client.delete(uri, headers: _headers));
   }
 
-  Future<dynamic> _send(Future<http.Response> Function() request) async {
+  Future<dynamic> _send(Future<http.Response> Function() request, [Duration timeout = const Duration(seconds: 25)]) async {
     http.Response response;
     try {
-      response = await request().timeout(const Duration(seconds: 25));
+      response = await request().timeout(timeout);
     } catch (_) {
       throw ApiException(t('Интернет нест ё суст аст. Пайвастро санҷед ва боз кӯшиш кунед.'));
     }

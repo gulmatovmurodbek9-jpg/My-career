@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api.dart';
 import '../api/models.dart';
+import '../app/career_refs.dart';
 import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
@@ -12,7 +13,10 @@ import '../app/i18n.dart';
 
 // Рӯйхати 884 ихтисос: ҷустуҷӯи калон дар боло, саҳифа ба саҳифа бор мешавад.
 class CareersScreen extends StatefulWidget {
-  const CareersScreen({super.key, this.clusterId, this.title});
+  const CareersScreen({super.key, this.clusterId, this.title, this.initialSearch});
+
+  // Аз «Ихтисосҳои вобаста»: рӯйхат бо ҷустуҷӯи тайёр кушода мешавад.
+  final String? initialSearch;
 
   // Аз саҳифаи асосӣ: танҳо ихтисосҳои як кластер.
   final String? clusterId;
@@ -36,6 +40,7 @@ class _CareersScreenState extends State<CareersScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialSearch != null) _search.text = widget.initialSearch!;
     _scroll.addListener(() {
       if (_scroll.position.pixels > _scroll.position.maxScrollExtent - 600) _load();
     });
@@ -61,7 +66,13 @@ class _CareersScreenState extends State<CareersScreen> {
       _error = null;
     });
     try {
-      final query = {'page': '$_page', 'limit': '20', if (_search.text.trim().isNotEmpty) 'search': _search.text.trim(), if (appSettings.grade != null) 'grade': '${appSettings.grade}', if (widget.clusterId != null) 'clusterId': widget.clusterId!};
+      final query = {
+        'page': '$_page',
+        'limit': '20',
+        if (_search.text.trim().isNotEmpty) 'search': _search.text.trim(),
+        if (appSettings.grade != null) 'grade': '${appSettings.grade}',
+        if (widget.clusterId != null) 'clusterId': widget.clusterId!,
+      };
       final data = await Api.instance.get('/careers', query);
       final list = (data['data'] as List).map((e) => Career.fromJson(Map<String, dynamic>.from(e))).toList();
       setState(() {
@@ -167,40 +178,53 @@ class CareerCard extends StatelessWidget {
   final Career career;
 
   @override
-  Widget build(BuildContext context) => AppCard(
-    onTap: () => Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CareerDetailScreen(careerId: career.id, title: career.name),
-      ),
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) {
+    final cluster = clusterTitle(career.clusterNumber, career.cluster);
+    final degree = [
+      if (career.degree.isNotEmpty) offerLabel(career.degree),
+      if (career.years != null) t('{n} сол', {'n': career.years}),
+    ].join(' · ');
+    return AppCard(
+      onTap: () => Navigator.of(context).push(smoothRoute(CareerDetailScreen(careerId: career.id, title: career.name))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (cluster.isNotEmpty)
+            Text(
+              (career.clusterNumber != null ? '${career.clusterNumber}. $cluster' : cluster).toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: AppColors.primary),
+            ),
+          const SizedBox(height: 4),
+          Text(
+            career.name,
+            style: TextStyle(fontFamily: AppFonts.display, fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.25),
+          ),
+          if (career.description.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              career.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 13, color: AppColors.textSoft, height: 1.4),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
-              if (career.cluster.isNotEmpty)
-                Text(
-                  career.cluster.toUpperCase(),
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.primary),
-                ),
-              const SizedBox(height: 4),
-              Text(career.name, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (career.hasFreeSeats) Badge2(t('Буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft),
-                  if (career.minFee != null && career.minFee! > 0) Badge2(t('аз {n} сомонӣ', {'n': money(career.minFee!)})),
-                  if (career.years != null) Badge2(t('{n} сол', {'n': career.years}), color: AppColors.textSoft, background: AppColors.muted),
-                ],
-              ),
+              if (career.code.isNotEmpty) Badge2(career.code, color: AppColors.textSoft, background: AppColors.muted),
+              if (degree.isNotEmpty) Badge2(degree),
+              if (career.minFee != null && career.minFee! > 0)
+                Badge2(t('аз {n} сомонӣ', {'n': money(career.minFee!)})),
+              if (career.hasFreeSeats) Badge2(t('Буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft),
+              if (career.universitiesCount > 0) Badge2(t('{n} муассиса', {'n': career.universitiesCount}), color: AppColors.textSoft, background: AppColors.muted),
             ],
           ),
-        ),
-        Icon(Icons.chevron_right_rounded, size: 26, color: AppColors.textSoft),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }

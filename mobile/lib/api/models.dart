@@ -9,29 +9,64 @@ int? _int(dynamic v) => v is num ? v.toInt() : int.tryParse(_str(v));
 class Career {
   Career.fromJson(Map<String, dynamic> j)
     : id = _str(j['id']),
-      name = cleanName(_str(j['name'])),
+      // Дар русӣ ва англисӣ сервер номи тарҷумашударо дар nameTranslated медиҳад.
+      name = cleanName(_str(j['nameTranslated']).isNotEmpty ? _str(j['nameTranslated']) : _str(j['name'])),
+      nameTj = _str(j['name']),
+      code = _str(j['code']),
       cluster = j['cluster'] is Map ? _str(j['cluster']['clusterName']) : '',
+      clusterNumber = _int(j['mmtCluster']),
       description = _str(j['description']),
       purpose = _str(j['purpose']),
       hasFreeSeats = j['hasFreeSeats'] == true,
+      contentWritten = j['contentWritten'] == true,
       minFee = _int(j['minTuitionFee']),
       years = _int(j['durationYears']),
       degree = _str(j['degreeType']),
+      likes = _int(j['likesCount']) ?? 0,
+      universitiesCount = j['universities'] is List ? (j['universities'] as List).length : 0,
       salary = j['salaryAndMarket'] is Map ? Map<String, dynamic>.from(j['salaryAndMarket']) : const {},
-      jobs = j['careerOpportunities'] is List ? (j['careerOpportunities'] as List).map(_str).where((s) => s.isNotEmpty).toList() : const [];
+      jobs = _strings(j['careerOpportunities']),
+      technicalSkills = j['skills'] is Map ? _strings(j['skills']['technical']) : const [],
+      softSkills = j['skills'] is Map ? _strings(j['skills']['soft']) : const [],
+      technologies = _strings(j['technologies']),
+      projects = _strings(j['projectsExamples']),
+      certificates = _strings(j['certification']),
+      books = j['learningResources'] is Map ? _strings(j['learningResources']['books']) : const [],
+      courses = j['learningResources'] is Map ? _strings(j['learningResources']['courses']) : const [],
+      blogs = j['learningResources'] is Map ? _strings(j['learningResources']['blogs']) : const [],
+      related = _strings(j['relatedSpecializations']),
+      advice = _str(j['advice']);
 
   final String id;
   final String name;
+  final String nameTj;
+  final String code;
   final String cluster;
+  final int? clusterNumber;
   final String description;
   final String purpose;
   final bool hasFreeSeats;
+  final bool contentWritten;
   final int? minFee;
   final int? years;
   final String degree;
+  final int likes;
+  final int universitiesCount;
   final Map<String, dynamic> salary;
   final List<String> jobs;
+  final List<String> technicalSkills;
+  final List<String> softSkills;
+  final List<String> technologies;
+  final List<String> projects;
+  final List<String> certificates;
+  final List<String> books;
+  final List<String> courses;
+  final List<String> blogs;
+  final List<String> related;
+  final String advice;
 }
+
+List<String> _strings(dynamic v) => v is List ? v.map(_str).map((s) => s.trim()).where((s) => s.isNotEmpty).toList() : const [];
 
 class Offering {
   Offering.fromJson(Map<String, dynamic> j)
@@ -42,8 +77,9 @@ class Offering {
       studyForm = _str(j['studyForm']),
       language = _str(j['language']),
       universityId = j['university'] is Map ? _str(j['university']['id']) : '',
-      universityName = j['university'] is Map ? _str(j['university']['name']) : '',
-      city = j['university'] is Map ? _str(j['university']['city']) : '';
+      universityName = j['university'] is Map ? (_str(j['university']['nameTranslated']).isNotEmpty ? _str(j['university']['nameTranslated']) : _str(j['university']['name'])) : '',
+      city = j['university'] is Map ? _str(j['university']['city']) : '',
+      isState = j['university'] is Map ? j['university']['isState'] != false : true;
 
   final String id;
   final bool free;
@@ -54,6 +90,7 @@ class Offering {
   final String universityId;
   final String universityName;
   final String city;
+  final bool isState;
 }
 
 class University {

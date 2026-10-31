@@ -7,6 +7,7 @@ import '../app/i18n.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'app_header.dart';
+import 'auth/login_screen.dart';
 import 'careers_screen.dart';
 import 'settings_screen.dart';
 import 'shell.dart';
@@ -118,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// «Салом, Муродбек! 👋» ё барои меҳмон «Хуш омадед!».
+// Корти салом: ном (ё «Хуш омадед!») ва барои меҳмон тугмаи «Ворид шудан».
 class _Greeting extends StatelessWidget {
   const _Greeting();
 
@@ -127,19 +128,48 @@ class _Greeting extends StatelessWidget {
     listenable: authStore,
     builder: (context, _) {
       final name = (authStore.user?.displayName ?? '').split(' ').first;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            t('Роҳнамои касбии шумо'),
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSoft),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            name.isEmpty ? '${t('Хуш омадед!')} 👋' : '${t('Салом, {name}!', {'name': name})} 👋',
-            style: TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.text),
-          ),
-        ],
+      return Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name.isEmpty ? t('Хуш омадед!') : t('Салом, {name}!', {'name': name}),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t('Роҳнамои касбии шумо'),
+                    style: TextStyle(fontSize: 12.5, color: AppColors.textSoft),
+                  ),
+                ],
+              ),
+            ),
+            if (name.isEmpty)
+              TextButton(
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.contractSoft,
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  minimumSize: const Size(0, 36),
+                  shape: const StadiumBorder(),
+                  textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                ),
+                onPressed: () => Navigator.of(context).push(authRoute(const LoginScreen())),
+                child: Text(t('Ворид шудан')),
+              ),
+          ],
+        ),
       );
     },
   );

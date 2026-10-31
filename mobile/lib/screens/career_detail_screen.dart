@@ -4,6 +4,7 @@ import '../api/api.dart';
 import '../api/models.dart';
 import '../app/auth.dart';
 import '../app/career_refs.dart';
+import '../app/clusters.dart';
 import '../app/config.dart';
 import '../app/i18n.dart';
 import '../app/settings.dart';
@@ -266,59 +267,81 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
   // Сарлавҳа: кабуди чуқур, мисли корти тест дар саҳифаи асосӣ.
   Widget _hero(Career c) {
     final cluster = clusterTitle(c.clusterNumber, c.cluster);
-    Widget chip(String text, {IconData? icon, Color? color}) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: (color ?? Colors.white).withValues(alpha: color == null ? 0.12 : 0.22),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[Icon(icon, size: 13, color: Colors.white), const SizedBox(width: 4)],
-          Flexible(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+    final info = clusters.where((e) => e.number == c.clusterNumber).firstOrNull;
+    final facts = <(String, String)>[
+      if (c.degree.isNotEmpty) (t('Дараҷа'), offerLabel(c.degree)),
+      if (c.years != null) (t('Мӯҳлат'), t('{n} сол', {'n': c.years})),
+      if (c.minFee != null && c.minFee! > 0) (t('Нархи таҳсил'), t('аз {n} сомонӣ', {'n': money(c.minFee!)})),
+      if (c.hasFreeSeats) (t('Ҷойҳои ройгон'), t('Ҳаст')),
+      if (c.code.isNotEmpty) (t('Коди ММТ'), c.code),
+    ];
+    Widget fact((String, String) f) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(f.$1, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.65))),
+        const SizedBox(height: 2),
+        Text(
+          f.$2,
+          style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+      ],
     );
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0B1F57), Color(0xFF1739A6), Color(0xFF2F5FE8)], stops: [0, 0.55, 1]),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (cluster.isNotEmpty) chip(cluster, icon: Icons.hub_rounded),
-          const SizedBox(height: 10),
+          // Кластер — аввалин чизе, ки чашм мебинад: рақам ва ном, бе фон.
+          if (cluster.isNotEmpty)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(info?.icon ?? Icons.hub_rounded, size: 26, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (c.clusterNumber != null)
+                        Text(
+                          t('Кластери {n}', {'n': c.clusterNumber}).toUpperCase(),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.white.withValues(alpha: 0.65)),
+                        ),
+                      Text(
+                        cluster,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white, height: 1.25),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
           Text(
             c.name,
-            style: const TextStyle(fontFamily: AppFonts.display, fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
+            style: const TextStyle(fontFamily: AppFonts.display, fontSize: 23, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              if (c.code.isNotEmpty) chip('${t('Коди ММТ')} ${c.code}'),
-              if (c.degree.isNotEmpty || c.years != null)
-                chip(
-                  [
-                    if (c.degree.isNotEmpty) offerLabel(c.degree),
-                    if (c.years != null) t('{n} сол', {'n': c.years}),
-                  ].join(' · '),
-                  icon: Icons.school_rounded,
+          if (facts.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(height: 1, color: Colors.white.withValues(alpha: 0.18)),
+            const SizedBox(height: 14),
+            for (var i = 0; i < facts.length; i += 2)
+              Padding(
+                padding: EdgeInsets.only(bottom: i + 2 < facts.length ? 12 : 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: fact(facts[i])),
+                    const SizedBox(width: 12),
+                    Expanded(child: i + 1 < facts.length ? fact(facts[i + 1]) : const SizedBox.shrink()),
+                  ],
                 ),
-              if (c.hasFreeSeats) chip(t('Ҷойҳои ройгон ҳастанд'), color: const Color(0xFF10B981)),
-              if (c.minFee != null && c.minFee! > 0) chip(t('аз {n} сомонӣ', {'n': money(c.minFee!)}), icon: Icons.payments_rounded),
-            ],
-          ),
+              ),
+          ],
         ],
       ),
     );

@@ -273,6 +273,7 @@ const en = <String, String>{
   'Санҷидан': 'Try it',
   'Сервер ҳозир ҷавоб намедиҳад. Баъдтар кӯшиш кунед.': 'The server isn\'t responding. Please try later.',
   'Сертификатҳо': 'Certificates',
+  'Синфи {n}': 'Grade {n}',
   'Сиёсати махфият': 'Privacy Policy',
   'Соли {year} барои дохил шудан лозим буд': 'To get in, {year} required',
   'Сомона': 'Website',

@@ -213,7 +213,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 children: [
                   Text(t('Баъди кадом синф?'), style: _heading),
                   const SizedBox(height: 8),
-                  _GradeSwitch(
+                  GradeSwitch(
                     value: _f.grade,
                     onChanged: (g) => _update(g == null ? _f.copy(clearGrade: true) : _f.copy(grade: g), reloadClusters: true),
                   ),
@@ -311,8 +311,9 @@ class _FilterSheetState extends State<_FilterSheet> {
   );
 }
 
-class _GradeSwitch extends StatelessWidget {
-  const _GradeSwitch({required this.value, required this.onChanged});
+class GradeSwitch extends StatelessWidget {
+  const GradeSwitch({super.key, required this.value, required this.onChanged, this.short = false});
+  final bool short; // «Синфи 9» — барои сатри болои рӯйхат
   final int? value;
   final void Function(int?) onChanged;
 
@@ -345,8 +346,8 @@ class _GradeSwitch extends StatelessWidget {
       child: Row(
         children: [
           item(null, t('Ҳама')),
-          item(9, t('Баъди синфи {n}', {'n': 9})),
-          item(11, t('Баъди синфи {n}', {'n': 11})),
+          item(9, short ? t('Синфи {n}', {'n': 9}) : t('Баъди синфи {n}', {'n': 9})),
+          item(11, short ? t('Синфи {n}', {'n': 11}) : t('Баъди синфи {n}', {'n': 11})),
         ],
       ),
     );

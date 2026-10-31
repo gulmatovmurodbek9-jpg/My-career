@@ -99,13 +99,7 @@ class _CareersScreenState extends State<CareersScreen> {
       return Map<String, dynamic>.from(data);
     }
     if (_aiQuery != null) {
-      final data = await Api.instance.post('/careers/ai-search', {
-        'query': _aiQuery,
-        'lang': appSettings.lang,
-        'page': _page,
-        'limit': _limit,
-        'grade': ?grade,
-      }, timeout: Api.aiTimeout);
+      final data = await Api.instance.post('/careers/ai-search', {'query': _aiQuery, 'lang': appSettings.lang, 'page': _page, 'limit': _limit, 'grade': ?grade}, timeout: Api.aiTimeout);
       return Map<String, dynamic>.from(data);
     }
     final text = _search.text.trim();
@@ -293,27 +287,34 @@ class _CareersScreenState extends State<CareersScreen> {
     ),
   );
 
-  // Як сатр: тугмаи «Филтрҳо», синф, ройгон ва филтрҳои фаъол, ки бо × нест мешаванд.
+  // Бе скрол: тугмаи филтр ва се синф ҳамеша пурра намоёнанд; филтрҳои фаъол дар зер ба сатри нав мегузаранд.
   Widget _quickFilters() {
     final f = _filters;
-    return SizedBox(
-      height: 38,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+    final active = <Widget>[
+      if (f.clusterId != null) _FilterChip(label: clusterTitle(f.clusterNumber, widget.title ?? t('Кластер')), onTap: () => _applyFilters(f.copy(clearCluster: true))),
+      if (f.city != null) _FilterChip(label: f.city!, onTap: () => _applyFilters(f.copy(clearCity: true))),
+      if (f.minPrice != null || f.maxPrice != null) _FilterChip(label: _priceLabel(f), onTap: () => _applyFilters(f.copy(clearPrice: true))),
+      if (f.freeOnly) _FilterChip(label: t('Ҷойҳои ройгон'), onTap: () => _applyFilters(f.copy(freeOnly: false))),
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _FilterChip(icon: Icons.tune_rounded, label: t('Филтрҳо'), badge: f.activeCount, selected: f.activeCount > 0, onTap: _openFilters),
-          _FilterChip(label: t('Баъди синфи {n}', {'n': 9}), selected: f.grade == 9, onTap: () => _applyFilters(f.grade == 9 ? f.copy(clearGrade: true) : f.copy(grade: 9))),
-          _FilterChip(label: t('Баъди синфи {n}', {'n': 11}), selected: f.grade == 11, onTap: () => _applyFilters(f.grade == 11 ? f.copy(clearGrade: true) : f.copy(grade: 11))),
-          _FilterChip(
-            label: t('Ҷойҳои ройгон'),
-            selected: f.freeOnly,
-            onTap: () => _applyFilters(f.copy(freeOnly: !f.freeOnly)),
+          Row(
+            children: [
+              _FilterButton(count: f.activeCount, onTap: _openFilters),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GradeSwitch(
+                  value: f.grade,
+                  short: true,
+                  onChanged: (g) => _applyFilters(g == null ? f.copy(clearGrade: true) : f.copy(grade: g)),
+                ),
+              ),
+            ],
           ),
-          if (f.clusterId != null)
-            _FilterChip(label: clusterTitle(f.clusterNumber, widget.title ?? t('Кластер')), selected: true, removable: true, onTap: () => _applyFilters(f.copy(clearCluster: true))),
-          if (f.city != null) _FilterChip(label: f.city!, selected: true, removable: true, onTap: () => _applyFilters(f.copy(clearCity: true))),
-          if (f.minPrice != null || f.maxPrice != null) _FilterChip(label: _priceLabel(f), selected: true, removable: true, onTap: () => _applyFilters(f.copy(clearPrice: true))),
+          if (active.isNotEmpty) ...[const SizedBox(height: 8), Wrap(spacing: 6, runSpacing: 6, children: active)],
         ],
       ),
     );
@@ -519,52 +520,45 @@ class _CareersScreenState extends State<CareersScreen> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.label, required this.selected, required this.onTap, this.icon, this.badge = 0, this.removable = false});
-  final String label;
-  final bool selected;
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({required this.count, required this.onTap});
+  final int count;
   final VoidCallback onTap;
-  final IconData? icon;
-  final int badge;
-  final bool removable;
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : AppColors.text;
-    return Padding(
-      padding: const EdgeInsets.only(right: 7),
+    final selected = count > 0;
+    return Tooltip(
+      message: t('Филтрҳо'),
       child: Material(
-        color: selected ? AppColors.contractSoft : AppColors.card,
-        shape: StadiumBorder(side: BorderSide(color: selected ? AppColors.primary.withValues(alpha: 0.5) : AppColors.border)),
+        color: selected ? AppColors.contractSoft : AppColors.muted,
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          customBorder: const StadiumBorder(),
+          borderRadius: BorderRadius.circular(14),
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+          child: SizedBox(
+            width: 46,
+            height: 46,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                if (icon != null) ...[Icon(icon, size: 17, color: color), const SizedBox(width: 6)],
-                Text(
-                  label,
-                  textScaler: TextScaler.noScaling,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: color),
-                ),
-                if (badge > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    width: 18,
-                    height: 18,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                    child: Text(
-                      '$badge',
-                      textScaler: TextScaler.noScaling,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                Icon(Icons.tune_rounded, size: 21, color: selected ? AppColors.primary : AppColors.text),
+                if (selected)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                      child: Text(
+                        '$count',
+                        textScaler: TextScaler.noScaling,
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
                     ),
                   ),
-                ],
-                if (removable) ...[const SizedBox(width: 4), Icon(Icons.close_rounded, size: 15, color: color)],
               ],
             ),
           ),
@@ -572,6 +566,39 @@ class _FilterChip extends StatelessWidget {
       ),
     );
   }
+}
+
+// Филтри фаъол: бо пахш нест мешавад.
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: AppColors.contractSoft,
+    borderRadius: BorderRadius.circular(12),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: AppColors.primary),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.close_rounded, size: 15, color: AppColors.primary),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _SmallLink extends StatelessWidget {

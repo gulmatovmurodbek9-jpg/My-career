@@ -632,6 +632,7 @@ class _SmallLink extends StatelessWidget {
   );
 }
 
+// Корти содда: чӣ ихтисос аст, чист ва ду сатри лозимӣ — бе чипҳо ва бе рамз (рамз дар саҳифаи ихтисос аст).
 class CareerCard extends StatelessWidget {
   const CareerCard({super.key, required this.career});
   final Career career;
@@ -639,10 +640,12 @@ class CareerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cluster = clusterTitle(career.clusterNumber, career.cluster);
-    final degree = [
+    final study = [
       if (career.degree.isNotEmpty) offerLabel(career.degree),
       if (career.years != null) t('{n} сол', {'n': career.years}),
+      if (career.universitiesCount > 0) t('{n} муассиса', {'n': career.universitiesCount}),
     ].join(' · ');
+    final hasFee = career.minFee != null && career.minFee! > 0;
     return AppCard(
       onTap: () => Navigator.of(context).push(smoothRoute(CareerDetailScreen(careerId: career.id, title: career.name))),
       child: Column(
@@ -650,18 +653,18 @@ class CareerCard extends StatelessWidget {
         children: [
           if (cluster.isNotEmpty)
             Text(
-              (career.clusterNumber != null ? '${career.clusterNumber}. $cluster' : cluster).toUpperCase(),
+              cluster,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: AppColors.primary),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.primary),
             ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             career.name,
             style: TextStyle(fontFamily: AppFonts.display, fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.25),
           ),
           if (career.description.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 5),
             Text(
               career.description,
               maxLines: 2,
@@ -669,18 +672,32 @@ class CareerCard extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: AppColors.textSoft, height: 1.4),
             ),
           ],
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              if (career.code.isNotEmpty) Badge2(career.code, color: AppColors.textSoft, background: AppColors.muted),
-              if (degree.isNotEmpty) Badge2(degree),
-              if (career.minFee != null && career.minFee! > 0) Badge2(t('аз {n} сомонӣ', {'n': money(career.minFee!)})),
-              if (career.hasFreeSeats) Badge2(t('Буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft),
-              if (career.universitiesCount > 0) Badge2(t('{n} муассиса', {'n': career.universitiesCount}), color: AppColors.textSoft, background: AppColors.muted),
-            ],
-          ),
+          if (study.isNotEmpty) ...[const SizedBox(height: 10), Text(study, style: TextStyle(fontSize: 13, color: AppColors.textSoft))],
+          if (hasFee || career.hasFreeSeats) ...[
+            const SizedBox(height: 3),
+            Text.rich(
+              TextSpan(
+                children: [
+                  if (hasFee)
+                    TextSpan(
+                      text: t('аз {n} сомонӣ', {'n': money(career.minFee!)}),
+                      style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.text),
+                    ),
+                  if (hasFee && career.hasFreeSeats)
+                    TextSpan(
+                      text: ' · ',
+                      style: TextStyle(color: AppColors.textSoft),
+                    ),
+                  if (career.hasFreeSeats)
+                    TextSpan(
+                      text: t('Буҷетӣ ҳаст'),
+                      style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.budget),
+                    ),
+                ],
+              ),
+              style: const TextStyle(fontSize: 13.5),
+            ),
+          ],
         ],
       ),
     );

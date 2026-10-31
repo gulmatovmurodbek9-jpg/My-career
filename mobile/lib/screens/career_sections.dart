@@ -216,7 +216,7 @@ class _Pill extends StatelessWidget {
   );
 }
 
-// --- Ёвари AI дар бораи ихтисос ---
+// --- Ёвари AI дар бораи ихтисос: савол ва санҷиши «Чаро ин касб?» дар як чат ---
 
 class CareerAiChat extends StatefulWidget {
   const CareerAiChat({super.key, required this.careerId});
@@ -228,10 +228,11 @@ class CareerAiChat extends StatefulWidget {
 
 class _CareerAiChatState extends State<CareerAiChat> {
   final _input = TextEditingController();
-  final _messages = <({String role, String text})>[];
+  final _messages = <({String role, String text, Map<String, dynamic>? why})>[];
   Map<String, dynamic>? _info;
   bool _busy = false;
-  bool _error = false;
+  String? _error;
+  bool _whyMode = false; // навбатӣ на савол, балки сабаби интихоб фиристода мешавад
 
   @override
   void initState() {
@@ -254,35 +255,73 @@ class _CareerAiChatState extends State<CareerAiChat> {
     }
   }
 
+  void _send(String raw) => _whyMode ? _checkWhy(raw) : _ask(raw);
+
   Future<void> _ask(String raw) async {
     final q = raw.trim();
     if (q.isEmpty || _busy) return;
     FocusScope.of(context).unfocus();
     setState(() {
-      _messages.add((role: 'user', text: q));
+      _messages.add((role: 'user', text: q, why: null));
       _input.clear();
       _busy = true;
-      _error = false;
+      _error = null;
     });
     try {
       final data = await Api.instance.post('/interview/${widget.careerId}', {
         'lang': appSettings.lang,
+        // Ба сервер танҳо саволу ҷавобҳо; сабаби шахсӣ дар сӯҳбат намеравад.
         'messages': [
-          for (final m in _messages) {'role': m.role, 'text': m.text},
+          for (final m in _messages)
+            if (m.role == 'user' || m.role == 'specialist') {'role': m.role, 'text': m.text},
         ],
       }, timeout: Api.aiTimeout);
       if (!mounted) return;
       setState(() {
-        _messages.add((role: 'specialist', text: '${data['answer'] ?? ''}'));
+        _messages.add((role: 'specialist', text: '${data['answer'] ?? ''}', why: null));
         _busy = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = true;
+        _error = t('Ҷавоб наомад. Боз кӯшиш кунед.');
       });
     }
+  }
+
+  Future<void> _checkWhy(String raw) async {
+    final text = raw.trim();
+    if (text.length < 3 || _busy) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _messages.add((role: 'reason', text: text, why: null));
+      _input.clear();
+      _busy = true;
+      _error = null;
+      _whyMode = false;
+    });
+    try {
+      final data = await Api.instance.post('/career-insight/${widget.careerId}/why', {'reason': text, 'lang': appSettings.lang}, timeout: Api.aiTimeout);
+      if (!mounted) return;
+      setState(() {
+        _messages.add((role: 'why', text: '', why: Map<String, dynamic>.from(data)));
+        _busy = false;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  void _addReason(String chip) {
+    final old = _input.text.trim();
+    _input.text = old.isEmpty ? chip : '$old, ${chip.toLowerCase()}';
+    _input.selection = TextSelection.collapsed(offset: _input.text.length);
+    setState(() {});
   }
 
   Widget _bubble(String text, {bool mine = false}) => Align(
@@ -304,187 +343,6 @@ class _CareerAiChatState extends State<CareerAiChat> {
     ),
   );
 
-  @override
-  Widget build(BuildContext context) {
-    final info = _info;
-    if (info == null) return const SizedBox.shrink();
-    final asked = _messages.where((m) => m.role == 'user').map((m) => m.text).toSet();
-    final suggestions = (info['suggestions'] is List ? (info['suggestions'] as List).map((e) => '$e') : const <String>[]).where((s) => !asked.contains(s)).take(3).toList();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: CareerSection(
-        icon: Icons.smart_toy_rounded,
-        color: sectionViolet,
-        title: t('Аз AI дар бораи касб пурсед'),
-        subtitle: t('Ёвари AI аз рӯи маълумоти ҳамин ихтисос ҷавоб медиҳад'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _bubble('${info['greeting'] ?? ''}'),
-            for (final m in _messages) _bubble(m.text, mine: m.role == 'user'),
-            if (_busy)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
-                    const SizedBox(width: 8),
-                    Text(t('AI фикр мекунад…'), style: _soft),
-                  ],
-                ),
-              ),
-            if (_error)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  t('Ҷавоб наомад. Боз кӯшиш кунед.'),
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.danger),
-                ),
-              ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final s in suggestions)
-                  _Pill(
-                    text: s,
-                    color: sectionViolet.withValues(alpha: AppColors.dark ? 0.16 : 0.06),
-                    border: sectionViolet.withValues(alpha: 0.3),
-                    onTap: _busy ? null : () => _ask(s),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _input,
-                    maxLength: 500,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: _ask,
-                    style: TextStyle(fontSize: 14.5, color: AppColors.text),
-                    decoration: InputDecoration(counterText: '', isDense: true, hintText: t('Саволи худро нависед…'), contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12)),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  tooltip: t('Фиристодан'),
-                  style: IconButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, minimumSize: const Size(46, 46)),
-                  onPressed: _busy ? null : () => _ask(_input.text),
-                  icon: const Icon(Icons.send_rounded, size: 19),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(t('Ин ёвари AI аст, на одами воқеӣ. Барои қарори ниҳоӣ бо мутахассиси воқеӣ ҳам гап занед.'), style: TextStyle(fontSize: 11.5, color: AppColors.textSoft, height: 1.35)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// --- «Чаро шумо ин касбро мехоҳед?» ---
-
-class CareerWhy extends StatefulWidget {
-  const CareerWhy({super.key, required this.careerId});
-  final String careerId;
-
-  @override
-  State<CareerWhy> createState() => _CareerWhyState();
-}
-
-class _CareerWhyState extends State<CareerWhy> {
-  final _reason = TextEditingController();
-  Map<String, dynamic>? _result;
-  bool _busy = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _reason.dispose();
-    super.dispose();
-  }
-
-  Future<void> _check() async {
-    final text = _reason.text.trim();
-    if (text.length < 3 || _busy) return;
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final data = await Api.instance.post('/career-insight/${widget.careerId}/why', {'reason': text, 'lang': appSettings.lang}, timeout: Api.aiTimeout);
-      if (!mounted) return;
-      setState(() {
-        _result = Map<String, dynamic>.from(data);
-        _busy = false;
-      });
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _error = e.message;
-      });
-    }
-  }
-
-  void _addChip(String chip) {
-    final old = _reason.text.trim();
-    _reason.text = old.isEmpty ? chip : '$old, ${chip.toLowerCase()}';
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final chips = [t('Маоши хуб дорад'), t('Падару модарам мехоҳанд'), t('Шавқ дорам'), t('Дӯстонам меравад')];
-    return CareerSection(
-      icon: Icons.help_rounded,
-      color: sectionBlue,
-      title: t('Чаро шумо ин касбро мехоҳед?'),
-      subtitle: t('Сабаби худро ростқавлона нависед — AI мегӯяд, ки он чӣ қадар устувор аст.'),
-      child: _result == null
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [for (final c in chips) _Pill(text: '+ $c', color: AppColors.muted, border: AppColors.border, onTap: () => _addChip(c))],
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _reason,
-                  maxLength: 400,
-                  minLines: 3,
-                  maxLines: 4,
-                  onChanged: (_) => setState(() {}),
-                  style: TextStyle(fontSize: 14.5, color: AppColors.text),
-                  decoration: InputDecoration(counterText: '', hintText: t('Масалан: ба одамон кӯмак кардан мехоҳам ва биологияро дӯст медорам…')),
-                ),
-                const SizedBox(height: 8),
-                Text(t('Матни шумо нигоҳ дошта намешавад.'), style: TextStyle(fontSize: 12, color: AppColors.textSoft)),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _SmallButton(label: t('Санҷед'), loading: _busy, onPressed: _reason.text.trim().length < 3 ? null : _check),
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _error!,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.danger),
-                  ),
-                ],
-              ],
-            )
-          : _whyResult(_result!),
-    );
-  }
-
   Widget _whyResult(Map<String, dynamic> r) {
     final type = switch (r['type']) {
       'inner' => t('💚 Сабаби дохилӣ (шавқ, қобилият)'),
@@ -497,32 +355,159 @@ class _CareerWhyState extends State<CareerWhy> {
       _ => (t('Хатари пушаймонӣ: миёна'), AppColors.warning),
     };
     final questions = r['questions'] is List ? (r['questions'] as List).map((e) => '$e').toList() : const <String>[];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            Badge2(type, color: AppColors.text, background: AppColors.muted),
-            Badge2(risk, color: riskColor, background: riskColor.withValues(alpha: 0.12)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: AppColors.muted, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              Badge2(type, color: AppColors.text, background: AppColors.card),
+              Badge2(risk, color: riskColor, background: riskColor.withValues(alpha: 0.12)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text('${r['summary'] ?? ''}', style: _body),
+          if (questions.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(t('3 савол барои худатон'), style: _label),
+            const SizedBox(height: 8),
+            for (var i = 0; i < questions.length; i++) _Numbered(i + 1, questions[i]),
           ],
-        ),
-        const SizedBox(height: 10),
-        Text('${r['summary'] ?? ''}', style: _body),
-        if (questions.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Text(t('3 савол барои худатон'), style: _label),
-          const SizedBox(height: 8),
-          for (var i = 0; i < questions.length; i++) _Numbered(i + 1, questions[i]),
+          if ('${r['talkTo'] ?? ''}'.isNotEmpty) ...[const SizedBox(height: 4), Text('${t('Бо кӣ гап занед')}: ${r['talkTo']}', style: _body)],
         ],
-        if ('${r['talkTo'] ?? ''}'.isNotEmpty) ...[const SizedBox(height: 4), _SoftBox(child: Text('${t('Бо кӣ гап занед')}: ${r['talkTo']}', style: _body))],
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(onPressed: () => setState(() => _result = null), child: Text(t('Сабаби дигар'))),
-        ),
-      ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = _info;
+    if (info == null) return const SizedBox.shrink();
+    final asked = _messages.where((m) => m.role == 'user').map((m) => m.text).toSet();
+    final suggestions = (info['suggestions'] is List ? (info['suggestions'] as List).map((e) => '$e') : const <String>[]).where((s) => !asked.contains(s)).take(3).toList();
+    final reasons = [t('Маоши хуб дорад'), t('Падару модарам мехоҳанд'), t('Шавқ дорам'), t('Дӯстонам меравад')];
+    return CareerSection(
+      icon: Icons.smart_toy_rounded,
+      color: sectionViolet,
+      title: t('Ёвари AI'),
+      subtitle: t('Дар бораи ин касб пурсед'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _bubble(
+            t('Салом! Дар бораи «{name}» чӣ донистан мехоҳед? Рӯзи корӣ, душвориҳо, фанҳо ё ҷойи кор — пурсед.', {'name': cleanName('${info['persona'] is Map ? info['persona']['title'] : ''}')}),
+          ),
+          for (final m in _messages)
+            if (m.why != null) _whyResult(m.why!) else _bubble(m.text, mine: m.role == 'user' || m.role == 'reason'),
+          if (_busy)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                  const SizedBox(width: 8),
+                  Text(t('AI фикр мекунад…'), style: _soft),
+                ],
+              ),
+            ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _error!,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.danger),
+              ),
+            ),
+          const SizedBox(height: 4),
+          if (_whyMode) ...[
+            _SoftBox(
+              color: AppColors.contractSoft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t('Чаро шумо ин касбро мехоҳед?'),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(t('Сабаби худро ростқавлона нависед — AI мегӯяд, ки он чӣ қадар устувор аст.'), style: _soft),
+                  const SizedBox(height: 3),
+                  Text(t('Матни шумо нигоҳ дошта намешавад.'), style: TextStyle(fontSize: 12, color: AppColors.textSoft)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _whyMode
+                ? [
+                    for (final c in reasons) _Pill(text: '+ $c', color: AppColors.muted, border: AppColors.border, onTap: () => _addReason(c)),
+                    _Pill(
+                      text: t('Бекор кардан'),
+                      color: Colors.transparent,
+                      border: AppColors.border,
+                      onTap: () => setState(() {
+                        _whyMode = false;
+                        _input.clear();
+                      }),
+                    ),
+                  ]
+                : [
+                    _Pill(
+                      text: t('Чаро шумо ин касбро мехоҳед?'),
+                      color: AppColors.primary.withValues(alpha: AppColors.dark ? 0.3 : 0.14),
+                      border: AppColors.primary.withValues(alpha: 0.5),
+                      onTap: _busy ? null : () => setState(() => _whyMode = true),
+                    ),
+                    for (final s in suggestions)
+                      _Pill(
+                        text: s,
+                        color: sectionViolet.withValues(alpha: AppColors.dark ? 0.16 : 0.06),
+                        border: sectionViolet.withValues(alpha: 0.3),
+                        onTap: _busy ? null : () => _ask(s),
+                      ),
+                  ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _input,
+                  maxLength: _whyMode ? 400 : 500,
+                  minLines: 1,
+                  maxLines: 3,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: _send,
+                  style: TextStyle(fontSize: 14.5, color: AppColors.text),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    isDense: true,
+                    hintText: _whyMode ? t('Сабаби худро нависед…') : t('Саволи худро нависед…'),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filled(
+                tooltip: t('Фиристодан'),
+                style: IconButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, minimumSize: const Size(46, 46)),
+                onPressed: _busy ? null : () => _send(_input.text),
+                icon: const Icon(Icons.send_rounded, size: 19),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(t('Ин AI аст, на одам. Пеш аз қарор бо мутахассис ҳам гап занед.'), style: TextStyle(fontSize: 11.5, color: AppColors.textSoft, height: 1.35)),
+        ],
+      ),
     );
   }
 }

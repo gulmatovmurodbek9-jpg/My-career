@@ -226,7 +226,6 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
         _whereToStudy(c),
         gap,
         CareerAiChat(careerId: c.id),
-        CareerWhy(careerId: c.id),
         if (c.purpose.isNotEmpty) ...[
           gap,
           CareerSection(

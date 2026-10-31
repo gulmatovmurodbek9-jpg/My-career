@@ -15,7 +15,10 @@ import '../app/i18n.dart';
 
 // Рӯйхати 884 ихтисос: ҷустуҷӯ (оддӣ ва бо AI), филтрҳои фаҳмо дар зери он, саҳифа ба саҳифа бор мешавад.
 class CareersScreen extends StatefulWidget {
-  const CareersScreen({super.key, this.clusterId, this.title, this.initialSearch});
+  const CareersScreen({super.key, this.clusterId, this.title, this.initialSearch, this.initialAi = false});
+
+  // Аз ёвари овозӣ: ҷумла бо ҷустуҷӯи AI иҷро мешавад.
+  final bool initialAi;
 
   // Аз «Ихтисосҳои вобаста»: рӯйхат бо ҷустуҷӯи тайёр кушода мешавад.
   final String? initialSearch;
@@ -55,6 +58,7 @@ class _CareersScreenState extends State<CareersScreen> {
   void initState() {
     super.initState();
     if (widget.initialSearch != null) _search.text = widget.initialSearch!;
+    if (widget.initialAi) _aiQuery = widget.initialSearch;
     _scroll.addListener(() {
       if (_scroll.hasClients && _scroll.position.pixels > _scroll.position.maxScrollExtent - 600) _load();
     });

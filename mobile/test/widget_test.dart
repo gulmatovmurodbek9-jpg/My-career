@@ -82,7 +82,7 @@ void main() {
     expect(find.text('Табиӣ ва техникӣ'), findsOneWidget);
     expect(find.text('Ихтисосҳо'), findsWidgets);
     expect(find.text('Донишгоҳҳо'), findsWidgets);
-    expect(find.text('Тест'), findsOneWidget);
+    expect(find.text('Ёвар'), findsOneWidget);
   });
 
   test('почта ва парол: хатоҳо пеш аз фиристодан', () {

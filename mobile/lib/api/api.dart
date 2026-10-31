@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../app/settings.dart';
 import '../app/i18n.dart';
@@ -60,6 +62,30 @@ class Api {
   Future<dynamic> post(String path, Map<String, dynamic> body, {Duration timeout = const Duration(seconds: 25)}) async {
     final uri = Uri.parse('$apiBase$path');
     return _send(() => _client.post(uri, headers: _headers, body: jsonEncode(body)), timeout);
+  }
+
+  // Сервер овозро танҳо барои сайти мо медиҳад (ниг. voice.controller.ts): барнома ҳамон манбаъро мегӯяд.
+  static const _voiceHeaders = {'Origin': 'https://ikhtisosiman.qobus.tj'};
+
+  // Садо → матн. Лимити сервер: 8 МБ.
+  Future<String> transcribe(String path) async {
+    final request = http.MultipartRequest('POST', Uri.parse('$apiBase/voice/stt'))
+      ..headers.addAll(_voiceHeaders)
+      ..files.add(await http.MultipartFile.fromPath('audio', path, contentType: MediaType('audio', 'mp4')));
+    final data = await _send(() async => http.Response.fromStream(await _client.send(request)), const Duration(seconds: 30));
+    return data is Map ? '${data['text'] ?? ''}'.trim() : '';
+  }
+
+  // Матн → садои MP3; агар нашуд — null (матн ба ҳар ҳол дар экран аст).
+  Future<Uint8List?> speak(String text, String lang) async {
+    try {
+      final response = await _client
+          .post(Uri.parse('$apiBase/voice/speak'), headers: {..._headers, ..._voiceHeaders}, body: jsonEncode({'text': text, 'lang': lang, 'format': 'mp3'}))
+          .timeout(const Duration(seconds: 30));
+      return response.statusCode < 300 ? response.bodyBytes : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<dynamic> delete(String path) async {

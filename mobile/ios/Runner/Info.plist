@@ -70,5 +70,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ёвари овозӣ гапи шуморо мешунавад, то ба савол ҷавоб диҳад.</string>
 </dict>
 </plist>

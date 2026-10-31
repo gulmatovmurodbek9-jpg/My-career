@@ -8,10 +8,11 @@ import 'settings_screen.dart';
 import 'home_screen.dart';
 import 'quiz_screen.dart';
 import 'universities_screen.dart';
+import 'voice_screen.dart';
 import '../app/i18n.dart';
 
 // Бахшҳои асосӣ: 0 Асосӣ, 1 Тест, 2 Ихтисосҳо, 3 Донишгоҳҳо.
-// Менюи поён мисли сайт: панели мудаввар, «Тест» — тугмаи калон дар мобайн, «Танзимот» дар канор.
+// Менюи поён: панели мудаввар, «Ёвар» (овоз) — тугмаи калон дар мобайн, «Танзимот» дар канор. Тест аз саҳифаи асосӣ ва бо овоз кушода мешавад.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -50,7 +51,7 @@ class _AppShellState extends State<AppShell> {
               children: [
                 _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: t('Асосӣ'), selected: _tab == 0, onTap: () => select(0)),
                 _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: t('Ихтисосҳо'), selected: _tab == 2, onTap: () => select(2)),
-                _CenterItem(selected: _tab == 1, onTap: () => select(1)),
+                _CenterItem(onTap: () => Navigator.of(context).push(smoothRoute(VoiceScreen(goToTab: select)))),
                 _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: t('Донишгоҳҳо'), selected: _tab == 3, onTap: () => select(3)),
                 _NavItem(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: t('Танзимот'), selected: false, onTap: () => Navigator.of(context).push(smoothRoute(const SettingsScreen()))),
               ],
@@ -128,18 +129,16 @@ class _NavButton extends StatelessWidget {
   );
 }
 
-// «Тест» — доираи калони градиентӣ, ки аз панел каме боло баромадааст (мисли «Ёвар» дар сайт).
+// «Ёвар» — доираи калони градиентӣ бо микрофон, ки аз панел каме боло баромадааст (мисли сайт).
 class _CenterItem extends StatelessWidget {
-  const _CenterItem({required this.selected, required this.onTap});
-  final bool selected;
+  const _CenterItem({required this.onTap});
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) => Expanded(
     child: Semantics(
       button: true,
-      selected: selected,
-      label: t('Тест'),
+      label: t('Ёвар'),
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -150,28 +149,24 @@ class _CenterItem extends StatelessWidget {
           children: [
             Positioned(
               top: -18,
-              child: AnimatedScale(
-                duration: const Duration(milliseconds: 220),
-                scale: selected ? 1.06 : 1,
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.brandGradient,
-                    border: Border.all(color: AppColors.card, width: 3),
-                    boxShadow: const [BoxShadow(color: Color(0x55003BB3), blurRadius: 18, offset: Offset(0, 8), spreadRadius: -4)],
-                  ),
-                  child: const Icon(Icons.quiz_rounded, color: Colors.white, size: 26),
+              child: Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.brandGradient,
+                  border: Border.all(color: AppColors.card, width: 3),
+                  boxShadow: const [BoxShadow(color: Color(0x55003BB3), blurRadius: 18, offset: Offset(0, 8), spreadRadius: -4)],
                 ),
+                child: const Icon(Icons.mic_rounded, color: Colors.white, size: 27),
               ),
             ),
             Positioned(
               bottom: 9,
               child: Text(
-                t('Тест'),
+                t('Ёвар'),
                 textScaler: TextScaler.noScaling,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? AppColors.primary : AppColors.text),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.text),
               ),
             ),
           ],

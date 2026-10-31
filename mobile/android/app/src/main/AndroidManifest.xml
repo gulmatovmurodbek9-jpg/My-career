@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Барнома ба API-и сайт пайваст мешавад. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Ёвари овозӣ. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="Ихтисоси ман"
         android:name="${applicationName}"

@@ -38,11 +38,16 @@ class AppSettings extends ChangeNotifier {
     await prefs.setDouble('textScale', value);
   }
 
-  Future<void> setGrade(int value) async {
+  // null — «Ҳама»: ихтисосҳо барои ҳарду синф.
+  Future<void> setGrade(int? value) async {
     _grade = value;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('grade', value);
+    if (value == null) {
+      await prefs.remove('grade');
+    } else {
+      await prefs.setInt('grade', value);
+    }
   }
 
   Future<void> setLang(String value) async {

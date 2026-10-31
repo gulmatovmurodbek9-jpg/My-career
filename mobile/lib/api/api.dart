@@ -36,8 +36,8 @@ class Api {
   // AI дертар ҷавоб медиҳад: ба он мӯҳлати дарозтар лозим аст.
   static const aiTimeout = Duration(seconds: 60);
 
-  Future<dynamic> get(String path, [Map<String, String>? query, Duration timeout = const Duration(seconds: 25)]) {
-    final uri = Uri.parse('$apiBase$path').replace(queryParameters: {'lang': appSettings.lang, ...?query});
+  Future<dynamic> get(String path, [Map<String, dynamic>? query, Duration timeout = const Duration(seconds: 25)]) {
+    final uri = Uri.parse('$apiBase$path').replace(queryParameters: <String, dynamic>{'lang': appSettings.lang, ...?query});
     final key = uri.toString();
     final hit = _cache[key];
     if (hit != null && DateTime.now().difference(hit.$1) < _cacheTtl) return hit.$2;

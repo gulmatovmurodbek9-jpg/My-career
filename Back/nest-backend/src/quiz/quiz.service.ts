@@ -25,6 +25,9 @@ export interface UserScores {
     chosenCluster?: string;
 }
 
+// Қадами 2: аз ҳар самт 3 савол, то тест кӯтоҳ бошад. Ҷавобҳои кӯҳнаи саволҳои дигар ҳанӯз ҳисоб мешаванд.
+const SPECIALTY_IN_TEST = new Set(['sp_c1_1', 'sp_c1_2', 'sp_c1_3', 'sp_c2_1', 'sp_c2_2', 'sp_c2_5', 'sp_c3_1', 'sp_c3_2', 'sp_c3_5', 'sp_c4_1', 'sp_c4_3', 'sp_c4_5', 'sp_c5_1', 'sp_c5_2', 'sp_c5_3']);
+
 @Injectable()
 export class QuizService {
     constructor(
@@ -52,7 +55,7 @@ export class QuizService {
 
     getSpecialtyQuestions(clusterNumber: string | number): QuizQuestion[] {
         const target = `c${clusterNumber}`;
-        const specialtyQuestions = QUIZ_QUESTIONS.filter(q => q.part === QuizPart.SPECIALTY && q.targetCluster === target);
+        const specialtyQuestions = QUIZ_QUESTIONS.filter(q => q.part === QuizPart.SPECIALTY && q.targetCluster === target && SPECIALTY_IN_TEST.has(q.id));
         return this.shuffleArray(specialtyQuestions);
     }
 

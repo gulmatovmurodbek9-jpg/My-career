@@ -59,9 +59,9 @@ describe('QuizService.calculateScores', () => {
         expect(scores.chosenCluster).toBeUndefined();
     });
 
-    it('саволҳои «пинҳон» (m17–m24) ҳар вариант ба ду самт хол медиҳанд', () => {
+    it('саволҳои «пинҳон» (m17–m23) ҳар вариант ба ду самт хол медиҳанд', () => {
         const hidden = MMT_QUESTIONS.filter((q) => Number(q.id.slice(1)) >= 17);
-        expect(hidden.length).toBe(8);
+        expect(hidden.length).toBe(3);
         for (const question of hidden) {
             for (const option of question.options) {
                 expect(Object.keys(option.scores || {}).length).toBe(2);
@@ -109,10 +109,10 @@ describe('Баробарии тест (ҳамаи 5 кластер)', () => {
     const mmt = MMT_QUESTIONS;
     const hidden = (id: string) => Number(id.slice(1)) > 16;
 
-    it('ҳадди имконпазир барои ҳар кластер баробар аст (64)', () => {
+    it('ҳадди имконпазир барои ҳар кластер баробар аст (27)', () => {
         for (const k of K) {
             const max = mmt.reduce((sum, q) => sum + Math.max(0, ...q.options.map((o) => o.scores?.[k] || 0)), 0);
-            expect(max).toBe(64);
+            expect(max).toBe(27);
         }
     });
 

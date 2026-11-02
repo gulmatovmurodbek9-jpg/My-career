@@ -56,8 +56,8 @@ class QuizStartScreen extends StatelessWidget {
           children: [
             Text(t('Чӣ тавр мегузарад?'), style: text.headlineMedium),
             const SizedBox(height: 14),
-            _Step(number: '1', text: t('Ба 24 саволи содда дар бораи ҳаёти худ ҷавоб медиҳед.')),
-            _Step(number: '2', text: t('Баъд 5 саволи дигар дар бораи самти шумо.')),
+            _Step(number: '1', text: t('Ба 10 саволи содда дар бораи ҳаёти худ ҷавоб медиҳед.')),
+            _Step(number: '2', text: t('Баъд 3 саволи дигар дар бораи самти шумо.')),
             _Step(number: '3', text: t('Мебинед, ки кадом ихтисосҳо ба шумо мувофиқанд ва онҳоро дар куҷо мехонанд.')),
             const SizedBox(height: 10),
             Text(t('Ҷавоби «дуруст» ё «нодуруст» нест. Он чиро интихоб кунед, ки ба шумо наздиктар аст.'), style: text.bodyLarge),
@@ -159,7 +159,7 @@ class QuizFlowScreen extends StatefulWidget {
 
 class _QuizFlowScreenState extends State<QuizFlowScreen> {
   static const _tieShare = 0.15; // ҳамон ҳадди сайт: ду самт камтар аз 15% фарқ — аз худи хонанда мепурсем
-  static const _expectedTotal = 29;
+  static const _expectedTotal = 13;
 
   final List<QuizQuestion> _questions = [];
   final Map<String, String> _answers = {};
@@ -372,20 +372,40 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
 
 // Ҷавоби худи хонанда: AI варианти наздиктаринро меёбад, хонанда онро тасдиқ мекунад
 // ва хол мисли интихоби ҳамон вариант ҳисоб мешавад (ҳамон /quiz/interpret-и сайт).
-class _OwnAnswer extends StatefulWidget {
+// Майдон дар варақи поён аст, то клавиатура саволро напӯшонад ва экран наҷаҳад.
+class _OwnAnswer extends StatelessWidget {
   const _OwnAnswer({super.key, required this.question, required this.onAnswer});
   final QuizQuestion question;
   final ValueChanged<String> onAnswer;
 
+  Future<void> _open(BuildContext context) async {
+    final value = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
+      builder: (_) => _OwnAnswerSheet(question: question),
+    );
+    if (value != null) onAnswer(value);
+  }
+
   @override
-  State<_OwnAnswer> createState() => _OwnAnswerState();
+  Widget build(BuildContext context) => TextButton(onPressed: () => _open(context), child: Text(t('Ҷавоби шумо дар рӯйхат нест?')));
 }
 
-class _OwnAnswerState extends State<_OwnAnswer> {
+class _OwnAnswerSheet extends StatefulWidget {
+  const _OwnAnswerSheet({required this.question});
+  final QuizQuestion question;
+
+  @override
+  State<_OwnAnswerSheet> createState() => _OwnAnswerSheetState();
+}
+
+class _OwnAnswerSheetState extends State<_OwnAnswerSheet> {
   final _controller = TextEditingController();
   bool _loading = false;
-  bool _open = false;
-  bool _none = false;
+  String? _error;
   int? _match;
 
   @override
@@ -399,10 +419,11 @@ class _OwnAnswerState extends State<_OwnAnswer> {
     if (said.isEmpty || _loading) return;
     setState(() {
       _loading = true;
-      _none = false;
+      _error = null;
       _match = null;
     });
     int? position;
+    String? error;
     try {
       final data = await Api.instance.post('/quiz/interpret', {
         'questionId': widget.question.id,
@@ -413,77 +434,60 @@ class _OwnAnswerState extends State<_OwnAnswer> {
       });
       final value = data['position'];
       if (value is int && value >= 0 && value < widget.question.options.length) position = value;
+      if (position == null) error = t('Фаҳмида нашуд. Бо суханони дигар нависед, масалан: «бо компютер кор кардан».');
     } catch (_) {
-      position = null;
+      error = t('Интернетро санҷед ва боз кӯшиш кунед.');
     }
     if (!mounted) return;
     setState(() {
       _loading = false;
       _match = position;
-      _none = position == null;
+      _error = error;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final match = _match;
-    if (!_open) {
-      return TextButton(onPressed: () => setState(() => _open = true), child: Text(t('Ҷавоби шумо дар рӯйхат нест?')));
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                autofocus: true,
-                maxLength: 300,
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _find(),
-                onChanged: (_) => setState(() {
-                  _match = null;
-                  _none = false;
-                }),
-                decoration: InputDecoration(hintText: t('Ҷавоби худро нависед'), counterText: '', isDense: true),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton.filled(
-              tooltip: t('Ёфтан'),
-              onPressed: _controller.text.trim().isEmpty || _loading ? null : _find,
-              icon: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.arrow_forward_rounded),
-            ),
-          ],
-        ),
-        if (match != null) ...[
-          const SizedBox(height: 8),
-          Text(t('Ҷавоби шумо ба ин вариант наздик аст:'), style: TextStyle(fontSize: 14, color: AppColors.textSoft)),
-          const SizedBox(height: 2),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 18, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           Text(
-            widget.question.options[match].text,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary),
+            t('Ҷавоби худро нависед'),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.text),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton(onPressed: () => widget.onAnswer(widget.question.options[match].value), child: Text(t('Қабул'))),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(onPressed: () => setState(() => _match = null), child: Text(t('Дигар кардан'))),
-              ),
-            ],
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            maxLength: 300,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _find(),
+            onChanged: (_) => setState(() {
+              _match = null;
+              _error = null;
+            }),
+            decoration: const InputDecoration(counterText: '', isDense: true),
           ),
+          const SizedBox(height: 12),
+          if (match == null)
+            FilledButton(onPressed: _controller.text.trim().isEmpty || _loading ? null : _find, child: Text(_loading ? t('Меҷӯем…') : t('Ёфтан')))
+          else ...[
+            Text(t('Ҷавоби шумо ба ин вариант наздик аст:'), style: TextStyle(fontSize: 14, color: AppColors.textSoft)),
+            const SizedBox(height: 4),
+            Text(
+              widget.question.options[match].text,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: () => Navigator.of(context).pop(widget.question.options[match].value), child: Text(t('Қабул'))),
+          ],
+          if (_error != null) ...[const SizedBox(height: 10), Text(_error!, style: TextStyle(fontSize: 14, color: AppColors.textSoft))],
         ],
-        if (_none) ...[
-          const SizedBox(height: 8),
-          Text(t('Ҷавобро ба ягон вариант пайваст карда натавонистем. Каме дигар нависед ё вариантро интихоб кунед.'), style: TextStyle(fontSize: 14, color: AppColors.textSoft)),
-        ],
-      ],
+      ),
     );
   }
 }

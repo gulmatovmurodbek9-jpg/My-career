@@ -1,3 +1,4 @@
+import 'last_result.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -109,6 +110,7 @@ class AuthStore extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    lastResult.clear();
     _token = null;
     _user = null;
     Api.instance.token = null;

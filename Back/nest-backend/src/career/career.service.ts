@@ -1,5 +1,5 @@
 import { joinBrokenLists } from './career-lists';
-import { diversifyCareers } from './career-match';
+import { CareerPlaces, diversifyCareers } from './career-match';
 import { createHash } from 'crypto';
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
 import { resourcesForAi } from '../common/resource-filters';
@@ -2837,7 +2837,7 @@ export class CareerService {
         clusterScores: { cluster: Cluster; score: number }[];
         careerRanks: Map<string, number>;
         careerReasons: Map<string, string[]>;
-        careerContext?: Map<string, { local: boolean; free: boolean }>;
+        careerContext?: Map<string, CareerPlaces>;
         careerPercents: Map<string, number>;
     }> {
         const mmtScores = userScores?.mmtClusters || { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 };
@@ -2915,18 +2915,24 @@ export class CareerService {
         // бошад кӯчад), вале ихтисосҳое, ки дар шаҳраш ё бо ҷойи ройгон ҳастанд, болотар.
         const city = String(context?.city || '').trim();
         const wantsFree = context?.budget === 'free';
-        const extra = new Map<string, { local: boolean; free: boolean }>();
-        if ((city || wantsFree) && pool.length) {
-            const rows: Array<{ id: string; local: boolean; free: boolean }> = await this.careerRepository.manager.query(
+        // Ҷойи таҳсил барои ҳама ихтисосҳо лозим аст: хонанда бояд бинад, ки куҷо мехонанд ва буҷет ҳаст ё не.
+        const extra = new Map<string, CareerPlaces>();
+        if (pool.length && this.careerRepository.manager) {
+            const rows: Array<{ id: string; local: boolean; free: boolean; count: number; fee: number | null; names: string[] }> = await this.careerRepository.manager.query(
                 `SELECT o."careerId" AS id,
                         bool_or($2 <> '' AND u.city = $2) AS local,
-                        bool_or(o."paymentType" = 'ройгон') AS free
+                        bool_or(o."paymentType" = 'ройгон') AS free,
+                        count(DISTINCT o."universityId")::int AS count,
+                        min(o."tuitionFee") FILTER (WHERE o."tuitionFee" > 0)::int AS fee,
+                        (array_agg(DISTINCT u.name))[1:3] AS names
                  FROM career_offerings o JOIN universities u ON u.id = o."universityId"
                  WHERE o."careerId" = ANY($1) AND ($3::int IS NULL OR o."basedOn" = $3)
                  GROUP BY 1`,
                 [pool.map((c) => c.id), city, grade],
             );
-            for (const row of rows) extra.set(row.id, { local: !!row.local, free: !!row.free });
+            for (const row of rows || []) {
+                extra.set(row.id, { local: !!row.local, free: !!row.free, count: Number(row.count) || 0, fee: row.fee ?? null, names: row.names || [] });
+            }
         }
         const bonus = (id: string) => (extra.get(id)?.local ? 2 : 0) + (wantsFree && extra.get(id)?.free ? 2 : 0);
 

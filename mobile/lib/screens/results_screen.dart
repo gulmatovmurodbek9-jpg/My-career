@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api.dart';
 import '../api/models.dart';
+import '../app/last_result.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
@@ -10,9 +11,10 @@ import 'quiz_screen.dart';
 import '../app/i18n.dart';
 
 class ResultsScreen extends StatefulWidget {
-  const ResultsScreen({super.key, required this.result, required this.requestBody});
+  const ResultsScreen({super.key, required this.result, required this.requestBody, this.savedAdvice});
   final QuizResult result;
   final Map<String, dynamic> requestBody;
+  final String? savedAdvice;
 
   @override
   State<ResultsScreen> createState() => _ResultsScreenState();
@@ -25,14 +27,20 @@ class _ResultsScreenState extends State<ResultsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAdvice();
+    if (widget.savedAdvice != null) {
+      _advice = widget.savedAdvice;
+    } else {
+      _loadAdvice();
+    }
   }
 
   // Натиҷа фавран нишон дода мешавад; маслиҳати AI баъд, алоҳида меояд.
   Future<void> _loadAdvice() async {
     try {
       final data = await Api.instance.post('/quiz/advice', widget.requestBody);
-      if (mounted) setState(() => _advice = '${data['aiAdvice'] ?? ''}'.trim());
+      final advice = '${data['aiAdvice'] ?? ''}'.trim();
+      if (advice.isNotEmpty) lastResult.saveAdvice(advice);
+      if (mounted) setState(() => _advice = advice);
     } catch (_) {
       if (mounted) setState(() => _adviceFailed = true);
     }
@@ -229,7 +237,23 @@ class _CareerResultCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (career.free) ...[const SizedBox(height: 10), Badge2(t('Ҷойи буҷетӣ ҳаст'), color: AppColors.budget, background: AppColors.budgetSoft)],
+              if (career.universitiesCount > 0) ...[
+                const SizedBox(height: 10),
+                Text(
+                  t('Дар {n} муассиса: {names}', {'n': career.universitiesCount, 'names': career.universityNames.join(', ')}),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14.5, height: 1.35, color: AppColors.textSoft),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  [
+                    if (career.free) t('Ҷойи буҷетӣ ҳаст') else t('Ҷойи буҷетӣ нест'),
+                    if (career.minFee != null) t('Шартнома аз {n} сомонӣ', {'n': career.minFee}),
+                  ].join(' · '),
+                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: AppColors.primary),
+                ),
+              ],
             ],
           ),
         ),

@@ -68,6 +68,14 @@ const LogoMark = ({ className = "" }) => (
 const SHUFFLE_SEED = Math.floor(Math.random() * 1e9);
 // «Ҷавоби худ»: агар ҳеҷ вариант мувофиқ набошад, корбар бо суханони худ менависад;
 // AI онро ба варианти наздиктарин мепайвандад ва хол ҳамон хол-и вариант аст.
+const PLACES_TEXT = (lang, { universitiesCount: n, universityNames: names = [], free, minFee }) => {
+    const list = names.map((name) => name.replace(/\s*\([^)]*\)\s*$/, "")).join(", ");
+    const fee = Number(minFee || 0).toLocaleString("ru-RU");
+    if (lang === "ru") return `В ${n} учреждениях: ${list}. ${free ? "Бюджетные места есть" : "Бюджетных мест нет"}${minFee ? `, контракт от ${fee} сомони` : ""}.`;
+    if (lang === "en") return `At ${n} institutions: ${list}. ${free ? "State-funded places available" : "No state-funded places"}${minFee ? `, tuition from ${fee} somoni` : ""}.`;
+    return `Дар ${n} муассиса: ${list}. ${free ? "Ҷойи буҷетӣ ҳаст" : "Ҷойи буҷетӣ нест"}${minFee ? `, шартнома аз ${fee} сомонӣ` : ""}.`;
+};
+
 const UNDECIDED_TEXT = {
     tj: {
         title: "Шавқи шумо ҳанӯз равшан нест",
@@ -1316,6 +1324,11 @@ const Quiz = () => {
                                         </div>
                                         {(careerDescription(career, i18n.language) || career.purpose) && (
                                             <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{displayName(careerDescription(career, i18n.language) || career.purpose)}</p>
+                                        )}
+                                        {career.universitiesCount > 0 && (
+                                            <p className="mt-2 text-[13px] leading-snug text-muted-foreground">
+                                                {PLACES_TEXT(i18n.language, career)}
+                                            </p>
                                         )}
                                         {(career.local || career.free) && (
                                             <div className="flex flex-wrap gap-1.5">

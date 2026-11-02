@@ -142,6 +142,9 @@ export class QuizService {
             reasons: selection.careerReasons.get(c.id) || [],
             local: selection.careerContext?.get(c.id)?.local || false,
             free: selection.careerContext?.get(c.id)?.free || false,
+            universitiesCount: selection.careerContext?.get(c.id)?.count ?? 0,
+            minFee: selection.careerContext?.get(c.id)?.fee ?? null,
+            universityNames: selection.careerContext?.get(c.id)?.names ?? [],
         }));
 
         const undecided = undecidedDirections(clusterScores);

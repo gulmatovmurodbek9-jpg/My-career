@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app/last_result.dart';
 import 'app/auth.dart';
 import 'app/i18n.dart';
 import 'app/settings.dart';
@@ -9,7 +10,7 @@ import 'screens/welcome_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Future.wait([appSettings.load(), authStore.load()]);
+  await Future.wait([appSettings.load(), authStore.load(), lastResult.load()]);
   _rebuildOnLanguageChange();
   runApp(const IkhtisosiManApp());
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api/api.dart';
 import '../api/models.dart';
 import '../app/auth.dart';
+import '../app/last_result.dart';
 import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
@@ -63,6 +64,18 @@ class QuizStartScreen extends StatelessWidget {
             SectionTitle(t('Шумо баъди кадом синф ҳастед?')),
             for (final g in [9, 11]) ...[_GradeButton(grade: g, selected: appSettings.grade == g), const SizedBox(height: 12)],
             const SizedBox(height: 8),
+            ListenableBuilder(
+              listenable: lastResult,
+              builder: (context, _) {
+                final saved = lastResult.result;
+                if (saved == null) return const SizedBox.shrink();
+                return OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(smoothRoute(ResultsScreen(result: QuizResult.fromJson(saved), requestBody: lastResult.body ?? {}, savedAdvice: lastResult.advice))),
+                  icon: const Icon(Icons.history_rounded),
+                  label: Text(t('Натиҷаи охирини ман')),
+                );
+              },
+            ),
             TextButton(onPressed: () => Navigator.of(context).push(smoothRoute(const MethodScreen())), child: Text(t('Асоси илмӣ'))),
           ],
         ),
@@ -293,6 +306,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
         }
       }
       data ??= await Api.instance.post('/quiz/submit', body);
+      await lastResult.save(Map<String, dynamic>.from(data), Map<String, dynamic>.from(body));
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

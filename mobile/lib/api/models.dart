@@ -156,12 +156,18 @@ class MatchedCareer {
       name = cleanName(_str(j['name'])),
       percent = _int(j['matchPercentage']) ?? 0,
       free = j['free'] == true,
+      universitiesCount = _int(j['universitiesCount']) ?? 0,
+      minFee = _int(j['minFee']),
+      universityNames = j['universityNames'] is List ? (j['universityNames'] as List).map((e) => cleanName(_str(e))).toList() : const [],
       reasons = j['reasons'] is List ? (j['reasons'] as List).map(_str).toList() : const [];
 
   final String id;
   final String name;
   final int percent;
   final bool free;
+  final int universitiesCount;
+  final int? minFee;
+  final List<String> universityNames;
   final List<String> reasons;
 }
 

@@ -1,5 +1,8 @@
 // Ин қоидаҳо аз рӯи мантиқ гузошта шудаанд, на аз таҳқиқот; рақамҳоро санҷиши синф бояд тасдиқ кунад.
 const MMT_MAX_SCORE = 40;
+
+export type CareerPlaces = { local: boolean; free: boolean; count: number; fee: number | null; names: string[] };
+
 const UNDECIDED_TOP_PERCENT = 40;
 const CLOSE_SHARE = 0.15;
 const NEAR_SHARE = 0.6;

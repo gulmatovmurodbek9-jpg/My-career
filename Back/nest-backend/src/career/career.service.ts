@@ -1,5 +1,5 @@
 import { joinBrokenLists } from './career-lists';
-import { CareerPlaces, diversifyCareers } from './career-match';
+import { CareerPlaces, diversifyCareers, maxFeeOf } from './career-match';
 import { createHash } from 'crypto';
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
 import { resourcesForAi } from '../common/resource-filters';
@@ -2915,6 +2915,7 @@ export class CareerService {
         // бошад кӯчад), вале ихтисосҳое, ки дар шаҳраш ё бо ҷойи ройгон ҳастанд, болотар.
         const city = String(context?.city || '').trim();
         const wantsFree = context?.budget === 'free';
+        const maxFee = maxFeeOf(context?.budget);
         // Ҷойи таҳсил барои ҳама ихтисосҳо лозим аст: хонанда бояд бинад, ки куҷо мехонанд ва буҷет ҳаст ё не.
         const extra = new Map<string, CareerPlaces>();
         if (pool.length && this.careerRepository.manager) {
@@ -2931,10 +2932,17 @@ export class CareerService {
                 [pool.map((c) => c.id), city, grade],
             );
             for (const row of rows || []) {
-                extra.set(row.id, { local: !!row.local, free: !!row.free, count: Number(row.count) || 0, fee: row.fee ?? null, names: row.names || [] });
+                extra.set(row.id, {
+                    local: !!row.local,
+                    free: !!row.free,
+                    count: Number(row.count) || 0,
+                    fee: row.fee ?? null,
+                    names: row.names || [],
+                    affordable: maxFee === null ? null : !!row.free || (row.fee !== null && row.fee <= maxFee),
+                });
             }
         }
-        const bonus = (id: string) => (extra.get(id)?.local ? 2 : 0) + (wantsFree && extra.get(id)?.free ? 2 : 0);
+        const bonus = (id: string) => (extra.get(id)?.local ? 2 : 0) + (wantsFree && extra.get(id)?.free ? 2 : 0) + (extra.get(id)?.affordable ? 2 : 0);
 
         // Холи баробар: пештар алифбо ҳал мекард — «География…» бо «Г» ҳамеша пеш мебаромад.
         // Ҳоло ихтисосе, ки дар муассисаҳои бештар хонда мешавад (дастрастар), пеш; баъд алифбо.

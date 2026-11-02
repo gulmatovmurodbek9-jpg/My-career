@@ -158,6 +158,8 @@ class MatchedCareer {
       free = j['free'] == true,
       universitiesCount = _int(j['universitiesCount']) ?? 0,
       minFee = _int(j['minFee']),
+      affordable = j['affordable'] is bool ? j['affordable'] as bool : null,
+      local = j['local'] == true,
       universityNames = j['universityNames'] is List ? (j['universityNames'] as List).map((e) => cleanName(_str(e))).toList() : const [],
       reasons = j['reasons'] is List ? (j['reasons'] as List).map(_str).toList() : const [];
 
@@ -167,6 +169,8 @@ class MatchedCareer {
   final bool free;
   final int universitiesCount;
   final int? minFee;
+  final bool? affordable;
+  final bool local;
   final List<String> universityNames;
   final List<String> reasons;
 }

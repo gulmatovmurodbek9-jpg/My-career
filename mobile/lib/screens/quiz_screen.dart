@@ -63,6 +63,7 @@ class QuizStartScreen extends StatelessWidget {
             Text(t('Ҷавоби «дуруст» ё «нодуруст» нест. Он чиро интихоб кунед, ки ба шумо наздиктар аст.'), style: text.bodyLarge),
             SectionTitle(t('Шумо баъди кадом синф ҳастед?')),
             for (final g in [9, 11]) ...[_GradeButton(grade: g, selected: appSettings.grade == g), const SizedBox(height: 12)],
+            const _PlaceQuestions(),
             const SizedBox(height: 8),
             ListenableBuilder(
               listenable: lastResult,
@@ -80,6 +81,73 @@ class QuizStartScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// Ду саволи иловагӣ: куҷо хондан мехоҳад ва оила чӣ қадар дода метавонад. Ба самти тест таъсир намерасонанд.
+class _PlaceQuestions extends StatefulWidget {
+  const _PlaceQuestions();
+
+  @override
+  State<_PlaceQuestions> createState() => _PlaceQuestionsState();
+}
+
+class _PlaceQuestionsState extends State<_PlaceQuestions> {
+  List<String> _cities = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCities();
+  }
+
+  Future<void> _loadCities() async {
+    try {
+      final data = await Api.instance.get('/universities/cities');
+      if (mounted && data is List) setState(() => _cities = data.map((e) => '${e['city'] ?? ''}').where((e) => e.isNotEmpty).toList());
+    } catch (_) {
+      // Бе рӯйхат саволи шаҳр пинҳон мемонад.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final city = _cities.contains(appSettings.studyCity) ? appSettings.studyCity : '';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_cities.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(t('Дар кадом шаҳр хондан мехоҳед?'), style: text.titleMedium),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: city,
+            isExpanded: true,
+            onChanged: (value) => appSettings.setStudyCity(value ?? ''),
+            items: [
+              DropdownMenuItem(value: '', child: Text(t('Фарқ надорад'))),
+              for (final name in _cities) DropdownMenuItem(value: name, child: Text(name)),
+            ],
+          ),
+        ],
+        const SizedBox(height: 16),
+        Text(t('Оила дар як сол барои таҳсил чӣ қадар дода метавонад?'), style: text.titleMedium),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          initialValue: appSettings.studyBudget,
+          isExpanded: true,
+          onChanged: (value) => appSettings.setStudyBudget(value ?? 'any'),
+          items: [
+            DropdownMenuItem(value: 'any', child: Text(t('Фарқ надорад / намехоҳам гӯям'))),
+            DropdownMenuItem(value: 'free', child: Text(t('Танҳо ҷойи буҷетӣ'))),
+            DropdownMenuItem(value: '5000', child: Text(t('То 5 000 сомонӣ'))),
+            DropdownMenuItem(value: '10000', child: Text(t('То 10 000 сомонӣ'))),
+          ],
+        ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 }
@@ -293,7 +361,13 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
 
   Future<void> _submit() async {
     setState(() => _loading = t('Натиҷа тайёр мешавад…'));
-    final body = {'answers': _answerList, 'lang': appSettings.lang, 'grade': appSettings.grade ?? 11, 'deferAdvice': true};
+    final body = {
+      'answers': _answerList,
+      'lang': appSettings.lang,
+      'grade': appSettings.grade ?? 11,
+      'deferAdvice': true,
+      'context': {'city': appSettings.studyCity, 'budget': appSettings.studyBudget},
+    };
     try {
       dynamic data;
       // Агар корбар ворид шуда бошад, натиҷа дар ҳисобаш нигоҳ дошта мешавад.

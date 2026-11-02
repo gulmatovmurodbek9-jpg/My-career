@@ -27,7 +27,7 @@ export function getQuizContext() {
         const value = JSON.parse(localStorage.getItem(KEY) || "{}");
         return {
             subjects: Array.isArray(value.subjects) ? value.subjects.filter((s) => SUBJECTS.some((x) => x.key === s)) : [],
-            budget: value.budget === "free" ? "free" : "any",
+            budget: ["free", "5000", "10000"].includes(value.budget) ? value.budget : "any",
             city: typeof value.city === "string" ? value.city : "",
         };
     } catch {

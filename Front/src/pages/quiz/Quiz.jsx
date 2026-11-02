@@ -68,12 +68,12 @@ const LogoMark = ({ className = "" }) => (
 const SHUFFLE_SEED = Math.floor(Math.random() * 1e9);
 // «Ҷавоби худ»: агар ҳеҷ вариант мувофиқ набошад, корбар бо суханони худ менависад;
 // AI онро ба варианти наздиктарин мепайвандад ва хол ҳамон хол-и вариант аст.
-const PLACES_TEXT = (lang, { universitiesCount: n, universityNames: names = [], free, minFee }) => {
+const PLACES_TEXT = (lang, { universitiesCount: n, universityNames: names = [], free, minFee, affordable }) => {
     const list = names.map((name) => name.replace(/\s*\([^)]*\)\s*$/, "")).join(", ");
     const fee = Number(minFee || 0).toLocaleString("ru-RU");
-    if (lang === "ru") return `В ${n} учреждениях: ${list}. ${free ? "Бюджетные места есть" : "Бюджетных мест нет"}${minFee ? `, контракт от ${fee} сомони` : ""}.`;
-    if (lang === "en") return `At ${n} institutions: ${list}. ${free ? "State-funded places available" : "No state-funded places"}${minFee ? `, tuition from ${fee} somoni` : ""}.`;
-    return `Дар ${n} муассиса: ${list}. ${free ? "Ҷойи буҷетӣ ҳаст" : "Ҷойи буҷетӣ нест"}${minFee ? `, шартнома аз ${fee} сомонӣ` : ""}.`;
+    if (lang === "ru") return `В ${n} учреждениях: ${list}. ${free ? "Бюджетные места есть" : "Бюджетных мест нет"}${minFee ? `, контракт от ${fee} сомони` : ""}.${affordable === false ? " Дороже указанной суммы." : ""}`;
+    if (lang === "en") return `At ${n} institutions: ${list}. ${free ? "State-funded places available" : "No state-funded places"}${minFee ? `, tuition from ${fee} somoni` : ""}.${affordable === false ? " Above your stated amount." : ""}`;
+    return `Дар ${n} муассиса: ${list}. ${free ? "Ҷойи буҷетӣ ҳаст" : "Ҷойи буҷетӣ нест"}${minFee ? `, шартнома аз ${fee} сомонӣ` : ""}.${affordable === false ? " Аз маблағи гуфтаи шумо гаронтар аст." : ""}`;
 };
 
 const UNDECIDED_TEXT = {
@@ -234,10 +234,12 @@ const CONTEXT_TEXT = {
     tj: {
         title: "Барои тавсияи дақиқтар (ихтиёрӣ)",
         subjects: "Дар кадом фанҳо баҳоятон баланд аст?",
-        budget: "Таҳсил",
-        any: "Пулакӣ ҳам мумкин",
-        free: "Танҳо ҷойи ройгон",
-        city: "Шаҳри шумо",
+        budget: "Оила дар як сол барои таҳсил чӣ қадар дода метавонад?",
+        any: "Фарқ надорад / намехоҳам гӯям",
+        free: "Танҳо ҷойи буҷетӣ",
+        upTo5: "То 5 000 сомонӣ",
+        upTo10: "То 10 000 сомонӣ",
+        city: "Дар кадом шаҳр хондан мехоҳед?",
         anyCity: "Фарқ надорад",
         weakTitle: "Ба фанҳо диққат диҳед",
         weak: "Барои самти «{{name}}» фанҳои {{subjects}} муҳиманд, вале шумо онҳоро ҳамчун фанни қавӣ қайд накардед. Ин манъ нест - танҳо тайёрии бештар лозим мешавад.",
@@ -248,10 +250,12 @@ const CONTEXT_TEXT = {
     ru: {
         title: "Для более точной рекомендации (необязательно)",
         subjects: "По каким предметам у вас высокие оценки?",
-        budget: "Обучение",
-        any: "Можно и платно",
+        budget: "Сколько семья может платить за учёбу в год?",
+        any: "Неважно / не хочу говорить",
         free: "Только бюджет",
-        city: "Ваш город",
+        upTo5: "До 5 000 сомони",
+        upTo10: "До 10 000 сомони",
+        city: "В каком городе вы хотите учиться?",
         anyCity: "Неважно",
         weakTitle: "Обратите внимание на предметы",
         weak: "Для направления «{{name}}» важны предметы {{subjects}}, но вы не отметили их как сильные. Это не запрет - просто понадобится больше подготовки.",
@@ -262,11 +266,13 @@ const CONTEXT_TEXT = {
     en: {
         title: "For a more precise recommendation (optional)",
         subjects: "Which subjects do you get high marks in?",
-        budget: "Study",
-        any: "Paid is fine too",
-        free: "Free places only",
-        city: "Your city",
-        anyCity: "Doesn't matter",
+        budget: "How much can your family pay for study per year?",
+        any: "No limit / prefer not to say",
+        free: "State-funded places only",
+        upTo5: "Up to 5,000 somoni",
+        upTo10: "Up to 10,000 somoni",
+        city: "In which city do you want to study?",
+        anyCity: "No preference",
         weakTitle: "Mind the subjects",
         weak: "For the “{{name}}” direction, {{subjects}} matter, but you did not mark them as strong. That is not a ban - you will just need more preparation.",
         local: "in your city",
@@ -1503,7 +1509,7 @@ const Quiz = () => {
                         const ctx = CONTEXT_TEXT[(i18n.language || "tj").slice(0, 2)] || CONTEXT_TEXT.tj;
                         const lang2 = (i18n.language || "tj").slice(0, 2);
                         return (
-                            <details className="rounded-2xl border border-dashed border-border p-4">
+                            <details open className="rounded-2xl border border-dashed border-border p-4">
                                 <summary className="cursor-pointer text-sm font-bold text-foreground">{ctx.title}</summary>
                                 <div className="mt-4 space-y-4">
                                     <div>
@@ -1534,6 +1540,8 @@ const Quiz = () => {
                                             >
                                                 <option value="any">{ctx.any}</option>
                                                 <option value="free">{ctx.free}</option>
+                                                <option value="5000">{ctx.upTo5}</option>
+                                                <option value="10000">{ctx.upTo10}</option>
                                             </select>
                                         </label>
                                         <label className="text-[13px] font-semibold text-muted-foreground">

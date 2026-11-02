@@ -12,17 +12,23 @@ class AppSettings extends ChangeNotifier {
   String _lang = 'tj';
   bool _seenWelcome = false;
   bool _dark = false;
+  String _studyCity = '';
+  String _studyBudget = 'any';
 
   double get textScale => _textScale;
   int? get grade => _grade;
   String get lang => _lang;
   bool get seenWelcome => _seenWelcome;
   bool get dark => _dark;
+  String get studyCity => _studyCity;
+  String get studyBudget => _studyBudget;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     _textScale = prefs.getDouble('textScale') ?? 1.0;
     _grade = prefs.getInt('grade');
+    _studyCity = prefs.getString('studyCity') ?? '';
+    _studyBudget = prefs.getString('studyBudget') ?? 'any';
     final lang = prefs.getString('lang');
     _lang = langs.contains(lang) ? lang! : 'tj';
     _seenWelcome = prefs.getBool('seenWelcome') ?? false;
@@ -48,6 +54,21 @@ class AppSettings extends ChangeNotifier {
     } else {
       await prefs.setInt('grade', value);
     }
+  }
+
+  // Шаҳр ва имкони оила танҳо дар телефон мемонанд ва дар база сабт намешаванд.
+  Future<void> setStudyCity(String value) async {
+    _studyCity = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('studyCity', value);
+  }
+
+  Future<void> setStudyBudget(String value) async {
+    _studyBudget = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('studyBudget', value);
   }
 
   Future<void> setLang(String value) async {

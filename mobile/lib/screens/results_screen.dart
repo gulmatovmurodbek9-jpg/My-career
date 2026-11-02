@@ -250,6 +250,8 @@ class _CareerResultCard extends StatelessWidget {
                   [
                     if (career.free) t('Ҷойи буҷетӣ ҳаст') else t('Ҷойи буҷетӣ нест'),
                     if (career.minFee != null) t('Шартнома аз {n} сомонӣ', {'n': career.minFee}),
+                    if (career.local) t('Дар шаҳри шумо'),
+                    if (career.affordable == false) t('Аз маблағи гуфтаи шумо гаронтар аст'),
                   ].join(' · '),
                   style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: AppColors.primary),
                 ),

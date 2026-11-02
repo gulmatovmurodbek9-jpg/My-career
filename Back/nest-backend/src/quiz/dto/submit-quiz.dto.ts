@@ -31,7 +31,7 @@ export class SubmitQuizDto {
     // Ихтиёрӣ: фанҳои қавӣ, «танҳо ройгон», шаҳр — барои тартиби ихтисосҳо ва огоҳиҳо.
     @ApiProperty({ required: false, example: { subjects: ['math'], budget: 'free', city: 'Хуҷанд' } })
     @IsOptional()
-    context?: { subjects?: string[]; budget?: 'free' | 'any'; city?: string };
+    context?: { subjects?: string[]; budget?: 'free' | 'any' | '5000' | '10000'; city?: string };
 
     // true: натиҷа фавран, бе маслиҳати AI (~4 с); саҳифа маслиҳатро баъд аз /quiz/advice мегирад.
     @ApiProperty({ required: false })

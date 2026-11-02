@@ -1,7 +1,13 @@
 // Ин қоидаҳо аз рӯи мантиқ гузошта шудаанд, на аз таҳқиқот; рақамҳоро санҷиши синф бояд тасдиқ кунад.
 const MMT_MAX_SCORE = 40;
 
-export type CareerPlaces = { local: boolean; free: boolean; count: number; fee: number | null; names: string[] };
+export type CareerPlaces = { local: boolean; free: boolean; count: number; fee: number | null; names: string[]; affordable: boolean | null };
+
+// Имкони оила: «5000» ё «10000» сомонӣ дар сол; «free» ва «any» ҳадди рақамӣ надоранд.
+export function maxFeeOf(budget: unknown): number | null {
+    const value = Number(budget);
+    return value > 0 ? value : null;
+}
 
 const UNDECIDED_TOP_PERCENT = 40;
 const CLOSE_SHARE = 0.15;

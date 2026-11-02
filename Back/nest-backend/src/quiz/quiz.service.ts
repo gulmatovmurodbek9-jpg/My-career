@@ -144,6 +144,7 @@ export class QuizService {
             free: selection.careerContext?.get(c.id)?.free || false,
             universitiesCount: selection.careerContext?.get(c.id)?.count ?? 0,
             minFee: selection.careerContext?.get(c.id)?.fee ?? null,
+            affordable: selection.careerContext?.get(c.id)?.affordable ?? null,
             universityNames: selection.careerContext?.get(c.id)?.names ?? [],
         }));
 

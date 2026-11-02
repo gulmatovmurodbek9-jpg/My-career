@@ -1,4 +1,12 @@
-import { careerFamily, diversifyCareers, undecidedDirections } from './career-match';
+import { careerFamily, diversifyCareers, maxFeeOf, undecidedDirections } from './career-match';
+
+describe('maxFeeOf', () => {
+    it('танҳо ҳадди рақамӣ медиҳад', () => {
+        expect(maxFeeOf('5000')).toBe(5000);
+        expect(maxFeeOf('free')).toBeNull();
+        expect(maxFeeOf(undefined)).toBeNull();
+    });
+});
 
 describe('careerFamily', () => {
     it('номҳои як навъро як оила мекунад', () => {

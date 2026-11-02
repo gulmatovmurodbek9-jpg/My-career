@@ -162,3 +162,23 @@ describe('Баробарии тест (ҳамаи 5 кластер)', () => {
         }
     });
 });
+
+describe('QuizService.interpretAnswer', () => {
+    const ask = (reply: string, options: string[]) => new QuizService({ generateFast: async () => reply } as any, {} as any)
+        .interpretAnswer('Савол', options, 'барномасозӣ', 'tj', 'm08');
+    const m08 = MMT_QUESTIONS.find((question) => question.id === 'm08')!;
+    const shuffled = m08.options.map((option) => option.text.tj).reverse();
+
+    it('самти 1 варианти техникиро мегирад, ҳатто агар тартиб дигар бошад', async () => {
+        const position = (await ask('{"cluster": 1}', shuffled)).position!;
+        expect(shuffled[position]).toContain('информатика');
+    });
+    it('вариантҳои русиро ҳам меёбад', async () => {
+        const russian = m08.options.map((option) => option.text.ru);
+        expect((await ask('{"cluster": 5}', russian)).position).toBe(russian.indexOf('Биология'));
+    });
+    it('ҷавоби бе самт ё хатои AI вариант намедиҳад', async () => {
+        expect((await ask('{"cluster": null}', shuffled)).position).toBeNull();
+        expect((await ask('хато', shuffled)).position).toBeNull();
+    });
+});

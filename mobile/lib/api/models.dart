@@ -1,5 +1,7 @@
 // Моделҳои маълумот аз API. Ҳар майдон ихтиёрӣ хонда мешавад, то майдони холӣ барномаро наафтонад.
 
+import '../app/settings.dart';
+
 String _str(dynamic v) => v == null ? '' : v.toString();
 
 // «Бизнес-идора (ФМТДМТБваДТТ)» → «Бизнес-идора»: рамзи дохилии муассиса ба корбар маъно надорад.
@@ -134,12 +136,13 @@ class QuizQuestion {
   factory QuizQuestion.fromJson(Map<String, dynamic> j) {
     final options = (j['options'] as List? ?? []).asMap().entries.map((e) {
       final o = e.value as Map;
-      final text = o['text'] is Map ? _str(o['text']['tj']) : _str(o['text']);
-      return QuizOption(text, '${e.key}');
+      return QuizOption(_localized(o['text']), '${e.key}');
     }).toList();
-    final q = j['question'];
-    return QuizQuestion(id: _str(j['id']), text: q is Map ? _str(q['tj']) : _str(q), options: options, part: _str(j['part']));
+    return QuizQuestion(id: _str(j['id']), text: _localized(j['question']), options: options, part: _str(j['part']));
   }
+
+  // Савол бо забони барнома; агар тарҷума набошад, тоҷикӣ.
+  static String _localized(dynamic value) => value is Map ? _str(value[appSettings.lang] ?? value['tj']) : _str(value);
 
   final String id;
   final String text;

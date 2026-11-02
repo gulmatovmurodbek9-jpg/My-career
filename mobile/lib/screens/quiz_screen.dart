@@ -404,6 +404,7 @@ class _OwnAnswerState extends State<_OwnAnswer> {
     int? position;
     try {
       final data = await Api.instance.post('/quiz/interpret', {
+        'questionId': widget.question.id,
         'question': widget.question.text,
         'options': widget.question.options.map((o) => o.text).toList(),
         'text': said,

@@ -301,11 +301,40 @@ export class QuizService {
         ].filter(Boolean).join(' ');
     }
 
+    private async positionByCluster(question: QuizQuestion, options: string[], text: string): Promise<number | null> {
+        const prompt = [
+            'Хонанда дар санҷиши касбӣ ҷавоби худро навишт. Муайян кун, ки ин ҷавоб ба кадом самт тааллуқ дорад:',
+            '1. Табиӣ ва техникӣ: барномасозӣ, компютер, технологияи иттилоотӣ, математика, физика, муҳандисӣ, сохтмон, энергетика, нақлиёт.',
+            '2. Иқтисод ва география: молия, бонк, тиҷорат, бизнес, менеҷмент, сайёҳӣ, география.',
+            '3. Филология, педагогика ва санъат: забон, адабиёт, омӯзгорӣ, мусиқӣ, расм, рӯзноманигорӣ.',
+            '4. Ҷомеашиносӣ ва ҳуқуқ: ҳуқуқ, таърих, сиёсат, психология, кори иҷтимоӣ.',
+            '5. Тиб, биология ва варзиш: тиб, биология, химия, кишоварзӣ, экология, варзиш.',
+            'Агар ҷавоб ба ҳеҷ самт рабт надошта бошад (шӯхӣ, бемаънӣ, «намедонам»), null деҳ.',
+            '',
+            `ҶАВОБИ ХОНАНДА: ${text}`,
+            '',
+            'Танҳо JSON: {"cluster": рақами самт (1-5) ё null}',
+        ].join(String.fromCharCode(10));
+        try {
+            const raw = await this.aiService.generateFast(prompt, 6000);
+            const match = String(raw || '').match(/"cluster"\s*:\s*([1-5]|null)/);
+            if (!match || match[1] === 'null') return null;
+            const key = `c${match[1]}`;
+            const best = question.options.reduce((top, option) => ((Number(option.scores?.[key]) || 0) > (Number(top.scores?.[key]) || 0) ? option : top));
+            // Тартиби вариантҳо ва забон дар муштарӣ метавонад дигар бошад: аз рӯи матн меёбем.
+            const position = options.findIndex((option) => Object.values(best.text).includes(option));
+            return position >= 0 ? position : null;
+        } catch {
+            return null;
+        }
+    }
+
     async interpretAnswer(
         rawQuestion?: string,
         rawOptions?: string[],
         rawText?: string,
         rawLang?: string,
+        questionId?: string,
     ): Promise<{ position: number | null }> {
         const question = String(rawQuestion || '').trim().slice(0, 300);
         const options = (Array.isArray(rawOptions) ? rawOptions : [])
@@ -313,6 +342,11 @@ export class QuizService {
             .slice(0, 6);
         const text = String(rawText || '').trim().slice(0, 300);
         if (!question || options.length < 2 || text.length < 2) return { position: null };
+
+        // Саволҳои қисми 1: ҳар самт вариант дорад. AI танҳо самтро муайян мекунад ва варианти
+        // ҳамон самтро мо худамон мегирем — муқоисаи матн «барномасозӣ»-ро ба ҳуқуқ мебурд.
+        const known = QUIZ_QUESTIONS.find((item) => item.id === questionId);
+        if (known?.part === QuizPart.MMT) return { position: await this.positionByCluster(known, options, text) };
 
         const prompt = [
             'Дар санҷиши касбӣ корбар ба ҷои интихоби вариант ҷавоби худро навишт.',

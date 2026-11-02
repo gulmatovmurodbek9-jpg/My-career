@@ -681,7 +681,7 @@ const Quiz = () => {
         let position = null;
         try {
             const { data } = await axios.post(`${API}/quiz/interpret`, {
-                question: quiz.question, options: quiz.options, text: said, lang: quiz.lang,
+                questionId: quiz.id, question: quiz.question, options: quiz.options, text: said, lang: quiz.lang,
             }, { timeout: 12000 });
             position = Number.isInteger(data?.position) ? data.position : null;
         } catch {

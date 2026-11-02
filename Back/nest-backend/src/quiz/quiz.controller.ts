@@ -94,9 +94,9 @@ export class QuizController {
     @Post('interpret')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Ҷавоби озод → варианти наздиктарин (AI)' })
-    interpret(@Body() body: { question?: string; options?: string[]; text?: string; lang?: string }, @Ip() ip: string) {
+    interpret(@Body() body: { questionId?: string; question?: string; options?: string[]; text?: string; lang?: string }, @Ip() ip: string) {
         assertAiAllowed(ip);
-        return this.quizService.interpretAnswer(body?.question, body?.options, body?.text, body?.lang);
+        return this.quizService.interpretAnswer(body?.question, body?.options, body?.text, body?.lang, body?.questionId);
     }
 
     // Забони сайт баъди тест иваз шуд: маслиҳати AI бо забони нав (ҳамон ҷавобҳо, бе сабти омор).

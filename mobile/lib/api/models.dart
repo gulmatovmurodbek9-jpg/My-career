@@ -165,6 +165,14 @@ class MatchedCareer {
   final List<String> reasons;
 }
 
+class UndecidedDirection {
+  UndecidedDirection.fromJson(Map<String, dynamic> j) : id = _str(j['id']), name = _str(j['clusterName']), percent = _int(j['percent']) ?? 0;
+
+  final String id;
+  final String name;
+  final int percent;
+}
+
 class QuizResult {
   QuizResult.fromJson(Map<String, dynamic> j)
     : clusterName = j['topCluster'] is Map ? _str(j['topCluster']['clusterName']) : '',
@@ -174,8 +182,10 @@ class QuizResult {
           : const [],
       directions = j['allMatches'] is List
           ? (j['allMatches'] as List).map((e) => MapEntry(_str(e['clusterName']), ((e['score'] is num ? e['score'] as num : 0) / 40 * 100).round())).toList()
-          : const [];
+          : const [],
+      undecided = j['undecided'] is List ? (j['undecided'] as List).map((e) => UndecidedDirection.fromJson(Map<String, dynamic>.from(e))).toList() : const [];
 
+  final List<UndecidedDirection> undecided;
   final String clusterName;
   final int clusterPercent;
   final List<MatchedCareer> careers;

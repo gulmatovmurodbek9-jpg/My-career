@@ -68,6 +68,27 @@ const LogoMark = ({ className = "" }) => (
 const SHUFFLE_SEED = Math.floor(Math.random() * 1e9);
 // «Ҷавоби худ»: агар ҳеҷ вариант мувофиқ набошад, корбар бо суханони худ менависад;
 // AI онро ба варианти наздиктарин мепайвандад ва хол ҳамон хол-и вариант аст.
+const UNDECIDED_TEXT = {
+    tj: {
+        title: "Шавқи шумо ҳанӯз равшан нест",
+        hint: "Ин хато нест. Ҷавобҳоятон ба чанд самт баробар наздиканд:",
+        stepsTitle: "Барои равшанӣ чӣ кор кунед:",
+        steps: ["Дар ҳар самт 2–3 ихтисосро кушоед ва бинед, ки кадомаш ба шумо наздик аст.", "Бо волидон, омӯзгор ё касе, ки дар ин соҳа кор мекунад, сӯҳбат кунед.", "Пас аз як ҳафта тестро боз супоред ва натиҷаро муқоиса кунед."],
+    },
+    ru: {
+        title: "Ваши интересы пока не определились",
+        hint: "Это не ошибка. Ваши ответы одинаково близки к нескольким направлениям:",
+        stepsTitle: "Что сделать, чтобы стало яснее:",
+        steps: ["В каждом направлении откройте 2–3 специальности и посмотрите, какая вам ближе.", "Поговорите с родителями, учителем или человеком, работающим в этой сфере.", "Через неделю пройдите тест снова и сравните результаты."],
+    },
+    en: {
+        title: "Your interests are not clear yet",
+        hint: "This is not a mistake. Your answers are equally close to several directions:",
+        stepsTitle: "What to do to get clarity:",
+        steps: ["In each direction, open 2–3 specialties and see which feels closest to you.", "Talk to your parents, a teacher or someone who works in the field.", "Take the test again in a week and compare the results."],
+    },
+};
+
 const OWN_TEXT = {
     tj: {
         title: "Ҷавоби шумо дар рӯйхат нест?",
@@ -1013,6 +1034,8 @@ const Quiz = () => {
             missed.sort((a, b) => b.points - a.points);
             return { gave, missed };
         };
+        const undecided = results.undecided?.length ? results.undecided : null;
+        const undecidedText = UNDECIDED_TEXT[i18n.language] || UNDECIDED_TEXT.tj;
         const isClose = first && second && first.raw - second.raw < 0.15 * Math.max(first.raw, 1);
 
         return (
@@ -1028,9 +1051,26 @@ const Quiz = () => {
                     </div>
                     <p className="mt-5 text-sm font-semibold text-muted-foreground">{t('quiz.your_direction', 'Самти ба шумо мувофиқ')}</p>
                     <h1 className="mt-1 text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-                        {topCluster ? clusterLabel(t, topCluster) : t('quiz.cluster_not_defined')}
+                        {undecided ? undecidedText.title : topCluster ? clusterLabel(t, topCluster) : t('quiz.cluster_not_defined')}
                     </h1>
-                    {topCluster && (
+                    {undecided && (
+                        <div className="mx-auto mt-4 max-w-xl text-left">
+                            <p className="text-[15px] leading-relaxed text-muted-foreground">{undecidedText.hint}</p>
+                            <div className="mt-3 space-y-2">
+                                {undecided.map((direction) => (
+                                    <Link key={direction.id} to={`/careers?clusterId=${direction.id}`} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3 font-bold text-foreground">
+                                        <span>{clusterLabel(t, direction)}</span>
+                                        <span className="text-primary">{direction.percent}%</span>
+                                    </Link>
+                                ))}
+                            </div>
+                            <p className="mt-4 text-sm font-bold text-foreground">{undecidedText.stepsTitle}</p>
+                            <ol className="mt-2 list-decimal space-y-1 pl-5 text-[15px] leading-relaxed text-muted-foreground">
+                                {undecidedText.steps.map((step) => <li key={step}>{step}</li>)}
+                            </ol>
+                        </div>
+                    )}
+                    {topCluster && !undecided && (
                         <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
                             {clusterDescription(t, topCluster, "")}
                         </p>
@@ -1040,7 +1080,7 @@ const Quiz = () => {
                             {gradeText(i18n.language).results9}
                         </p>
                     )}
-                    {isClose && second && (
+                    {isClose && second && !undecided && (
                         <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
                             {t('quiz.close_second', { defaultValue: 'Самти «{{name}}» низ ба шумо хеле наздик аст - бо ихтисосҳои он ҳам шинос шавед.', name: second.label })}
                         </p>

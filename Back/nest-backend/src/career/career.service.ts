@@ -1,4 +1,5 @@
 import { joinBrokenLists } from './career-lists';
+import { diversifyCareers } from './career-match';
 import { createHash } from 'crypto';
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
 import { resourcesForAi } from '../common/resource-filters';
@@ -2871,9 +2872,16 @@ export class CareerService {
 
         // Калидвожа танҳо аз аввали калима: пештар «ай» (AI) дар «ҳайвон», «тайёр»
         // ҳам ёфт мешуд ва ихтисосҳои тасодуфӣ мебаромаданд.
-        const keywords: string[] = [...new Set<string>((userScores?.specialtyKeywords || [])
+        const clean = (list: string[]): string[] => [...new Set<string>((list || [])
             .map((k: string) => String(k).toLowerCase().trim())
             .filter((k: string) => k.length >= 3))];
+        const keywords: string[] = clean(userScores?.specialtyKeywords);
+        // Ҳар ҷавоб як бор хол медиҳад: варианте, ки калимаҳои бештар дорад, набояд бартарӣ гирад.
+        const answerGroups: string[][] = userScores?.specialtyAnswers?.length
+            ? userScores.specialtyAnswers.map(clean)
+            : keywords.map((keyword) => [keyword]);
+        // «Тибб» ба ихтисоси байторӣ ҳам мерасад: он танҳо вақте боло меравад, ки хонанда ҳайвонотро интихоб кард.
+        const wantsAnimals = keywords.some((keyword) => /байтор|ҳайвон|зоо/.test(keyword));
         const words = (text: string): string[] => text.toLowerCase().split(/[^0-9a-zа-яёӣӯқғҳҷ]+/i).filter(Boolean);
         const hits = (list: string[], keyword: string): boolean => list.some((word) => word.startsWith(keyword));
 
@@ -2891,13 +2899,16 @@ export class CareerService {
             ].join(' '));
 
             const matched: string[] = [];
-            const total = keywords.reduce((sum, keyword) => {
-                if (hits(name, keyword)) { matched.push(keyword); return sum + 4; }
-                if (hits(body, keyword)) { matched.push(keyword); return sum + 1; }
+            const total = answerGroups.reduce((sum, group) => {
+                const inName = group.find((keyword) => hits(name, keyword));
+                if (inName) { matched.push(inName); return sum + 4; }
+                const inBody = group.find((keyword) => hits(body, keyword));
+                if (inBody) { matched.push(inBody); return sum + 1; }
                 return sum;
             }, 0);
             reasons.set(career.id, matched);
-            return total;
+            const animalCareer = name.some((word) => word.startsWith('байтор') || word.startsWith('ветеринар'));
+            return animalCareer && !wantsAnimals ? total - 4 : total;
         };
 
         // Имкони хонанда: шаҳр ва «танҳо ройгон». Ихтисосро хориҷ намекунем (шояд омода
@@ -2932,7 +2943,7 @@ export class CareerService {
 
         // Як ном дар якчанд рамз (донишгоҳҳои гуногун) — як бор, то ҳамеша 12 ихтисоси гуногун бошад.
         const seenNames = new Set<string>();
-        const ranked = pool
+        const sorted = pool
             .map(career => ({ career, rank: scoreOf(career) + bonus(career.id) }))
             // Лайкҳо ба тартиб таъсир намекунанд (вагарна «ҳалқаи маъруфият» мешуд):
             // аввал мувофиқат бо ҷавобҳо, баъд дастрасӣ (шумораи муассисаҳо), баъд алифбо.
@@ -2945,15 +2956,15 @@ export class CareerService {
                 if (seenNames.has(key)) return false;
                 seenNames.add(key);
                 return true;
-            })
-            .slice(0, 12);
+            });
+        const ranked = diversifyCareers(sorted, (entry) => entry.career.name);
 
         // Фоизи ҳар ихтисос = нисфаш мувофиқати самт (тести қисми 1), нисфаш мувофиқат бо
         // ҷавобҳои қисми 2 (калимаҳо) нисбат ба мувофиқтарин ихтисос. Бе калимаҳо — фоизи самт.
         const bestRank = Math.max(0, ...ranked.map((r) => r.rank));
         const careerPercents = new Map(ranked.map((r) => [
             r.career.id,
-            bestRank > 0 ? Math.round(matchPercentage * 0.5 + (r.rank / bestRank) * 50) : matchPercentage,
+            bestRank > 0 ? Math.round(matchPercentage * 0.5 + (Math.max(0, r.rank) / bestRank) * 50) : matchPercentage,
         ]));
 
         const topCareers = ranked.length

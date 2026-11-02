@@ -5,6 +5,7 @@ import '../api/models.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
+import 'careers_screen.dart';
 import 'quiz_screen.dart';
 import '../app/i18n.dart';
 
@@ -53,20 +54,24 @@ class _ResultsScreenState extends State<ResultsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(t('Самти мувофиқи шумо'), style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.9))),
+                  if (r.undecided.isEmpty) Text(t('Самти мувофиқи шумо'), style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.9))),
                   const SizedBox(height: 6),
                   Text(
-                    r.clusterName,
+                    r.undecided.isEmpty ? r.clusterName : t('Шавқи шумо ҳанӯз равшан нест'),
                     style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    t('Мувофиқат: {n}%', {'n': r.clusterPercent}),
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
+                  if (r.undecided.isEmpty)
+                    Text(
+                      t('Мувофиқат: {n}%', {'n': r.clusterPercent}),
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
+                    )
+                  else
+                    Text(t('Ин хато нест. Ҷавобҳоятон ба чанд самт баробар наздиканд.'), style: const TextStyle(fontSize: 15.5, color: Colors.white, height: 1.35)),
                 ],
               ),
             ),
+            if (r.undecided.isNotEmpty) _UndecidedCard(directions: r.undecided),
             SectionTitle(t('Маслиҳат')),
             AppCard(
               child: _advice != null && _advice!.isNotEmpty
@@ -102,6 +107,49 @@ class _ResultsScreenState extends State<ResultsScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// Хонандаи дудил: ду-се самт баробар ва қадамҳо барои равшанӣ.
+class _UndecidedCard extends StatelessWidget {
+  const _UndecidedCard({required this.directions});
+  final List<UndecidedDirection> directions;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 12),
+        for (final d in directions) ...[
+          AppCard(
+            onTap: () => Navigator.of(context).push(smoothRoute(CareersScreen(clusterId: d.id, title: d.name))),
+            child: Row(
+              children: [
+                Expanded(child: Text(d.name, style: text.titleMedium)),
+                const SizedBox(width: 10),
+                Text('${d.percent}%', style: text.titleMedium?.copyWith(color: AppColors.primary)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        SectionTitle(t('Барои равшанӣ чӣ кор кунед')),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(t('1. Дар ҳар самт 2–3 ихтисосро кушоед ва бинед, ки кадомаш ба шумо наздик аст.'), style: text.bodyLarge),
+              const SizedBox(height: 8),
+              Text(t('2. Бо волидон, омӯзгор ё касе, ки дар ин соҳа кор мекунад, сӯҳбат кунед.'), style: text.bodyLarge),
+              const SizedBox(height: 8),
+              Text(t('3. Пас аз як ҳафта тестро боз супоред ва натиҷаро муқоиса кунед.'), style: text.bodyLarge),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

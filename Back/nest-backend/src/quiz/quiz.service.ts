@@ -4,6 +4,7 @@ import { Career } from '../career/career.entity';
 import { Cluster } from '../cluster/cluster.entity';
 import { QUIZ_QUESTIONS, QuizQuestion, QuizPart } from './data/questions';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { undecidedDirections } from '../career/career-match';
 import { AiService } from '../ai/ai.service';
 import { CareerService } from '../career/career.service';
 
@@ -20,6 +21,8 @@ export interface UserScores {
     cognitive: Record<string, number>;
     motivation: Record<string, any>;
     specialtyKeywords: string[];
+    // Калимаҳои ҳар ҷавоб алоҳида: ҳар ҷавоб ба ихтисос як бор хол медиҳад.
+    specialtyAnswers?: string[][];
     // Ду самт баробар баромаданд ва корбар худаш яке интихоб кард. Хол илова намешавад
     // (пештар +3-и бе асос буд) — интихоб рост самти асосиро муайян мекунад.
     chosenCluster?: string;
@@ -64,7 +67,8 @@ export class QuizService {
             mmtClusters: { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0 },
             cognitive: {},
             motivation: {},
-            specialtyKeywords: []
+            specialtyKeywords: [],
+            specialtyAnswers: [],
         };
 
         // Холҳои хом ва ҳадди имконпазир барои ҳар кластер — баъд ба миқёси 0–40.
@@ -101,6 +105,7 @@ export class QuizService {
             } else if (question.part === QuizPart.SPECIALTY) {
                 if (selectedOption?.keywords) {
                     scores.specialtyKeywords.push(...selectedOption.keywords);
+                    scores.specialtyAnswers!.push(selectedOption.keywords);
                 }
             }
         }
@@ -139,7 +144,10 @@ export class QuizService {
             free: selection.careerContext?.get(c.id)?.free || false,
         }));
 
-        const personality = "Натиҷаи тести шумо мутобиқати баландро бо " + topCluster.clusterName + " нишон медиҳад.";
+        const undecided = undecidedDirections(clusterScores);
+        const personality = undecided
+            ? 'Шавқи шумо ҳанӯз равшан нест: чанд самт ба шумо наздиканд.'
+            : "Натиҷаи тести шумо мутобиқати баландро бо " + topCluster.clusterName + " нишон медиҳад.";
         const aiAdvice = deferAdvice ? '' : await this.generateAiAdvice(userScores, topCluster, topCareers, lang, clusterScores, grade);
 
         return {
@@ -161,6 +169,12 @@ export class QuizService {
                 clusterName: cs.cluster.clusterName,
                 score: cs.score,
             })),
+            undecided: undecided?.map((entry) => ({
+                id: entry.cluster.id,
+                clusterName: entry.cluster.clusterName,
+                clusterNumber: entry.cluster.clusterId,
+                percent: entry.percent,
+            })) ?? null,
         };
     }
 

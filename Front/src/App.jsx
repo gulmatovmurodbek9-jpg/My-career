@@ -59,6 +59,8 @@ const ParentSurvey = lazy(() => import("./pages/parent/ParentSurvey"));
 const Favorites = lazyPreload(() => import("./pages/favorites/Favorites"));
 
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const Method = lazy(() => import("./pages/Method"));
+const InterestTest = lazy(() => import("./pages/InterestTest"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminImpact = lazy(() => import("./pages/admin/AdminImpact"));
 const AdminCareers = lazy(() => import("./pages/admin/AdminCareers"));
@@ -93,6 +95,8 @@ export const AppRoutes = () => (
               <Route index element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/method" element={<Method />} />
+              <Route path="/interest-test" element={<InterestTest />} />
               <Route path="/help" element={<Help />} />
               <Route path="/swipe" element={<Swipe />} />
               <Route path="/peers" element={<Peers />} />

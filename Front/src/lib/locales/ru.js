@@ -427,6 +427,7 @@ const resources = {
                 compare_desc: "Сравните профессии с помощью AI и найдите лучшую"
             },
             footer: {
+                method: "Научная основа",
                 privacy: "Конфиденциальность",
                 platform: "Платформа",
                 contact: "Контакты",

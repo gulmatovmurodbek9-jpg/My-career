@@ -411,6 +411,7 @@ const resources = {
                 compare_desc: "Compare careers with AI and find the best match"
             },
             footer: {
+                method: "Scientific basis",
                 privacy: "Privacy",
                 platform: "Platform",
                 contact: "Contact",

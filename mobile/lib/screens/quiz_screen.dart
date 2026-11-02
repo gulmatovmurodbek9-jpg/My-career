@@ -6,6 +6,8 @@ import '../app/auth.dart';
 import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
+import 'interest_test_screen.dart';
+import 'method_screen.dart';
 import 'results_screen.dart';
 import '../app/i18n.dart';
 
@@ -61,6 +63,9 @@ class QuizStartScreen extends StatelessWidget {
             Text(t('Ҷавоби «дуруст» ё «нодуруст» нест. Он чиро интихоб кунед, ки ба шумо наздиктар аст.'), style: text.bodyLarge),
             SectionTitle(t('Шумо баъди кадом синф ҳастед?')),
             for (final g in [9, 11]) ...[_GradeButton(grade: g, selected: appSettings.grade == g), const SizedBox(height: 12)],
+            const SizedBox(height: 8),
+            OutlinedButton.icon(onPressed: () => Navigator.of(context).push(smoothRoute(const InterestTestScreen())), icon: const Icon(Icons.checklist_rounded), label: Text(t('Тести шавқ (O*NET)'))),
+            TextButton(onPressed: () => Navigator.of(context).push(smoothRoute(const MethodScreen())), child: Text(t('Асоси илмӣ'))),
           ],
         ),
       ),

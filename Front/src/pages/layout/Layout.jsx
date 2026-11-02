@@ -530,6 +530,9 @@ const Layout = () => {
                   © {new Date().getFullYear()} {t("footer.copyright", "Ikhtisosiman. Built with")} <span className="text-rose-500 animate-pulse">❤</span>{" "}
                   {t("footer.copyright_2", "in Tajikistan.")}
                 </p>
+                <Link to="/method" className="text-[11px] font-bold text-muted-foreground hover:text-foreground">
+                  {t("footer.method", "Асоси илмӣ")}
+                </Link>
                 <Link to="/privacy" className="text-[11px] font-bold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
                   {t("footer.privacy", "Махфият ва маълумот")}
                 </Link>

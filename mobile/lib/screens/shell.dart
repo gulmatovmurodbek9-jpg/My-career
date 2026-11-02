@@ -39,7 +39,7 @@ class _AppShellState extends State<AppShell> {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.only(bottom: 10),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
           child: Container(
             height: 66,
             decoration: BoxDecoration(
@@ -48,6 +48,8 @@ class _AppShellState extends State<AppShell> {
               border: Border.all(color: AppColors.border),
               boxShadow: AppColors.dark ? null : const [BoxShadow(color: Color(0x1F0D2E8C), blurRadius: 20, offset: Offset(0, 8), spreadRadius: -10)],
             ),
+            // Фосила дар дохили панел: нишонаҳои канорӣ ба гӯшаи мудаввар начаспанд.
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
                 _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: t('Асосӣ'), selected: _tab == 0, onTap: () => select(0)),

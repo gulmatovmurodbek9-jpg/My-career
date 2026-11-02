@@ -38,14 +38,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c1",
         "question": {
-            "tj": "Кадом намуди технология бештар диққати шуморо ҷалб мекунад?",
+            "tj": "Кадом технология диққати шуморо бештар ҷалб мекунад?",
             "ru": "Какой вид технологий привлекает вас больше всего?",
             "en": "What type of technology attracts you the most?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Барномасозӣ ва AI",
+                    "tj": "Барномасозӣ ва зеҳни сунъӣ",
                     "ru": "Программирование и ИИ",
                     "en": "Programming & AI"
                 },
@@ -72,7 +72,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Архитектура ва сохтмон",
+                    "tj": "Меъморӣ ва сохтмон",
                     "ru": "Архитектура и строительство",
                     "en": "Architecture & Construction"
                 },
@@ -103,7 +103,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c1",
         "question": {
-            "tj": "Ҳангоми кор дар лоиҳа, кадом қисмаш ба шумо маъқул аст?",
+            "tj": "Дар лоиҳа кадом қисми кор ба шумо маъқул аст?",
             "ru": "Работая над проектом, какая часть вам нравится?",
             "en": "When working on a project, which part do you like?"
         },
@@ -122,7 +122,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Сохтани моделҳои 3D",
+                    "tj": "Сохтани моделҳои сеченака",
                     "ru": "Создание 3D моделей",
                     "en": "Creating 3D models"
                 },
@@ -134,7 +134,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Таҳлили маълумот (Data)",
+                    "tj": "Таҳлили маълумот",
                     "ru": "Анализ данных",
                     "en": "Data analysis"
                 },
@@ -164,7 +164,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c1",
         "question": {
-            "tj": "Шумо кадом мушкилотро тезтар ҳал кардан мехоҳед?",
+            "tj": "Кадом мушкилиро пеш аз ҳама ҳал кардан мехоҳед?",
             "ru": "Какую проблему вы хотели бы решить быстрее?",
             "en": "Which problem would you like to solve faster?"
         },
@@ -224,14 +224,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c1",
         "question": {
-            "tj": "Шумо бо кадом асбобҳо кор карданро дӯст медоред?",
+            "tj": "Бо кадом асбобҳо кор кардан ба шумо маъқул аст?",
             "ru": "С какими инструментами вы любите работать?",
             "en": "Which tools do you like to work with?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Компютер ва IDE",
+                    "tj": "Компютер ва барномаҳо",
                     "ru": "Компьютер и IDE",
                     "en": "Computer and IDE"
                 },
@@ -242,7 +242,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Асбобҳои ченкунӣ ва асбобҳои дастӣ",
+                    "tj": "Асбобҳои ченкунӣ ва дастӣ",
                     "ru": "Измерительные и ручные инструменты",
                     "en": "Measuring and hand tools"
                 },
@@ -283,14 +283,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c1",
         "question": {
-            "tj": "Кадом намуди натиҷа шуморо қонеъ мекунад?",
+            "tj": "Кадом натиҷа шуморо бештар қонеъ мекунад?",
             "ru": "Какой результат вас удовлетворяет?",
             "en": "What type of result satisfies you?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Барномаи бенуқсон коркунанда",
+                    "tj": "Барномае, ки бе хато кор мекунад",
                     "ru": "Идеально работающая программа",
                     "en": "Flawless working program"
                 },
@@ -301,7 +301,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Бинои зебо ва мустаҳкам",
+                    "tj": "Бинои зебо ва устувор",
                     "ru": "Красивое и прочное здание",
                     "en": "Beautiful and solid building"
                 },
@@ -312,7 +312,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Дастгоҳи нави ихтироъшуда",
+                    "tj": "Дастгоҳи нав",
                     "ru": "Новое изобретенное устройство",
                     "en": "Newly invented device"
                 },
@@ -327,7 +327,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Раванди оптимизатсияшудаи истеҳсолот",
+                    "tj": "Истеҳсолоти беҳтаршуда",
                     "ru": "Оптимизированный процесс производства",
                     "en": "Optimized production process"
                 },
@@ -407,7 +407,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c2",
         "question": {
-            "tj": "Агар шумо ширкат кушоед, он чӣ гуна хоҳад буд?",
+            "tj": "Агар ширкат кушоед, он дар кадом соҳа мешавад?",
             "ru": "Если бы вы открыли компанию, какой бы она была?",
             "en": "If you opened a company, what would it be like?"
         },
@@ -449,7 +449,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Ширкати стартап ва маркетинг",
+                    "tj": "Ширкати нав дар соҳаи маркетинг",
                     "ru": "Стартап и маркетинговая компания",
                     "en": "Startup and marketing company"
                 },
@@ -467,14 +467,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c2",
         "question": {
-            "tj": "Шумо бо кадом намуди маълумот кор карданро дӯст медоред?",
+            "tj": "Бо кадом маълумот кор кардан ба шумо маъқул аст?",
             "ru": "С какими данными вы любите работать?",
             "en": "What type of data do you like working with?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Рақамҳо, ҳисоботҳо ва андоз",
+                    "tj": "Рақамҳо, ҳисобот ва андоз",
                     "ru": "Цифры, отчеты и налоги",
                     "en": "Numbers, reports, and taxes"
                 },
@@ -498,7 +498,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Таҳлили рафтори истеъмолкунандагон",
+                    "tj": "Рафтори харидорон",
                     "ru": "Анализ поведения потребителей",
                     "en": "Consumer behavior analysis"
                 },
@@ -533,7 +533,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c2",
         "question": {
-            "tj": "Ояндаи шумо бештар ба кадом нақш монанд аст?",
+            "tj": "Худро дар оянда дар кадом вазифа мебинед?",
             "ru": "На какую роль больше похоже ваше будущее?",
             "en": "What role does your future look like?"
         },
@@ -552,7 +552,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Гид, харитакаш ё мутахассиси экология",
+                    "tj": "Роҳбалад, харитасоз ё эколог",
                     "ru": "Гид, картограф или эколог",
                     "en": "Guide, cartographer, or ecologist"
                 },
@@ -660,7 +660,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c3",
         "question": {
-            "tj": "Дар соҳаи филология ва санъат, шуморо чӣ бештар ҷалб мекунад?",
+            "tj": "Дар соҳаи филология ва санъат шуморо чӣ бештар ҷалб мекунад?",
             "ru": "В сфере филологии и искусства, что вас привлекает больше?",
             "en": "In philology and arts, what attracts you most?"
         },
@@ -680,7 +680,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Журналистика ва навиштани мақолаҳо",
+                    "tj": "Рӯзноманигорӣ ва навиштани мақола",
                     "ru": "Журналистика и написание статей",
                     "en": "Journalism and article writing"
                 },
@@ -723,14 +723,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c3",
         "question": {
-            "tj": "Шумо фикрҳои худро чӣ гуна баён мекунед?",
+            "tj": "Фикри худро чӣ гуна баён мекунед?",
             "ru": "Как вы выражаете свои мысли?",
             "en": "How do you express your thoughts?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Тавассути суханронӣ ва мубоҳиса",
+                    "tj": "Бо суханронӣ ва мубоҳиса",
                     "ru": "Через выступления и дебаты",
                     "en": "Through speaking and debates"
                 },
@@ -746,7 +746,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Тавассути навиштани ҳикояҳо ё шеър",
+                    "tj": "Бо навиштани ҳикоя ё шеър",
                     "ru": "Через написание рассказов или стихов",
                     "en": "Through writing stories or poetry"
                 },
@@ -758,7 +758,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Тавассути расмкашӣ ё видео",
+                    "tj": "Бо расм ё видео",
                     "ru": "Через рисование или видео",
                     "en": "Through drawing or video"
                 },
@@ -776,7 +776,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Тавассути тарҷума ба забонҳои дигар",
+                    "tj": "Бо тарҷума ба забонҳои дигар",
                     "ru": "Через перевод на другие языки",
                     "en": "Through translating to other languages"
                 },
@@ -793,7 +793,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c3",
         "question": {
-            "tj": "Муҳити кории орзуи шумо кадом аст?",
+            "tj": "Дар кадом ҷой кор кардан мехоҳед?",
             "ru": "Какая ваша работа мечты?",
             "en": "What is your dream work environment?"
         },
@@ -857,14 +857,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c3",
         "question": {
-            "tj": "Шумо кадом малакаро рушд додан мехоҳед?",
+            "tj": "Кадом малакаро рушд додан мехоҳед?",
             "ru": "Какой навык вы хотите развить?",
             "en": "Which skill do you want to develop?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Маҳорати тарҷума ва муоширати бисёрзабона",
+                    "tj": "Тарҷума ва муошират бо чанд забон",
                     "ru": "Навык перевода и многоязычного общения",
                     "en": "Translation and multilingual communication"
                 },
@@ -876,7 +876,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Психологияи кӯдак ва методикаи таълим",
+                    "tj": "Равоншиносии кӯдак ва усули таълим",
                     "ru": "Детская психология и методика преподавания",
                     "en": "Child psychology and teaching methodology"
                 },
@@ -903,7 +903,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Эҷодкории визуалӣ ва графики компютерӣ",
+                    "tj": "Эҷоди тасвир ва графикаи компютерӣ",
                     "ru": "Визуальное творчество и компьютерная графика",
                     "en": "Visual creativity and computer graphics"
                 },
@@ -928,7 +928,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "options": [
             {
                 "text": {
-                    "tj": "Тарҷумон ё робита бо хориҷа",
+                    "tj": "Тарҷумон ё корманди робитаҳои хориҷӣ",
                     "ru": "Переводчик или связи с зарубежьем",
                     "en": "Translator or foreign relations"
                 },
@@ -959,7 +959,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Дизайнер, рассом ё архитектор",
+                    "tj": "Дизайнер, рассом ё меъмор",
                     "ru": "Дизайнер, художник или архитектор",
                     "en": "Designer, artist, or architect"
                 },
@@ -971,7 +971,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Хабарнигор, наттоқ ё блогер",
+                    "tj": "Рӯзноманигор, сухангӯ ё блогер",
                     "ru": "Журналист, диктор или блогер",
                     "en": "Journalist, anchor, or blogger"
                 },
@@ -1060,14 +1060,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c4",
         "question": {
-            "tj": "Дар ҳолатҳои мураккаб шумо чӣ гуна амал мекунед?",
+            "tj": "Дар ҳолати душвор чӣ кор мекунед?",
             "ru": "Как вы действуете в сложных ситуациях?",
             "en": "How do you act in complex situations?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Қонун ва қоидаҳоро ба таври қатъӣ риоя мекунам",
+                    "tj": "Қонун ва қоидаҳоро қатъӣ риоя мекунам",
                     "ru": "Строго соблюдаю законы и правила",
                     "en": "Strictly observe laws and rules"
                 },
@@ -1079,7 +1079,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Кӯшиш мекунам муросо ва сулҳ кунам",
+                    "tj": "Кӯшиш мекунам тарафҳоро оштӣ диҳам",
                     "ru": "Стараюсь найти компромисс и примирить",
                     "en": "Try to find compromise and make peace"
                 },
@@ -1106,7 +1106,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Сабабҳои психологиро меомӯзам",
+                    "tj": "Сабабҳои равониро меомӯзам",
                     "ru": "Изучаю психологические причины",
                     "en": "Study psychological causes"
                 },
@@ -1124,14 +1124,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c4",
         "question": {
-            "tj": "Шумо бо кӣ бештар кор кардан мехоҳед?",
+            "tj": "Бо кӣ бештар кор кардан мехоҳед?",
             "ru": "С кем вы хотите работать больше всего?",
             "en": "Who do you want to work with the most?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Бо шаҳрвандон, барои ҳалли ҳуқуқии онҳо",
+                    "tj": "Бо шаҳрвандон, барои ҳалли масъалаҳои ҳуқуқиашон",
                     "ru": "С гражданами, для решения их правовых проблем",
                     "en": "With citizens, solving legal issues"
                 },
@@ -1169,7 +1169,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Бо ҷинояткорон ё тафтишоти парвандаҳо",
+                    "tj": "Дар тафтиши парвандаҳои ҷиноӣ",
                     "ru": "С преступниками или расследованием дел",
                     "en": "With criminals or case investigations"
                 },
@@ -1193,7 +1193,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c4",
         "question": {
-            "tj": "Кадом намуди ҳуҷҷатҳо барои шумо ҷолиб аст?",
+            "tj": "Кадом ҳуҷҷатҳо барои шумо ҷолибанд?",
             "ru": "Какой вид документов вам интересен?",
             "en": "What type of documents is interesting to you?"
         },
@@ -1212,7 +1212,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Анкетаҳо ва пурсишномаҳои сотсиологӣ",
+                    "tj": "Пурсишномаҳои ҷомеашиносӣ",
                     "ru": "Анкеты и социологические опросники",
                     "en": "Surveys and sociological questionnaires"
                 },
@@ -1286,7 +1286,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Идоракунии муваффақонаи шаҳр ё давлат",
+                    "tj": "Идораи хуби шаҳр ё давлат",
                     "ru": "Успешное управление городом или страной",
                     "en": "Successful city or state management"
                 },
@@ -1298,7 +1298,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Кӯмак ба инсонҳо ва таҳлили рафтор",
+                    "tj": "Кӯмак ба одамон ва омӯзиши рафтори онҳо",
                     "ru": "Помощь людям и анализ поведения",
                     "en": "Helping people and analyzing behavior"
                 },
@@ -1316,14 +1316,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c5",
         "question": {
-            "tj": "Дар соҳаи тиб ва биология кадом самт маъқул аст?",
+            "tj": "Дар соҳаи тиб ва биология кадом самт ба шумо маъқул аст?",
             "ru": "Какое направление в медицине и биологии вам нравится?",
             "en": "Which area in medicine and biology do you like?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Табобати бевоситаи беморон (Клиника)",
+                    "tj": "Табобати беморон",
                     "ru": "Непосредственное лечение пациентов",
                     "en": "Direct patient treatment"
                 },
@@ -1336,7 +1336,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Таҳқиқоти лабораторӣ ва фармасевтика",
+                    "tj": "Таҳқиқоти озмоишгоҳӣ ва дорусозӣ",
                     "ru": "Лабораторные исследования и фармацевтика",
                     "en": "Lab research and pharmaceuticals"
                 },
@@ -1362,7 +1362,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Варзиш, фитнес ва тарбияи ҷисмонӣ",
+                    "tj": "Варзиш ва тарбияи ҷисмонӣ",
                     "ru": "Спорт, фитнес и физическое воспитание",
                     "en": "Sports, fitness, and physical education"
                 },
@@ -1380,7 +1380,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c5",
         "question": {
-            "tj": "Шумо бештар дар куҷо кор кардан мехоҳед?",
+            "tj": "Бештар дар куҷо кор кардан мехоҳед?",
             "ru": "Где вы хотите работать больше всего?",
             "en": "Where do you want to work the most?"
         },
@@ -1399,7 +1399,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Лабораторияи илмӣ ё заводи доруворӣ",
+                    "tj": "Озмоишгоҳи илмӣ ё корхонаи дорусозӣ",
                     "ru": "Научная лаборатория или фармзавод",
                     "en": "Science lab or pharma factory"
                 },
@@ -1440,7 +1440,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Толори варзишӣ ё маркази солимгардонӣ",
+                    "tj": "Толори варзиш ё маркази солимгардонӣ",
                     "ru": "Спортзал или оздоровительный центр",
                     "en": "Gym or wellness center"
                 },
@@ -1459,14 +1459,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c5",
         "question": {
-            "tj": "Муносибати шумо бо хун ва ҷарроҳӣ чӣ гуна аст?",
+            "tj": "Шумо ба хун ва ҷарроҳӣ чӣ гуна муносибат доред?",
             "ru": "Как вы относитесь к крови и хирургии?",
             "en": "How do you feel about blood and surgery?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Ман омодаам ҷарроҳӣ кунам (шавқовар аст)",
+                    "tj": "Ҷарроҳӣ ба ман шавқовар аст",
                     "ru": "Я готов оперировать (это интересно)",
                     "en": "I am ready to operate (it is interesting)"
                 },
@@ -1486,7 +1486,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Ман табобат бо доруҳоро авлотар медонам",
+                    "tj": "Табобат бо доруро беҳтар медонам",
                     "ru": "Я предпочитаю лечение лекарствами",
                     "en": "I prefer treatment with medicine"
                 },
@@ -1498,7 +1498,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Ман таҳқиқоти микроскопӣ ва вирусҳоро дӯст медорам",
+                    "tj": "Омӯзиши вирусҳо бо микроскоп ба ман маъқул аст",
                     "ru": "Я люблю микроскопические исследования",
                     "en": "I love microscopic research"
                 },
@@ -1517,7 +1517,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Ман ба саломатии умумӣ ва варзиш таваҷҷӯҳ дорам",
+                    "tj": "Ба солимӣ ва варзиш таваҷҷӯҳ дорам",
                     "ru": "Я интересуюсь общим здоровьем и спортом",
                     "en": "I am interested in general health and sports"
                 },
@@ -1538,14 +1538,14 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c5",
         "question": {
-            "tj": "Агар шумо як ихтироъ мекардед, он чӣ мешуд?",
+            "tj": "Агар ихтироъ мекардед, он чӣ мебуд?",
             "ru": "Если бы вы что-то изобрели, что бы это было?",
             "en": "If you invented something, what would it be?"
         },
         "options": [
             {
                 "text": {
-                    "tj": "Усули нави табобати бемории душвор",
+                    "tj": "Усули нави табобати бемории вазнин",
                     "ru": "Новый метод лечения сложной болезни",
                     "en": "New method to treat a difficult disease"
                 },
@@ -1582,7 +1582,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
             },
             {
                 "text": {
-                    "tj": "Методикаи нави машқ барои варзишгарон",
+                    "tj": "Усули нави машқ барои варзишгарон",
                     "ru": "Новая методика тренировок для спортсменов",
                     "en": "New training method for athletes"
                 },
@@ -1600,7 +1600,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
         "type": "refinement",
         "targetCluster": "c5",
         "question": {
-            "tj": "Шумо бештар ба кадом фанни мактабӣ шавқ доштед?",
+            "tj": "Ба кадом мавзӯи мактабӣ бештар шавқ доред?",
             "ru": "Какой школьный предмет вам был наиболее интересен?",
             "en": "Which school subject interested you the most?"
         },

@@ -8,7 +8,10 @@ import '../app/theme.dart';
 const _content = <String, List<(String, String)>>{
   'tj': [
     ('Вазъи расмӣ', 'Тестҳои ин сайт ҳоло аз ҷониби Вазорати маориф ё Маркази миллии тестӣ тасдиқ нашудаанд. Натиҷа маслиҳат аст, на қарор ё ташхис.'),
-    ('Тести асосӣ', 'Саволҳоро дастаи мо сохтааст. Онҳо ба 5 кластери имтиҳонҳои Маркази миллии тестӣ вобастаанд.'),
+    (
+      'Тести асосӣ',
+      'Саволҳоро дастаи мо аз рӯи китоби «Асосҳои интихоби касб» ва «Тавсияҳои методӣ»-и Маркази миллии тестӣ навиштааст. Онҳо ба 5 кластери имтиҳонҳо вобастаанд. Ин муассисаҳо худи саволҳоро тасдиқ накардаанд.',
+    ),
     (
       'Тести шавқ',
       'O*NET Interest Profiler Short Form: 60 кор ва 6 шавқи Холланд. Онро Вазорати меҳнати ИМА таҳия кардааст. Тарҷумаи тоҷикӣ ва русӣ аз они мост ва ҳанӯз дар Тоҷикистон санҷида нашудааст.',
@@ -20,7 +23,10 @@ const _content = <String, List<(String, String)>>{
   ],
   'ru': [
     ('Официальный статус', 'Тесты этого сайта пока не утверждены Министерством образования или Национальным центром тестирования. Результат является советом, а не решением или диагнозом.'),
-    ('Основной тест', 'Вопросы составлены нашей командой. Они связаны с 5 кластерами экзаменов Национального центра тестирования.'),
+    (
+      'Основной тест',
+      'Вопросы написаны нашей командой на основе книги «Основы выбора профессии» и «Методических рекомендаций» Национального центра тестирования. Они связаны с 5 кластерами экзаменов. Эти организации сами вопросы не утверждали.',
+    ),
     (
       'Тест интересов',
       'O*NET Interest Profiler Short Form: 60 занятий и 6 интересов по Холланду. Разработан Министерством труда США. Таджикский и русский переводы сделаны нами и ещё не проверялись в Таджикистане.',
@@ -35,7 +41,10 @@ const _content = <String, List<(String, String)>>{
   ],
   'en': [
     ('Official status', 'The tests on this site are not yet approved by the Ministry of Education or the National Testing Center. A result is advice, not a decision or a diagnosis.'),
-    ('Main test', 'The questions were written by our team. They are linked to the 5 clusters of the National Testing Center exams.'),
+    (
+      'Main test',
+      'Our team wrote the questions based on the book “Fundamentals of Choosing a Profession” and the National Testing Center’s methodological recommendations. They are linked to the 5 exam clusters. These institutions have not approved the questions themselves.',
+    ),
     (
       'Interest test',
       'O*NET Interest Profiler Short Form: 60 activities and 6 Holland interests, developed by the U.S. Department of Labor. The Tajik and Russian translations are ours and have not yet been tested in Tajikistan.',

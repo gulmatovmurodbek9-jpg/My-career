@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'careers_screen.dart';
@@ -38,7 +39,7 @@ class _AppShellState extends State<AppShell> {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.only(bottom: 10),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
           child: Container(
             height: 66,
             decoration: BoxDecoration(
@@ -52,7 +53,7 @@ class _AppShellState extends State<AppShell> {
                 _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: t('Асосӣ'), selected: _tab == 0, onTap: () => select(0)),
                 _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: t('Ихтисосҳо'), selected: _tab == 2, onTap: () => select(2)),
                 _CenterItem(onTap: () => Navigator.of(context).push(smoothRoute(VoiceScreen(goToTab: select)))),
-                _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: t('Донишгоҳҳо'), selected: _tab == 3, onTap: () => select(3)),
+                _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: appSettings.lang == 'ru' ? 'Вузы' : t('Донишгоҳҳо'), selected: _tab == 3, onTap: () => select(3)),
                 _NavItem(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: t('Танзимот'), selected: false, onTap: () => Navigator.of(context).push(smoothRoute(const SettingsScreen()))),
               ],
             ),
@@ -113,14 +114,17 @@ class _NavButton extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           // Номи дароз (масалан «Специальности») хурдтар мешавад, вале бурида намешавад.
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              maxLines: 1,
-              // Номи бахш бо андозаи доимӣ, то дар «Хеле калон» ҳам менюи поён вайрон нашавад.
-              textScaler: TextScaler.noScaling,
-              style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, color: selected ? AppColors.primary : AppColors.textSoft),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                // Номи бахш бо андозаи доимӣ, то дар «Хеле калон» ҳам менюи поён вайрон нашавад.
+                textScaler: TextScaler.noScaling,
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: selected ? AppColors.primary : AppColors.textSoft),
+              ),
             ),
           ),
         ],
@@ -166,7 +170,7 @@ class _CenterItem extends StatelessWidget {
               child: Text(
                 t('Ёвар'),
                 textScaler: TextScaler.noScaling,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.text),
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.textSoft),
               ),
             ),
           ],

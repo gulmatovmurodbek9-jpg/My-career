@@ -1,3 +1,4 @@
+import { joinBrokenLists } from './career-lists';
 import { createHash } from 'crypto';
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
 import { resourcesForAi } from '../common/resource-filters';
@@ -195,6 +196,7 @@ export class CareerService {
 
 
     localize<T extends Partial<Career>>(career: T, lang?: string): T {
+        if (career) career = joinBrokenLists(career);
         if (!career || !lang || lang === 'tj') return career;
 
         const tr = (career as any).translations?.[lang];

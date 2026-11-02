@@ -84,7 +84,7 @@ export const MMT_QUESTIONS: QuizQuestion[] = [
     ]),
     // Дастури ММТ, с. 10–12: фанҳои имтиҳони ҳар кластер.
     q('m08', 'scenario', { tj: 'Дар мактаб олимпиада эълон шуд. Шумо аз кадом фан иштирок мекунед?', ru: 'В школе объявили олимпиаду. По какому предмету вы будете участвовать?', en: 'An olympiad is announced at school. Which subject will you enter?' }, [
-        [{ tj: 'Физика', ru: 'Физика', en: 'Physics' }, { c1: 3 }],
+        [{ tj: 'Физика, математика ё информатика', ru: 'Физика, математика или информатика', en: 'Physics, maths or computer science' }, { c1: 3 }],
         [{ tj: 'География', ru: 'География', en: 'Geography' }, { c2: 3 }],
         [{ tj: 'Забон ва адабиёт', ru: 'Язык и литература', en: 'Language and literature' }, { c3: 3 }],
         [{ tj: 'Таърих', ru: 'История', en: 'History' }, { c4: 3, c3: 1 }],

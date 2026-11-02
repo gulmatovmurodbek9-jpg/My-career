@@ -350,6 +350,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
             ),
             const SizedBox(height: 12),
           ],
+          if (question.id != 'tiebreak') _OwnAnswer(key: ValueKey(question.id), question: question, onAnswer: _answer),
         ],
       );
     }
@@ -364,6 +365,111 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
           title: Text(t('Тест')),
         ),
         body: SafeArea(child: body),
+      ),
+    );
+  }
+}
+
+// Ҷавоби худи хонанда: AI варианти наздиктаринро меёбад, хонанда онро тасдиқ мекунад
+// ва хол мисли интихоби ҳамон вариант ҳисоб мешавад (ҳамон /quiz/interpret-и сайт).
+class _OwnAnswer extends StatefulWidget {
+  const _OwnAnswer({super.key, required this.question, required this.onAnswer});
+  final QuizQuestion question;
+  final ValueChanged<String> onAnswer;
+
+  @override
+  State<_OwnAnswer> createState() => _OwnAnswerState();
+}
+
+class _OwnAnswerState extends State<_OwnAnswer> {
+  final _controller = TextEditingController();
+  bool _loading = false;
+  bool _none = false;
+  int? _match;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _find() async {
+    final said = _controller.text.trim();
+    if (said.isEmpty || _loading) return;
+    setState(() {
+      _loading = true;
+      _none = false;
+      _match = null;
+    });
+    int? position;
+    try {
+      final data = await Api.instance.post('/quiz/interpret', {
+        'question': widget.question.text,
+        'options': widget.question.options.map((o) => o.text).toList(),
+        'text': said,
+        'lang': appSettings.lang,
+      });
+      final value = data['position'];
+      if (value is int && value >= 0 && value < widget.question.options.length) position = value;
+    } catch (_) {
+      position = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _match = position;
+      _none = position == null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final match = _match;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            t('Ҷавоби шумо дар рӯйхат нест?'),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _controller,
+            maxLength: 300,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _find(),
+            onChanged: (_) => setState(() {
+              _match = null;
+              _none = false;
+            }),
+            decoration: InputDecoration(hintText: t('Ҷавоби худро нависед'), counterText: ''),
+          ),
+          const SizedBox(height: 10),
+          if (match == null)
+            FilledButton(onPressed: _controller.text.trim().isEmpty || _loading ? null : _find, child: Text(_loading ? t('Меҷӯем…') : t('Ёфтан')))
+          else ...[
+            Text(t('Ҷавоби шумо ба ин вариант наздик аст:'), style: TextStyle(fontSize: 15, color: AppColors.text)),
+            const SizedBox(height: 4),
+            Text(
+              widget.question.options[match].text,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary),
+            ),
+            const SizedBox(height: 10),
+            FilledButton(onPressed: () => widget.onAnswer(widget.question.options[match].value), child: Text(t('Қабул'))),
+            const SizedBox(height: 8),
+            OutlinedButton(onPressed: () => setState(() => _match = null), child: Text(t('Дигар кардан'))),
+          ],
+          if (_none) ...[
+            const SizedBox(height: 8),
+            Text(t('Ҷавобро ба ягон вариант пайваст карда натавонистем. Каме дигар нависед ё вариантро интихоб кунед.'), style: TextStyle(fontSize: 14.5, color: AppColors.text)),
+          ],
+        ],
       ),
     );
   }

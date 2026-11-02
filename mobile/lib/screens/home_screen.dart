@@ -415,17 +415,21 @@ class _ClusterCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      t('Кластери {n}', {'n': cluster.number}).toUpperCase(),
-                      style: TextStyle(fontSize: 11.5, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: color),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(999)),
-                    child: Text(
-                      t('{n} ихтисос', {'n': count}),
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t('Кластери {n}', {'n': cluster.number}).toUpperCase(),
+                          maxLines: 1,
+                          style: TextStyle(fontSize: 11.5, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: color),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          t('{n} ихтисос', {'n': count}),
+                          maxLines: 1,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSoft),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -475,11 +479,19 @@ class _ClusterCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Text(
-                    t('Ҳамаи ихтисосҳои ин самт'),
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color),
+                  // Дар русӣ матн дароз аст: хурдтар мешавад, то тир аз корт набарояд.
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        t('Ҳамаи ихтисосҳои ин самт'),
+                        maxLines: 1,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color),
+                      ),
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 6),
                   Icon(Icons.arrow_forward_rounded, size: 19, color: color),
                 ],
               ),

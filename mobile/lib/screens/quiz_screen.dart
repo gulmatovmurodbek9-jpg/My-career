@@ -330,17 +330,17 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
       final total = _questions.length > _expectedTotal ? _questions.length : _expectedTotal;
       final selected = _answers[question.id];
       body = ListView(
-        padding: AppSizes.page,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         children: [
           Text(t('Савол {v1} аз {v2}', {'v1': _index + 1, 'v2': total}), style: text.titleMedium?.copyWith(color: AppColors.primary)),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(value: (_index + 1) / total, minHeight: 10, backgroundColor: AppColors.contractSoft),
+            child: LinearProgressIndicator(value: (_index + 1) / total, minHeight: 6, backgroundColor: AppColors.contractSoft),
           ),
-          const SizedBox(height: 24),
-          Text(question.text, style: text.headlineMedium),
-          const SizedBox(height: 22),
+          const SizedBox(height: 14),
+          Text(question.text, style: text.titleLarge?.copyWith(fontSize: 19, height: 1.25, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
           for (var i = 0; i < question.options.length; i++) ...[
             _AnswerButton(
               letter: String.fromCharCode(0x0410 + i), // А, Б, В…
@@ -348,7 +348,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
               selected: selected == question.options[i].value,
               onTap: () => _answer(question.options[i].value),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
           if (question.id != 'tiebreak') _OwnAnswer(key: ValueKey(question.id), question: question, onAnswer: _answer),
         ],
@@ -384,6 +384,7 @@ class _OwnAnswer extends StatefulWidget {
 class _OwnAnswerState extends State<_OwnAnswer> {
   final _controller = TextEditingController();
   bool _loading = false;
+  bool _open = false;
   bool _none = false;
   int? _match;
 
@@ -426,52 +427,63 @@ class _OwnAnswerState extends State<_OwnAnswer> {
   @override
   Widget build(BuildContext context) {
     final match = _match;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSizes.radius),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            t('Ҷавоби шумо дар рӯйхат нест?'),
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _controller,
-            maxLength: 300,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _find(),
-            onChanged: (_) => setState(() {
-              _match = null;
-              _none = false;
-            }),
-            decoration: InputDecoration(hintText: t('Ҷавоби худро нависед'), counterText: ''),
-          ),
-          const SizedBox(height: 10),
-          if (match == null)
-            FilledButton(onPressed: _controller.text.trim().isEmpty || _loading ? null : _find, child: Text(_loading ? t('Меҷӯем…') : t('Ёфтан')))
-          else ...[
-            Text(t('Ҷавоби шумо ба ин вариант наздик аст:'), style: TextStyle(fontSize: 15, color: AppColors.text)),
-            const SizedBox(height: 4),
-            Text(
-              widget.question.options[match].text,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary),
+    if (!_open) {
+      return TextButton(onPressed: () => setState(() => _open = true), child: Text(t('Ҷавоби шумо дар рӯйхат нест?')));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                autofocus: true,
+                maxLength: 300,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _find(),
+                onChanged: (_) => setState(() {
+                  _match = null;
+                  _none = false;
+                }),
+                decoration: InputDecoration(hintText: t('Ҷавоби худро нависед'), counterText: '', isDense: true),
+              ),
             ),
-            const SizedBox(height: 10),
-            FilledButton(onPressed: () => widget.onAnswer(widget.question.options[match].value), child: Text(t('Қабул'))),
-            const SizedBox(height: 8),
-            OutlinedButton(onPressed: () => setState(() => _match = null), child: Text(t('Дигар кардан'))),
+            const SizedBox(width: 8),
+            IconButton.filled(
+              tooltip: t('Ёфтан'),
+              onPressed: _controller.text.trim().isEmpty || _loading ? null : _find,
+              icon: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.arrow_forward_rounded),
+            ),
           ],
-          if (_none) ...[
-            const SizedBox(height: 8),
-            Text(t('Ҷавобро ба ягон вариант пайваст карда натавонистем. Каме дигар нависед ё вариантро интихоб кунед.'), style: TextStyle(fontSize: 14.5, color: AppColors.text)),
-          ],
+        ),
+        if (match != null) ...[
+          const SizedBox(height: 8),
+          Text(t('Ҷавоби шумо ба ин вариант наздик аст:'), style: TextStyle(fontSize: 14, color: AppColors.textSoft)),
+          const SizedBox(height: 2),
+          Text(
+            widget.question.options[match].text,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(onPressed: () => widget.onAnswer(widget.question.options[match].value), child: Text(t('Қабул'))),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(onPressed: () => setState(() => _match = null), child: Text(t('Дигар кардан'))),
+              ),
+            ],
+          ),
         ],
-      ),
+        if (_none) ...[
+          const SizedBox(height: 8),
+          Text(t('Ҷавобро ба ягон вариант пайваст карда натавонистем. Каме дигар нависед ё вариантро интихоб кунед.'), style: TextStyle(fontSize: 14, color: AppColors.textSoft)),
+        ],
+      ],
     );
   }
 }
@@ -495,8 +507,8 @@ class _AnswerButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.radius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 68),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          constraints: const BoxConstraints(minHeight: 50),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSizes.radius),
             border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.6 : 1),
@@ -504,20 +516,20 @@ class _AnswerButton extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 30,
+                height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: selected ? AppColors.primary : AppColors.contractSoft, shape: BoxShape.circle),
                 child: Text(
                   letter,
-                  style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.primary),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.primary),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 11),
               Expanded(
                 child: Text(
                   text,
-                  style: TextStyle(fontSize: 16.5, height: 1.35, fontWeight: FontWeight.w600, color: AppColors.text),
+                  style: TextStyle(fontSize: 15, height: 1.28, fontWeight: FontWeight.w600, color: AppColors.text),
                 ),
               ),
             ],

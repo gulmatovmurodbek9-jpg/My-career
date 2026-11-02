@@ -266,7 +266,7 @@ class _TestCard extends StatelessWidget {
                   style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.78), height: 1.4),
                 ),
                 const SizedBox(height: 12),
-                Wrap(spacing: 6, runSpacing: 6, children: [chip(Icons.checklist_rounded, t('13 савол')), chip(Icons.schedule_rounded, t('~3 дақиқа')), chip(Icons.hub_rounded, t('5 самт'))]),
+                Wrap(spacing: 6, runSpacing: 6, children: [chip(Icons.checklist_rounded, t('20 савол')), chip(Icons.schedule_rounded, t('~5 дақиқа')), chip(Icons.hub_rounded, t('5 самт'))]),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

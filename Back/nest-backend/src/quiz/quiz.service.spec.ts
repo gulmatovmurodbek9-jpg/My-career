@@ -109,10 +109,10 @@ describe('Баробарии тест (ҳамаи 5 кластер)', () => {
     const mmt = MMT_QUESTIONS;
     const hidden = (id: string) => Number(id.slice(1)) > 16;
 
-    it('ҳадди имконпазир барои ҳар кластер баробар аст (27)', () => {
+    it('ҳадди имконпазир барои ҳар кластер баробар аст (48)', () => {
         for (const k of K) {
             const max = mmt.reduce((sum, q) => sum + Math.max(0, ...q.options.map((o) => o.scores?.[k] || 0)), 0);
-            expect(max).toBe(27);
+            expect(max).toBe(48);
         }
     });
 

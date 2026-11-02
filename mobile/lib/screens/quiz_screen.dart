@@ -6,7 +6,6 @@ import '../app/auth.dart';
 import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
-import 'interest_test_screen.dart';
 import 'method_screen.dart';
 import 'results_screen.dart';
 import '../app/i18n.dart';
@@ -56,7 +55,7 @@ class QuizStartScreen extends StatelessWidget {
           children: [
             Text(t('Чӣ тавр мегузарад?'), style: text.headlineMedium),
             const SizedBox(height: 14),
-            _Step(number: '1', text: t('Ба 10 саволи содда дар бораи ҳаёти худ ҷавоб медиҳед.')),
+            _Step(number: '1', text: t('Ба 17 саволи содда дар бораи ҳаёти худ ҷавоб медиҳед.')),
             _Step(number: '2', text: t('Баъд 3 саволи дигар дар бораи самти шумо.')),
             _Step(number: '3', text: t('Мебинед, ки кадом ихтисосҳо ба шумо мувофиқанд ва онҳоро дар куҷо мехонанд.')),
             const SizedBox(height: 10),
@@ -64,7 +63,6 @@ class QuizStartScreen extends StatelessWidget {
             SectionTitle(t('Шумо баъди кадом синф ҳастед?')),
             for (final g in [9, 11]) ...[_GradeButton(grade: g, selected: appSettings.grade == g), const SizedBox(height: 12)],
             const SizedBox(height: 8),
-            OutlinedButton.icon(onPressed: () => Navigator.of(context).push(smoothRoute(const InterestTestScreen())), icon: const Icon(Icons.checklist_rounded), label: Text(t('Тести шавқ (O*NET)'))),
             TextButton(onPressed: () => Navigator.of(context).push(smoothRoute(const MethodScreen())), child: Text(t('Асоси илмӣ'))),
           ],
         ),
@@ -159,7 +157,7 @@ class QuizFlowScreen extends StatefulWidget {
 
 class _QuizFlowScreenState extends State<QuizFlowScreen> {
   static const _tieShare = 0.15; // ҳамон ҳадди сайт: ду самт камтар аз 15% фарқ — аз худи хонанда мепурсем
-  static const _expectedTotal = 13;
+  static const _expectedTotal = 20;
 
   final List<QuizQuestion> _questions = [];
   final Map<String, String> _answers = {};

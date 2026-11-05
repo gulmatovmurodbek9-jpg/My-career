@@ -17,7 +17,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   group('Моделҳо', () {
     test('ихтисос: майдонҳои холӣ барномаро намеафтонанд', () {
-      final c = Career.fromJson({'id': 'x', 'name': 'Стоматология', 'cluster': {'clusterName': 'Тиб'}, 'hasFreeSeats': true, 'minTuitionFee': 6050});
+      final c = Career.fromJson({
+        'id': 'x',
+        'name': 'Стоматология',
+        'cluster': {'clusterName': 'Тиб'},
+        'hasFreeSeats': true,
+        'minTuitionFee': 6050,
+      });
       expect(c.name, 'Стоматология');
       expect(c.cluster, 'Тиб');
       expect(c.hasFreeSeats, isTrue);
@@ -27,7 +33,10 @@ void main() {
     });
 
     test('пешниҳод: буҷетӣ аз paymentType «ройгон»', () {
-      final free = Offering.fromJson({'paymentType': 'ройгон', 'university': {'id': 'u', 'name': 'ДМТ', 'city': 'Душанбе'}});
+      final free = Offering.fromJson({
+        'paymentType': 'ройгон',
+        'university': {'id': 'u', 'name': 'ДМТ', 'city': 'Душанбе'},
+      });
       final paid = Offering.fromJson({'paymentType': 'пулакӣ', 'tuitionFee': 8535});
       expect(free.free, isTrue);
       expect(free.city, 'Душанбе');
@@ -41,8 +50,12 @@ void main() {
         'part': 'mmt',
         'question': {'tj': 'Савол?'},
         'options': [
-          {'text': {'tj': 'Якум'}},
-          {'text': {'tj': 'Дуюм'}},
+          {
+            'text': {'tj': 'Якум'},
+          },
+          {
+            'text': {'tj': 'Дуюм'},
+          },
         ],
       });
       expect(q.options.map((o) => o.value), ['0', '1']);
@@ -51,8 +64,16 @@ void main() {
 
     test('натиҷа: фоизи самт аз миқёси 0–40', () {
       final r = QuizResult.fromJson({
-        'topCluster': {'clusterName': 'Техникӣ', 'averageMatch': 75, 'specializations': [{'id': '1', 'name': 'Информатика', 'matchPercentage': 88, 'free': true}]},
-        'allMatches': [{'clusterName': 'Техникӣ', 'score': 30}],
+        'topCluster': {
+          'clusterName': 'Техникӣ',
+          'averageMatch': 75,
+          'specializations': [
+            {'id': '1', 'name': 'Информатика', 'matchPercentage': 88, 'free': true},
+          ],
+        },
+        'allMatches': [
+          {'clusterName': 'Техникӣ', 'score': 30},
+        ],
       });
       expect(r.clusterPercent, 75);
       expect(r.careers.single.percent, 88);
@@ -109,20 +130,26 @@ void main() {
   testWidgets('рамзи 6-рақама: танҳо рақам, баъди 6-ум худаш мефиристад', (tester) async {
     final controller = TextEditingController();
     String? done;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CodeInput(controller: controller, onCompleted: (c) => done = c))));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CodeInput(controller: controller, onCompleted: (c) => done = c),
+        ),
+      ),
+    );
     await tester.enterText(find.byType(TextField), '12a3456789');
     await tester.pump();
     expect(controller.text, '123456');
     expect(done, '123456');
   });
 
-  testWidgets('бори аввал «Хуш омадед», «Оғоз кардан» ба экрани асосӣ мебарад', (tester) async {
+  testWidgets('бори аввал муаррифӣ, «Гузаштан» ба экрани асосӣ мебарад', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await appSettings.load();
     await tester.pumpWidget(const IkhtisosiManApp());
     await tester.pumpAndSettle();
-    expect(find.text('Хуш омадед ба'), findsOneWidget);
-    await tester.tap(find.text('Оғоз кардан'));
+    expect(find.text('Ихтисоси ман чӣ кор мекунад?'), findsOneWidget);
+    await tester.tap(find.text('Гузаштан'));
     await tester.pumpAndSettle();
     expect(find.text('Оғози тест'), findsOneWidget);
     final prefs = await SharedPreferences.getInstance();

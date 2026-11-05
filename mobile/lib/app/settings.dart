@@ -14,6 +14,7 @@ class AppSettings extends ChangeNotifier {
   bool _dark = false;
   String _studyCity = '';
   String _studyBudget = 'any';
+  List<String> _studySubjects = const [];
 
   double get textScale => _textScale;
   int? get grade => _grade;
@@ -22,6 +23,7 @@ class AppSettings extends ChangeNotifier {
   bool get dark => _dark;
   String get studyCity => _studyCity;
   String get studyBudget => _studyBudget;
+  List<String> get studySubjects => _studySubjects;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,6 +31,7 @@ class AppSettings extends ChangeNotifier {
     _grade = prefs.getInt('grade');
     _studyCity = prefs.getString('studyCity') ?? '';
     _studyBudget = prefs.getString('studyBudget') ?? 'any';
+    _studySubjects = prefs.getStringList('studySubjects') ?? const [];
     final lang = prefs.getString('lang');
     _lang = langs.contains(lang) ? lang! : 'tj';
     _seenWelcome = prefs.getBool('seenWelcome') ?? false;
@@ -62,6 +65,13 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('studyCity', value);
+  }
+
+  Future<void> toggleStudySubject(String key) async {
+    _studySubjects = _studySubjects.contains(key) ? [..._studySubjects.where((s) => s != key)] : [..._studySubjects, key];
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('studySubjects', _studySubjects);
   }
 
   Future<void> setStudyBudget(String value) async {

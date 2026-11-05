@@ -6,7 +6,7 @@ import 'app/i18n.dart';
 import 'app/settings.dart';
 import 'app/theme.dart';
 import 'screens/shell.dart';
-import 'screens/welcome_screen.dart';
+import 'screens/intro_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,7 +57,7 @@ class IkhtisosiManApp extends StatelessWidget {
           );
         },
         // Калиди забон: маълумоти аз сервер омада (ихтисосҳо, донишгоҳҳо) бо забони нав аз нав бор мешавад.
-        home: appSettings.seenWelcome ? AppShell(key: ValueKey(appSettings.lang)) : const WelcomeScreen(),
+        home: appSettings.seenWelcome ? AppShell(key: ValueKey(appSettings.lang)) : const IntroScreen(),
       ),
     );
   }

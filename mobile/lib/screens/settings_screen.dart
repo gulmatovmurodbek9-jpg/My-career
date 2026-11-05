@@ -4,6 +4,7 @@ import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import '../app/i18n.dart';
+import 'intro_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -20,6 +21,12 @@ class SettingsScreen extends StatelessWidget {
         builder: (context, _) => ListView(
           padding: AppSizes.page,
           children: [
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const IntroScreen(replay: true))),
+              icon: const Icon(Icons.help_outline_rounded),
+              label: Text(t('Барнома чӣ кор мекунад?')),
+            ),
+            const SizedBox(height: 18),
             Text(t('Забон'), style: text.titleLarge),
             const SizedBox(height: 12),
             for (final code in AppSettings.langs) ...[_Choice(label: langNames[code]!, selected: appSettings.lang == code, onTap: () => appSettings.setLang(code)), const SizedBox(height: 10)],

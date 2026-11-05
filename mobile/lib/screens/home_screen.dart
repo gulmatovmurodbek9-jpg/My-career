@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../api/api.dart';
+import '../api/models.dart';
+import '../app/settings.dart';
 import '../app/auth.dart';
 import '../app/clusters.dart';
 import '../app/i18n.dart';
@@ -112,6 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 22),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: _FeaturedCareers()),
           ],
         ),
       ),
@@ -148,10 +152,7 @@ class _Greeting extends StatelessWidget {
                     style: TextStyle(fontFamily: AppFonts.display, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    t('Роҳнамои касбии шумо'),
-                    style: TextStyle(fontSize: 12.5, color: AppColors.textSoft),
-                  ),
+                  Text(t('Роҳнамои касбии шумо'), style: TextStyle(fontSize: 12.5, color: AppColors.textSoft)),
                 ],
               ),
             ),
@@ -556,4 +557,45 @@ class _QuickTile extends StatelessWidget {
       ),
     ),
   );
+}
+
+// Чанд ихтисос барои шиносоӣ (мисли сайт). Дар бораи «талабот» чизе намегӯем: маълумоти он нест.
+class _FeaturedCareers extends StatefulWidget {
+  const _FeaturedCareers();
+
+  @override
+  State<_FeaturedCareers> createState() => _FeaturedCareersState();
+}
+
+class _FeaturedCareersState extends State<_FeaturedCareers> {
+  List<Career> _careers = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final data = await Api.instance.get('/careers', {'limit': '4', 'lang': appSettings.lang});
+      final list = (data['data'] as List).map((e) => Career.fromJson(Map<String, dynamic>.from(e))).toList();
+      if (mounted) setState(() => _careers = list);
+    } catch (_) {
+      // Бе интернет ин бахш пинҳон мемонад.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_careers.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionTitle(title: t('Аз ихтисосҳо шинос шавед'), subtitle: t('Ба ихтисос пахш кунед: тавсиф, маош ва ҷойи таҳсил.')),
+        const SizedBox(height: 12),
+        for (final c in _careers) ...[CareerCard(career: c), const SizedBox(height: 10)],
+      ],
+    );
+  }
 }

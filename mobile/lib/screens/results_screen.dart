@@ -8,13 +8,15 @@ import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
 import 'careers_screen.dart';
 import 'quiz_screen.dart';
+import 'result_extras.dart';
 import '../app/i18n.dart';
 
 class ResultsScreen extends StatefulWidget {
-  const ResultsScreen({super.key, required this.result, required this.requestBody, this.savedAdvice});
+  const ResultsScreen({super.key, required this.result, required this.requestBody, this.savedAdvice, this.why = const []});
   final QuizResult result;
   final Map<String, dynamic> requestBody;
   final String? savedAdvice;
+  final List<Map<String, dynamic>> why;
 
   @override
   State<ResultsScreen> createState() => _ResultsScreenState();
@@ -23,6 +25,7 @@ class ResultsScreen extends StatefulWidget {
 class _ResultsScreenState extends State<ResultsScreen> {
   String? _advice;
   bool _adviceFailed = false;
+  final _cardKey = GlobalKey();
 
   @override
   void initState() {
@@ -56,29 +59,36 @@ class _ResultsScreenState extends State<ResultsScreen> {
         child: ListView(
           padding: AppSizes.page,
           children: [
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(AppSizes.radius + 4)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (r.undecided.isEmpty) Text(t('Самти мувофиқи шумо'), style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.9))),
-                  const SizedBox(height: 6),
-                  Text(
-                    r.undecided.isEmpty ? r.clusterName : t('Шавқи шумо ҳанӯз равшан нест'),
-                    style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
-                  ),
-                  const SizedBox(height: 12),
-                  if (r.undecided.isEmpty)
+            RepaintBoundary(
+              key: _cardKey,
+              child: Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(AppSizes.radius + 4)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (r.undecided.isEmpty) Text(t('Самти мувофиқи шумо'), style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.9))),
+                    const SizedBox(height: 6),
                     Text(
-                      t('Мувофиқат: {n}%', {'n': r.clusterPercent}),
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
-                    )
-                  else
-                    Text(t('Ин хато нест. Ҷавобҳоятон ба чанд самт баробар наздиканд.'), style: const TextStyle(fontSize: 15.5, color: Colors.white, height: 1.35)),
-                ],
+                      r.undecided.isEmpty ? r.clusterName : t('Шавқи шумо ҳанӯз равшан нест'),
+                      style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
+                    ),
+                    const SizedBox(height: 12),
+                    if (r.undecided.isEmpty)
+                      Text(
+                        t('Мувофиқат: {n}%', {'n': r.clusterPercent}),
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
+                      )
+                    else
+                      Text(t('Ин хато нест. Ҷавобҳоятон ба чанд самт баробар наздиканд.'), style: const TextStyle(fontSize: 15.5, color: Colors.white, height: 1.35)),
+                  ],
+                ),
               ),
             ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(onPressed: () => shareResultCard(_cardKey, r), icon: const Icon(Icons.ios_share_rounded), label: Text(t('Натиҷаро фиристед'))),
+            if (r.undecided.isEmpty) ...[const SizedBox(height: 12), WhyResultCard(result: r, why: widget.why)],
+            WeakSubjectsCard(result: r, strong: [for (final s in ((widget.requestBody['context'] as Map?)?['subjects'] as List? ?? const [])) '$s']),
             if (r.undecided.isNotEmpty) _UndecidedCard(directions: r.undecided),
             SectionTitle(t('Маслиҳат')),
             AppCard(
@@ -106,7 +116,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
             Text(t('Ба ихтисос пахш кунед, то маош ва донишгоҳҳоро бинед.'), style: text.bodyMedium),
             const SizedBox(height: 12),
             for (var i = 0; i < r.careers.length; i++) ...[_CareerResultCard(rank: i + 1, career: r.careers[i]), const SizedBox(height: 12)],
-            const SizedBox(height: 12),
+            SectionTitle(t('Қадами навбатӣ')),
+            ResultActions(result: r),
+            SectionTitle(t('Оила')),
+            ParentInviteCard(result: r),
+            SectionTitle(t('Фикри шумо')),
+            QuizFeedbackCard(attemptId: r.attemptId),
+            const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const QuizFlowScreen())),
               icon: const Icon(Icons.refresh_rounded, size: 28),

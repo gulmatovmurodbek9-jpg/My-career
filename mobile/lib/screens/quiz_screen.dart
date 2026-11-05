@@ -5,6 +5,7 @@ import '../api/models.dart';
 import '../app/auth.dart';
 import '../app/last_result.dart';
 import '../app/settings.dart';
+import '../app/subjects.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'method_screen.dart';
@@ -71,7 +72,9 @@ class QuizStartScreen extends StatelessWidget {
                 final saved = lastResult.result;
                 if (saved == null) return const SizedBox.shrink();
                 return OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).push(smoothRoute(ResultsScreen(result: QuizResult.fromJson(saved), requestBody: lastResult.body ?? {}, savedAdvice: lastResult.advice))),
+                  onPressed: () =>
+                      Navigator.of(context)
+                          .push(smoothRoute(ResultsScreen(result: QuizResult.fromJson(saved), requestBody: lastResult.body ?? {}, savedAdvice: lastResult.advice, why: lastResult.why))),
                   icon: const Icon(Icons.history_rounded),
                   label: Text(t('Натиҷаи охирини ман')),
                 );
@@ -133,6 +136,25 @@ class _PlaceQuestionsState extends State<_PlaceQuestions> {
           ),
         ],
         const SizedBox(height: 16),
+        Text(t('Дар кадом фанҳо баҳоятон баланд аст?'), style: text.titleMedium),
+        const SizedBox(height: 4),
+        Wrap(
+          children: [
+            for (final key in schoolSubjects.keys)
+              SizedBox(
+                width: (MediaQuery.sizeOf(context).width - 40) / 2,
+                child: CheckboxListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: appSettings.studySubjects.contains(key),
+                  onChanged: (_) => appSettings.toggleStudySubject(key),
+                  title: Text(subjectName(key, appSettings.lang), style: text.bodyMedium),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
         Text(t('Оила дар як сол барои таҳсил чӣ қадар дода метавонад?'), style: text.titleMedium),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
@@ -366,7 +388,7 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
       'lang': appSettings.lang,
       'grade': appSettings.grade ?? 11,
       'deferAdvice': true,
-      'context': {'city': appSettings.studyCity, 'budget': appSettings.studyBudget},
+      'context': {'city': appSettings.studyCity, 'budget': appSettings.studyBudget, 'subjects': appSettings.studySubjects},
     };
     try {
       dynamic data;
@@ -380,11 +402,18 @@ class _QuizFlowScreenState extends State<QuizFlowScreen> {
         }
       }
       data ??= await Api.instance.post('/quiz/submit', body);
-      await lastResult.save(Map<String, dynamic>.from(data), Map<String, dynamic>.from(body));
+      // Барои «Чаро ин натиҷа?»: савол, ҷавоб ва холи ҳамон ҷавоб.
+      final why = [
+        for (final q in _questions)
+          if (q.part == 'mmt' && _answers[q.id] != null)
+            for (final o in q.options)
+              if (o.value == _answers[q.id]) {'q': q.text, 'a': o.text, 'scores': o.scores},
+      ];
+      await lastResult.save(Map<String, dynamic>.from(data), Map<String, dynamic>.from(body), why);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => ResultsScreen(result: QuizResult.fromJson(Map<String, dynamic>.from(data)), requestBody: body),
+          builder: (_) => ResultsScreen(result: QuizResult.fromJson(Map<String, dynamic>.from(data)), requestBody: body, why: why),
         ),
       );
     } catch (e) {

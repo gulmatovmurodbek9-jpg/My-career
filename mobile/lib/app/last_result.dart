@@ -11,6 +11,7 @@ class LastResult extends ChangeNotifier {
   Map<String, dynamic>? get result => _saved == null ? null : Map<String, dynamic>.from(_saved!['result']);
   Map<String, dynamic>? get body => _saved == null ? null : Map<String, dynamic>.from(_saved!['body']);
   String? get advice => _saved?['advice'] as String?;
+  List<Map<String, dynamic>> get why => [for (final item in (_saved?['why'] as List? ?? const [])) Map<String, dynamic>.from(item)];
 
   Future<void> load() async {
     try {
@@ -23,8 +24,8 @@ class LastResult extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> save(Map<String, dynamic> result, Map<String, dynamic> body) async {
-    _saved = {'result': result, 'body': body};
+  Future<void> save(Map<String, dynamic> result, Map<String, dynamic> body, [List<Map<String, dynamic>> why = const []]) async {
+    _saved = {'result': result, 'body': body, 'why': why};
     notifyListeners();
     await _write();
   }

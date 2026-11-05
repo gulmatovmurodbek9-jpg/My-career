@@ -125,8 +125,10 @@ class University {
 }
 
 class QuizOption {
-  QuizOption(this.text, this.value);
+  QuizOption(this.text, this.value, [this.scores = const {}]);
   final String text;
+  // Холи ин вариант ба ҳар кластер (c1…c5) — барои «Чаро ин натиҷа?».
+  final Map<String, num> scores;
   final String value; // рақами вариант ("0"…) ё кластер ("c2") дар саволи «баробар»
 }
 
@@ -136,7 +138,8 @@ class QuizQuestion {
   factory QuizQuestion.fromJson(Map<String, dynamic> j) {
     final options = (j['options'] as List? ?? []).asMap().entries.map((e) {
       final o = e.value as Map;
-      return QuizOption(_localized(o['text']), '${e.key}');
+      final scores = o['scores'] is Map ? {for (final s in (o['scores'] as Map).entries) '${s.key}': (s.value is num ? s.value as num : 0)} : <String, num>{};
+      return QuizOption(_localized(o['text']), '${e.key}', scores);
     }).toList();
     return QuizQuestion(id: _str(j['id']), text: _localized(j['question']), options: options, part: _str(j['part']));
   }
@@ -186,6 +189,10 @@ class UndecidedDirection {
 class QuizResult {
   QuizResult.fromJson(Map<String, dynamic> j)
     : clusterName = j['topCluster'] is Map ? _str(j['topCluster']['clusterName']) : '',
+      clusterId = j['topCluster'] is Map ? _str(j['topCluster']['id']) : '',
+      clusterNumber = j['topCluster'] is Map ? (_int(j['topCluster']['clusterNumber']) ?? 0) : 0,
+      attemptId = _str(j['attemptId']),
+      scores = j['scores'] is Map && j['scores']['mmtClusters'] is Map ? Map<String, dynamic>.from(j['scores']['mmtClusters']) : const {},
       clusterPercent = j['topCluster'] is Map ? (_int(j['topCluster']['averageMatch']) ?? 0) : 0,
       careers = j['topCluster'] is Map && j['topCluster']['specializations'] is List
           ? (j['topCluster']['specializations'] as List).map((e) => MatchedCareer.fromJson(Map<String, dynamic>.from(e))).toList()
@@ -196,6 +203,10 @@ class QuizResult {
       undecided = j['undecided'] is List ? (j['undecided'] as List).map((e) => UndecidedDirection.fromJson(Map<String, dynamic>.from(e))).toList() : const [];
 
   final List<UndecidedDirection> undecided;
+  final String clusterId;
+  final int clusterNumber;
+  final String attemptId;
+  final Map<String, dynamic> scores;
   final String clusterName;
   final int clusterPercent;
   final List<MatchedCareer> careers;

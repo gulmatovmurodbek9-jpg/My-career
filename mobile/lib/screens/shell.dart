@@ -5,7 +5,7 @@ import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'careers_screen.dart';
-import 'settings_screen.dart';
+import 'dashboard_screen.dart';
 import 'home_screen.dart';
 import 'quiz_screen.dart';
 import 'universities_screen.dart';
@@ -30,12 +30,13 @@ class _AppShellState extends State<AppShell> {
     if (tab == _tab) return;
     HapticFeedback.selectionClick();
     setState(() => _tab = tab);
+    if (tab == 4) dashboardRefresh.value++;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _tab, children: const [HomeScreen(), QuizStartScreen(), CareersScreen(), UniversitiesScreen()]),
+      body: IndexedStack(index: _tab, children: const [HomeScreen(), QuizStartScreen(), CareersScreen(), UniversitiesScreen(), DashboardScreen()]),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.only(bottom: 10),
         child: Padding(
@@ -56,7 +57,7 @@ class _AppShellState extends State<AppShell> {
                 _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: t('Ихтисосҳо'), selected: _tab == 2, onTap: () => select(2)),
                 _CenterItem(onTap: () => Navigator.of(context).push(smoothRoute(VoiceScreen(goToTab: select)))),
                 _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: appSettings.lang == 'ru' ? 'Вузы' : t('Донишгоҳҳо'), selected: _tab == 3, onTap: () => select(3)),
-                _NavItem(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: t('Танзимот'), selected: false, onTap: () => Navigator.of(context).push(smoothRoute(const SettingsScreen()))),
+                _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view_rounded, label: t('Панел'), selected: _tab == 4, onTap: () => select(4)),
               ],
             ),
           ),

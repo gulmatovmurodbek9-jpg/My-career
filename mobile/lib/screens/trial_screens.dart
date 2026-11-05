@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api.dart';
@@ -13,6 +12,7 @@ import '../app/theme.dart';
 import '../app/web_texts.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
+import 'share_card.dart';
 
 // «Худро дар касб санҷед» (мисли /trial ва /trial/... -и сайт): матнҳо аз сайт (web_texts.dart).
 
@@ -548,7 +548,18 @@ class _TrialPlayScreenState extends State<TrialPlayScreen> {
       ),
       const SizedBox(height: 10),
       OutlinedButton.icon(
-        onPressed: () => SharePlus.instance.share(ShareParams(text: '${tx('name')}: $name — ${tx('solved', {'n': s['solved'], 'total': s['total']})}. https://ikhtisosiman.qobus.tj/trial')),
+        onPressed: () => showShareCard(
+          context,
+          ShareCardData.trial(
+            title: name,
+            fit: s['suggestOther'] != true,
+            solved: s['solved'] is int ? s['solved'] as int : null,
+            total: s['total'] is int ? s['total'] as int : null,
+            confBefore: conf(s['confBefore']),
+            confAfter: conf(s['confAfter']),
+          ),
+          '${tx('name')}: $name — ${tx('solved', {'n': s['solved'], 'total': s['total']})}.',
+        ),
         icon: const Icon(Icons.ios_share_rounded),
         label: Text(t('Натиҷаро фиристед')),
       ),

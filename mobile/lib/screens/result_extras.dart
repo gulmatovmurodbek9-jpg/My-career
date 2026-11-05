@@ -1,9 +1,4 @@
-import 'dart:io';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,22 +14,6 @@ import 'careers_screen.dart';
 import 'universities_screen.dart';
 
 const _site = 'https://ikhtisosiman.qobus.tj';
-
-// Корти болоии натиҷа ҳамчун сурат (мисли ShareResult-и сайт) ба Telegram, WhatsApp ва ғ.
-Future<void> shareResultCard(GlobalKey cardKey, QuizResult result) async {
-  final text = '${t('Натиҷаи тести касбии ман: {name}', {'name': result.clusterName})} $_site';
-  try {
-    final boundary = cardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) throw StateError('no card');
-    final image = await boundary.toImage(pixelRatio: 3);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('${(await getTemporaryDirectory()).path}/ikhtisosi-man-natija.png');
-    await file.writeAsBytes(bytes!.buffer.asUint8List());
-    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], text: text));
-  } catch (_) {
-    await SharePlus.instance.share(ShareParams(text: text));
-  }
-}
 
 // «Чаро ин натиҷа?»: ҷавобҳое, ки ба самти асосӣ хол доданд.
 class WhyResultCard extends StatelessWidget {

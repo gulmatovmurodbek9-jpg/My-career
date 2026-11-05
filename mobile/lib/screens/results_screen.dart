@@ -9,6 +9,7 @@ import 'career_detail_screen.dart';
 import 'careers_screen.dart';
 import 'quiz_screen.dart';
 import 'result_extras.dart';
+import 'share_card.dart';
 import '../app/i18n.dart';
 
 class ResultsScreen extends StatefulWidget {
@@ -86,7 +87,17 @@ class _ResultsScreenState extends State<ResultsScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            OutlinedButton.icon(onPressed: () => shareResultCard(_cardKey, r), icon: const Icon(Icons.ios_share_rounded), label: Text(t('Натиҷаро фиристед'))),
+            OutlinedButton.icon(
+              onPressed: () => showShareCard(
+                context,
+                r.undecided.isEmpty
+                    ? ShareCardData.quiz(title: r.clusterName, percent: r.clusterPercent, careers: [for (final c in r.careers) c.name], cluster: r.clusterNumber)
+                    : ShareCardData.quiz(title: t('Шавқи шумо ҳанӯз равшан нест'), careers: [for (final c in r.careers) c.name]),
+                t('Натиҷаи тести касбии ман: {name}', {'name': r.undecided.isEmpty ? r.clusterName : r.undecided.map((d) => d.name).join(', ')}),
+              ),
+              icon: const Icon(Icons.ios_share_rounded),
+              label: Text(t('Натиҷаро фиристед')),
+            ),
             if (r.undecided.isEmpty) ...[const SizedBox(height: 12), WhyResultCard(result: r, why: widget.why)],
             WeakSubjectsCard(result: r, strong: [for (final s in ((widget.requestBody['context'] as Map?)?['subjects'] as List? ?? const [])) '$s']),
             if (r.undecided.isNotEmpty) _UndecidedCard(directions: r.undecided),

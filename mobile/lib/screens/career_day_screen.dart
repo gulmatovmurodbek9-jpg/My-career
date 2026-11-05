@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../app/config.dart';
 import '../app/i18n.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_sections.dart';
+import 'trial_screens.dart';
 
 // Саҳифаи алоҳида: «Як рӯзи корӣ» — вақтҳо, ҷиҳатҳои мусбат ва манфӣ. Маълумот аз /trial/career/:id.
 class CareerDayScreen extends StatelessWidget {
@@ -55,7 +55,11 @@ class CareerDayScreen extends StatelessWidget {
             if (pros.isNotEmpty) ...[const SizedBox(height: 14), _ProsCons(title: t('Ҷиҳатҳои мусбат'), items: pros, icon: Icons.add_circle_rounded, color: AppColors.budget)],
             if (cons.isNotEmpty) ...[const SizedBox(height: 14), _ProsCons(title: t('Ҷиҳатҳои манфӣ'), items: cons, icon: Icons.remove_circle_rounded, color: AppColors.danger)],
             const SizedBox(height: 16),
-            GradientButton(label: t('Худро дар касб санҷед'), height: 50, onPressed: () => openLink('$siteUrl/trial/career/$careerId')),
+            GradientButton(
+              label: t('Худро дар касб санҷед'),
+              height: 50,
+              onPressed: () => Navigator.of(context).push(smoothRoute(TrialPlayScreen(careerId: careerId, title: careerName))),
+            ),
           ],
         ),
       ),

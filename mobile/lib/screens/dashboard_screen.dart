@@ -15,7 +15,10 @@ import 'career_detail_screen.dart';
 import 'careers_screen.dart';
 import 'result_extras.dart';
 import 'results_screen.dart';
+import 'interest_test_screen.dart';
 import 'settings_screen.dart';
+import 'swipe_screen.dart';
+import 'trial_screens.dart';
 import 'shell.dart';
 
 // Ҳар бор, ки бахши «Панел» кушода мешавад, рӯйхатҳо аз нав гирифта мешаванд.
@@ -189,6 +192,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _LinkRow(icon: Icons.chat_bubble_outline_rounded, label: t('Чати AI'), onTap: () => _open(const AiChatScreen())),
                 ],
                 if (lastResult.result != null) ...[SectionTitle(t('Оила')), ParentInviteCard(result: QuizResult.fromJson(lastResult.result!))],
+                SectionTitle(t('Санҷиши худ')),
+                _LinkRow(
+                  icon: Icons.swipe_rounded,
+                  label: t('Касб-свайп: 30 сурат'),
+                  onTap: () => _open(
+                    SwipeScreen(
+                      onFullTest: () {
+                        Navigator.of(context).pop();
+                        AppShell.goTo(context, 1);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _LinkRow(icon: Icons.wb_sunny_outlined, label: t('Худро дар касб санҷед'), onTap: () => _open(const TrialHubScreen())),
+                const SizedBox(height: 8),
+                _LinkRow(icon: Icons.checklist_rounded, label: t('Тести шавқ (O*NET)'), onTap: () => _open(const InterestTestScreen())),
                 SectionTitle(t('Ҳисоб')),
                 if (authStore.isLoggedIn) ...[_LinkRow(icon: Icons.person_outline_rounded, label: t('Профил'), onTap: () => _open(const ProfileScreen())), const SizedBox(height: 8)],
                 _LinkRow(icon: Icons.tune_rounded, label: t('Танзимот'), onTap: () => _open(const SettingsScreen())),

@@ -154,10 +154,18 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
         final clear = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            content: Text(e.message),
+            title: Text(t('Кластери дигар')),
+            content: Text(e.message, style: TextStyle(fontSize: 16, height: 1.45, color: AppColors.textSoft)),
+            actionsPadding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: Text(t('Не'))),
-              TextButton(onPressed: () => Navigator.pop(context, true), child: Text(t('Рӯйхатро тоза карда, илова кунед'))),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(t('Рӯйхатро тоза карда, илова кунед'))),
+                  const SizedBox(height: 8),
+                  OutlinedButton(onPressed: () => Navigator.pop(context, false), child: Text(t('Бекор кардан'))),
+                ],
+              ),
             ],
           ),
         );

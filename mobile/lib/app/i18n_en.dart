@@ -224,6 +224,7 @@ const en = <String, String>{
   'Кишоварзӣ ва ҷангалпарварӣ': 'Agriculture and forestry',
   'Кластер': 'Cluster',
   'Кластери {n}': 'Cluster {n}',
+  'Кластери дигар': 'Different cluster',
   'Кластерҳо': 'Clusters',
   'Коди ММТ': 'NTC code',
   'Коллеҷ': 'College',

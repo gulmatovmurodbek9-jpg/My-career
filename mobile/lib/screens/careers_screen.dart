@@ -10,6 +10,8 @@ import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
+import 'field_quiz_screen.dart';
+import 'shell.dart';
 import 'career_filters.dart';
 import '../app/saved_store.dart';
 import '../app/auth.dart';
@@ -417,12 +419,76 @@ class _CareersScreenState extends State<CareersScreen> {
               ),
               const SizedBox(height: 8),
               for (final o in _aiOptions) _aiOption(o),
+              if (_aiCluster() != null) _unsureOption(_aiCluster()!),
+            ] else if (choice == null && _items.isNotEmpty && _aiCluster() != null) ...[
+              const SizedBox(height: 10),
+              _unsureOption(_aiCluster()!),
             ],
           ],
         ),
       ),
     );
   }
+
+  // Соҳаи ҷустуҷӯ: аз филтри AI ё аз ихтисосҳои ёфтшуда (самти бештар).
+  int? _aiCluster() {
+    final n = _aiFilters?['clusterNumber'];
+    if (n is num) return n.toInt();
+    final counts = <int, int>{};
+    for (final c in _items) {
+      if (c.clusterNumber != null) counts[c.clusterNumber!] = (counts[c.clusterNumber!] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return null;
+    return (counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).first.key;
+  }
+
+  // «Намедонам»: 3 саволи ҳамин соҳа, баъд ихтисосҳои мувофиқ.
+  Widget _unsureOption(int cluster) => Padding(
+    padding: const EdgeInsets.only(bottom: 7),
+    child: Material(
+      color: AppColors.contractSoft,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: AppColors.primary),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => Navigator.of(context).push(
+          smoothRoute(
+            FieldQuizScreen(
+              clusterNumber: cluster,
+              onFullTest: () {
+                Navigator.of(context).pop();
+                AppShell.goTo(context, 1);
+              },
+            ),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(11),
+          child: Row(
+            children: [
+              Icon(Icons.quiz_outlined, color: AppColors.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t('Намедонам — бо 3 савол ёбем'),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(t('Саволҳои кӯтоҳи ҳамин соҳа: кадом самт ба шумо наздиктар аст.'), style: TextStyle(fontSize: 12.5, color: AppColors.textSoft, height: 1.35)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 
   Widget _aiOption(Map<String, dynamic> o) {
     final number = o['clusterNumber'] is num ? (o['clusterNumber'] as num).toInt() : null;

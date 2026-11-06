@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api/api.dart';
 import '../api/models.dart';
 import '../app/i18n.dart';
+import '../app/saved_store.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
@@ -24,6 +25,7 @@ class _SavedCareersScreenState extends State<SavedCareersScreen> {
   @override
   void initState() {
     super.initState();
+    savedStore.ensureLoaded();
     _load();
   }
 
@@ -40,7 +42,8 @@ class _SavedCareersScreenState extends State<SavedCareersScreen> {
   Future<void> _unsave(Career career) async {
     setState(() => _saved = [...?_saved?.where((c) => c.id != career.id)]);
     try {
-      await Api.instance.post('/users/save-career/${career.id}', {});
+      final data = await Api.instance.post('/users/save-career/${career.id}', {});
+      savedStore.mark(career.id, data['saved'] == true);
     } catch (_) {
       _load();
     }
@@ -49,7 +52,12 @@ class _SavedCareersScreenState extends State<SavedCareersScreen> {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final saved = _saved;
+    // Тугмаи нигоҳ доштан дар худи корт ҳам ихтисосро аз ин рӯйхат мебарорад.
+    return ListenableBuilder(listenable: savedStore, builder: (context, _) => _page(context, text));
+  }
+
+  Widget _page(BuildContext context, TextTheme text) {
+    final saved = _saved?.where((c) => !savedStore.isReady || savedStore.isSaved(c.id)).toList();
     return Scaffold(
       appBar: AppBar(title: Text(t('Ихтисосҳои нигоҳдошта'))),
       body: SafeArea(

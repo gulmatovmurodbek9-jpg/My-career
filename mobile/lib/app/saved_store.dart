@@ -11,13 +11,17 @@ class SavedStore extends ChangeNotifier {
 
   Set<String> _ids = {};
   bool _loaded = false;
+  bool _fetched = false;
   final Set<String> _busy = {};
 
   bool isSaved(String id) => _ids.contains(id);
+  // То боркунии рӯйхат аз сервер ҳолати тугмаҳо маълум нест.
+  bool get isReady => _fetched;
   bool isBusy(String id) => _busy.contains(id);
 
   void _onAuth() {
     _loaded = false;
+    _fetched = false;
     _ids = {};
     notifyListeners();
     ensureLoaded();
@@ -29,6 +33,7 @@ class SavedStore extends ChangeNotifier {
     try {
       final data = await Api.instance.getFresh('/users/saved-careers');
       _ids = {for (final c in (data as List? ?? const [])) '${(c as Map)['id']}'};
+      _fetched = true;
       notifyListeners();
     } catch (_) {
       _loaded = false;

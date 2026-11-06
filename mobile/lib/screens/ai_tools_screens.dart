@@ -437,7 +437,10 @@ class _AdvisorReportScreenState extends State<AdvisorReportScreen> {
           ],
         },
       }, timeout: _aiTimeout);
-      if (mounted) setState(() => _report = Map<String, dynamic>.from(data));
+      // Сервер ҳисоботро дар {report: {...}} мефиристад (бо mmtScores ва topMatches дар паҳлӯ).
+      final root = Map<String, dynamic>.from(data);
+      final report = root['report'] is Map ? Map<String, dynamic>.from(root['report']) : root;
+      if (mounted) setState(() => _report = report);
     } catch (e) {
       if (mounted) setState(() => _error = _errorText(e));
     }
@@ -478,6 +481,26 @@ class _AdvisorReportScreenState extends State<AdvisorReportScreen> {
               OutlinedButton(onPressed: _load, child: Text(t('Боз кӯшиш кунед'))),
             ] else if (r != null) ...[
               const _AiNote(),
+              if ([...(r['quizAnswerAnalysis'] as List? ?? const [])].any((x) => x is Map && '${x['insight'] ?? ''}'.isNotEmpty)) ...[
+                SectionTitle(t('Ҷавобҳои шумо')),
+                for (final item in [
+                  for (final x in (r['quizAnswerAnalysis'] as List))
+                    if (x is Map && '${x['insight'] ?? ''}'.isNotEmpty) x,
+                ]) ...[
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if ('${item['question'] ?? ''}'.isNotEmpty) Text('${item['question']}', style: text.bodySmall?.copyWith(color: AppColors.textSoft)),
+                        if ('${item['answer'] ?? ''}'.isNotEmpty) Text('${item['answer']}', style: text.titleMedium),
+                        const SizedBox(height: 4),
+                        Text('${item['insight']}', style: text.bodyMedium),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
               if ('${r['personalityAnalysis'] ?? ''}'.isNotEmpty) ...[SectionTitle(t('Ҷавобҳои шумо чӣ нишон медиҳанд')), AppCard(child: Text('${r['personalityAnalysis']}', style: text.bodyLarge))],
               if (recs.isNotEmpty) ...[
                 SectionTitle(t('Ихтисосҳои тавсияшуда')),

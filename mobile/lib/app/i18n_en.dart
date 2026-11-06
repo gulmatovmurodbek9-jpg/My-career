@@ -543,6 +543,7 @@ const en = <String, String>{
   'Ҷавоби шумо дар рӯйхат нест?': 'Your answer is not on the list?',
   'Ҷавобро ба ягон вариант пайваст карда натавонистем. Каме дигар нависед ё вариантро интихоб кунед.': 'We could not match your answer to an option. Rephrase it or pick an option.',
   'Ҷавобҳо ҳисоб мешаванд…': 'Calculating your answers…',
+  'Ҷавобҳои шумо': 'Your answers',
   'Ҷавобҳои шумо чӣ нишон медиҳанд': 'What your answers show',
   'Ҷиҳатҳои манфӣ': 'Cons',
   'Ҷиҳатҳои мусбат': 'Pros',

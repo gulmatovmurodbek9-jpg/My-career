@@ -11,6 +11,9 @@ import '../app/theme.dart';
 import '../ui/widgets.dart';
 import 'career_detail_screen.dart';
 import 'career_filters.dart';
+import '../app/saved_store.dart';
+import '../app/auth.dart';
+import 'auth/login_screen.dart';
 import '../app/i18n.dart';
 
 // Рӯйхати 884 ихтисос: ҷустуҷӯ (оддӣ ва бо AI), филтрҳои фаҳмо дар зери он, саҳифа ба саҳифа бор мешавад.
@@ -663,9 +666,17 @@ class CareerCard extends StatelessWidget {
               style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.primary),
             ),
           const SizedBox(height: 3),
-          Text(
-            career.name,
-            style: TextStyle(fontFamily: AppFonts.display, fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.25),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  career.name,
+                  style: TextStyle(fontFamily: AppFonts.display, fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.25),
+                ),
+              ),
+              _SaveButton(careerId: career.id),
+            ],
           ),
           if (career.description.isNotEmpty) ...[
             const SizedBox(height: 5),
@@ -704,6 +715,43 @@ class CareerCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+// Нигоҳ доштан рост аз корт; бе вуруд ба экрани вуруд мебарад.
+class _SaveButton extends StatelessWidget {
+  const _SaveButton({required this.careerId});
+  final String careerId;
+
+  @override
+  Widget build(BuildContext context) {
+    savedStore.ensureLoaded();
+    return ListenableBuilder(
+      listenable: savedStore,
+      builder: (context, _) {
+        final saved = savedStore.isSaved(careerId);
+        return SizedBox(
+          width: 36,
+          height: 32,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            tooltip: saved ? t('Аз нигоҳдошта бардоштан') : t('Нигоҳ доштан'),
+            onPressed: savedStore.isBusy(careerId)
+                ? null
+                : () {
+                    if (!authStore.isLoggedIn) {
+                      Navigator.of(context).push(authRoute(const LoginScreen()));
+                      return;
+                    }
+                    savedStore.toggle(careerId).catchError((_) {
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t('Нашуд. Интернетро санҷед.'))));
+                    });
+                  },
+            icon: Icon(saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded, size: 24, color: saved ? AppColors.primary : AppColors.textSoft),
+          ),
+        );
+      },
     );
   }
 }

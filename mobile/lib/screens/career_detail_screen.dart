@@ -7,6 +7,7 @@ import '../app/career_refs.dart';
 import '../app/clusters.dart';
 import '../app/config.dart';
 import '../app/i18n.dart';
+import '../app/saved_store.dart';
 import '../app/settings.dart';
 import '../app/theme.dart';
 import '../ui/widgets.dart';
@@ -129,6 +130,7 @@ class _CareerDetailScreenState extends State<CareerDetailScreen> {
     if (_needLogin()) return;
     try {
       final data = await Api.instance.post('/users/save-career/${widget.careerId}', {});
+      savedStore.mark(widget.careerId, data['saved'] == true);
       if (mounted) setState(() => _saved = data['saved'] == true);
     } on ApiException catch (e) {
       if (mounted) _snack(e.message);

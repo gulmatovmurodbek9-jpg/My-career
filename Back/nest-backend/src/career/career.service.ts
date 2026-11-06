@@ -349,7 +349,10 @@ export class CareerService {
             const said = parsed.lang.trim().toLowerCase();
             // Ёвари овозӣ ҷустуҷӯро ҳамеша бо тоҷикӣ мефиристад (номҳо дар база тоҷикӣ) —
             // он гоҳ забони сайт мемонад, вагарна саҳифаи русӣ тоҷикӣ ҷавоб мегирифт.
-            if (!keepLang && (said === 'tj' || said === 'ru' || said === 'en')) answerLang = said;
+            // Калимаи лотинии хато навишташуда («Pragamist», «Dukhtur») англисӣ нест: шарҳ бо забони
+            // барнома мемонад; ба англисӣ танҳо вақте мегузарем, ки худи барнома англисӣ бошад.
+            const fromLatin = said === 'en' && answerLang !== 'en';
+            if (!keepLang && !fromLatin && (said === 'tj' || said === 'ru' || said === 'en')) answerLang = said;
         }
 
         const filters: any = {};

@@ -309,6 +309,7 @@ const en = <String, String>{
   'Натиҷаи тести касбии ман: {name}': 'My career test result: {name}',
   'Натиҷаи шумо': 'Your result',
   'Натиҷаи ҳар тесте, ки ҳоло мегузаред, дар ҳисобатон нигоҳ дошта мешавад — дар сайт ҳам онро мебинед.': 'Every test result is saved to your account — you can see it on the website too.',
+  'Натиҷаи ҷустуҷӯи AI': 'AI search result',
   'Натиҷаро фиристед': 'Share your result',
   'Натиҷаҳоятон дар ҳисоб мемонанд. Баъд боз бо почта ва парол ворид шуда метавонед.': 'Your results stay in your account. You can sign in again later with email and password.',
   'Нашуд. Интернетро санҷед.': 'That did not work. Check your internet.',

@@ -339,27 +339,14 @@ class _CareersScreenState extends State<CareersScreen> {
   Widget _aiSummary() {
     final f = _aiFilters ?? const <String, dynamic>{};
     final choice = _aiChoice;
-    final words = [
-      if (f['names'] is List && (f['names'] as List).isNotEmpty)
-        (f['names'] as List).join(', ')
-      else if (f['keywords'] is List && (f['keywords'] as List).isNotEmpty)
-        (f['keywords'] as List).join(', ')
-      else if ('${f['search'] ?? ''}'.isNotEmpty)
-        '${f['search']}',
-    ];
     final tags = <String>[
-      if (words.isNotEmpty) t('калима: {word}', {'word': words.first}),
       if (f['clusterNumber'] is num) clusterTitle((f['clusterNumber'] as num).toInt(), ''),
       if (f['maxPrice'] is num) t('то {price} сомонӣ', {'price': money((f['maxPrice'] as num).toInt())}),
       if ('${f['city'] ?? ''}'.isNotEmpty) t('шаҳри {city}', {'city': f['city']}),
       if (f['onlyFree'] == true) t('ҷойи ройгон'),
     ];
-    final tagStyle = TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.primary);
-    Widget tag(String text) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: AppColors.contractSoft, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: tagStyle),
-    );
+    if (choice != null) tags.add(choice['clusterNumber'] is num ? clusterTitle((choice['clusterNumber'] as num).toInt(), '') : '${choice['label'] ?? ''}');
+    final summary = !_aiUnderstood ? t('AI саволро пурра нафаҳмид — ҷустуҷӯи оддӣ иҷро шуд.') : (tags.isEmpty ? t('Натиҷаи ҷустуҷӯи AI') : tags.join(' · '));
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.42),
       child: SingleChildScrollView(
@@ -372,45 +359,37 @@ class _CareersScreenState extends State<CareersScreen> {
                 t('Ҷустуҷӯи AI кор накард. Ҷустуҷӯи оддиро истифода баред.'),
                 style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.danger),
               ),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                if (_aiFilters != null)
-                  Text(
-                    _aiUnderstood ? t('AI фаҳмид:') : t('AI саволро пурра нафаҳмид — ҷустуҷӯи оддӣ иҷро шуд.'),
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSoft),
+            // Як сатри содда: AI чӣ фаҳмид ва тугмаи тоза кардан — бе тасмаҳои ранга.
+            if (_aiFilters != null)
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      summary,
+                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.text, height: 1.3),
+                    ),
                   ),
-                for (final text in tags) tag(text),
-                if (choice != null) tag(choice['clusterNumber'] is num ? clusterTitle((choice['clusterNumber'] as num).toInt(), '') : '${choice['label'] ?? ''}'),
-                if (choice != null)
-                  _SmallLink(
-                    icon: Icons.arrow_back_rounded,
-                    label: t('Вариантҳои дигар'),
-                    onTap: () {
-                      setState(() => _aiChoice = null);
+                  if (choice != null)
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _aiChoice = null);
+                        _load(reset: true);
+                      },
+                      child: Text(t('Вариантҳои дигар')),
+                    ),
+                  IconButton(
+                    tooltip: t('Тоза кардан'),
+                    onPressed: () {
+                      setState(_clearAi);
                       _load(reset: true);
                     },
+                    icon: Icon(Icons.close_rounded, color: AppColors.textSoft),
                   ),
-                _SmallLink(
-                  icon: Icons.close_rounded,
-                  label: t('Тоза кардан'),
-                  onTap: () {
-                    setState(_clearAi);
-                    _load(reset: true);
-                  },
-                ),
-              ],
-            ),
-            if ('${f['note'] ?? ''}'.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColors.contractSoft, borderRadius: BorderRadius.circular(12)),
-                child: Text('${f['note']}', style: TextStyle(fontSize: 13, color: AppColors.text, height: 1.4)),
+                ],
               ),
-            ],
+            if ('${f['note'] ?? ''}'.isNotEmpty) ...[const SizedBox(height: 8), Text('${f['note']}', style: TextStyle(fontSize: 13.5, color: AppColors.textSoft, height: 1.4))],
             if (_aiOptions.isNotEmpty && choice == null) ...[
               const SizedBox(height: 10),
               Text(
@@ -669,37 +648,6 @@ class _FilterChip extends StatelessWidget {
             Icon(Icons.close_rounded, size: 15, color: AppColors.primary),
           ],
         ),
-      ),
-    ),
-  );
-}
-
-class _SmallLink extends StatelessWidget {
-  const _SmallLink({required this.icon, required this.label, required this.onTap});
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-    borderRadius: BorderRadius.circular(999),
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppColors.textSoft),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSoft),
-          ),
-        ],
       ),
     ),
   );

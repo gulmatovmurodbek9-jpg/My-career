@@ -292,7 +292,7 @@ export class CareerService {
             cityNames.join(', '),
             '',
             'ФОРМАТИ ҶАВОБ — танҳо JSON, бе матни дигар:',
-            '{"lang": "tj ё ru ё en", "keywords": ["решаи мушаххас", "решаи умумитар"], "clusterNumber": 1-5 ё null, "maxPrice": рақам ё null, "city": "ном ё null", "onlyFree": true ё false}',
+            '{"lang": "tj ё ru ё en", "keywords": ["решаи мушаххас", "решаи умумитар"], "field": ["решаҳои самтҳои дигари ҳамин соҳа"], "clusterNumber": 1-5 ё null, "maxPrice": рақам ё null, "city": "ном ё null", "onlyFree": true ё false}',
             '',
             'ҚОИДАҲО:',
             '- "lang" забонест, ки корбар САВОЛРО бо он навиштааст: "tj", "ru" ё "en".',
@@ -319,6 +319,12 @@ export class CareerService {
             '- Саволро аз ҳар забон бифаҳм, вале решаҳо ҲАМЕША тоҷикӣ бошанд:',
             '  номи ихтисосҳо дар база тоҷикӣ аст.',
             '  Номи касби ғайрирасмиро (масалан «Дизайнери UX/UI») нанавис.',
+            '- "field": агар корбар СОҲАИ ВАСЕЪРО гӯяд, на як касби танг (барномасозӣ, IT, муҳандисӣ,',
+            '  тиб, санъат, иқтисод, омӯзгорӣ), 4–8 решаи тоҷикии САМТҲОИ ГУНОГУНИ ҳамин соҳаро нависед,',
+            '  ки дар номи ихтисосҳо меоянд. Намунаҳо:',
+            '  барномасозӣ, IT → ["информатика", "иттилоот", "компютер", "амният", "зеҳни сунъӣ", "шабака", "рақамӣ"]',
+            '  муҳандисӣ → ["муҳандис", "мошинсоз", "сохтмон", "энергетика", "барқ", "автоматон", "техника"]',
+            '  Агар касб танг бошад (стоматолог, уролог, тарҷумони англисӣ), [] гузор.',
             '- Агар корбар нархро гӯяд («то 4000 сомонӣ»), онро ба "maxPrice" гузор.',
             '- Агар «ройгон», «бюджет» ё «бепул» гӯяд, "onlyFree" = true.',
             '- Кластерҳо: 1 — табиӣ ва техникӣ, 2 — иқтисод ва география,',
@@ -372,6 +378,20 @@ export class CareerService {
             const found = await this.findAll(toDto({ searchAny: keywords }, 1, 1));
             if (found.meta.total < 3) keywords = [...new Set([...keywords, ...aiUseful])];
         }
+        // Соҳаи васеъ («барномасозӣ», «муҳандисӣ»): самтҳои дигари ҳамин соҳа низ ҷустуҷӯ мешаванд,
+        // то хонанда на танҳо номҳои бо ҳамон калима, балки ҳамаи соҳаро бинад ва баъд самтро интихоб кунад.
+        const fieldStems = (Array.isArray(parsed?.field) ? parsed.field : [])
+            .filter((k: unknown): k is string => typeof k === 'string')
+            .map((k: string) => k.trim().slice(0, 40))
+            .filter((k: string) => k.length >= 3 && !CareerService.BROAD_STEMS.has(foldTajik(k)))
+            .slice(0, 8);
+        const expanded: string[] = [];
+        for (const stem of fieldStems) {
+            const hit = await this.findAll(toDto({ searchAny: [stem] }, 1, 1));
+            if (hit.meta.total) expanded.push(stem);
+        }
+        if (expanded.length) keywords = [...new Set([...keywords, ...expanded])];
+
         // Як реша — як калима: «муҳандис» ва «мухандиси», «англис» ва «англиси» ду бор ҳисоб
         // намешаванд (вагарна тартиб каҷ мешуд). Решаи кӯтоҳтар (умумитар) мемонад.
         const roots: string[] = [];
@@ -383,7 +403,7 @@ export class CareerService {
                 roots.push(folded);
                 return true;
             })
-            .slice(0, 5);
+            .slice(0, expanded.length ? 10 : 5);
 
         const clusterNumber = direct.length ? NaN : Number(parsed?.clusterNumber);
         if (clusterNumber >= 1 && clusterNumber <= 5) {

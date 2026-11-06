@@ -1,4 +1,4 @@
-import { careerFamily, diversifyCareers, maxFeeOf, undecidedDirections } from './career-match';
+import { careerFamily, describeClusterScores, diversifyCareers, maxFeeOf, undecidedDirections } from './career-match';
 
 describe('maxFeeOf', () => {
     it('танҳо ҳадди рақамӣ медиҳад', () => {
@@ -37,5 +37,14 @@ describe('undecidedDirections', () => {
     });
     it('ду самти қавии наздикро низ дудил мегӯяд', () => {
         expect(undecidedDirections(list(30, 28, 5, 3, 1))!.length).toBe(2);
+    });
+});
+
+describe('describeClusterScores', () => {
+    it('ба AI номи самт ва фоиз медиҳад, на рамз', () => {
+        const text = describeClusterScores({ c1: 0, c2: 2.5, c3: 37.5, c4: 0.8, c5: 1.7 });
+        expect(text).toContain('Economics and geography (Иқтисод ва география): 6%');
+        expect(text).toContain('Philology, education and arts (Филология, педагогика ва санъат): 94%');
+        expect(text).not.toMatch(/c2:/);
     });
 });

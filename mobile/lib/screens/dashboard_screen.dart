@@ -11,11 +11,11 @@ import 'ai_tools_screens.dart';
 import 'app_header.dart';
 import 'auth/login_screen.dart';
 import 'auth/profile_screen.dart';
-import 'career_detail_screen.dart';
 import 'careers_screen.dart';
 import 'result_extras.dart';
 import 'results_screen.dart';
 import 'interest_test_screen.dart';
+import 'my_lists_screens.dart';
 import 'settings_screen.dart';
 import 'swipe_screen.dart';
 import 'trial_screens.dart';
@@ -35,7 +35,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<Career> _saved = const [];
   List<Map<String, dynamic>> _plan = const [];
-  bool _loading = false;
   bool _failed = false;
 
   @override
@@ -64,7 +63,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
     setState(() {
-      _loading = true;
       _failed = false;
     });
     try {
@@ -77,35 +75,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (_) {
       if (mounted) setState(() => _failed = true);
     }
-    if (mounted) setState(() => _loading = false);
-  }
-
-  Future<void> _unsave(Career career) async {
-    setState(() => _saved = [..._saved.where((c) => c.id != career.id)]);
-    try {
-      await Api.instance.post('/users/save-career/${career.id}', {});
-    } catch (_) {
-      _load();
-    }
-  }
-
-  Future<void> _removeChoice(String offeringId) async {
-    setState(() => _plan = [..._plan.where((item) => '${item['offeringId']}' != offeringId)]);
-    try {
-      await Api.instance.delete('/users/application-plan/$offeringId');
-    } catch (_) {
-      _load();
-    }
   }
 
   void _open(Widget page) => Navigator.of(context).push(smoothRoute(page));
 
-  // Барои муқоиса: ихтисосҳои нигоҳдошта ва ихтисосҳои натиҷаи тест, бе такрор.
-  List<String> _compareChoices() {
-    final names = <String>{for (final c in _saved) c.name};
-    final saved = lastResult.result;
-    if (saved != null) names.addAll(QuizResult.fromJson(saved).careers.take(8).map((c) => c.name));
-    return names.where((n) => n.isNotEmpty).toList();
+  Future<void> _openAndReload(Widget page) async {
+    await Navigator.of(context).push(smoothRoute(page));
+    _load();
   }
 
   @override
@@ -138,54 +114,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ] else ...[
-                  SectionTitle(t('Ихтисосҳои нигоҳдошта ({n})', {'n': _saved.length})),
-                  if (_failed)
-                    AppCard(child: Text(t('Маълумот наомад. Барои навсозӣ экранро ба поён кашед.'), style: text.bodyMedium))
-                  else if (_loading && _saved.isEmpty)
-                    const Center(
-                      child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()),
-                    )
-                  else if (_saved.isEmpty)
-                    AppCard(
-                      onTap: () => AppShell.goTo(context, 2),
-                      child: Text(t('Ҳоло холӣ аст. Дар саҳифаи ихтисос тугмаи нигоҳ доштанро пахш кунед.'), style: text.bodyMedium),
-                    )
-                  else
-                    for (final career in _saved) ...[
-                      Dismissible(
-                        key: ValueKey('saved-${career.id}'),
-                        direction: DismissDirection.endToStart,
-                        onDismissed: (_) => _unsave(career),
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: Icon(Icons.delete_outline_rounded, color: AppColors.textSoft),
-                        ),
-                        child: CareerCard(career: career),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  if (_saved.isNotEmpty) Text(t('Барои бардоштан ихтисосро ба чап кашед.'), style: text.bodySmall?.copyWith(color: AppColors.textSoft)),
-                  SectionTitle(t('Нақшаи ҳуҷҷатсупорӣ ({n})', {'n': _plan.length})),
-                  if (_plan.isEmpty && !_loading)
-                    AppCard(child: Text(t('Дар саҳифаи ихтисос ҷойи таҳсилро «Ба рӯйхат» илова кунед. Дар ММТ то 10 интихоб мумкин аст.'), style: text.bodyMedium))
-                  else
-                    for (final item in _plan) ...[
-                      _PlanItem(
-                        item: item,
-                        onOpen: () => _open(CareerDetailScreen(careerId: '${item['careerId']}', title: '${item['careerName'] ?? ''}')),
-                        onRemove: () => _removeChoice('${item['offeringId']}'),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
+                  SectionTitle(t('Ихтисосҳо ва нақшаи ман')),
+                  if (_failed) ...[AppCard(child: Text(t('Маълумот наомад. Барои навсозӣ экранро ба поён кашед.'), style: text.bodyMedium)), const SizedBox(height: 8)],
+                  _LinkRow(icon: Icons.bookmark_outline_rounded, label: t('Ихтисосҳои нигоҳдошта ({n})', {'n': _saved.length}), onTap: () => _openAndReload(const SavedCareersScreen())),
+                  const SizedBox(height: 8),
+                  _LinkRow(icon: Icons.assignment_outlined, label: t('Нақшаи ҳуҷҷатсупорӣ ({n})', {'n': _plan.length}), onTap: () => _openAndReload(const ApplicationPlanScreen())),
                 ],
                 if (authStore.isLoggedIn) ...[
                   SectionTitle(t('Абзорҳои AI')),
-                  _LinkRow(
-                    icon: Icons.compare_arrows_rounded,
-                    label: t('Муқоисаи ихтисосҳо'),
-                    onTap: () => _open(CompareScreen(choices: _compareChoices())),
-                  ),
+                  _LinkRow(icon: Icons.compare_arrows_rounded, label: t('Муқоисаи ихтисосҳо'), onTap: () => _open(const CompareScreen())),
                   const SizedBox(height: 8),
                   _LinkRow(icon: Icons.description_outlined, label: t('Ҳисоботи AI'), onTap: () => _open(const AdvisorReportScreen())),
                   const SizedBox(height: 8),
@@ -259,57 +196,6 @@ class _LastResultCard extends StatelessWidget {
             ),
           ),
           Icon(Icons.chevron_right_rounded, color: AppColors.textSoft),
-        ],
-      ),
-    );
-  }
-}
-
-class _PlanItem extends StatelessWidget {
-  const _PlanItem({required this.item, required this.onOpen, required this.onRemove});
-  final Map<String, dynamic> item;
-  final VoidCallback onOpen;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final free = item['isFree'] == true;
-    final fee = item['tuitionFee'];
-    return AppCard(
-      onTap: onOpen,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 15,
-            backgroundColor: AppColors.contractSoft,
-            child: Text(
-              '${item['order'] ?? ''}',
-              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(cleanName('${item['careerName'] ?? ''}'), style: text.titleMedium),
-                const SizedBox(height: 4),
-                Text('${item['universityName'] ?? ''}${item['city'] != null ? ', ${item['city']}' : ''}', style: text.bodyMedium?.copyWith(color: AppColors.textSoft)),
-                const SizedBox(height: 4),
-                Text(
-                  free ? t('Ҷойи буҷетӣ') : (fee is num ? t('Шартнома: {n} сомонӣ', {'n': fee}) : t('Шартнома')),
-                  style: text.bodyMedium?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            tooltip: t('Аз рӯйхат бардоштан'),
-            onPressed: onRemove,
-            icon: Icon(Icons.close_rounded, color: AppColors.textSoft),
-          ),
         ],
       ),
     );

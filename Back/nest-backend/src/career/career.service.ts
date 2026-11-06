@@ -1,5 +1,5 @@
 import { joinBrokenLists } from './career-lists';
-import { CareerPlaces, diversifyCareers, maxFeeOf } from './career-match';
+import { CareerPlaces, describeClusterScores, diversifyCareers, maxFeeOf } from './career-match';
 import { createHash } from 'crypto';
 import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common';
 import { resourcesForAi } from '../common/resource-filters';
@@ -3688,7 +3688,8 @@ FORMATTING - THE CHAT RENDERS A LIMITED SUBSET:
             .filter(Boolean);
 
         const prompt = `Шумо як мушовири касбии ботаҷриба ҳастед.
-Натиҷаҳои санҷиши MMT-и корбар (Кластерҳои Маркази Миллии Тестӣ): ${JSON.stringify(mmt)}.
+Натиҷаҳои санҷиши MMT-и корбар (Кластерҳои Маркази Миллии Тестӣ), мувофиқат бо ҳар самт:
+${describeClusterScores(mmt)}
 Ихтисосҳои мувофиқтарин аз базаи мо барои ин корбар:
 ${careersContext}
 
@@ -3975,7 +3976,8 @@ ${candidates.map((c) => `- ${c.name} (${c.cluster?.clusterName || ''})`).join('\
 
         const prompt = `${instr.role}
 ${hasQuizScores
-                ? `Натиҷаҳои санҷиши MMT-и корбар: ${JSON.stringify(mmt)}.`
+                ? `Натиҷаҳои санҷиши MMT-и корбар, мувофиқат бо ҳар самт:
+${describeClusterScores(mmt)}`
                 : 'Корбар ҳанӯз санҷиши ММТ-ро насупоридааст — муқоисаро аз рӯи худи ихтисосҳо ва саволи ӯ кунед, дар бораи майлу хислати ӯ тахмин назанед.'}
 Ихтисосҳо барои муқоиса:
 ${careersContext}

@@ -53,3 +53,21 @@ export function undecidedDirections<T extends { score: number }>(sorted: T[]): A
         .slice(0, MAX_DIRECTIONS)
         .map((entry) => ({ ...entry, percent: percent(entry.score) }));
 }
+
+// Холҳои тест барои AI: бо номи самт ва фоиз, на «c2: 2.5». Бо рамз AI маънои самтро
+// тахмин мекард (масалан, c2-ро «муошират» мегуфт, вале он иқтисод ва география аст).
+const CLUSTER_NAMES: Record<string, string> = {
+    c1: 'Natural sciences and technology (Табиӣ ва техникӣ)',
+    c2: 'Economics and geography (Иқтисод ва география)',
+    c3: 'Philology, education and arts (Филология, педагогика ва санъат)',
+    c4: 'Social sciences and law (Ҷомеашиносӣ ва ҳуқуқ)',
+    c5: 'Medicine, biology and sport (Тиб, биология ва варзиш)',
+};
+
+export function describeClusterScores(mmt: Record<string, unknown> | null | undefined): string {
+    const lines = Object.keys(CLUSTER_NAMES).map((key) => {
+        const percent = Math.round((Number(mmt?.[key]) || 0) / MMT_MAX_SCORE * 100);
+        return `- ${CLUSTER_NAMES[key]}: ${percent}%`;
+    });
+    return `${lines.join('\n')}\n(Do not quote cluster codes like "c2" or raw scores; name the direction in words.)`;
+}
